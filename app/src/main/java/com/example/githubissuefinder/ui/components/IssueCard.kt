@@ -22,13 +22,15 @@ import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.Issue
 
 /**
- * The core feed card. Swipe-to-bookmark and shimmer loading states come in
- * a later iteration — for now this is a plain, tappable card so we can
- * confirm the visual layout against real-shaped (if hardcoded) data first.
+ * The core feed card. `isBookmarked` is passed in rather than read from the
+ * Issue model, since bookmark state now lives in shared state at the
+ * navigation level (see AppNavHost.kt) — this keeps the sample data
+ * immutable and the bookmark state as the single source of truth.
  */
 @Composable
 fun IssueCard(
     issue: Issue,
+    isBookmarked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -36,7 +38,7 @@ fun IssueCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (issue.isBookmarked) 4.dp else 1.dp,
+            defaultElevation = if (isBookmarked) 4.dp else 1.dp,
         ),
         shape = RoundedCornerShape(16.dp),
     ) {
@@ -54,7 +56,7 @@ fun IssueCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 8.dp),
                 )
-                if (issue.isBookmarked) {
+                if (isBookmarked) {
                     Text(
                         text = "★ saved",
                         style = MaterialTheme.typography.bodySmall,
@@ -101,8 +103,6 @@ fun IssueCard(
                         )
                     }
                 } else {
-                    // Reserve the space even with no language, so cards in
-                    // the same list stay visually aligned.
                     Box(modifier = Modifier)
                 }
 

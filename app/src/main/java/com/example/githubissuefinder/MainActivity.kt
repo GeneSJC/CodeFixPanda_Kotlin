@@ -4,9 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import com.example.githubissuefinder.ui.feed.FeedScreen
+import com.example.githubissuefinder.ui.navigation.AppNavHost
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GitHubIssueFinderTheme {
-                FeedScreen(modifier = Modifier.fillMaxSize())
+                AppNavHost()
             }
         }
     }

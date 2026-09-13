@@ -15,14 +15,16 @@ import com.example.githubissuefinder.data.SampleIssues
 import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
- * Static feed screen: renders SampleIssues.all in a scrollable list.
- * No ViewModel, no state hoisting, no click handling beyond a no-op —
- * those come in the next iteration once we introduce MVVM. The goal here
- * is purely to validate the card layout against a realistic list.
+ * Static-data feed screen. Bookmark state and navigation are both owned by
+ * the caller (AppNavHost) and passed down — this screen just renders.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(modifier: Modifier = Modifier) {
+fun FeedScreen(
+    bookmarkedIds: Set<Long>,
+    onIssueClick: (issueId: Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         topBar = { TopAppBar(title = { Text("Issue feed") }) },
@@ -37,7 +39,11 @@ fun FeedScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(SampleIssues.all, key = { it.id }) { issue ->
-                IssueCard(issue = issue, onClick = { /* wired up in a later iteration */ })
+                IssueCard(
+                    issue = issue,
+                    isBookmarked = issue.id in bookmarkedIds,
+                    onClick = { onIssueClick(issue.id) },
+                )
             }
         }
     }

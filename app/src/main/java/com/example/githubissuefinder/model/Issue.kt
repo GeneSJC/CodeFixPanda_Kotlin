@@ -10,13 +10,13 @@ package com.example.githubissuefinder.model
 data class Issue(
     val id: Long,
     val title: String,
+    val bodyText: String,
     val repoOwner: String,
     val repoName: String,
     val labels: List<IssueLabel>,
     val language: String?,
     val commentCount: Int,
     val updatedAtLabel: String,
-    val isBookmarked: Boolean = false,
 ) {
     val repoFullName: String get() = "$repoOwner/$repoName"
 }
