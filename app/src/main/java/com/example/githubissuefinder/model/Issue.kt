@@ -17,6 +17,8 @@ data class Issue(
     val language: String?,
     val commentCount: Int,
     val updatedAtLabel: String,
+    /** Public GitHub URL for this issue — used by the "Open in GitHub" action. */
+    val htmlUrl: String,
 ) {
     val repoFullName: String get() = "$repoOwner/$repoName"
 }

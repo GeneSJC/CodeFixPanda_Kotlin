@@ -5,7 +5,10 @@ import com.example.githubissuefinder.model.IssueLabel
 
 /**
  * Hand-written data standing in for what a real GitHub Search API response
- * will look like once Retrofit is wired in.
+ * will look like once Retrofit is wired in. htmlUrl values point at each
+ * repo's real issues page on github.com — good enough to prove the Open in
+ * GitHub action against real, working links before Retrofit gives us exact
+ * per-issue URLs from the API.
  */
 object SampleIssues {
 
@@ -24,6 +27,7 @@ object SampleIssues {
             language = "Kotlin",
             commentCount = 4,
             updatedAtLabel = "2d ago",
+            htmlUrl = "https://github.com/square/retrofit/issues",
         ),
         Issue(
             id = 2L,
@@ -35,6 +39,7 @@ object SampleIssues {
             language = "Kotlin",
             commentCount = 1,
             updatedAtLabel = "5h ago",
+            htmlUrl = "https://github.com/ktorio/ktor/issues",
         ),
         Issue(
             id = 3L,
@@ -46,6 +51,7 @@ object SampleIssues {
             language = "Kotlin",
             commentCount = 7,
             updatedAtLabel = "1d ago",
+            htmlUrl = "https://github.com/square/okio/issues",
         ),
         Issue(
             id = 4L,
@@ -57,6 +63,7 @@ object SampleIssues {
             language = null,
             commentCount = 0,
             updatedAtLabel = "3d ago",
+            htmlUrl = "https://github.com/coil-kt/coil/issues",
         ),
         Issue(
             id = 5L,
@@ -68,6 +75,7 @@ object SampleIssues {
             language = "Kotlin",
             commentCount = 2,
             updatedAtLabel = "6d ago",
+            htmlUrl = "https://github.com/cashapp/turbine/issues",
         ),
     )
 }

@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.ui.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,14 +20,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.components.LabelChip
 
 /**
- * Full issue detail. `onOpenInGitHub` is a no-op placeholder for now — real
- * deep-linking (Intent.ACTION_VIEW against issue.htmlUrl) comes once
- * SampleIssues is replaced by real API data that actually has a URL.
+ * Full issue detail. "Open in GitHub" launches a standard ACTION_VIEW
+ * Intent against issue.htmlUrl — a plain public URL, not a custom deep
+ * link. Android decides whether that opens the GitHub app or a browser;
+ * this code has no say in — or need to know — which one handles it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,9 +38,10 @@ fun DetailScreen(
     isBookmarked: Boolean,
     onBack: () -> Unit,
     onToggleBookmark: () -> Unit,
-    onOpenInGitHub: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -100,7 +105,9 @@ fun DetailScreen(
                     Text(if (isBookmarked) "★ Saved" else "☆ Save")
                 }
                 Button(
-                    onClick = onOpenInGitHub,
+                    onClick = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)))
+                    },
                     modifier = Modifier.weight(1f),
                 ) {
                     Text("Open in GitHub")
