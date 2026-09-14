@@ -16,13 +16,22 @@ import kotlinx.coroutines.flow.asStateFlow
  * regardless of current filters. This holds "what Feed is showing right
  * now" — which is what Insights should visualize — not "everything ever
  * loaded."
+ *
+ * isSampleData lets Insights show the same "showing sample data" context
+ * Feed does, rather than silently displaying sample-derived numbers as if
+ * they were live.
  */
+data class FeedSnapshot(
+    val issues: List<Issue> = emptyList(),
+    val isSampleData: Boolean = false,
+)
+
 object CurrentFeedState {
 
-    private val _issues = MutableStateFlow<List<Issue>>(emptyList())
-    val issues: StateFlow<List<Issue>> = _issues.asStateFlow()
+    private val _state = MutableStateFlow(FeedSnapshot())
+    val state: StateFlow<FeedSnapshot> = _state.asStateFlow()
 
-    fun update(newIssues: List<Issue>) {
-        _issues.value = newIssues
+    fun update(issues: List<Issue>, isSampleData: Boolean) {
+        _state.value = FeedSnapshot(issues, isSampleData)
     }
 }

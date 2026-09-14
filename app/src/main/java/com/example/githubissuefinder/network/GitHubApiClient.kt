@@ -17,18 +17,24 @@ import retrofit2.converter.moshi.MoshiConverterFactory
  *
  * The GitHub token comes from BuildConfig.GITHUB_API_TOKEN, which is
  * populated at build time from local.properties (see app/build.gradle.kts)
- * — never hardcoded here, never committed to source control. A blank
- * token still works: GitHub allows unauthenticated search, just at a much
- * lower rate limit.
+ * — never hardcoded here, never committed to source control.
  */
 object GitHubApiClient {
+
+    /**
+     * Whether a token is configured. FeedViewModel checks this to decide
+     * between live search and local sample-data fallback — kept here
+     * rather than having FeedViewModel read BuildConfig directly, so the
+     * "what counts as configured" logic lives in one place.
+     */
+    val hasToken: Boolean get() = BuildConfig.GITHUB_API_TOKEN.isNotBlank()
 
     private val authInterceptor = Interceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
             .addHeader("Accept", "application/vnd.github+json")
             .addHeader("X-GitHub-Api-Version", "2022-11-28")
 
-        if (BuildConfig.GITHUB_API_TOKEN.isNotBlank()) {
+        if (hasToken) {
             requestBuilder.addHeader("Authorization", "Bearer ${BuildConfig.GITHUB_API_TOKEN}")
         }
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -30,9 +31,12 @@ import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
  * Now backed by FeedViewModel and real GitHub Search API data, instead of
- * SampleIssues.kt. Bookmark state (bookmarkedIds, onIssueClick) is still
- * owned by AppNavHost and passed down, unchanged from v0.3 — this screen's
- * own ViewModel owns only the search results and filter selection.
+ * SampleIssues.kt directly. Bookmark state (bookmarkedIds, onIssueClick)
+ * is still owned by AppNavHost and passed down, unchanged from v0.3.
+ *
+ * When no GitHub token is configured, FeedViewModel falls back to locally
+ * filtered SampleIssues.kt data — this screen shows a small banner in
+ * that case so it's never ambiguous which mode is active.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +53,10 @@ fun FeedScreen(
         topBar = { TopAppBar(title = { Text("Issue feed") }) },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            if (uiState.isSampleData) {
+                SampleDataBanner()
+            }
+
             LabelFilterRow(
                 selected = uiState.selectedLabel,
                 onSelect = viewModel::onLabelSelected,
@@ -72,6 +80,17 @@ fun FeedScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SampleDataBanner() {
+    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+        Text(
+            "Showing sample data — add a GitHub token to local.properties to see live issues.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary,
+        )
     }
 }
 

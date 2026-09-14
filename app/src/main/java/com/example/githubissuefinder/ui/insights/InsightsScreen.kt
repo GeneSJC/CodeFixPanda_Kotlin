@@ -29,32 +29,23 @@ import io.androidpoet.drafter.treemap.model.TreemapData
 import io.androidpoet.drafter.treemap.model.TreemapItem
 
 /**
- * Now reflects Feed's live, currently-loaded search results (via
- * CurrentFeedState) instead of SampleIssues.kt. Two adjustments were
- * required by real data's shape, both intentional:
+ * Reflects Feed's live, currently-loaded search results (via
+ * CurrentFeedState) instead of SampleIssues.kt directly. Also shows a
+ * "sample data" note when Feed itself is in sample-data fallback mode (no
+ * GitHub token configured) — CurrentFeedState.state carries that flag
+ * through so this screen never silently shows sample-derived numbers as
+ * if they were live.
  *
- * - LABEL changed from repoFullName to a truncated issue title. Sample
- *   data had exactly one issue per repo, so repoFullName was a unique,
- *   meaningful label per box. Real search results can return several
- *   issues from the same repo (visible in the Feed screenshots — multiple
- *   oppia/oppia-android issues at once), which would produce confusing
- *   duplicate box labels if we kept repoFullName.
- * - CAPPED to the top 12 issues by comment count. GitHub search can
- *   return up to 30 results per page; a 30-box treemap would be
- *   unreadable on a phone screen. This is a deliberate legibility
- *   decision, not an arbitrary limitation — the most-discussed issues
- *   are also arguably the most interesting ones to surface here.
- *
- * Box SIZE (comment count) and COLOR (freshness) logic are unchanged from
- * the sample-data version. One known minor imprecision: real data's
- * relative-time formatter (IssueMappers.kt) can also produce "just now"
- * or "recently", which don't match this screen's \d+[hd] regex and fall
- * back to a fixed 24h-equivalent freshness — visually harmless, not a bug.
+ * Two adjustments were required by real data's shape, both intentional:
+ * - LABEL changed from repoFullName to a truncated issue title, since
+ *   real results can have several issues from the same repo.
+ * - CAPPED to the top 12 issues by comment count, for legibility.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(modifier: Modifier = Modifier) {
-    val feedIssues by CurrentFeedState.issues.collectAsStateWithLifecycle()
+    val feedState by CurrentFeedState.state.collectAsStateWithLifecycle()
+    val feedIssues = feedState.issues
 
     Scaffold(
         modifier = modifier,
@@ -83,6 +74,15 @@ fun InsightsScreen(modifier: Modifier = Modifier) {
                 .padding(padding)
                 .padding(16.dp),
         ) {
+            if (feedState.isSampleData) {
+                Text(
+                    "Showing sample data — add a GitHub token to local.properties to see live issues.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+            }
+
             Text(
                 text = "Box size = comments · color = freshness · " +
                     "top ${topIssues.size} of ${feedIssues.size} current results",
@@ -116,11 +116,6 @@ fun InsightsScreen(modifier: Modifier = Modifier) {
 private fun truncatedTitle(title: String, maxLength: Int = 28): String =
     if (title.length > maxLength) "${title.take(maxLength)}…" else title
 
-/**
- * Blends from the app's brand primary color (fresh) toward a neutral gray
- * (stale) based on an approximate hours-since-update value parsed from a
- * display string. Anything a week or older reads as fully "cold."
- */
 private fun freshnessColor(updatedAtLabel: String, brandColor: Color): Color {
     val hoursAgo = parseHoursAgo(updatedAtLabel)
     val staleness = (hoursAgo / (24f * 7f)).coerceIn(0f, 1f)

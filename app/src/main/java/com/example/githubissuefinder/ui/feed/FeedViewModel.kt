@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.data.IssueCache
+import com.example.githubissuefinder.data.SampleIssues
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
@@ -21,6 +22,12 @@ import kotlinx.coroutines.withContext
  * talks to GitHubApiClient directly (a plain singleton, not injected) —
  * a Repository abstraction and Hilt-based DI are still future Commit
  * Milestones; this is a deliberate, honest intermediate step.
+ *
+ * When no GitHub token is configured (GitHubApiClient.hasToken == false),
+ * search() skips the network entirely and filters SampleIssues.kt locally
+ * using the exact same label/language selections a live search would use
+ * — so the filter UI behaves identically in both modes, and SampleIssues.kt
+ * stays genuinely useful (a demo/offline mode) instead of dead code.
  */
 class FeedViewModel : ViewModel() {
 
@@ -49,6 +56,16 @@ class FeedViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+            if (!GitHubApiClient.hasToken) {
+                val issues = filterSampleIssues(label, language)
+                IssueCache.putAll(issues)
+                CurrentFeedState.update(issues, isSampleData = true)
+                _uiState.update {
+                    it.copy(issues = issues, isLoading = false, isSampleData = true)
+                }
+                return@launch
+            }
+
             val query = buildString {
                 append("label:\"${label.queryValue}\"")
                 append(" state:open")
@@ -61,10 +78,10 @@ class FeedViewModel : ViewModel() {
                 }
                 val issues = response.items.map { it.toIssue(language.queryValue) }
                 IssueCache.putAll(issues)
-                // Feeds Insights' treemap with exactly what this search
-                // returned — replaced wholesale, not accumulated.
-                CurrentFeedState.update(issues)
-                _uiState.update { it.copy(issues = issues, isLoading = false) }
+                CurrentFeedState.update(issues, isSampleData = false)
+                _uiState.update {
+                    it.copy(issues = issues, isLoading = false, isSampleData = false)
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -75,4 +92,19 @@ class FeedViewModel : ViewModel() {
             }
         }
     }
+
+    /**
+     * Applies the same label/language qualifiers a live search would send
+     * to GitHub, but locally against the fixed sample set. Depending on
+     * the selection, this can legitimately return few or zero results —
+     * that's expected, not a bug, since SampleIssues.kt is only 5 fixed
+     * issues rather than GitHub's full corpus.
+     */
+    private fun filterSampleIssues(label: IssueLabelFilter, language: LanguageFilter) =
+        SampleIssues.all.filter { issue ->
+            val matchesLabel = issue.labels.any { it.name.equals(label.queryValue, ignoreCase = true) }
+            val matchesLanguage = language.queryValue == null ||
+                issue.language?.equals(language.queryValue, ignoreCase = true) == true
+            matchesLabel && matchesLanguage
+        }
 }
