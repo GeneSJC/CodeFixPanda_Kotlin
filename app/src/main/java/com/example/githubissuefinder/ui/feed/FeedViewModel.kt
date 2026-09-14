@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.feed
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.data.IssueCache
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -60,6 +61,9 @@ class FeedViewModel : ViewModel() {
                 }
                 val issues = response.items.map { it.toIssue(language.queryValue) }
                 IssueCache.putAll(issues)
+                // Feeds Insights' treemap with exactly what this search
+                // returned — replaced wholesale, not accumulated.
+                CurrentFeedState.update(issues)
                 _uiState.update { it.copy(issues = issues, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update {
