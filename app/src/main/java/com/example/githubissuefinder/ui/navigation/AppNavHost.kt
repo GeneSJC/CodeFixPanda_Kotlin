@@ -20,7 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.githubissuefinder.data.SampleIssues
+import com.example.githubissuefinder.data.IssueCache
+import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.bookmarks.BookmarksScreen
 import com.example.githubissuefinder.ui.detail.DetailScreen
 import com.example.githubissuefinder.ui.feed.FeedScreen
@@ -33,24 +34,28 @@ private const val ROUTE_DETAIL = "detail/{issueId}"
 
 /**
  * Owns navigation between Feed, Bookmarks, Insights, and Detail, plus the
- * shared bookmark state the first three screens need. The bottom nav bar
- * only appears on the three top-level destinations — Detail is pushed on
- * top without it, which is the standard pattern for a "drill-in" screen.
+ * shared bookmark state the first three screens need.
  *
- * Bookmark state is still a simple remember-held Set<Long>, same as v0.3 —
- * this is a deliberate, temporary stand-in for what a shared ViewModel +
- * Room will do once we introduce MVVM.
+ * Bookmark state changed shape this Commit Milestone: from Set<Long> to
+ * Map<Long, Issue>. Reason: Feed now shows live search results rather than
+ * a fixed sample list, so a bookmarked issue can scroll out of the current
+ * search entirely (different filters, a later page, etc). Storing the full
+ * Issue at the moment it's bookmarked means Bookmarks/Detail keep working
+ * for it regardless of what Feed's IssueCache currently holds. This is
+ * still just remember-held in-memory state — the real, permanent fix is
+ * Room persistence, still a future Commit Milestone.
  */
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
-    var bookmarkedIds by remember { mutableStateOf(setOf<Long>()) }
+    var bookmarkedIssues by remember { mutableStateOf(mapOf<Long, Issue>()) }
 
     fun toggleBookmark(issueId: Long) {
-        bookmarkedIds = if (issueId in bookmarkedIds) {
-            bookmarkedIds - issueId
+        bookmarkedIssues = if (issueId in bookmarkedIssues) {
+            bookmarkedIssues - issueId
         } else {
-            bookmarkedIds + issueId
+            val issue = IssueCache.get(issueId)
+            if (issue != null) bookmarkedIssues + (issueId to issue) else bookmarkedIssues
         }
     }
 
@@ -111,14 +116,13 @@ fun AppNavHost() {
         ) {
             composable(ROUTE_FEED) {
                 FeedScreen(
-                    bookmarkedIds = bookmarkedIds,
+                    bookmarkedIds = bookmarkedIssues.keys,
                     onIssueClick = { issueId -> navController.navigate("detail/$issueId") },
                 )
             }
             composable(ROUTE_BOOKMARKS) {
-                val bookmarkedIssues = SampleIssues.all.filter { it.id in bookmarkedIds }
                 BookmarksScreen(
-                    bookmarkedIssues = bookmarkedIssues,
+                    bookmarkedIssues = bookmarkedIssues.values.toList(),
                     onIssueClick = { issueId -> navController.navigate("detail/$issueId") },
                 )
             }
@@ -130,11 +134,14 @@ fun AppNavHost() {
                 arguments = listOf(navArgument("issueId") { type = NavType.LongType }),
             ) { backStackEntry ->
                 val issueId = backStackEntry.arguments?.getLong("issueId") ?: -1L
-                val issue = SampleIssues.all.find { it.id == issueId }
+                // Check the bookmark snapshot first (guaranteed available if
+                // bookmarked, even if evicted from IssueCache by a later
+                // search), then fall back to the transient search cache.
+                val issue = bookmarkedIssues[issueId] ?: IssueCache.get(issueId)
 
                 DetailScreen(
                     issue = issue,
-                    isBookmarked = issueId in bookmarkedIds,
+                    isBookmarked = issueId in bookmarkedIssues,
                     onBack = { navController.popBackStack() },
                     onToggleBookmark = { toggleBookmark(issueId) },
                 )
