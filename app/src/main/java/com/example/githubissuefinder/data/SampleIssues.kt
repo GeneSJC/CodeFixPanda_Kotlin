@@ -9,6 +9,11 @@ import com.example.githubissuefinder.model.IssueLabel
  * repo's real issues page on github.com — good enough to prove the Open in
  * GitHub action against real, working links before Retrofit gives us exact
  * per-issue URLs from the API.
+ *
+ * Note: retrofit and okio moved from the square org to lysine-dev (verified
+ * Sep 2026 — github.com/square/retrofit and github.com/square/okio now
+ * redirect there). repoOwner/htmlUrl below use the current org directly
+ * rather than relying on GitHub's redirect.
  */
 object SampleIssues {
 
@@ -21,13 +26,13 @@ object SampleIssues {
             id = 1L,
             title = "Add Kotlin coroutine adapter example to docs",
             bodyText = "The retrofit adapter docs only show a Java callback example. It would help new contributors to add a Kotlin suspend fun example alongside it. Should live in docs/kotlin.md.",
-            repoOwner = "square",
+            repoOwner = "lysine-dev",
             repoName = "retrofit",
             labels = listOf(goodFirstIssue, helpWanted),
             language = "Kotlin",
             commentCount = 4,
             updatedAtLabel = "2d ago",
-            htmlUrl = "https://github.com/square/retrofit/issues",
+            htmlUrl = "https://github.com/lysine-dev/retrofit/issues",
         ),
         Issue(
             id = 2L,
@@ -45,13 +50,13 @@ object SampleIssues {
             id = 3L,
             title = "Update README with multiplatform setup instructions",
             bodyText = "The README covers JVM setup well but multiplatform (iOS/JS targets) isn't documented at all. A short getting-started section would help a lot of newcomers.",
-            repoOwner = "square",
+            repoOwner = "lysine-dev",
             repoName = "okio",
             labels = listOf(documentation, helpWanted),
             language = "Kotlin",
             commentCount = 7,
             updatedAtLabel = "1d ago",
-            htmlUrl = "https://github.com/square/okio/issues",
+            htmlUrl = "https://github.com/lysine-dev/okio/issues",
         ),
         Issue(
             id = 4L,
