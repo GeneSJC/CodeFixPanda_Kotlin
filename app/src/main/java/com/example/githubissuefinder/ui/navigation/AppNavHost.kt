@@ -24,16 +24,18 @@ import com.example.githubissuefinder.data.SampleIssues
 import com.example.githubissuefinder.ui.bookmarks.BookmarksScreen
 import com.example.githubissuefinder.ui.detail.DetailScreen
 import com.example.githubissuefinder.ui.feed.FeedScreen
+import com.example.githubissuefinder.ui.insights.InsightsScreen
 
 private const val ROUTE_FEED = "feed"
 private const val ROUTE_BOOKMARKS = "bookmarks"
+private const val ROUTE_INSIGHTS = "insights"
 private const val ROUTE_DETAIL = "detail/{issueId}"
 
 /**
- * Owns navigation between Feed, Bookmarks, and Detail, plus the shared
- * bookmark state all three screens need. The bottom nav bar only appears
- * on the two top-level destinations (Feed, Bookmarks) — Detail is pushed
- * on top without it, which is the standard pattern for a "drill-in" screen.
+ * Owns navigation between Feed, Bookmarks, Insights, and Detail, plus the
+ * shared bookmark state the first three screens need. The bottom nav bar
+ * only appears on the three top-level destinations — Detail is pushed on
+ * top without it, which is the standard pattern for a "drill-in" screen.
  *
  * Bookmark state is still a simple remember-held Set<Long>, same as v0.3 —
  * this is a deliberate, temporary stand-in for what a shared ViewModel +
@@ -55,7 +57,7 @@ fun AppNavHost() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination
     val showBottomBar = currentRoute?.hierarchy?.any {
-        it.route == ROUTE_FEED || it.route == ROUTE_BOOKMARKS
+        it.route == ROUTE_FEED || it.route == ROUTE_BOOKMARKS || it.route == ROUTE_INSIGHTS
     } == true
 
     Scaffold(
@@ -86,6 +88,18 @@ fun AppNavHost() {
                         icon = { Text("🔖", style = MaterialTheme.typography.titleMedium) },
                         label = { Text("Bookmarks") },
                     )
+                    NavigationBarItem(
+                        selected = currentRoute?.hierarchy?.any { it.route == ROUTE_INSIGHTS } == true,
+                        onClick = {
+                            navController.navigate(ROUTE_INSIGHTS) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Text("📊", style = MaterialTheme.typography.titleMedium) },
+                        label = { Text("Insights") },
+                    )
                 }
             }
         },
@@ -107,6 +121,9 @@ fun AppNavHost() {
                     bookmarkedIssues = bookmarkedIssues,
                     onIssueClick = { issueId -> navController.navigate("detail/$issueId") },
                 )
+            }
+            composable(ROUTE_INSIGHTS) {
+                InsightsScreen()
             }
             composable(
                 route = ROUTE_DETAIL,
