@@ -1,6 +1,5 @@
 package com.example.githubissuefinder.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,32 +11,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = BrandGreen80,
+    onPrimary = OnGreenContainerDark,
+    secondary = BrandPurple80,
+    tertiary = BrandBlue80,
+    secondaryContainer = GreenContainerDark,
+    onSecondaryContainer = OnGreenContainerDark,
+    background = BackgroundDark,
+    surface = SurfaceDark,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = BrandGreen40,
+    onPrimary = SurfaceLight,
+    secondary = BrandPurple40,
+    tertiary = BrandBlue40,
+    secondaryContainer = GreenContainerLight,
+    onSecondaryContainer = OnGreenContainerLight,
+    background = BackgroundLight,
+    surface = SurfaceLight,
 )
 
 @Composable
 fun GitHubIssueFinderTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color (Android 12+) derives its palette from the device's
+    // wallpaper, which would silently override our brand colors below —
+    // that's why earlier screenshots showed a generic purple/gray look
+    // regardless of what Color.kt specified. Defaulting this to false so
+    // our actual theme renders; callers can still opt back into dynamic
+    // color explicitly if desired.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
