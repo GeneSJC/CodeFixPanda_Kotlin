@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,17 +27,15 @@ import io.androidpoet.drafter.treemap.model.TreemapData
 import io.androidpoet.drafter.treemap.model.TreemapItem
 
 /**
- * Reflects Feed's live, currently-loaded search results (via
- * CurrentFeedState) instead of SampleIssues.kt directly. Also shows a
- * "sample data" note when Feed itself is in sample-data fallback mode (no
- * GitHub token configured) — CurrentFeedState.state carries that flag
- * through so this screen never silently shows sample-derived numbers as
- * if they were live.
- *
- * Two adjustments were required by real data's shape, both intentional:
- * - LABEL changed from repoFullName to a truncated issue title, since
- *   real results can have several issues from the same repo.
- * - CAPPED to the top 12 issues by comment count, for legibility.
+ * The "Insights" tab's content: a treemap of Feed's current results. No
+ * longer owns its own Scaffold or TopAppBar — as of this Commit Milestone
+ * it's hosted inside FeedTabsScreen alongside FeedScreen ("List"), sharing
+ * one TopAppBar and a top TabRow between them. Insights was previously its
+ * own bottom-nav destination; merged here because it was never
+ * conceptually a separate place, just a different lens on the same
+ * current search results (it has always sourced from CurrentFeedState,
+ * which Feed populates — no data-flow change here, only where this
+ * content is hosted).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,68 +43,58 @@ fun InsightsScreen(modifier: Modifier = Modifier) {
     val feedState by CurrentFeedState.state.collectAsStateWithLifecycle()
     val feedIssues = feedState.issues
 
-    Scaffold(
-        modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Insights") }) },
-    ) { padding ->
-        if (feedIssues.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "No data yet — visit the Feed tab to load issues.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            return@Scaffold
+    if (feedIssues.isEmpty()) {
+        Box(
+            modifier = modifier.fillMaxSize().padding(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "No data yet — switch to the List tab to load issues.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        return
+    }
+
+    val topIssues = feedIssues.sortedByDescending { it.commentCount }.take(12)
+
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        if (feedState.isSampleData) {
+            Text(
+                "Showing sample data — add a GitHub token to local.properties to see live issues.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
         }
 
-        val topIssues = feedIssues.sortedByDescending { it.commentCount }.take(12)
+        Text(
+            text = "Box size = comments · color = freshness · " +
+                "top ${topIssues.size} of ${feedIssues.size} current results",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-        ) {
-            if (feedState.isSampleData) {
-                Text(
-                    "Showing sample data — add a GitHub token to local.properties to see live issues.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(bottom = 6.dp),
-                )
-            }
-
-            Text(
-                text = "Box size = comments · color = freshness · " +
-                    "top ${topIssues.size} of ${feedIssues.size} current results",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-
-            DrafterTheme(dark = isSystemInDarkTheme()) {
-                TreemapChart(
-                    renderer = TreemapChartRenderer(
-                        TreemapData(
-                            items = topIssues.map { issue ->
-                                TreemapItem(
-                                    truncatedTitle(issue.title),
-                                    (issue.commentCount + 1).toFloat(),
-                                    freshnessColor(issue.updatedAtLabel, MaterialTheme.colorScheme.primary),
-                                )
-                            },
-                        ),
+        DrafterTheme(dark = isSystemInDarkTheme()) {
+            TreemapChart(
+                renderer = TreemapChartRenderer(
+                    TreemapData(
+                        items = topIssues.map { issue ->
+                            TreemapItem(
+                                truncatedTitle(issue.title),
+                                (issue.commentCount + 1).toFloat(),
+                                freshnessColor(issue.updatedAtLabel, MaterialTheme.colorScheme.primary),
+                            )
+                        },
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(320.dp),
-                )
-            }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp),
+            )
         }
     }
 }

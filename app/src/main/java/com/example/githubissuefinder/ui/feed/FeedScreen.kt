@@ -15,9 +15,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -30,13 +28,12 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
- * Now backed by FeedViewModel and real GitHub Search API data, instead of
- * SampleIssues.kt directly. Bookmark state (bookmarkedIds, onIssueClick)
- * is still owned by AppNavHost and passed down, unchanged from v0.3.
- *
- * When no GitHub token is configured, FeedViewModel falls back to locally
- * filtered SampleIssues.kt data — this screen shows a small banner in
- * that case so it's never ambiguous which mode is active.
+ * The "List" tab's content: issue list, filter chips, loading/error/empty
+ * states, and the sample-data banner. No longer owns its own Scaffold or
+ * TopAppBar — as of this Commit Milestone it's hosted inside
+ * FeedTabsScreen, which owns the shared TopAppBar and the List/Insights
+ * TabRow above it. Bookmark state (bookmarkedIds, onIssueClick) is still
+ * owned by AppNavHost and passed down, unchanged from v0.3.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,37 +45,32 @@ fun FeedScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Issue feed") }) },
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            if (uiState.isSampleData) {
-                SampleDataBanner()
-            }
+    Column(modifier = modifier.fillMaxSize()) {
+        if (uiState.isSampleData) {
+            SampleDataBanner()
+        }
 
-            LabelFilterRow(
-                selected = uiState.selectedLabel,
-                onSelect = viewModel::onLabelSelected,
-            )
-            LanguageFilterRow(
-                selected = uiState.selectedLanguage,
-                onSelect = viewModel::onLanguageSelected,
-            )
+        LabelFilterRow(
+            selected = uiState.selectedLabel,
+            onSelect = viewModel::onLabelSelected,
+        )
+        LanguageFilterRow(
+            selected = uiState.selectedLanguage,
+            onSelect = viewModel::onLanguageSelected,
+        )
 
-            when {
-                uiState.isLoading && uiState.issues.isEmpty() -> LoadingState()
-                uiState.errorMessage != null && uiState.issues.isEmpty() -> ErrorState(
-                    message = uiState.errorMessage.orEmpty(),
-                    onRetry = viewModel::retry,
-                )
-                uiState.issues.isEmpty() -> EmptyState()
-                else -> IssueList(
-                    issues = uiState.issues,
-                    bookmarkedIds = bookmarkedIds,
-                    onIssueClick = onIssueClick,
-                )
-            }
+        when {
+            uiState.isLoading && uiState.issues.isEmpty() -> LoadingState()
+            uiState.errorMessage != null && uiState.issues.isEmpty() -> ErrorState(
+                message = uiState.errorMessage.orEmpty(),
+                onRetry = viewModel::retry,
+            )
+            uiState.issues.isEmpty() -> EmptyState()
+            else -> IssueList(
+                issues = uiState.issues,
+                bookmarkedIds = bookmarkedIds,
+                onIssueClick = onIssueClick,
+            )
         }
     }
 }

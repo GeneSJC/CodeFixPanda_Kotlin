@@ -24,26 +24,25 @@ import com.example.githubissuefinder.data.IssueCache
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.bookmarks.BookmarksScreen
 import com.example.githubissuefinder.ui.detail.DetailScreen
-import com.example.githubissuefinder.ui.feed.FeedScreen
-import com.example.githubissuefinder.ui.insights.InsightsScreen
+import com.example.githubissuefinder.ui.feed.FeedTabsScreen
 
 private const val ROUTE_FEED = "feed"
 private const val ROUTE_BOOKMARKS = "bookmarks"
-private const val ROUTE_INSIGHTS = "insights"
 private const val ROUTE_DETAIL = "detail/{issueId}"
 
 /**
- * Owns navigation between Feed, Bookmarks, Insights, and Detail, plus the
- * shared bookmark state the first three screens need.
+ * Owns navigation between Feed, Bookmarks, and Detail, plus the shared
+ * bookmark state. Bottom nav is now 2 top-level items (Feed, Bookmarks) —
+ * Insights was removed as its own bottom-nav destination and is now a top
+ * tab inside FeedTabsScreen alongside the issue list, since it was never
+ * conceptually a separate place, just a different lens on Feed's current
+ * data. Detail is still pushed on top without the bottom bar, same as
+ * before.
  *
- * Bookmark state changed shape this Commit Milestone: from Set<Long> to
- * Map<Long, Issue>. Reason: Feed now shows live search results rather than
- * a fixed sample list, so a bookmarked issue can scroll out of the current
- * search entirely (different filters, a later page, etc). Storing the full
- * Issue at the moment it's bookmarked means Bookmarks/Detail keep working
- * for it regardless of what Feed's IssueCache currently holds. This is
- * still just remember-held in-memory state — the real, permanent fix is
- * Room persistence, still a future Commit Milestone.
+ * Bookmark state is still a simple remember-held Map<Long, Issue> (see
+ * v0.8 for why it's a Map, not a Set<Long>) — a deliberate, temporary
+ * stand-in for what a shared ViewModel + Room will do once we introduce
+ * MVVM/Hilt/Room fully.
  */
 @Composable
 fun AppNavHost() {
@@ -62,7 +61,7 @@ fun AppNavHost() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination
     val showBottomBar = currentRoute?.hierarchy?.any {
-        it.route == ROUTE_FEED || it.route == ROUTE_BOOKMARKS || it.route == ROUTE_INSIGHTS
+        it.route == ROUTE_FEED || it.route == ROUTE_BOOKMARKS
     } == true
 
     Scaffold(
@@ -93,18 +92,6 @@ fun AppNavHost() {
                         icon = { Text("🔖", style = MaterialTheme.typography.titleMedium) },
                         label = { Text("Bookmarks") },
                     )
-                    NavigationBarItem(
-                        selected = currentRoute?.hierarchy?.any { it.route == ROUTE_INSIGHTS } == true,
-                        onClick = {
-                            navController.navigate(ROUTE_INSIGHTS) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Text("📊", style = MaterialTheme.typography.titleMedium) },
-                        label = { Text("Insights") },
-                    )
                 }
             }
         },
@@ -115,7 +102,7 @@ fun AppNavHost() {
             modifier = Modifier.padding(padding),
         ) {
             composable(ROUTE_FEED) {
-                FeedScreen(
+                FeedTabsScreen(
                     bookmarkedIds = bookmarkedIssues.keys,
                     onIssueClick = { issueId -> navController.navigate("detail/$issueId") },
                 )
@@ -126,17 +113,11 @@ fun AppNavHost() {
                     onIssueClick = { issueId -> navController.navigate("detail/$issueId") },
                 )
             }
-            composable(ROUTE_INSIGHTS) {
-                InsightsScreen()
-            }
             composable(
                 route = ROUTE_DETAIL,
                 arguments = listOf(navArgument("issueId") { type = NavType.LongType }),
             ) { backStackEntry ->
                 val issueId = backStackEntry.arguments?.getLong("issueId") ?: -1L
-                // Check the bookmark snapshot first (guaranteed available if
-                // bookmarked, even if evicted from IssueCache by a later
-                // search), then fall back to the transient search cache.
                 val issue = bookmarkedIssues[issueId] ?: IssueCache.get(issueId)
 
                 DetailScreen(
