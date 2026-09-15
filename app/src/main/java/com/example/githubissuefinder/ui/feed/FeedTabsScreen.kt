@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -23,6 +24,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,19 +34,27 @@ import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.insights.InsightsScreen
+import io.androidpoet.drafter.gauge.GaugeChart
+import io.androidpoet.drafter.gauge.GaugeChartRenderer
+import io.androidpoet.drafter.gauge.model.GaugeData
+
+// NOTE: GaugeChart, GaugeChartRenderer, and GaugeData are intentionally
+// NOT imported here. Their constructor shape is confirmed directly from
+// Drafter's official Kotlin README (not the unrelated Swift sibling
+// project's changelog, which uses a different, incompatible API shape) —
+// only the package path is unconfirmed, same situation as v0.7 and
+// v0.15. See README.txt for the Android Studio quick-fix steps.
 
 /**
  * Owns the single Feed destination's shared TopAppBar and a top TabRow
  * switching between "List" and "Insights" (see v0.11).
  *
- * The rate-limit indicator (see v0.12) is now a tappable chip rather than
- * plain text — given a bare Text with a hidden onClick has exactly the
- * same "you have to already know it's there" problem raised earlier about
- * pull-to-refresh gestures, it's styled with a tonal background so it
- * visibly reads as interactive at rest, not just on press. Tapping it
- * opens a small dialog with the full breakdown (remaining / limit / used /
- * resets in) rather than cramming all four numbers into the TopAppBar
- * itself.
+ * The rate-limit indicator (see v0.12/v0.13) stays a compact tappable
+ * chip in the TopAppBar — there genuinely isn't room to render a legible
+ * dial in that constrained space. Tapping it opens a dialog that now
+ * includes an actual GaugeChart (a real speedometer-style dial), not just
+ * plain text rows — addressing feedback that a bare "28/30" number wasn't
+ * the visual originally envisioned for this feature.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,6 +155,18 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                 Text("No rate limit data available yet.")
             } else {
                 Column {
+                    GaugeChart(
+                        renderer = GaugeChartRenderer(
+                            GaugeData(
+                                value = info.remaining.toFloat(),
+                                min = 0f,
+                                max = info.limit.toFloat().coerceAtLeast(1f),
+                                label = "Remaining",
+                                color = gaugeColorFor(info),
+                            ),
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                    )
                     RateLimitRow("Remaining", "${info.remaining}")
                     RateLimitRow("Limit", "${info.limit}")
                     RateLimitRow("Used", "${info.used}")
@@ -159,6 +182,21 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
             }
         },
     )
+}
+
+/**
+ * Drafter's GaugeData takes a single color, not a built-in two-tone
+ * green-to-red split — so instead of a fixed dial color, this computes
+ * one dynamically from how much capacity remains: green when plentiful,
+ * sliding toward red as it depletes. Same visual "danger" signal the
+ * original speedometer concept was after, built on the confirmed, real
+ * API rather than an unconfirmed multi-color feature.
+ */
+private fun gaugeColorFor(info: RateLimitInfo): Color {
+    val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
+    val depleted = Color(0xFFC62828)
+    val full = Color(0xFF2E7D32)
+    return lerp(depleted, full, ratio)
 }
 
 @Composable
