@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.data.IssueCache
+import com.example.githubissuefinder.data.RateLimitInfo
+import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.SampleIssues
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -25,9 +27,9 @@ import kotlinx.coroutines.withContext
  *
  * When no GitHub token is configured (GitHubApiClient.hasToken == false),
  * search() skips the network entirely and filters SampleIssues.kt locally
- * using the exact same label/language selections a live search would use
- * — so the filter UI behaves identically in both modes, and SampleIssues.kt
- * stays genuinely useful (a demo/offline mode) instead of dead code.
+ * — see v0.10 for details. RateLimitState is explicitly cleared to null
+ * in that branch, since a rate limit isn't a meaningful concept when
+ * nothing is actually being fetched.
  */
 class FeedViewModel : ViewModel() {
 
@@ -60,6 +62,7 @@ class FeedViewModel : ViewModel() {
                 val issues = filterSampleIssues(label, language)
                 IssueCache.putAll(issues)
                 CurrentFeedState.update(issues, isSampleData = true)
+                RateLimitState.update(null)
                 _uiState.update {
                     it.copy(issues = issues, isLoading = false, isSampleData = true)
                 }
@@ -76,7 +79,25 @@ class FeedViewModel : ViewModel() {
                 val response = withContext(Dispatchers.IO) {
                     GitHubApiClient.api.searchIssues(query = query)
                 }
-                val issues = response.items.map { it.toIssue(language.queryValue) }
+
+                val body = response.body()
+                if (!response.isSuccessful || body == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "GitHub returned an error (HTTP ${response.code()})",
+                        )
+                    }
+                    return@launch
+                }
+
+                val remaining = response.headers()["X-RateLimit-Remaining"]?.toIntOrNull()
+                val limit = response.headers()["X-RateLimit-Limit"]?.toIntOrNull()
+                RateLimitState.update(
+                    if (remaining != null && limit != null) RateLimitInfo(remaining, limit) else null,
+                )
+
+                val issues = body.items.map { it.toIssue(language.queryValue) }
                 IssueCache.putAll(issues)
                 CurrentFeedState.update(issues, isSampleData = false)
                 _uiState.update {
