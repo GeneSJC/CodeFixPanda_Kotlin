@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.data.IssueCache
-import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.SampleIssues
+import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
@@ -91,11 +91,7 @@ class FeedViewModel : ViewModel() {
                     return@launch
                 }
 
-                val remaining = response.headers()["X-RateLimit-Remaining"]?.toIntOrNull()
-                val limit = response.headers()["X-RateLimit-Limit"]?.toIntOrNull()
-                RateLimitState.update(
-                    if (remaining != null && limit != null) RateLimitInfo(remaining, limit) else null,
-                )
+                RateLimitState.update(parseRateLimitHeaders(response.headers()))
 
                 val issues = body.items.map { it.toIssue(language.queryValue) }
                 IssueCache.putAll(issues)
