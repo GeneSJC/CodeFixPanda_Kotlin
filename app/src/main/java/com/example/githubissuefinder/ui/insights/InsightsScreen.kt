@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.model.Issue
+import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.model.LanguageFilter
 import io.androidpoet.drafter.bars.BarChart
 import io.androidpoet.drafter.bars.model.SimpleBarChartData
 import io.androidpoet.drafter.bars.renderer.BarChartRenderer
@@ -144,10 +146,12 @@ fun InsightsScreen(onIssueClick: (issueId: Long) -> Unit, modifier: Modifier = M
             )
         }
 
+        ActiveFilterHeader(label = feedState.selectedLabel, language = feedState.selectedLanguage)
+
         ChartPicker(selected = selectedChart, onSelect = { selectedChart = it })
 
         Text(
-            text = captionFor(selectedChart, topIssuesByComments.size, feedIssues.size),
+            text = captionFor(selectedChart, topIssuesByComments.size, feedIssues.size, feedState.totalCount),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(vertical = 8.dp),
@@ -180,11 +184,30 @@ fun InsightsScreen(onIssueClick: (issueId: Long) -> Unit, modifier: Modifier = M
     }
 }
 
-private fun captionFor(chart: InsightChartType, shown: Int, total: Int): String = when (chart) {
-    InsightChartType.TREEMAP -> "Box size = comments · color = freshness · top $shown of $total current results"
-    InsightChartType.DONUT -> "Label overlap across $total current results"
-    InsightChartType.BAR -> "Issues per repo · top repos of $total current results"
-    InsightChartType.SCATTER -> "Comments vs. freshness · $total current results"
+private fun captionFor(chart: InsightChartType, shown: Int, loaded: Int, trueTotal: Int): String {
+    val totalSuffix = if (trueTotal > loaded) " ($trueTotal total open matches)" else ""
+    return when (chart) {
+        InsightChartType.TREEMAP -> "Box size = comments · color = freshness · top $shown of $loaded loaded$totalSuffix"
+        InsightChartType.DONUT -> "Label overlap across $loaded loaded issues$totalSuffix"
+        InsightChartType.BAR -> "Issues per repo · top repos of $loaded loaded$totalSuffix"
+        InsightChartType.SCATTER -> "Comments vs. freshness · $loaded loaded issues$totalSuffix"
+    }
+}
+
+/**
+ * Ties Insights back to Feed's active search, so this tab is never
+ * ambiguous about what it's visualizing without needing to flip back to
+ * List to check. Sourced from CurrentFeedState.selectedLabel/
+ * selectedLanguage, which FeedViewModel populates on every search.
+ */
+@Composable
+private fun ActiveFilterHeader(label: IssueLabelFilter, language: LanguageFilter) {
+    Text(
+        "Showing: ${label.displayName} · ${language.displayName}",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(bottom = 10.dp),
+    )
 }
 
 @Composable

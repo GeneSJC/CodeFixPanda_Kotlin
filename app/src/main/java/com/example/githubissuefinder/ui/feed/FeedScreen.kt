@@ -28,12 +28,14 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
- * The "List" tab's content: issue list, filter chips, loading/error/empty
- * states, and the sample-data banner. No longer owns its own Scaffold or
- * TopAppBar — as of this Commit Milestone it's hosted inside
- * FeedTabsScreen, which owns the shared TopAppBar and the List/Insights
- * TabRow above it. Bookmark state (bookmarkedIds, onIssueClick) is still
- * owned by AppNavHost and passed down, unchanged from v0.3.
+ * Now backed by FeedViewModel and real GitHub Search API data, instead of
+ * SampleIssues.kt directly. Bookmark state (bookmarkedIds, onIssueClick)
+ * is still owned by AppNavHost and passed down, unchanged from v0.3.
+ *
+ * Shows a "Showing N of M open matches" caption above the list when M
+ * exceeds N — GitHub's Search API caps each response at per_page=30, so
+ * without this, two very differently-sized searches could look identical
+ * just because both hit the same page ceiling.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +61,10 @@ fun FeedScreen(
             onSelect = viewModel::onLanguageSelected,
         )
 
+        if (uiState.issues.isNotEmpty()) {
+            ResultCountCaption(shown = uiState.issues.size, total = uiState.totalResultCount)
+        }
+
         when {
             uiState.isLoading && uiState.issues.isEmpty() -> LoadingState()
             uiState.errorMessage != null && uiState.issues.isEmpty() -> ErrorState(
@@ -73,6 +79,21 @@ fun FeedScreen(
             )
         }
     }
+}
+
+@Composable
+private fun ResultCountCaption(shown: Int, total: Int) {
+    val text = if (total > shown) {
+        "Showing $shown of $total open matches"
+    } else {
+        "Showing $shown open matches"
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+//        modifier = Modifier.padding(horizontal = 16.dp, top = 4.dp),
+    )
 }
 
 @Composable

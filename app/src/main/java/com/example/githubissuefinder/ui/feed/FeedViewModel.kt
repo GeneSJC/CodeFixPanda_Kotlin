@@ -61,10 +61,21 @@ class FeedViewModel : ViewModel() {
             if (!GitHubApiClient.hasToken) {
                 val issues = filterSampleIssues(label, language)
                 IssueCache.putAll(issues)
-                CurrentFeedState.update(issues, isSampleData = true)
+                CurrentFeedState.update(
+                    issues = issues,
+                    isSampleData = true,
+                    totalCount = issues.size,
+                    selectedLabel = label,
+                    selectedLanguage = language,
+                )
                 RateLimitState.update(null)
                 _uiState.update {
-                    it.copy(issues = issues, isLoading = false, isSampleData = true)
+                    it.copy(
+                        issues = issues,
+                        isLoading = false,
+                        isSampleData = true,
+                        totalResultCount = issues.size,
+                    )
                 }
                 return@launch
             }
@@ -95,9 +106,20 @@ class FeedViewModel : ViewModel() {
 
                 val issues = body.items.map { it.toIssue(language.queryValue) }
                 IssueCache.putAll(issues)
-                CurrentFeedState.update(issues, isSampleData = false)
+                CurrentFeedState.update(
+                    issues = issues,
+                    isSampleData = false,
+                    totalCount = body.totalCount,
+                    selectedLabel = label,
+                    selectedLanguage = language,
+                )
                 _uiState.update {
-                    it.copy(issues = issues, isLoading = false, isSampleData = false)
+                    it.copy(
+                        issues = issues,
+                        isLoading = false,
+                        isSampleData = false,
+                        totalResultCount = body.totalCount,
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update {
