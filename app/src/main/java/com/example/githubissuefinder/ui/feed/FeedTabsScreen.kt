@@ -92,7 +92,10 @@ fun FeedTabsScreen(
                 onIssueClick = onIssueClick,
                 modifier = Modifier.padding(padding),
             )
-            else -> InsightsScreen(modifier = Modifier.padding(padding))
+            else -> InsightsScreen(
+                onIssueClick = onIssueClick,
+                modifier = Modifier.padding(padding),
+            )
         }
     }
 
