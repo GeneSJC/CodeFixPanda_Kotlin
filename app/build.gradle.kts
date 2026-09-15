@@ -37,6 +37,14 @@ android {
             "GITHUB_API_TOKEN",
             "\"${localProperties.getProperty("GITHUB_API_TOKEN", "")}\"",
         )
+
+        // Single source of truth for the on-device Commit Milestone version
+        // stamp (see ui/components/VersionLabel.kt). Distinct from
+        // versionName/versionCode above, which track real Android app
+        // releases, not this project's internal CM numbering. Bumping this
+        // one line is the ONLY per-CM maintenance required to keep the
+        // on-device stamp accurate — no other file needs to change.
+        buildConfigField("String", "CM_VERSION", "\"v0.16\"")
     }
 
     buildTypes {

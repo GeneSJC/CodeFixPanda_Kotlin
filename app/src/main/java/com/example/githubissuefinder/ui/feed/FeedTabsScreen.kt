@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.githubissuefinder.data.CurrentFeedState
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
+import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.insights.InsightsScreen
 
 /**
@@ -61,7 +62,12 @@ fun FeedTabsScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("Issue feed") },
+                    title = {
+                        Column {
+                            Text("Issue feed")
+                            VersionLabel()
+                        }
+                    },
                     actions = {
                         rateLimit?.let { info ->
                             RateLimitChip(

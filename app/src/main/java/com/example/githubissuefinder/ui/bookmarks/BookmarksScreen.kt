@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.bookmarks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,12 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.components.IssueCard
+import com.example.githubissuefinder.ui.components.VersionLabel
 
-/**
- * Shows every currently-bookmarked issue. Reuses IssueCard as-is (isBookmarked
- * is always true here, so every card renders in its "saved" state) rather
- * than introducing a separate card variant just for this screen.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookmarksScreen(
@@ -34,7 +31,16 @@ fun BookmarksScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Bookmarks") }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("Bookmarks")
+                        VersionLabel()
+                    }
+                },
+            )
+        },
     ) { padding ->
         if (bookmarkedIssues.isEmpty()) {
             Box(
@@ -42,7 +48,7 @@ fun BookmarksScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Nothing saved yet. Tap Save on an issue's detail screen to bookmark it here.",
+                    "Nothing saved yet. Tap Save on an issue's detail screen to bookmark it here.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -50,13 +56,9 @@ fun BookmarksScreen(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = padding.calculateTopPadding() + 12.dp,
-                    bottom = 16.dp,
-                ),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(padding),
             ) {
                 items(bookmarkedIssues, key = { it.id }) { issue ->
                     IssueCard(
