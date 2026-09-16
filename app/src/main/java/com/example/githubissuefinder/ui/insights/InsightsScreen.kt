@@ -228,7 +228,12 @@ private fun infoTextFor(chart: InsightChartType): String = when (chart) {
             "already guaranteed."
     InsightChartType.BAR ->
         "Shows how many currently loaded issues belong to each repo, tallest bar first.\n\n" +
-            "Only the top repos are shown, to keep the bars legible on a phone screen."
+            "Bars are numbered (1, 2, 3…) rather than showing full repo names directly on " +
+            "the chart — long \"owner/repo\" names overlapped illegibly when drawn as axis " +
+            "labels, so the real names are listed below the chart instead, in the same " +
+            "numbered order.\n\n" +
+            "The Y-axis is always a whole number of issues — gridlines like \"2.4\" are just " +
+            "how the chart auto-scales its axis, not a fractional issue count."
     InsightChartType.SCATTER ->
         "Each dot is one issue.\n\n" +
             "X position shows how long ago it was last updated — further right means staler.\n\n" +
@@ -425,7 +430,14 @@ private fun BarSection(issues: List<Issue>) {
         BarChart(
             renderer = BarChartRenderer(
                 SimpleBarChartData(
-                    labelsList = repoCounts.map { it.first },
+                    // Short index labels ("1","2","3"...) instead of full
+                    // "owner/repo" names — Drafter's own x-axis label
+                    // rendering doesn't truncate or rotate long text, so 8
+                    // full repo names collided into an unreadable overlapping
+                    // mess on a phone-width chart. Real names are shown in
+                    // the legend below instead, which we control directly —
+                    // same pattern already used for Donut's legend.
+                    labelsList = repoCounts.indices.map { (it + 1).toString() },
                     values = repoCounts.map { it.second.toFloat() },
                     colors = repoCounts.indices.map { CategoricalPalette[it % CategoricalPalette.size] },
                 ),
@@ -434,7 +446,28 @@ private fun BarSection(issues: List<Issue>) {
             animate = true,
         )
     }
+
+    Column(modifier = Modifier.padding(top = 12.dp)) {
+        repoCounts.forEachIndexed { index, (repo, count) ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(CategoricalPalette[index % CategoricalPalette.size]),
+                )
+                Text(
+                    "${index + 1}. ${truncatedRepoName(repo)} ($count)",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+    }
 }
+
+private fun truncatedRepoName(repo: String, maxLength: Int = 36): String =
+    if (repo.length > maxLength) "${repo.take(maxLength)}…" else repo
 
 // ---------------------------------------------------------------------
 // Scatter — comments vs. freshness
