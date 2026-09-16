@@ -19,11 +19,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,6 +114,7 @@ fun InsightsScreen(onIssueClick: (issueId: Long) -> Unit, modifier: Modifier = M
     val feedState by CurrentFeedState.state.collectAsStateWithLifecycle()
     val feedIssues = feedState.issues
     var selectedChart by remember { mutableStateOf(InsightChartType.TREEMAP) }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     if (feedIssues.isEmpty()) {
         Box(
@@ -150,12 +153,22 @@ fun InsightsScreen(onIssueClick: (issueId: Long) -> Unit, modifier: Modifier = M
 
         ChartPicker(selected = selectedChart, onSelect = { selectedChart = it })
 
-        Text(
-            text = captionFor(selectedChart, topIssuesByComments.size, feedIssues.size, feedState.totalCount),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(vertical = 8.dp),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+            Text(
+                text = captionFor(selectedChart, topIssuesByComments.size, feedIssues.size, feedState.totalCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                "ⓘ",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable { showInfoDialog = true }
+                    .padding(start = 8.dp),
+            )
+        }
 
         if (selectedChart == InsightChartType.TREEMAP || selectedChart == InsightChartType.SCATTER) {
             FreshnessLegend(brandColor = brandColor)
@@ -182,6 +195,59 @@ fun InsightsScreen(onIssueClick: (issueId: Long) -> Unit, modifier: Modifier = M
             onIssueClick = onIssueClick,
         )
     }
+
+    if (showInfoDialog) {
+        ChartInfoDialog(
+            chart = selectedChart,
+            onDismiss = { showInfoDialog = false },
+        )
+    }
+}
+
+/**
+ * Plain-language explanation per chart mode, opened via the ⓘ next to the
+ * caption. Explicitly explains what color means for Treemap/Scatter —
+ * feedback confirmed people didn't realize color was meaningful
+ * (freshness) rather than arbitrary, and that a uniformly green-looking
+ * chart usually means "most loaded issues really are fresh," not a
+ * rendering shortcoming.
+ */
+private fun infoTextFor(chart: InsightChartType): String = when (chart) {
+    InsightChartType.TREEMAP ->
+        "Each box is one issue.\n\n" +
+            "SIZE reflects how many comments it has — a bigger box means more discussion.\n\n" +
+            "COLOR reflects freshness: green means recently updated, fading toward gray the " +
+            "longer it's been since the last update. If most boxes look similarly green, that " +
+            "means most of your currently loaded issues really are fresh — not a limitation of " +
+            "the chart."
+    InsightChartType.DONUT ->
+        "Shows label overlap among your currently loaded issues.\n\n" +
+            "Feed's search already filters by one label (good first issue or help wanted), so " +
+            "every loaded issue already has that label. This chart instead shows how many ALSO " +
+            "carry the other label — not an independent distribution, since one label is " +
+            "already guaranteed."
+    InsightChartType.BAR ->
+        "Shows how many currently loaded issues belong to each repo, tallest bar first.\n\n" +
+            "Only the top repos are shown, to keep the bars legible on a phone screen."
+    InsightChartType.SCATTER ->
+        "Each dot is one issue.\n\n" +
+            "X position shows how long ago it was last updated — further right means staler.\n\n" +
+            "Y position shows comment count — higher means more discussion.\n\n" +
+            "Dot COLOR uses the same freshness gradient as the treemap: green means recently " +
+            "updated, fading toward gray as it goes stale."
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChartInfoDialog(chart: InsightChartType, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Got it") }
+        },
+        title = { Text("${chart.label} — what am I looking at?") },
+        text = { Text(infoTextFor(chart)) },
+    )
 }
 
 private fun captionFor(chart: InsightChartType, shown: Int, loaded: Int, trueTotal: Int): String {
