@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,10 +52,12 @@ import io.androidpoet.drafter.gauge.model.GaugeData
  *
  * The rate-limit indicator (see v0.12/v0.13) stays a compact tappable
  * chip in the TopAppBar — there genuinely isn't room to render a legible
- * dial in that constrained space. Tapping it opens a dialog that now
- * includes an actual GaugeChart (a real speedometer-style dial), not just
- * plain text rows — addressing feedback that a bare "28/30" number wasn't
- * the visual originally envisioned for this feature.
+ * dial in that constrained space. Tapping it opens a dialog that
+ * includes an actual GaugeChart (see v0.17), not just plain text rows.
+ *
+ * selectedTab uses rememberSaveable (see v0.19) so returning from Detail
+ * restores whichever tab (List/Insights) the person was actually on,
+ * instead of always resetting to List.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +66,14 @@ fun FeedTabsScreen(
     onIssueClick: (issueId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    // rememberSaveable, not remember: Navigation Compose disposes this
+    // destination's composition when Detail is pushed on top, and plain
+    // remember does not survive that dispose/recompose cycle — it would
+    // silently reset to List every time someone navigates back from
+    // Detail, regardless of which tab they were actually on. showRateLimitDialog
+    // stays plain remember deliberately: resetting a dialog to "closed"
+    // on return from Detail is reasonable, expected behavior, not a bug.
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
     val feedState by CurrentFeedState.state.collectAsStateWithLifecycle()
     val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
