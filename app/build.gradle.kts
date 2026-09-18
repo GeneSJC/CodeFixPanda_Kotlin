@@ -44,7 +44,13 @@ android {
         // releases, not this project's internal CM numbering. Bumping this
         // one line is the ONLY per-CM maintenance required to keep the
         // on-device stamp accurate — no other file needs to change.
-        buildConfigField("String", "CM_VERSION", "\"v0.23\"")
+        buildConfigField("String", "CM_VERSION", "\"v0.24\"")
+
+        // Which splash animation plays on launch: "coin" (default) or
+        // "origami". A build-time config value, same pattern as the two
+        // fields above — not a runtime user-facing setting. See
+        // MainActivity.kt for how this is read.
+        buildConfigField("String", "SPLASH_ANIMATION", "\"origami\"")
     }
 
     buildTypes {
