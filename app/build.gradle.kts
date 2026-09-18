@@ -17,6 +17,13 @@ val localProperties = Properties().apply {
     }
 }
 
+// Actual config values live here, as plain vals — the buildConfigField calls
+// below just reference these via string interpolation, instead of each
+// value being buried inline inside an escaped-quote string. Edit a value
+// here; nothing else needs to change to pick it up.
+val cmVersion = "v0.25"
+val splashAnimation = "coin" // "coin" or "origami"
+
 android {
     namespace = "com.example.githubissuefinder"
     compileSdk {
@@ -41,16 +48,15 @@ android {
         // Single source of truth for the on-device Commit Milestone version
         // stamp (see ui/components/VersionLabel.kt). Distinct from
         // versionName/versionCode above, which track real Android app
-        // releases, not this project's internal CM numbering. Bumping this
-        // one line is the ONLY per-CM maintenance required to keep the
-        // on-device stamp accurate — no other file needs to change.
-        buildConfigField("String", "CM_VERSION", "\"v0.24\"")
+        // releases, not this project's internal CM numbering. Bumping the
+        // cmVersion val above is the ONLY per-CM maintenance required to
+        // keep the on-device stamp accurate — no other file needs to change.
+        buildConfigField("String", "CM_VERSION", "\"$cmVersion\"")
 
-        // Which splash animation plays on launch: "coin" (default) or
-        // "origami". A build-time config value, same pattern as the two
-        // fields above — not a runtime user-facing setting. See
-        // MainActivity.kt for how this is read.
-        buildConfigField("String", "SPLASH_ANIMATION", "\"origami\"")
+        // Which splash animation plays on launch. A build-time config
+        // value, same pattern as the field above — not a runtime
+        // user-facing setting. See MainActivity.kt for how this is read.
+        buildConfigField("String", "SPLASH_ANIMATION", "\"$splashAnimation\"")
     }
 
     buildTypes {
