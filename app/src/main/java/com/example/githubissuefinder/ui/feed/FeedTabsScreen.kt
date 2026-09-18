@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.ui.feed
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,9 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,16 +41,8 @@ import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.insights.InsightsScreen
-import io.androidpoet.drafter.gauge.GaugeChart
-import io.androidpoet.drafter.gauge.GaugeChartRenderer
-import io.androidpoet.drafter.gauge.model.GaugeData
-
-// NOTE: GaugeChart, GaugeChartRenderer, and GaugeData are intentionally
-// NOT imported here. Their constructor shape is confirmed directly from
-// Drafter's official Kotlin README (not the unrelated Swift sibling
-// project's changelog, which uses a different, incompatible API shape) —
-// only the package path is unconfirmed, same situation as v0.7 and
-// v0.15. See README.txt for the Android Studio quick-fix steps.
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Owns the single Feed destination's shared TopAppBar and a top TabRow
@@ -52,8 +50,18 @@ import io.androidpoet.drafter.gauge.model.GaugeData
  *
  * The rate-limit indicator (see v0.12/v0.13) stays a compact tappable
  * chip in the TopAppBar — there genuinely isn't room to render a legible
- * dial in that constrained space. Tapping it opens a dialog that
- * includes an actual GaugeChart (see v0.17), not just plain text rows.
+ * dial in that constrained space. Tapping it opens a dialog with a
+ * speedometer-style dial.
+ *
+ * As of this Commit Milestone, that dial is a hand-built Compose Canvas
+ * drawing (RateLimitDial below), NOT Drafter's GaugeChart. Reason:
+ * Drafter's GaugeData exposes only a single color parameter — there's no
+ * documented way to give it a fixed, position-based 4-stop gradient
+ * (red-left to green-right, like a classic speedometer red-line). That's
+ * a real, confirmed limit of the library's API, not something worth
+ * guessing around — so this specific piece is drawn directly with
+ * Canvas + Brush.sweepGradient, both stable, well-documented core Compose
+ * APIs, rather than betting on an unconfirmed Drafter feature.
  *
  * selectedTab uses rememberSaveable (see v0.19) so returning from Detail
  * restores whichever tab (List/Insights) the person was actually on,
@@ -66,13 +74,6 @@ fun FeedTabsScreen(
     onIssueClick: (issueId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // rememberSaveable, not remember: Navigation Compose disposes this
-    // destination's composition when Detail is pushed on top, and plain
-    // remember does not survive that dispose/recompose cycle — it would
-    // silently reset to List every time someone navigates back from
-    // Detail, regardless of which tab they were actually on. showRateLimitDialog
-    // stays plain remember deliberately: resetting a dialog to "closed"
-    // on return from Detail is reasonable, expected behavior, not a bug.
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
     val feedState by CurrentFeedState.state.collectAsStateWithLifecycle()
@@ -165,18 +166,7 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                 Text("No rate limit data available yet.")
             } else {
                 Column {
-                    GaugeChart(
-                        renderer = GaugeChartRenderer(
-                            GaugeData(
-                                value = info.remaining.toFloat(),
-                                min = 0f,
-                                max = info.limit.toFloat().coerceAtLeast(1f),
-                                label = "Remaining",
-                                color = gaugeColorFor(info),
-                            ),
-                        ),
-                        modifier = Modifier.fillMaxWidth().height(200.dp),
-                    )
+                    RateLimitDial(info = info)
                     RateLimitRow("Remaining", "${info.remaining}")
                     RateLimitRow("Limit", "${info.limit}")
                     RateLimitRow("Used", "${info.used}")
@@ -195,18 +185,89 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 }
 
 /**
- * Drafter's GaugeData takes a single color, not a built-in two-tone
- * green-to-red split — so instead of a fixed dial color, this computes
- * one dynamically from how much capacity remains: green when plentiful,
- * sliding toward red as it depletes. Same visual "danger" signal the
- * original speedometer concept was after, built on the confirmed, real
- * API rather than an unconfirmed multi-color feature.
+ * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
+ * evenly stepped through orange and yellow — a classic speedometer
+ * red-line convention, independent of the current value. A separate
+ * pointer dot marks where the current remaining/limit ratio actually
+ * falls along that fixed track. This is a deliberate design change from
+ * v0.17: the track's colors no longer shift based on the value (that was
+ * a workaround for Drafter's single-color limit) — now the track is
+ * fixed and the pointer moves, which is both what was actually asked for
+ * and a more standard gauge convention.
+ *
+ * Text ("29 Remaining") is rendered as ordinary Compose Text below the
+ * Canvas, rather than drawn inside the arc via Canvas.drawText — simpler
+ * and safer to lay out correctly than measuring/centering native text
+ * inside a curved region.
  */
-private fun gaugeColorFor(info: RateLimitInfo): Color {
+@Composable
+private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
     val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
-    val depleted = Color(0xFFC62828)
-    val full = Color(0xFF2E7D32)
-    return lerp(depleted, full, ratio)
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val dialogBackground = MaterialTheme.colorScheme.surface
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
+    ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+            val strokeWidthPx = 20.dp.toPx()
+            val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
+            val center = Offset(size.width / 2f, size.height - strokeWidthPx / 2f)
+            val arcTopLeft = Offset(center.x - radius, center.y - radius)
+            val arcSize = Size(radius * 2f, radius * 2f)
+
+            // Fixed track: red at 180° (left/"0" end) through orange and
+            // yellow, to green at 360°/0° (right/"max" end) — the visible
+            // half of a full sweepGradient. The 0.0-0.5 stops (the
+            // invisible bottom-right-to-left half) are never drawn by the
+            // drawArc call below, so their exact color doesn't matter.
+            val trackBrush = Brush.sweepGradient(
+                0.0f to Color(0xFF43A047),
+                0.5f to Color(0xFFE53935),
+                0.667f to Color(0xFFFB8C00),
+                0.833f to Color(0xFFFDD835),
+                1.0f to Color(0xFF43A047),
+                center = center,
+            )
+
+            drawArc(
+                brush = trackBrush,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+            )
+
+            // Pointer position: ratio=0 (empty) -> 180° (left/red).
+            // ratio=1 (full) -> 360°/0° (right/green).
+            val pointerAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
+            val pointerX = center.x + radius * cos(pointerAngleRad).toFloat()
+            val pointerY = center.y + radius * sin(pointerAngleRad).toFloat()
+            val pointerRadius = strokeWidthPx / 2f + 4.dp.toPx()
+
+            drawCircle(color = dialogBackground, radius = pointerRadius, center = Offset(pointerX, pointerY))
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.3f),
+                radius = pointerRadius,
+                center = Offset(pointerX, pointerY),
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
+
+        Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
+        Text("Remaining", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariant)
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("0", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+            Text("${info.limit}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+        }
+    }
 }
 
 @Composable

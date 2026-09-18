@@ -44,7 +44,7 @@ android {
         // releases, not this project's internal CM numbering. Bumping this
         // one line is the ONLY per-CM maintenance required to keep the
         // on-device stamp accurate — no other file needs to change.
-        buildConfigField("String", "CM_VERSION", "\"v0.21\"")
+        buildConfigField("String", "CM_VERSION", "\"v0.22\"")
     }
 
     buildTypes {
