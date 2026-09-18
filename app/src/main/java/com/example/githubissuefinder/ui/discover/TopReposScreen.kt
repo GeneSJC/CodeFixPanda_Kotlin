@@ -16,7 +16,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -36,6 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
+import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
+import com.example.githubissuefinder.ui.splash.SplashScreen
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -45,8 +50,21 @@ import com.example.githubissuefinder.ui.components.LanguageFilterRow
  * uses (v0.27).
  *
  * The "ⓘ" beside the title (v0.28) opens a dialog explaining the ranking
- * formula in plain language — same pattern already used for Insights'
- * per-chart info dialog (v0.20) and Feed's label info dialog (v0.23).
+ * formula. The hamburger menu (☰, v0.31) offers "Play Origami Animation"
+ * / "Play Coin Animation" — both replay the corresponding splash as an
+ * OVERLAY drawn on top of this same composable, not by navigating away
+ * to a different screen. This is deliberate: replayAnimation is local
+ * state inside THIS function, so viewModel() above is only ever called
+ * once per real session — toggling the overlay is just a recomposition,
+ * not a disposal/recreation of TopReposScreen or its ViewModel. Language
+ * filter selection, loaded repo list, and scroll position all survive a
+ * replay untouched, exactly because this screen is never actually torn
+ * down underneath the overlay.
+ *
+ * Menu presented as a simple DropdownMenu anchored to the hamburger
+ * icon, not a full slide-out ModalNavigationDrawer — appropriately
+ * modest for 2 actions; explicitly flagged as "get into place first,"
+ * to be organized further once more menu items exist.
  *
  * Tapping a repo is intentionally a no-op for now (onRepoClick is wired
  * to an empty lambda in MainActivity) — scoped Feed/Insights/Bookmarks
@@ -65,62 +83,99 @@ fun TopReposScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var replayAnimation by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("Top Repos") },
-                actions = {
-                    Text(
-                        "ⓘ",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .clickable { showInfoDialog = true }
-                            .padding(end = 16.dp),
-                    )
-                },
-            )
-        },
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            LanguageFilterRow(
-                selected = uiState.selectedLanguage,
-                onSelect = viewModel::onLanguageSelected,
-            )
-
-            when {
-                uiState.noTokenConfigured -> CenteredMessage(
-                    text = "This screen needs a live GitHub connection — add a token to " +
-                        "local.properties to see ranked repos here. No sample-data " +
-                        "fallback yet for this screen.",
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Top Repos") },
+                    navigationIcon = {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Text("☰", style = MaterialTheme.typography.titleLarge)
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Play Origami Animation") },
+                                    onClick = {
+                                        showMenu = false
+                                        replayAnimation = "origami"
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Play Coin Animation") },
+                                    onClick = {
+                                        showMenu = false
+                                        replayAnimation = "coin"
+                                    },
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        Text(
+                            "ⓘ",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .clickable { showInfoDialog = true }
+                                .padding(end = 16.dp),
+                        )
+                    },
                 )
-                uiState.isLoading && uiState.repos.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-                uiState.errorMessage != null && uiState.repos.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
-                        Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
-                            Text("Retry")
+            },
+        ) { padding ->
+            Column(modifier = Modifier.padding(padding)) {
+                LanguageFilterRow(
+                    selected = uiState.selectedLanguage,
+                    onSelect = viewModel::onLanguageSelected,
+                )
+
+                when {
+                    uiState.noTokenConfigured -> CenteredMessage(
+                        text = "This screen needs a live GitHub connection — add a token to " +
+                            "local.properties to see ranked repos here. No sample-data " +
+                            "fallback yet for this screen.",
+                    )
+                    uiState.isLoading && uiState.repos.isEmpty() -> Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                    uiState.errorMessage != null && uiState.repos.isEmpty() -> Box(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                            Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                    else -> LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(uiState.repos, key = { it.id }) { repo ->
+                            RepoCard(repo = repo, onClick = { onRepoClick(repo) })
                         }
                     }
                 }
-                else -> LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(uiState.repos, key = { it.id }) { repo ->
-                        RepoCard(repo = repo, onClick = { onRepoClick(repo) })
-                    }
-                }
+            }
+        }
+
+        if (replayAnimation != null) {
+            val onFinished = { replayAnimation = null }
+            when (replayAnimation) {
+                "origami" -> OrigamiSplashScreen(onFinished = onFinished)
+                else -> SplashScreen(onFinished = onFinished)
             }
         }
     }
