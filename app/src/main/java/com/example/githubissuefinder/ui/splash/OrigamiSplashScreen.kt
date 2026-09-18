@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.splash
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -18,80 +17,68 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
-private val DIAMOND_WIDTH = 160.dp
-private val DIAMOND_HALF_HEIGHT = 80.dp
-private const val FOLD_MS = 700
-private const val PAUSE_MS = 200L
+private const val APPEAR_MS = 400
+private const val HOLD_MS = 1400L
 
 /**
- * A one-shot ~5 second brand animation replicating the first two real
- * folds shared by the origami bird/crane/boat sequences referenced when
- * building this: a diamond (a square, drawn lying on its side) folds in
- * half along its horizontal midline into a triangle, then that triangle
- * folds in half again along its vertical midline into a smaller
- * triangle. Deliberately stops there — the crane's later squash-folds
- * (corners tucking INTO the model) are a much harder class of problem
- * and weren't attempted, per the explicit "just start it" scope.
+ * A "stop-motion" brand animation: a stack of colored shapes appear one
+ * at a time — each fading/scaling in at a fixed, slightly offset and
+ * rotated position, staying visible as the next one lands partially over
+ * it — followed by the shared "GH" brand mark and app name as the final
+ * frame.
  *
- * WHY THIS AVOIDS THE RISK THE PREVIOUS TWO ATTEMPTS HAD: both earlier
- * versions needed to combine a rotation around one axis with a
- * DIFFERENT static rotation on the same layer, which isn't something
- * this project could verify composes correctly without seeing it
- * render. This version sidesteps that entirely — every shape is drawn
- * ALREADY oriented as a diamond (not as a square that then gets
- * rotated), so both fold hinges are naturally horizontal or vertical
- * from the start. Fold 1 is a plain rotationX around a horizontal
- * hinge; fold 2 is a plain rotationY around a vertical hinge on the
- * result of fold 1. Neither needs a compound rotation on one layer —
- * each is exactly as simple as the coin flip's own single rotation.
+ * ORIGIN OF THIS DESIGN: an earlier version of this file attempted a
+ * literal real-origami fold sequence (diamond -> triangle -> smaller
+ * triangle). When run, the tween easing plus the pause between folds
+ * produced a distinct "snap into a pose, hold, snap to the next" rhythm
+ * — closer to classic cel animation (draw a frame, hold it, draw the
+ * next) than to smooth continuous folding. That rhythm was explicitly
+ * preferred over pursuing smoother "more accurate" folding, so this
+ * version leans into it deliberately: every shape here is a static
+ * appear-and-hold frame, not an attempt at a physically continuous fold.
  *
- * Three pieces, each independently simple:
- *  - topHalf: the diamond's top triangle. Animates rotationX (0->180°)
- *    during fold 1, hinged at its own bottom edge, then stays frozen.
- *  - bottomLeftHalf: the LEFT half of the diamond's bottom triangle.
- *    Never animates — it's the stationary reference for fold 2.
- *  - bottomRightHalf: the RIGHT half of the diamond's bottom triangle.
- *    Animates rotationY (0->180°) during fold 2, hinged at its own
- *    left edge (the shared vertical centerline).
- * Composed in that order (topHalf first) so it renders BELOW the
- * bottom pieces — during fold 1 the two halves barely overlap until
- * the very end, so this doesn't hide fold 1, and it means fold 2's
- * rotation (on top) stays visible instead of being covered by the
- * now-frozen top piece.
+ * Each shape's position/rotation is a fixed constant, not animated — the
+ * ONLY animated properties are alpha and scale (a simple fade+grow-in),
+ * which is why this carries none of the rotation-axis-composition risk
+ * the fold-based attempts had. This is as low-risk as the original coin
+ * flip's own single rotation.
+ *
+ * Total runtime is intentionally longer than the earlier ~5 second
+ * target (roughly 7-8 seconds) — compressing the hold times back down
+ * would undercut the exact "cartoon-y, clunky-but-charming" quality that
+ * was the whole point of this direction.
  *
  * Selectable via BuildConfig.SPLASH_ANIMATION ("origami"). Built
- * entirely with core Compose APIs (Canvas + Path, graphicsLayer
- * rotationX/rotationY, Animatable) — no third-party dependency.
- *
- * Exact corner alignment between pieces is a reasonable-effort match
- * to the reference diagrams, not pixel-verified against a running
- * device — treat as a likely candidate for a small follow-up tuning
- * pass, same caveat every splash variant in this project has had.
+ * entirely with core Compose APIs (Canvas + Path, graphicsLayer,
+ * Animatable) — no third-party dependency. Exact shape positions are a
+ * reasonable-effort layout, not visually tuned against a running
+ * device — same caveat every splash variant in this project has had.
  */
 @Composable
 fun OrigamiSplashScreen(onFinished: () -> Unit) {
-    val density = LocalDensity.current
-    val fold1 = remember { Animatable(0f) }
-    val fold2 = remember { Animatable(0f) }
-    val revealAlpha = remember { Animatable(0f) }
+    val shape1Progress = remember { Animatable(0f) }
+    val shape2Progress = remember { Animatable(0f) }
+    val shape3Progress = remember { Animatable(0f) }
+    val markAlpha = remember { Animatable(0f) }
+    val nameAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        // Fold 1: diamond -> triangle.
-        fold1.animateTo(180f, animationSpec = tween(durationMillis = FOLD_MS, easing = LinearOutSlowInEasing))
-        delay(PAUSE_MS)
-        // Fold 2: triangle -> smaller triangle.
-        fold2.animateTo(180f, animationSpec = tween(durationMillis = FOLD_MS, easing = LinearOutSlowInEasing))
-        delay(PAUSE_MS)
-        // Brand mark + app name fade in together, then hold before handoff.
-        revealAlpha.animateTo(1f, animationSpec = tween(durationMillis = 450))
-        delay(2800)
+        shape1Progress.animateTo(1f, animationSpec = tween(APPEAR_MS))
+        delay(HOLD_MS)
+        shape2Progress.animateTo(1f, animationSpec = tween(APPEAR_MS))
+        delay(HOLD_MS)
+        shape3Progress.animateTo(1f, animationSpec = tween(APPEAR_MS))
+        delay(HOLD_MS)
+        markAlpha.animateTo(1f, animationSpec = tween(APPEAR_MS))
+        delay(500)
+        nameAlpha.animateTo(1f, animationSpec = tween(APPEAR_MS))
+        delay(2200)
         onFinished()
     }
 
@@ -100,87 +87,41 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // The final folded shape lands in the LEFT half of this box
-            // (bottomRightHalf folds ONTO the stationary bottomLeftHalf),
-            // so the whole assembly is shifted left by a quarter-width to
-            // bring that final shape's own center to the screen center.
-            Box(
-                modifier = Modifier
-                    .size(width = DIAMOND_WIDTH, height = DIAMOND_HALF_HEIGHT * 2)
-                    .offset(x = -(DIAMOND_WIDTH / 4)),
-            ) {
-                val primary = MaterialTheme.colorScheme.primary
-                val primaryDim = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-
-                // topHalf: apex at top, base at its own bottom edge (the hinge).
-                Canvas(
+            Box(modifier = Modifier.size(220.dp)) {
+                // Shape 1: the original downward triangle, brand green.
+                TriangleShape(
+                    color = Color(0xFF0F6E56),
+                    progress = shape1Progress.value,
                     modifier = Modifier
-                        .size(width = DIAMOND_WIDTH, height = DIAMOND_HALF_HEIGHT)
-                        .offset(x = 0.dp, y = 0.dp)
-                        .graphicsLayer {
-                            rotationX = fold1.value
-                            transformOrigin = TransformOrigin(0.5f, 1f)
-                            cameraDistance = 16f * density.density
-                        },
-                ) {
-                    val path = Path().apply {
-                        moveTo(size.width / 2f, 0f)
-                        lineTo(size.width, size.height)
-                        lineTo(0f, size.height)
-                        close()
-                    }
-                    drawPath(path, color = primary)
-                }
-
-                // bottomLeftHalf: static, half the width, right-triangle shape.
-                Canvas(
+                        .size(140.dp)
+                        .offset(x = 30.dp, y = 30.dp),
+                )
+                // Shape 2: purple, offset down-right, tilted — leaves a
+                // corner of shape 1 visible behind/above it.
+                TriangleShape(
+                    color = Color(0xFF534AB7),
+                    progress = shape2Progress.value,
+                    rotationDegrees = 18f,
                     modifier = Modifier
-                        .size(width = DIAMOND_WIDTH / 2, height = DIAMOND_HALF_HEIGHT)
-                        .offset(x = 0.dp, y = DIAMOND_HALF_HEIGHT),
-                ) {
-                    val path = Path().apply {
-                        moveTo(0f, 0f)
-                        lineTo(size.width, 0f)
-                        lineTo(size.width, size.height)
-                        close()
-                    }
-                    drawPath(path, color = primaryDim)
-                }
-
-                // bottomRightHalf: animates rotationY during fold 2, hinged at its own left edge.
-                Canvas(
+                        .size(110.dp)
+                        .offset(x = 75.dp, y = 60.dp),
+                )
+                // Shape 3: blue, offset again, tilted the other way — leaves
+                // slivers of both earlier shapes visible.
+                TriangleShape(
+                    color = Color(0xFF0B5FA5),
+                    progress = shape3Progress.value,
+                    rotationDegrees = -14f,
                     modifier = Modifier
-                        .size(width = DIAMOND_WIDTH / 2, height = DIAMOND_HALF_HEIGHT)
-                        .offset(x = DIAMOND_WIDTH / 2, y = DIAMOND_HALF_HEIGHT)
-                        .graphicsLayer {
-                            rotationY = fold2.value
-                            transformOrigin = TransformOrigin(0f, 0f)
-                            cameraDistance = 16f * density.density
-                        },
-                ) {
-                    val path = Path().apply {
-                        moveTo(0f, 0f)
-                        lineTo(size.width, 0f)
-                        lineTo(0f, size.height)
-                        close()
-                    }
-                    drawPath(path, color = primary)
-                }
-
-                // Brand mark centered on bottomLeftHalf's own footprint —
-                // where the folded result actually ends up, not the
-                // diamond's original full width.
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .offset(
-                            x = DIAMOND_WIDTH / 4 - 28.dp,
-                            y = DIAMOND_HALF_HEIGHT + (DIAMOND_HALF_HEIGHT / 2) - 28.dp,
-                        ),
-                ) {
+                        .size(90.dp)
+                        .offset(x = 50.dp, y = 90.dp),
+                )
+                // Final frame: the shared brand mark, roughly centered
+                // over the accumulated shape stack.
+                Box(modifier = Modifier.offset(x = 72.dp, y = 72.dp)) {
                     SplashBrandMark(
-                        modifier = Modifier.graphicsLayer { alpha = revealAlpha.value },
-                        size = 56.dp,
+                        modifier = Modifier.graphicsLayer { alpha = markAlpha.value },
+                        size = 64.dp,
                     )
                 }
             }
@@ -191,8 +132,39 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .padding(top = 12.dp)
-                    .graphicsLayer { alpha = revealAlpha.value },
+                    .graphicsLayer { alpha = nameAlpha.value },
             )
         }
+    }
+}
+
+/**
+ * A single static (non-folding) triangle, fading and growing in from
+ * progress=0 to progress=1. rotationDegrees is a fixed cosmetic tilt,
+ * not animated — safe on its own since nothing else rotates on the same
+ * layer at the same time.
+ */
+@Composable
+private fun TriangleShape(
+    color: Color,
+    progress: Float,
+    modifier: Modifier = Modifier,
+    rotationDegrees: Float = 0f,
+) {
+    Canvas(
+        modifier = modifier.graphicsLayer {
+            alpha = progress
+            scaleX = 0.7f + 0.3f * progress
+            scaleY = 0.7f + 0.3f * progress
+            rotationZ = rotationDegrees
+        },
+    ) {
+        val path = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(size.width, 0f)
+            lineTo(size.width / 2f, size.height)
+            close()
+        }
+        drawPath(path, color = color)
     }
 }
