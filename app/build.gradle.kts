@@ -21,8 +21,8 @@ val localProperties = Properties().apply {
 // below just reference these via string interpolation, instead of each
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
-val cmVersion = "v0.28"
-val splashAnimation = "coin" // "coin" or "origami"
+val cmVersion = "v0.30"
+val splashAnimation = "origami" // "coin" or "origami"
 val landingExperience = "repoFirst" // "classic" or "repoFirst"
 
 android {
