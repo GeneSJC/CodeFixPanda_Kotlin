@@ -21,9 +21,9 @@ val localProperties = Properties().apply {
 // below just reference these via string interpolation, instead of each
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
-val cmVersion = "v0.26"
+val cmVersion = "v0.27"
 val splashAnimation = "coin" // "coin" or "origami"
-val landingExperience = "classic" // "classic" or "repoFirst"
+val landingExperience = "repoFirst" // "classic" or "repoFirst"
 
 android {
     namespace = "com.example.githubissuefinder"

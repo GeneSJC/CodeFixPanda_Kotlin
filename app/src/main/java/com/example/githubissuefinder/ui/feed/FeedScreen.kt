@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.model.IssueLabelFilter
-import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.ui.components.IssueCard
+import com.example.githubissuefinder.ui.components.LanguageFilterRow
 
 /**
  * Now backed by FeedViewModel and real GitHub Search API data, instead of
@@ -50,6 +50,10 @@ import com.example.githubissuefinder.ui.components.IssueCard
  * "good first issue" and "help wanted" actually mean — these are
  * GitHub-wide conventions applied by each repo's own maintainers, not
  * something this app defines or enforces.
+ *
+ * LanguageFilterRow is now shared with the Discover "Top Repos" screen
+ * (v0.26) — extracted to ui/components/ so both render identical options
+ * from one source.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,22 +200,6 @@ private fun LabelFilterRow(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
     ) {
         items(IssueLabelFilter.entries) { option ->
-            FilterChip(
-                selected = option == selected,
-                onClick = { onSelect(option) },
-                label = { Text(option.displayName) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun LanguageFilterRow(selected: LanguageFilter, onSelect: (LanguageFilter) -> Unit) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-    ) {
-        items(LanguageFilter.entries) { option ->
             FilterChip(
                 selected = option == selected,
                 onClick = { onSelect(option) },

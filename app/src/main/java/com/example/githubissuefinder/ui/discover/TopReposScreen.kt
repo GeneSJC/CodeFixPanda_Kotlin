@@ -29,12 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.model.Repo
+import com.example.githubissuefinder.ui.components.LanguageFilterRow
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
  * discussion, agreed for a build-time-switchable redesign via
  * BuildConfig.LANDING_EXPERIENCE — see MainActivity.kt). A ranked Top 20
- * Kotlin repos list.
+ * repos list, filterable by language via the same LanguageFilterRow Feed
+ * uses (v0.27) — previously hardcoded to Kotlin only (v0.26).
+ *
+ * Title is now static ("Top Repos") rather than embedding the language
+ * name — avoids awkward phrasing for the "Any" option ("Top Any Repos"),
+ * with the language row itself showing the active selection instead.
  *
  * Tapping a repo is intentionally a no-op for now (onRepoClick is wired
  * to an empty lambda in MainActivity) — scoped Feed/Insights/Bookmarks
@@ -55,39 +61,44 @@ fun TopReposScreen(
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Top Kotlin Repos") }) },
+        topBar = { TopAppBar(title = { Text("Top Repos") }) },
     ) { padding ->
-        when {
-            uiState.noTokenConfigured -> CenteredMessage(
-                padding = padding,
-                text = "This screen needs a live GitHub connection — add a token to " +
-                    "local.properties to see ranked repos here. No sample-data " +
-                    "fallback yet for this screen.",
+        Column(modifier = Modifier.padding(padding)) {
+            LanguageFilterRow(
+                selected = uiState.selectedLanguage,
+                onSelect = viewModel::onLanguageSelected,
             )
-            uiState.isLoading && uiState.repos.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-            uiState.errorMessage != null && uiState.repos.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
-                    Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
-                        Text("Retry")
+
+            when {
+                uiState.noTokenConfigured -> CenteredMessage(
+                    text = "This screen needs a live GitHub connection — add a token to " +
+                        "local.properties to see ranked repos here. No sample-data " +
+                        "fallback yet for this screen.",
+                )
+                uiState.isLoading && uiState.repos.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+                uiState.errorMessage != null && uiState.repos.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                        Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
+                            Text("Retry")
+                        }
                     }
                 }
-            }
-            else -> LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(uiState.repos, key = { it.id }) { repo ->
-                    RepoCard(repo = repo, onClick = { onRepoClick(repo) })
+                else -> LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(uiState.repos, key = { it.id }) { repo ->
+                        RepoCard(repo = repo, onClick = { onRepoClick(repo) })
+                    }
                 }
             }
         }
@@ -95,9 +106,9 @@ fun TopReposScreen(
 }
 
 @Composable
-private fun CenteredMessage(padding: PaddingValues, text: String) {
+private fun CenteredMessage(text: String) {
     Box(
-        modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

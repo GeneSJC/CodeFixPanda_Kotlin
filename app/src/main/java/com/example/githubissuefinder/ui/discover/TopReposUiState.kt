@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.Repo
 
 data class TopReposUiState(
@@ -13,4 +14,6 @@ data class TopReposUiState(
      * proven out. A token is required to see anything here for now.
      */
     val noTokenConfigured: Boolean = false,
+    /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
+    val selectedLanguage: LanguageFilter = LanguageFilter.KOTLIN,
 )
