@@ -21,7 +21,7 @@ val localProperties = Properties().apply {
 // below just reference these via string interpolation, instead of each
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
-val cmVersion = "v0.27"
+val cmVersion = "v0.28"
 val splashAnimation = "coin" // "coin" or "origami"
 val landingExperience = "repoFirst" // "classic" or "repoFirst"
 
@@ -59,9 +59,10 @@ android {
         // user-facing setting. See MainActivity.kt for how this is read.
         buildConfigField("String", "SPLASH_ANIMATION", "\"$splashAnimation\"")
 
-        // Which post-splash experience shows: "classic" (today's existing
-        // tabs flow — completely untouched by this) or "repoFirst" (the
-        // in-progress repo-first redesign, CM 1 as of this version). Same
+        // Which post-splash experience shows: "repoFirst" (the Discover
+        // landing screen — now the default as of v0.28) or "classic" (the
+        // original tabs flow, still fully intact and reachable by setting
+        // this back). Same
         // build-time "branch by abstraction" pattern as the two fields
         // above — see MainActivity.kt.
         buildConfigField("String", "LANDING_EXPERIENCE", "\"$landingExperience\"")

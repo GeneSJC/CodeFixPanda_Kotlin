@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,9 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -36,11 +42,11 @@ import com.example.githubissuefinder.ui.components.LanguageFilterRow
  * discussion, agreed for a build-time-switchable redesign via
  * BuildConfig.LANDING_EXPERIENCE — see MainActivity.kt). A ranked Top 20
  * repos list, filterable by language via the same LanguageFilterRow Feed
- * uses (v0.27) — previously hardcoded to Kotlin only (v0.26).
+ * uses (v0.27).
  *
- * Title is now static ("Top Repos") rather than embedding the language
- * name — avoids awkward phrasing for the "Any" option ("Top Any Repos"),
- * with the language row itself showing the active selection instead.
+ * The "ⓘ" beside the title (v0.28) opens a dialog explaining the ranking
+ * formula in plain language — same pattern already used for Insights'
+ * per-chart info dialog (v0.20) and Feed's label info dialog (v0.23).
  *
  * Tapping a repo is intentionally a no-op for now (onRepoClick is wired
  * to an empty lambda in MainActivity) — scoped Feed/Insights/Bookmarks
@@ -58,10 +64,25 @@ fun TopReposScreen(
     viewModel: TopReposViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Top Repos") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Top Repos") },
+                actions = {
+                    Text(
+                        "ⓘ",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable { showInfoDialog = true }
+                            .padding(end = 16.dp),
+                    )
+                },
+            )
+        },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             LanguageFilterRow(
@@ -103,6 +124,62 @@ fun TopReposScreen(
             }
         }
     }
+
+    if (showInfoDialog) {
+        RankingInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RankingInfoDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Got it") }
+        },
+        title = { Text("How are these repos ranked?") },
+        text = {
+            Column {
+                Text(
+                    "Each repo gets a combined score, shown as the number on its card, " +
+                        "based on four things:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+                Text(
+                    "• Stars, relative to others in this list — the biggest single factor.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                Text(
+                    "• Forks — a sign the project is actually being built on, not just " +
+                        "bookmarked.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                Text(
+                    "• How recently it was updated — very recent activity counts more, " +
+                        "fading out over about a year.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                Text(
+                    "• Open issue count — a smaller number scores slightly better, since a " +
+                        "huge backlog can signal an overwhelmed or stalled project.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+                Text(
+                    "This reflects general repo health, not whether it actually has open " +
+                        "good-first-issues right now — GitHub's search doesn't support " +
+                        "filtering repos by that directly.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    )
 }
 
 @Composable
