@@ -9,6 +9,8 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.network.GitHubApiClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val TOP_N = 20
+private const val COOLDOWN_SECONDS = 60
 
 /**
  * CM 1 of the repo-first "Discover" flow (option C from the architecture
@@ -24,23 +27,26 @@ private const val TOP_N = 20
  * language via repository search, scores them via scoreAndRankRepos(),
  * and keeps the top 20.
  *
- * v0.34: after the ranked list loads, separately annotates EACH visible
- * repo with its actual open "good first issue" count — the first half
- * of a two-step plan (repos-first, annotate with real counts, THEN a
- * later CM adds re-ranking/filtering based on those counts). This
- * directly addresses the known limitation flagged since CM 1: a repo
- * can rank highly on general health while having zero matching issues.
- * Reuses the existing searchIssues() endpoint/DTO — no new network
- * surface needed, since we only read totalCount from the response.
+ * v0.34: annotates each visible repo with its actual open
+ * good-first-issue count (a separate call per repo).
  *
- * RATE LIMIT NOTE: annotating all 20 visible repos means 20 additional
- * Search API calls (same bucket as the repo search and Feed's issue
- * search) per screen load, on top of the 1 repo-search call — 21 calls
- * in a burst, comfortably under the 30/min cap for a single load, but
- * worth knowing that switching the language filter twice within the
- * same minute would approach ~42 calls and risk a 403. Each repo's
- * count fails independently and silently (stays null) rather than
- * disrupting the rest of the list if one lookup errors.
+ * v0.35: adds a 60-second cooldown between loads, guarding
+ * onLanguageSelected() specifically. This is NOT "block after the 2nd
+ * switch in a minute" — it's "every load starts a 60s cooldown before
+ * the next one," because the arithmetic makes those the same rule in
+ * practice: one load is already 21 Search API calls (1 repo search +
+ * 20 per-repo issue checks from v0.34), and a SECOND load within that
+ * same 60-second window already reaches ~42 calls — over the 30/min
+ * cap on the second attempt, not the third. Guarding every load
+ * (including the very first, on screen-open) rather than only
+ * "switches" reflects that the expensive thing is the load itself, not
+ * specifically the act of changing languages.
+ *
+ * retry() is DELIBERATELY exempt from the cooldown: a failed load may
+ * not have fired all 20 per-repo calls in the first place (e.g. if the
+ * repo search itself failed, zero of them did), so blocking a genuine
+ * error-recovery retry for a full minute seemed like the wrong
+ * tradeoff. This is a real design choice, not an oversight.
  *
  * Reuses the same LanguageFilter enum Feed uses (v0.8), including its
  * ANY option, rather than a second parallel set of language options.
@@ -57,15 +63,27 @@ class TopReposViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(TopReposUiState())
     val uiState: StateFlow<TopReposUiState> = _uiState.asStateFlow()
 
+    private var lastLoadAtMs = 0L
+    private var cooldownJob: Job? = null
+
     init {
         load(uiState.value.selectedLanguage)
     }
 
     fun onLanguageSelected(language: LanguageFilter) {
+        val elapsedMs = System.currentTimeMillis() - lastLoadAtMs
+        if (lastLoadAtMs != 0L && elapsedMs < COOLDOWN_SECONDS * 1000L) {
+            // Still cooling down from the last load — ignore this switch
+            // attempt rather than risk exceeding the Search API's 30/min
+            // cap. The visible countdown (started by the previous load)
+            // is already telling the user why.
+            return
+        }
         _uiState.update { it.copy(selectedLanguage = language) }
         load(language)
     }
 
+    /** Deliberately exempt from the cooldown — see class doc comment. */
     fun retry() = load(uiState.value.selectedLanguage)
 
     private fun load(language: LanguageFilter) {
@@ -73,6 +91,9 @@ class TopReposViewModel : ViewModel() {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
         }
+
+        lastLoadAtMs = System.currentTimeMillis()
+        startCooldownCountdown()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
@@ -103,6 +124,19 @@ class TopReposViewModel : ViewModel() {
                     )
                 }
             }
+        }
+    }
+
+    private fun startCooldownCountdown() {
+        cooldownJob?.cancel()
+        cooldownJob = viewModelScope.launch {
+            var remaining = COOLDOWN_SECONDS
+            while (remaining > 0) {
+                _uiState.update { it.copy(cooldownSecondsRemaining = remaining) }
+                delay(1000)
+                remaining--
+            }
+            _uiState.update { it.copy(cooldownSecondsRemaining = 0) }
         }
     }
 

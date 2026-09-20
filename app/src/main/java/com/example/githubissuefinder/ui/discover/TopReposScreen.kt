@@ -57,6 +57,15 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * does NOT yet factor this count in — that's a planned follow-up CM,
  * per the two-step plan (annotate first, re-rank/filter later).
  *
+ * v0.35 adds a 60-second cooldown between loads (shown as "You can
+ * switch languages again in Ns" below the language row) — annotating
+ * 20 repos costs 21 Search API calls per load, so a second load within
+ * the same minute already risks the 30/min cap. Language chips remain
+ * tappable during cooldown; taps are just silently ignored rather than
+ * visually disabled, matching this feature's "get into place first"
+ * scope. See TopReposViewModel's doc comment for why retry() is
+ * deliberately exempt from this cooldown.
+ *
  * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
  * offers "Play Origami Animation" / "Play Shape Stack Animation" /
  * "Play Coin Animation" — all three replay their corresponding splash as an
@@ -150,6 +159,15 @@ fun TopReposScreen(
                     selected = uiState.selectedLanguage,
                     onSelect = viewModel::onLanguageSelected,
                 )
+
+                if (uiState.cooldownSecondsRemaining > 0) {
+                    Text(
+                        "You can switch languages again in ${uiState.cooldownSecondsRemaining}s",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp, top = 2.dp, bottom = 4.dp),
+                    )
+                }
 
                 when {
                     uiState.noTokenConfigured -> CenteredMessage(

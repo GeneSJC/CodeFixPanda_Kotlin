@@ -16,4 +16,13 @@ data class TopReposUiState(
     val noTokenConfigured: Boolean = false,
     /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
     val selectedLanguage: LanguageFilter = LanguageFilter.KOTLIN,
+    /**
+     * Seconds remaining before another language switch is allowed
+     * (v0.35). 0 means switching is currently allowed. Exists because
+     * each load fires 21 Search API calls (1 repo search + 20
+     * per-repo good-first-issue checks, v0.34) — a second load within
+     * 60 seconds of the first already exceeds the 30/min Search API
+     * cap, not just a third or later one.
+     */
+    val cooldownSecondsRemaining: Int = 0,
 )
