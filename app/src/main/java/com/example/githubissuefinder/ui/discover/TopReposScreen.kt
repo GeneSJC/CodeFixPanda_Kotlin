@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
+import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
 
 /**
@@ -50,8 +51,9 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * uses (v0.27).
  *
  * The "ⓘ" beside the title (v0.28) opens a dialog explaining the ranking
- * formula. The hamburger menu (☰, v0.31) offers "Play Origami Animation"
- * / "Play Coin Animation" — both replay the corresponding splash as an
+ * formula. The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
+ * offers "Play Origami Animation" / "Play Shape Stack Animation" /
+ * "Play Coin Animation" — all three replay their corresponding splash as an
  * OVERLAY drawn on top of this same composable, not by navigating away
  * to a different screen. This is deliberate: replayAnimation is local
  * state inside THIS function, so viewModel() above is only ever called
@@ -105,6 +107,13 @@ fun TopReposScreen(
                                     onClick = {
                                         showMenu = false
                                         replayAnimation = "origami"
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Play Shape Stack Animation") },
+                                    onClick = {
+                                        showMenu = false
+                                        replayAnimation = "shapeStack"
                                     },
                                 )
                                 DropdownMenuItem(
@@ -175,6 +184,7 @@ fun TopReposScreen(
             val onFinished = { replayAnimation = null }
             when (replayAnimation) {
                 "origami" -> OrigamiSplashScreen(onFinished = onFinished)
+                "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
                 else -> SplashScreen(onFinished = onFinished)
             }
         }
