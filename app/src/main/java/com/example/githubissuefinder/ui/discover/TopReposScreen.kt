@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.BuildConfig
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,16 +66,18 @@ import java.util.Locale
  * does NOT yet factor this count in — that's a planned follow-up CM,
  * per the two-step plan (annotate first, re-rank/filter later).
  *
- * v0.35 adds a 60-second cooldown between loads (shown as "You can
- * switch languages again in Ns" below the language row) — annotating
- * 20 repos costs 21 Search API calls per load, so a second load within
- * the same minute already risks the 30/min cap. Language chips remain
- * tappable during cooldown; a blocked tap now also shows a Snackbar
- * (v0.36) — a plain Material3 Snackbar rather than a literal Android
- * Toast, since it fits this screen's existing Scaffold naturally and
- * won't queue up if tapped several times in a row the way stacked
- * system Toasts can. See TopReposViewModel's doc comment for why
- * retry() is deliberately exempt from this cooldown.
+ * v0.35 adds a 60-second cooldown between loads — annotating 20 repos
+ * costs 21 Search API calls per load, so a second load within the same
+ * minute already risks the 30/min cap. Language chips remain tappable
+ * during cooldown; a blocked tap shows a Snackbar (v0.36) — a plain
+ * Material3 Snackbar rather than a literal Android Toast, since it
+ * fits this screen's existing Scaffold naturally and won't queue up if
+ * tapped several times in a row the way stacked system Toasts can. The
+ * persistent "You can switch again in Ns" text that also existed
+ * alongside the Snackbar was removed in this same CM ("new v38") as
+ * redundant — the Snackbar alone covers it. See TopReposViewModel's
+ * doc comment for why retry() is deliberately exempt from this
+ * cooldown.
  *
  * v0.37 adds a "stars/day since creation" velocity label to each card
  * (hidden for repos under 30 days old, where it would be noise, not
@@ -80,9 +85,14 @@ import java.util.Locale
  * number, not currently a ranking factor. Repos above a threshold
  * (HOT_THRESHOLD, a starting guess) get a 🔥 and bolder styling.
  *
- * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
- * offers "Play Origami Animation" / "Play Shape Stack Animation" /
- * "Play Coin Animation" — all three replay their corresponding splash as an
+ * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33) opens
+ * with a non-interactive "GitHubIssueFinder {CM_VERSION}" header (new
+ * in this same CM) above the animation items, so the on-device version
+ * stamp is reachable from Discover the same way VersionLabel already
+ * makes it reachable from the "classic" flow's TopAppBars. Below that
+ * header, the menu offers "Play Origami Animation" / "Play Shape Stack
+ * Animation" / "Play Coin Animation" — all three replay their
+ * corresponding splash as an
  * OVERLAY drawn on top of this same composable, not by navigating away
  * to a different screen. This is deliberate: replayAnimation is local
  * state inside THIS function, so viewModel() above is only ever called
@@ -97,13 +107,10 @@ import java.util.Locale
  * modest for 2 actions; explicitly flagged as "get into place first,"
  * to be organized further once more menu items exist.
  *
- * Tapping a repo is intentionally a no-op for now (onRepoClick is wired
- * to an empty lambda in MainActivity) — scoped Feed/Insights/Bookmarks
- * for a chosen repo are deliberately deferred to later Commit
- * Milestones, per the incremental plan agreed for this feature. Rows
- * still look and feel tappable (Card's built-in ripple) so the
- * interaction reads as "not yet wired" rather than broken, once drill-in
- * is added.
+ * As of v0.38, tapping a repo opens a real repo-scoped issue list
+ * (RepoIssuesScreen), with proper back-navigation via DiscoverNavHost
+ * — onRepoClick is no longer wired to a no-op. Feed/Insights/Bookmarks
+ * scoping to a chosen repo remains a separate, future Commit Milestone.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -133,6 +140,13 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
+                                Text(
+                                    "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                )
+                                HorizontalDivider()
                                 DropdownMenuItem(
                                     text = { Text("Play Origami Animation") },
                                     onClick = {
@@ -185,15 +199,6 @@ fun TopReposScreen(
                         }
                     },
                 )
-
-                if (uiState.cooldownSecondsRemaining > 0) {
-                    Text(
-                        "You can switch languages again in ${uiState.cooldownSecondsRemaining}s",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 16.dp, top = 2.dp, bottom = 4.dp),
-                    )
-                }
 
                 when {
                     uiState.noTokenConfigured -> CenteredMessage(

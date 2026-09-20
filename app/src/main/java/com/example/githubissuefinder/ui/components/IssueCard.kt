@@ -26,6 +26,14 @@ import com.example.githubissuefinder.model.Issue
  * Issue model, since bookmark state now lives in shared state at the
  * navigation level (see AppNavHost.kt) — this keeps the sample data
  * immutable and the bookmark state as the single source of truth.
+ *
+ * showExternalLinkIndicator (v0.38, "new v38") is false by default,
+ * matching Feed's behavior — tapping a Feed card navigates to the
+ * in-app DetailScreen, not a browser, so no indicator is shown there.
+ * RepoIssuesScreen passes true, since tapping a card there opens the
+ * issue directly in GitHub — an "↗" was used rather than a chevron
+ * ("›"), since a chevron conventionally signals drilling deeper WITHIN
+ * an app, while this action actually leaves it.
  */
 @Composable
 fun IssueCard(
@@ -33,6 +41,7 @@ fun IssueCard(
     isBookmarked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showExternalLinkIndicator: Boolean = false,
 ) {
     Card(
         onClick = onClick,
@@ -42,74 +51,91 @@ fun IssueCard(
         ),
         shape = RoundedCornerShape(16.dp),
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                )
-                Text(
-                    text = issue.repoFullName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-                if (isBookmarked) {
+        Box {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                    )
                     Text(
-                        text = "★ saved",
+                        text = issue.repoFullName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 8.dp),
+                    )
+                    if (isBookmarked) {
+                        Text(
+                            text = "★ saved",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                }
+
+                Text(
+                    text = issue.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    modifier = Modifier.padding(
+                        top = 8.dp,
+                        bottom = 10.dp,
+                        end = if (showExternalLinkIndicator) 20.dp else 0.dp,
+                    ),
+                )
+
+                if (issue.labels.isNotEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(bottom = 10.dp),
+                    ) {
+                        issue.labels.take(3).forEach { label -> LabelChip(label) }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (issue.language != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
+                            )
+                            Text(
+                                text = issue.language,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 6.dp),
+                            )
+                        }
+                    } else {
+                        Box(modifier = Modifier)
+                    }
+
+                    Text(
+                        text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            Text(
-                text = issue.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
-            )
-
-            if (issue.labels.isNotEmpty()) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(bottom = 10.dp),
-                ) {
-                    issue.labels.take(3).forEach { label -> LabelChip(label) }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (issue.language != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                        )
-                        Text(
-                            text = issue.language,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 6.dp),
-                        )
-                    }
-                } else {
-                    Box(modifier = Modifier)
-                }
-
+            if (showExternalLinkIndicator) {
                 Text(
-                    text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
-                    style = MaterialTheme.typography.bodySmall,
+                    "↗",
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 14.dp),
                 )
             }
         }

@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.githubissuefinder.ui.discover.TopReposScreen
+import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.navigation.AppNavHost
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
@@ -47,14 +47,15 @@ class MainActivity : ComponentActivity() {
                     // reachable at all times, while "repoFirst" is built up
                     // incrementally alongside it.
                     //
-                    // "repoFirst" is CM 1 of an in-progress redesign (option C
-                    // from the architecture discussion): a ranked Top Repos
-                    // landing screen. Tapping a repo is currently a no-op —
-                    // scoped Feed/Insights/Bookmarks for a chosen repo are
-                    // future Commit Milestones, built on top of this same
-                    // config switch, not a replacement for it.
+                    // "repoFirst" is the Discover flow (option C from the
+                    // architecture discussion): a ranked Top Repos landing
+                    // screen. As of v0.38, tapping a repo opens a real
+                    // repo-scoped issue list (RepoIssuesScreen) with proper
+                    // back-navigation, via DiscoverNavHost — no longer a
+                    // no-op. Feed/Insights/Bookmarks scoping to the chosen
+                    // repo remains a future Commit Milestone.
                     when (BuildConfig.LANDING_EXPERIENCE) {
-                        "repoFirst" -> TopReposScreen(onRepoClick = { /* no-op for CM 1 */ })
+                        "repoFirst" -> DiscoverNavHost()
                         else -> AppNavHost()
                     }
                 }
