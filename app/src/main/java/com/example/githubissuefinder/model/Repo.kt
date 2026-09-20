@@ -8,6 +8,15 @@ package com.example.githubissuefinder.model
  * data/RepoScoring.kt) — kept on the model so the UI can show it
  * directly, matching this project's "every number traces to something
  * real and visible" convention rather than hiding the ranking logic.
+ *
+ * goodFirstIssueCount (v0.34) is the actual number of currently-open
+ * issues labeled "good first issue" in this repo — null while that
+ * check hasn't completed yet (a separate call per repo, made after the
+ * ranked list itself loads), never a placeholder for "zero." Added to
+ * directly address the known limitation flagged since CM 1: a repo can
+ * rank highly on general health while having zero matching issues.
+ * Ranking itself does NOT yet factor this in — that's a planned,
+ * separate follow-up CM.
  */
 data class Repo(
     val id: Long,
@@ -22,4 +31,5 @@ data class Repo(
     val updatedAtLabel: String,
     val htmlUrl: String,
     val score: Float,
+    val goodFirstIssueCount: Int? = null,
 )

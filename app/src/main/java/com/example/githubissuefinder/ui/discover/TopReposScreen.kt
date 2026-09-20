@@ -51,7 +51,13 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * uses (v0.27).
  *
  * The "ⓘ" beside the title (v0.28) opens a dialog explaining the ranking
- * formula. The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
+ * formula. Each card also shows its actual open good-first-issue count
+ * (v0.34) — "Checking open issues…" while that per-repo lookup is still
+ * in flight, then the real count once it resolves. The composite score
+ * does NOT yet factor this count in — that's a planned follow-up CM,
+ * per the two-step plan (annotate first, re-rank/filter later).
+ *
+ * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
  * offers "Play Origami Animation" / "Play Shape Stack Animation" /
  * "Play Coin Animation" — all three replay their corresponding splash as an
  * OVERLAY drawn on top of this same composable, not by navigating away
@@ -236,9 +242,11 @@ private fun RankingInfoDialog(onDismiss: () -> Unit) {
                     modifier = Modifier.padding(bottom = 10.dp),
                 )
                 Text(
-                    "This reflects general repo health, not whether it actually has open " +
-                        "good-first-issues right now — GitHub's search doesn't support " +
-                        "filtering repos by that directly.",
+                    "This reflects general repo health. Each card also shows its actual " +
+                        "count of currently-open good-first-issues directly (or \"Checking " +
+                        "open issues…\" while that's still loading) — the score above doesn't " +
+                        "factor that count in yet, but you can see both at a glance. A future " +
+                        "update will let you re-rank by open-issue count directly.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -306,6 +314,24 @@ private fun RepoCard(repo: Repo, onClick: () -> Unit) {
                 Text("${repo.openIssuesCount} open issues", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(repo.updatedAtLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+
+            GoodFirstIssueCountLabel(repo.goodFirstIssueCount)
         }
     }
+}
+
+@Composable
+private fun GoodFirstIssueCountLabel(count: Int?) {
+    val (text, color) = when {
+        count == null -> "Checking open issues…" to MaterialTheme.colorScheme.onSurfaceVariant
+        count == 0 -> "No open good-first-issues" to MaterialTheme.colorScheme.onSurfaceVariant
+        count == 1 -> "1 good-first-issue open" to MaterialTheme.colorScheme.primary
+        else -> "$count good-first-issues open" to MaterialTheme.colorScheme.primary
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = color,
+        modifier = Modifier.padding(top = 6.dp),
+    )
 }
