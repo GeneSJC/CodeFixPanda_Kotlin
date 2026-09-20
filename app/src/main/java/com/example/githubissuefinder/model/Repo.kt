@@ -26,6 +26,13 @@ package com.example.githubissuefinder.model
  * metric would be noise (a brand-new repo with 50 stars on day one
  * looks "explosive" but isn't a real signal yet) — not a placeholder
  * for zero.
+ *
+ * displayTitle (v0.39, "CM B") is a humanized version of the repo
+ * slug ("github-readme-stats" -> "Github Readme Stats"), shown as the
+ * primary title, with fullName (the real owner/name path) demoted to
+ * secondary metadata underneath — see RepoNameFormatting.kt for why
+ * this is a deliberate approximation, not an attempt at the repo's
+ * "real" title (GitHub has no such field).
  */
 data class Repo(
     val id: Long,
@@ -40,6 +47,7 @@ data class Repo(
     val updatedAtLabel: String,
     val htmlUrl: String,
     val score: Float,
+    val displayTitle: String,
     val goodFirstIssueCount: Int? = null,
     val starsPerDay: Float? = null,
 )

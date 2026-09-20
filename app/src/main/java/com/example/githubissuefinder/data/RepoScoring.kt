@@ -30,6 +30,10 @@ private const val MIN_AGE_DAYS_FOR_VELOCITY = 30f
  * catching on right now" signal, not (yet) a ranking factor. Folding it
  * into the score itself is a reasonable future step once this is seen
  * in practice.
+ *
+ * displayTitle (v0.39) uses humanizeRepoName() (RepoNameFormatting.kt,
+ * same package) — a deterministic slug-to-title approximation, not an
+ * attempt at fetching/parsing each repo's actual README heading.
  */
 fun scoreAndRankRepos(candidates: List<RepoDto>): List<Repo> {
     if (candidates.isEmpty()) return emptyList()
@@ -61,6 +65,7 @@ fun RepoDto.toRepo(score: Float): Repo = Repo(
     updatedAtLabel = formatRelativeTime(updatedAt),
     htmlUrl = htmlUrl,
     score = score,
+    displayTitle = humanizeRepoName(name),
     starsPerDay = calculateStarsPerDay(stargazersCount, createdAt),
 )
 

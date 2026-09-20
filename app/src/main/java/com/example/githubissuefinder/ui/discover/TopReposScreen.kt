@@ -85,6 +85,10 @@ import java.util.Locale
  * number, not currently a ranking factor. Repos above a threshold
  * (HOT_THRESHOLD, a starting guess) get a 🔥 and bolder styling.
  *
+ * v0.39 ("CM B"): each card's title is now displayTitle (a humanized,
+ * readable name — see RepoNameFormatting.kt), with fullName (the raw
+ * owner/name path) demoted to a smaller line underneath.
+ *
  * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33) opens
  * with a non-interactive "GitHubIssueFinder {CM_VERSION}" header (new
  * in this same CM) above the animation items, so the on-device version
@@ -326,13 +330,19 @@ private fun RepoCard(repo: Repo, onClick: () -> Unit) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    repo.fullName,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        repo.displayTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        repo.fullName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.secondaryContainer,

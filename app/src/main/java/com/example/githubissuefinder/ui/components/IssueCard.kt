@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,13 +28,21 @@ import com.example.githubissuefinder.model.Issue
  * navigation level (see AppNavHost.kt) — this keeps the sample data
  * immutable and the bookmark state as the single source of truth.
  *
- * showExternalLinkIndicator (v0.38, "new v38") is false by default,
- * matching Feed's behavior — tapping a Feed card navigates to the
- * in-app DetailScreen, not a browser, so no indicator is shown there.
+ * v0.39 ("CM B"): the repo identity row is now two-tier — repoDisplayTitle
+ * (a humanized, readable name) as the more prominent line, with
+ * repoFullName (the raw owner/name path) demoted to a smaller line
+ * underneath. Addresses the original complaint directly: a mixed,
+ * cross-repo list (Feed) previously gave the repo only a small gray
+ * path, no clearly readable identity.
+ *
+ * showExternalLinkIndicator (v0.38) is false by default, matching
+ * Feed's behavior — tapping a Feed card navigates to the in-app
+ * DetailScreen, not a browser, so no indicator is shown there.
  * RepoIssuesScreen passes true, since tapping a card there opens the
- * issue directly in GitHub — an "↗" was used rather than a chevron
- * ("›"), since a chevron conventionally signals drilling deeper WITHIN
- * an app, while this action actually leaves it.
+ * issue directly in GitHub. v0.39 enlarged this to 2.5x its original
+ * text scale and put it in a small rounded badge (same visual language
+ * as the score badge elsewhere) for better visibility, per direct
+ * feedback that the original plain-text arrow was easy to miss.
  */
 @Composable
 fun IssueCard(
@@ -53,19 +62,25 @@ fun IssueCard(
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.Top) {
                     Box(
                         modifier = Modifier
                             .size(20.dp)
                             .clip(RoundedCornerShape(6.dp))
                             .background(MaterialTheme.colorScheme.secondaryContainer),
                     )
-                    Text(
-                        text = issue.repoFullName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
+                    Column(modifier = Modifier.padding(start = 8.dp)) {
+                        Text(
+                            text = issue.repoDisplayTitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = issue.repoFullName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     if (isBookmarked) {
                         Text(
                             text = "★ saved",
@@ -83,7 +98,7 @@ fun IssueCard(
                     modifier = Modifier.padding(
                         top = 8.dp,
                         bottom = 10.dp,
-                        end = if (showExternalLinkIndicator) 20.dp else 0.dp,
+                        end = if (showExternalLinkIndicator) 56.dp else 0.dp,
                     ),
                 )
 
@@ -129,14 +144,22 @@ fun IssueCard(
             }
 
             if (showExternalLinkIndicator) {
-                Text(
-                    "↗",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .padding(end = 14.dp),
-                )
+                ) {
+                    Text(
+                        "↗",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize * 2.5f,
+                        ),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    )
+                }
             }
         }
     }

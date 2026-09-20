@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +39,8 @@ import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.components.LabelFilterRow
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 
+private const val DESCRIPTION_TRUNCATE_LENGTH = 200
+
 /**
  * The repo-scoped issue list — see RepoIssuesViewModel's doc comment
  * for the full design reasoning (why no language filter, why issues
@@ -44,15 +48,25 @@ import com.example.githubissuefinder.ui.components.LabelInfoDialog
  * "no token" check here).
  *
  * The "ⓘ" beside the label filter row opens the shared LabelInfoDialog
- * (same one Feed uses, extracted in this same CM) explaining "good
- * first issue" / "help wanted." Each IssueCard shows an "↗" (see
- * IssueCard's doc comment for why not a chevron) since tapping one
- * opens GitHub directly, not an in-app screen.
+ * (same one Feed uses, extracted in v0.38) explaining "good first
+ * issue" / "help wanted." Each IssueCard shows an external-link badge
+ * (see IssueCard's doc comment) since tapping one opens GitHub
+ * directly, not an in-app screen.
  *
- * TopAppBar shows the repo's full name directly, which is deliberately
- * why this screen doesn't need a per-card repo-identity treatment the
- * way a mixed, cross-repo list would — the repo is already established
- * by the screen itself.
+ * v0.39 ("CM B"): TopAppBar now shows repo.displayTitle (humanized,
+ * readable — see RepoNameFormatting.kt) as the primary title, with
+ * repo.fullName (the raw owner/name path) as a smaller line
+ * underneath, matching the same two-tier treatment applied to
+ * TopReposScreen's cards and IssueCard's repo identity row.
+ *
+ * The repo's description sits just below the TopAppBar (not inside the
+ * TopAppBar composable itself — Material3's TopAppBar is designed to
+ * stay compact, and cramming title + path + a full description into it
+ * would fight that). Truncated to DESCRIPTION_TRUNCATE_LENGTH characters
+ * with a "Read more" link opening a simple dialog with the full text —
+ * chosen over an inline expand-in-place for reliability (no layout
+ * height animation to get right blind); easy to swap for an inline
+ * expand later if a dialog feels heavier than wanted once seen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +79,7 @@ fun RepoIssuesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showFullDescription by remember { mutableStateOf(false) }
 
     LaunchedEffect(repo.id) {
         viewModel.loadIfNeeded(repo)
@@ -74,7 +89,16 @@ fun RepoIssuesScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(repo.fullName) },
+                title = {
+                    Column {
+                        Text(repo.displayTitle, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            repo.fullName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
@@ -84,6 +108,32 @@ fun RepoIssuesScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            if (repo.description.isNotBlank()) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    val isTruncated = repo.description.length > DESCRIPTION_TRUNCATE_LENGTH
+                    val shownText = if (isTruncated) {
+                        repo.description.take(DESCRIPTION_TRUNCATE_LENGTH).trimEnd() + "…"
+                    } else {
+                        repo.description
+                    }
+                    Text(
+                        shownText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (isTruncated) {
+                        Text(
+                            "Read more",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .clickable { showFullDescription = true }
+                                .padding(top = 2.dp),
+                        )
+                    }
+                }
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 LabelFilterRow(
                     selected = uiState.selectedLabel,
@@ -153,5 +203,16 @@ fun RepoIssuesScreen(
 
     if (showInfoDialog) {
         LabelInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+
+    if (showFullDescription) {
+        AlertDialog(
+            onDismissRequest = { showFullDescription = false },
+            confirmButton = {
+                TextButton(onClick = { showFullDescription = false }) { Text("Close") }
+            },
+            title = { Text(repo.displayTitle) },
+            text = { Text(repo.description) },
+        )
     }
 }
