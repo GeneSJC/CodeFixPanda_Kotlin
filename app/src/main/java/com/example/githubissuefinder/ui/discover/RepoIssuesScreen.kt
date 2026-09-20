@@ -19,6 +19,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -27,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,10 +37,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.components.LabelFilterRow
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
+import kotlinx.coroutines.launch
 
 private const val DESCRIPTION_TRUNCATE_LENGTH = 200
 
@@ -67,6 +72,13 @@ private const val DESCRIPTION_TRUNCATE_LENGTH = 200
  * chosen over an inline expand-in-place for reliability (no layout
  * height animation to get right blind); easy to swap for an inline
  * expand later if a dialog feels heavier than wanted once seen.
+ *
+ * v0.40 ("CM C"): the label filter row now grays out whichever option
+ * has zero matching issues for this repo. GOOD_FIRST_ISSUE uses the
+ * count already fetched back on Top Repos (repo.goodFirstIssueCount);
+ * HELP_WANTED has no such pre-fetched count, so it's learned live —
+ * see RepoIssuesViewModel's doc comment. Tapping a grayed-out option
+ * shows a Snackbar explaining why, rather than reloading nothing.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +92,15 @@ fun RepoIssuesScreen(
     val context = LocalContext.current
     var showInfoDialog by remember { mutableStateOf(false) }
     var showFullDescription by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    val disabledLabels = remember(repo.goodFirstIssueCount, uiState.helpWantedKnownEmpty) {
+        buildSet {
+            if (repo.goodFirstIssueCount == 0) add(IssueLabelFilter.GOOD_FIRST_ISSUE)
+            if (uiState.helpWantedKnownEmpty) add(IssueLabelFilter.HELP_WANTED)
+        }
+    }
 
     LaunchedEffect(repo.id) {
         viewModel.loadIfNeeded(repo)
@@ -106,6 +127,7 @@ fun RepoIssuesScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             if (repo.description.isNotBlank()) {
@@ -138,6 +160,14 @@ fun RepoIssuesScreen(
                 LabelFilterRow(
                     selected = uiState.selectedLabel,
                     onSelect = { label -> viewModel.onLabelSelected(repo, label) },
+                    disabledOptions = disabledLabels,
+                    onDisabledOptionTapped = { label ->
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                "No open ${label.displayName} issues for this repo",
+                            )
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                 )
                 Text(

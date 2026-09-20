@@ -40,9 +40,9 @@ import com.example.githubissuefinder.model.Issue
  * DetailScreen, not a browser, so no indicator is shown there.
  * RepoIssuesScreen passes true, since tapping a card there opens the
  * issue directly in GitHub. v0.39 enlarged this to 2.5x its original
- * text scale and put it in a small rounded badge (same visual language
- * as the score badge elsewhere) for better visibility, per direct
- * feedback that the original plain-text arrow was easy to miss.
+ * text scale in a rounded badge; v0.40 reduced that to ~1.67x (2.5x
+ * cut by one third) and halved the badge's vertical padding, per
+ * direct feedback that 2.5x read as larger than intended.
  */
 @Composable
 fun IssueCard(
@@ -154,10 +154,11 @@ fun IssueCard(
                     Text(
                         "↗",
                         style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize * 2.5f,
+                            // Reduced from 2.5x by one third per feedback: 2.5 * (2/3) ≈ 1.67x.
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
                         ),
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
                     )
                 }
             }

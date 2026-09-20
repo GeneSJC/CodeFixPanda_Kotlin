@@ -45,6 +45,16 @@ import kotlinx.coroutines.withContext
  * loadIfNeeded() rather than loading in init{} because this ViewModel
  * doesn't know which repo it's for until the Composable tells it — see
  * RepoIssuesScreen's LaunchedEffect.
+ *
+ * v0.40 ("CM C"): loadIfNeeded() now picks a smarter initial label —
+ * if repo.goodFirstIssueCount is already known to be 0 (fetched back
+ * on Top Repos, v0.34), it starts on HELP_WANTED instead of the
+ * default GOOD_FIRST_ISSUE, so the screen doesn't land on an
+ * already-known dead end. load() also tracks helpWantedKnownEmpty,
+ * learned live the first time a HELP_WANTED load comes back empty —
+ * there's no pre-fetched count for that label the way there is for
+ * good first issue, so this is the zero-extra-cost alternative to
+ * doubling the per-repo annotation calls on Top Repos.
  */
 class RepoIssuesViewModel : ViewModel() {
 
@@ -56,7 +66,13 @@ class RepoIssuesViewModel : ViewModel() {
     fun loadIfNeeded(repo: Repo) {
         if (loadedForRepoFullName == repo.fullName) return
         loadedForRepoFullName = repo.fullName
-        load(repo, uiState.value.selectedLabel)
+        val initialLabel = if (repo.goodFirstIssueCount == 0) {
+            IssueLabelFilter.HELP_WANTED
+        } else {
+            uiState.value.selectedLabel
+        }
+        _uiState.update { it.copy(selectedLabel = initialLabel) }
+        load(repo, initialLabel)
     }
 
     fun onLabelSelected(repo: Repo, label: IssueLabelFilter) {
@@ -86,7 +102,14 @@ class RepoIssuesViewModel : ViewModel() {
                 }
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
                 val issues = body.items.map { it.toIssue(languageFilter = repo.language) }
-                _uiState.update { it.copy(issues = issues, isLoading = false) }
+                _uiState.update { state ->
+                    state.copy(
+                        issues = issues,
+                        isLoading = false,
+                        helpWantedKnownEmpty = state.helpWantedKnownEmpty ||
+                            (label == IssueLabelFilter.HELP_WANTED && issues.isEmpty()),
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
