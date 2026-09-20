@@ -6,6 +6,9 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
+/** Below this age, starsPerDay would be noise, not signal — see toRepo(). */
+private const val MIN_AGE_DAYS_FOR_VELOCITY = 30f
+
 /**
  * Composite "interesting repo" score, from the earlier design discussion.
  * Every term traces to a real, visible GitHub field — no hidden/black-box
@@ -21,6 +24,12 @@ import java.util.TimeZone
  * scoring meaningful regardless of which query produced the candidates,
  * and avoids needing an arbitrary "what counts as a lot of stars"
  * assumption.
+ *
+ * starsPerDay (v0.37) is computed separately from this score and does
+ * NOT currently feed into it — it's a display-only "how fast is this
+ * catching on right now" signal, not (yet) a ranking factor. Folding it
+ * into the score itself is a reasonable future step once this is seen
+ * in practice.
  */
 fun scoreAndRankRepos(candidates: List<RepoDto>): List<Repo> {
     if (candidates.isEmpty()) return emptyList()
@@ -52,6 +61,7 @@ fun RepoDto.toRepo(score: Float): Repo = Repo(
     updatedAtLabel = formatRelativeTime(updatedAt),
     htmlUrl = htmlUrl,
     score = score,
+    starsPerDay = calculateStarsPerDay(stargazersCount, createdAt),
 )
 
 /**
@@ -68,5 +78,27 @@ private fun recencyBonus(isoTimestamp: String): Float {
         (1f - daysAgo / 365f).coerceIn(0f, 1f)
     } catch (e: Exception) {
         0f
+    }
+}
+
+/**
+ * stars / days-since-creation, an honest "how fast is this actually
+ * catching on" number — no hidden weighting, just the real arithmetic.
+ * Returns null for repos younger than MIN_AGE_DAYS_FOR_VELOCITY, where
+ * a handful of launch-day stars would look "explosive" without being a
+ * real signal yet — null means "too new to gauge," never a stand-in
+ * for zero.
+ */
+private fun calculateStarsPerDay(stars: Int, createdAtIso: String): Float? {
+    return try {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val createdMillis = format.parse(createdAtIso)?.time ?: return null
+        val daysSinceCreation = (System.currentTimeMillis() - createdMillis) / (1000f * 60 * 60 * 24)
+        if (daysSinceCreation < MIN_AGE_DAYS_FOR_VELOCITY) return null
+        stars / daysSinceCreation
+    } catch (e: Exception) {
+        null
     }
 }

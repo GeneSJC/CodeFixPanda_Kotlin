@@ -17,6 +17,15 @@ package com.example.githubissuefinder.model
  * rank highly on general health while having zero matching issues.
  * Ranking itself does NOT yet factor this in — that's a planned,
  * separate follow-up CM.
+ *
+ * starsPerDay (v0.37) is a "how fast is this actually catching on"
+ * velocity signal — stars divided by days since the repo was created —
+ * aimed at making an already-popular repo feel like it's happening
+ * RIGHT NOW rather than just being a static, settled number. Null for
+ * repos younger than RepoScoring's minimum-age threshold, where the
+ * metric would be noise (a brand-new repo with 50 stars on day one
+ * looks "explosive" but isn't a real signal yet) — not a placeholder
+ * for zero.
  */
 data class Repo(
     val id: Long,
@@ -32,4 +41,5 @@ data class Repo(
     val htmlUrl: String,
     val score: Float,
     val goodFirstIssueCount: Int? = null,
+    val starsPerDay: Float? = null,
 )

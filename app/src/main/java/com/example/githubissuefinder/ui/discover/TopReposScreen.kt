@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +47,7 @@ import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -71,6 +73,12 @@ import kotlinx.coroutines.launch
  * won't queue up if tapped several times in a row the way stacked
  * system Toasts can. See TopReposViewModel's doc comment for why
  * retry() is deliberately exempt from this cooldown.
+ *
+ * v0.37 adds a "stars/day since creation" velocity label to each card
+ * (hidden for repos under 30 days old, where it would be noise, not
+ * signal) — a display-only "how fast is this catching on right now"
+ * number, not currently a ranking factor. Repos above a threshold
+ * (HOT_THRESHOLD, a starting guess) get a 🔥 and bolder styling.
  *
  * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
  * offers "Play Origami Animation" / "Play Shape Stack Animation" /
@@ -352,6 +360,7 @@ private fun RepoCard(repo: Repo, onClick: () -> Unit) {
             }
 
             GoodFirstIssueCountLabel(repo.goodFirstIssueCount)
+            StarsPerDayLabel(repo.starsPerDay)
         }
     }
 }
@@ -371,3 +380,34 @@ private fun GoodFirstIssueCountLabel(count: Int?) {
         modifier = Modifier.padding(top = 6.dp),
     )
 }
+
+/**
+ * "Stars per day since creation" — a velocity signal, not a ranking
+ * factor (see RepoScoring.kt's doc comment). Null means the repo is
+ * too new (under 30 days old) for the number to mean anything yet, so
+ * nothing is shown at all rather than a misleading placeholder.
+ *
+ * HOT_THRESHOLD is a starting guess, not a tuned constant — easy to
+ * adjust once this is seen against real data.
+ */
+@Composable
+private fun StarsPerDayLabel(starsPerDay: Float?) {
+    if (starsPerDay == null) return
+
+    val isHot = starsPerDay >= HOT_THRESHOLD
+    val formatted = if (starsPerDay >= 10f) {
+        "${starsPerDay.toInt()}"
+    } else {
+        String.format(Locale.US, "%.1f", starsPerDay)
+    }
+
+    Text(
+        if (isHot) "🔥 $formatted stars/day" else "$formatted stars/day",
+        style = MaterialTheme.typography.bodySmall,
+        color = if (isHot) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = if (isHot) FontWeight.Bold else FontWeight.Normal,
+        modifier = Modifier.padding(top = 4.dp),
+    )
+}
+
+private const val HOT_THRESHOLD = 50f

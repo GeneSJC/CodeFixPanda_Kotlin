@@ -31,6 +31,7 @@ data class RepoDto(
     @Json(name = "forks_count") val forksCount: Int,
     @Json(name = "open_issues_count") val openIssuesCount: Int,
     val language: String?,
+    @Json(name = "created_at") val createdAt: String,
     @Json(name = "updated_at") val updatedAt: String,
     @Json(name = "html_url") val htmlUrl: String,
 )
