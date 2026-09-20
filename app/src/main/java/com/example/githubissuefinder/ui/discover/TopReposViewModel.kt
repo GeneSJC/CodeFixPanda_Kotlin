@@ -48,6 +48,10 @@ private const val COOLDOWN_SECONDS = 60
  * error-recovery retry for a full minute seemed like the wrong
  * tradeoff. This is a real design choice, not an oversight.
  *
+ * v0.36: onLanguageSelected() now returns a Boolean (accepted/blocked)
+ * so TopReposScreen can show a Snackbar when a tap is actually blocked
+ * by the cooldown, rather than the tap being silently swallowed.
+ *
  * Reuses the same LanguageFilter enum Feed uses (v0.8), including its
  * ANY option, rather than a second parallel set of language options.
  * GitHub's search endpoint requires a non-empty query, so ANY
@@ -70,17 +74,25 @@ class TopReposViewModel : ViewModel() {
         load(uiState.value.selectedLanguage)
     }
 
-    fun onLanguageSelected(language: LanguageFilter) {
+    /**
+     * Returns true if the switch was accepted, false if it was blocked
+     * by the cooldown (v0.36) — the caller (TopReposScreen) uses this to
+     * decide whether to show a "please wait" Snackbar, so the ViewModel
+     * doesn't need any special one-off-event machinery just for this.
+     */
+    fun onLanguageSelected(language: LanguageFilter): Boolean {
         val elapsedMs = System.currentTimeMillis() - lastLoadAtMs
         if (lastLoadAtMs != 0L && elapsedMs < COOLDOWN_SECONDS * 1000L) {
             // Still cooling down from the last load — ignore this switch
             // attempt rather than risk exceeding the Search API's 30/min
             // cap. The visible countdown (started by the previous load)
-            // is already telling the user why.
-            return
+            // is already telling the user why; the caller additionally
+            // surfaces a Snackbar on a blocked tap specifically.
+            return false
         }
         _uiState.update { it.copy(selectedLanguage = language) }
         load(language)
+        return true
     }
 
     /** Deliberately exempt from the cooldown — see class doc comment. */

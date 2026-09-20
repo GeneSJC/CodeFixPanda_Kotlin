@@ -22,6 +22,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,7 @@ import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
+import kotlinx.coroutines.launch
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -61,10 +65,12 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * switch languages again in Ns" below the language row) — annotating
  * 20 repos costs 21 Search API calls per load, so a second load within
  * the same minute already risks the 30/min cap. Language chips remain
- * tappable during cooldown; taps are just silently ignored rather than
- * visually disabled, matching this feature's "get into place first"
- * scope. See TopReposViewModel's doc comment for why retry() is
- * deliberately exempt from this cooldown.
+ * tappable during cooldown; a blocked tap now also shows a Snackbar
+ * (v0.36) — a plain Material3 Snackbar rather than a literal Android
+ * Toast, since it fits this screen's existing Scaffold naturally and
+ * won't queue up if tapped several times in a row the way stacked
+ * system Toasts can. See TopReposViewModel's doc comment for why
+ * retry() is deliberately exempt from this cooldown.
  *
  * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33)
  * offers "Play Origami Animation" / "Play Shape Stack Animation" /
@@ -102,6 +108,8 @@ fun TopReposScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
@@ -153,11 +161,21 @@ fun TopReposScreen(
                     },
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { padding ->
             Column(modifier = Modifier.padding(padding)) {
                 LanguageFilterRow(
                     selected = uiState.selectedLanguage,
-                    onSelect = viewModel::onLanguageSelected,
+                    onSelect = { language ->
+                        val accepted = viewModel.onLanguageSelected(language)
+                        if (!accepted) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Please wait ${uiState.cooldownSecondsRemaining}s before switching again",
+                                )
+                            }
+                        }
+                    },
                 )
 
                 if (uiState.cooldownSecondsRemaining > 0) {
