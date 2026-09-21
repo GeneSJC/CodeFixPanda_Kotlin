@@ -26,11 +26,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +50,7 @@ import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
+import kotlinx.coroutines.flow.collect
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -145,6 +149,19 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * IssueLabelFilter.entries, and would need direct edits — they won't
  * grow to cover a third mode on their own the way the gate screen
  * would.
+ *
+ * v0.44: two small additions. First, a "Repos" caption now sits under
+ * the mode name in the title — added after a real mix-up (confirmed on
+ * a running device) between this screen's Load More and
+ * RepoIssuesScreen's own, unrelated, unpaginated list further in;
+ * cheap, direct fix for that specific confusion rather than a deeper
+ * redesign. Second, SnackbarHost is back (removed in v0.42 when the
+ * old cooldown Snackbar became unnecessary) — for a new, unrelated
+ * reason this time: TopReposViewModel.snackbarEvents delivers a
+ * one-shot message when a Load More hits GitHub's Search API rate
+ * limit specifically (see that class's doc comment for why this is
+ * scoped to Load More only, and why it's a Channel-backed one-shot
+ * event rather than a UiState field).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,15 +174,32 @@ fun TopReposScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while IssueMode.current is null (see its own doc comment).
     val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
-                    title = { Text(currentMode.displayName) },
+                    title = {
+                        Column {
+                            Text(currentMode.displayName)
+                            Text(
+                                "Repos",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                     navigationIcon = {
                         Box {
                             IconButton(onClick = { showMenu = true }) {

@@ -20,6 +20,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // v0.44: restore any previously-chosen Issue Mode BEFORE
+        // setContent, so it's already in place by the time
+        // DiscoverNavHost computes its startDestination on first
+        // composition — see IssueMode.init()'s own doc comment.
+        IssueMode.init(this)
         setContent {
             // App-wide Issue Mode (v0.41): read directly from the shared
             // IssueMode object (see IssueMode.kt) at this single root

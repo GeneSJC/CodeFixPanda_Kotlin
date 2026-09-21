@@ -1,9 +1,13 @@
 package com.example.githubissuefinder.ui.discover
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.githubissuefinder.model.IssueLabelFilter
+
+private const val PREFS_NAME = "issue_mode_prefs"
+private const val KEY_MODE = "mode"
 
 /**
  * The sticky "which kind of issue am I looking for" state at the heart
@@ -16,20 +20,38 @@ import com.example.githubissuefinder.model.IssueLabelFilter
  * the normal flow until it's set — "you have to set it into the mode
  * you're looking for" was explicit in how this was asked for, so this
  * is a genuine gate, not a silent default to one mode or the other.
- * Once set, it stays set for the rest of the process (not persisted
- * across restart yet — see the README for this CM).
+ *
+ * v0.44: now persisted via SharedPreferences, restored once via
+ * init(context) — before v0.44, every fresh launch dropped back to the
+ * gate screen regardless of how many times a mode had already been
+ * chosen, which actively undercut the "deliberate, sticky, whole-app
+ * choice" framing the paradigm is built on.
+ *
+ * SharedPreferences, deliberately NOT a JSON file matching
+ * RepoIssueGroupCache's pattern: that cache legitimately needs JSON
+ * because it stores a genuinely complex nested structure (a map of
+ * language+mode keys to lists of RepoIssueGroup, each holding a list
+ * of Issue objects). This is a single enum value, or absent. Hand-
+ * rolling JSON serialization, a Moshi adapter, and Dispatchers.IO file
+ * I/O for one value that's either "GOOD_FIRST_ISSUE", "HELP_WANTED",
+ * or nothing would be real, avoidable complexity for what it buys —
+ * SharedPreferences is the appropriately-sized tool for exactly this
+ * job: built into Android, no new dependency, synchronous reads fast
+ * enough to not need Dispatchers.IO at this size, two lines to read
+ * and two to write.
  *
  * A plain object holding Compose's own mutableStateOf, same pattern
  * and same reasoning as ui/theme/ThemePreference.kt: the places that
- * need to WRITE this (IssueModeGateScreen; the mode dropdown on
- * TopReposScreen) and the places that need to READ it (MainActivity,
- * at the app's literal root, to pick a color scheme; TopReposViewModel,
- * to know which label to query for) aren't all parent/child in the
- * composition tree. A small shared object read directly wherever
- * needed avoids threading a new parameter through DiscoverNavHost and
- * everything under it. Same tradeoff ThemePreference accepted:
- * harder to unit-test in isolation, implicit rather than explicit data
- * flow — reasonable here for the same reason: one value, one job.
+ * need to WRITE this (IssueModeGateScreen; previously also a Top Repos
+ * dropdown, since removed) and the places that need to READ it
+ * (MainActivity, at the app's literal root, to pick a color scheme;
+ * TopReposViewModel, to know which label to query for) aren't all
+ * parent/child in the composition tree. A small shared object read
+ * directly wherever needed avoids threading a new parameter through
+ * DiscoverNavHost and everything under it. Same tradeoff ThemePreference
+ * accepted: harder to unit-test in isolation, implicit rather than
+ * explicit data flow — reasonable here for the same reason: one value,
+ * one job.
  *
  * Deliberately scoped to ui/discover, not somewhere more generically
  * "app-wide" like ThemePreference — Issue Mode is specifically a
@@ -70,5 +92,45 @@ import com.example.githubissuefinder.model.IssueLabelFilter
  * hadn't, being new.
  */
 object IssueMode {
-    var current: IssueLabelFilter? by mutableStateOf<IssueLabelFilter?>(null)
+
+    private var appContext: Context? = null
+    private var _current by mutableStateOf<IssueLabelFilter?>(null)
+
+    var current: IssueLabelFilter?
+        get() = _current
+        set(value) {
+            _current = value
+            appContext?.let { context ->
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(KEY_MODE, value?.name)
+                    .apply()
+            }
+        }
+
+    /**
+     * Restores whatever mode was last saved, if any — called once from
+     * MainActivity.onCreate, BEFORE setContent, so the restored value
+     * (or lack of one) is already in place by the time DiscoverNavHost
+     * computes its startDestination on first composition. Safe to call
+     * more than once (e.g. if MainActivity is ever recreated) — it
+     * only restores from disk if this object doesn't already have a
+     * live in-memory value AND hasn't been initialized with a context
+     * yet, so it never clobbers a mode the user already picked this
+     * process with whatever was on disk before that.
+     *
+     * Takes the Application context specifically (via
+     * context.applicationContext), not the Activity, since this object
+     * outlives any single Activity instance for the life of the
+     * process — the same reasoning TopReposViewModel's switch to
+     * AndroidViewModel already relies on via getApplication().
+     */
+    fun init(context: Context) {
+        if (appContext != null) return
+        appContext = context.applicationContext
+        val savedName = appContext
+            ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            ?.getString(KEY_MODE, null)
+        _current = savedName?.let { name -> IssueLabelFilter.entries.find { it.name == name } }
+    }
 }

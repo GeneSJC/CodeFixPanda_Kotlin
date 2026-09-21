@@ -11,9 +11,12 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.network.GitHubApiClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -119,11 +122,37 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * "how many matches in everything fetched so far," so it should update
  * as more is fetched, the same way it would if all of it had come back
  * in one page to begin with.
+ *
+ * v0.44 (rate-limit Snackbar, Load More only): if a Load More fetch
+ * comes back 403 with X-RateLimit-Remaining: 0, that's specifically
+ * GitHub's Search API rate limit, not a generic error — snackbarEvents
+ * emits a one-shot message for TopReposScreen to show, and
+ * deliberately does NOT touch canLoadMore or currentPage: the button
+ * stays exactly as it was, ready to tap again once the limit resets,
+ * rather than landing in the same inline-error-with-Retry state a
+ * genuine failure would. This is intentionally the full extent of
+ * rate-limit handling for now — a persistent visible meter (matching
+ * Feed's existing RateLimitChip) is deliberately out of scope here,
+ * parked as lower priority; this Snackbar is enough to know it CAN
+ * happen without committing to where/how a fuller indicator eventually
+ * lives. Scoped to Load More specifically, not the initial load, per
+ * how this was asked for — switching language/mode into a rate limit
+ * still just surfaces the existing generic errorMessage state.
+ *
+ * snackbarEvents is a Channel, not part of TopReposUiState — a
+ * StateFlow field would re-emit its last value on every new collector
+ * (e.g. after a configuration change), showing the same Snackbar again
+ * for an event that already happened. A Channel only ever delivers
+ * each event once, to whichever collector is listening at the time —
+ * the correct shape for a genuinely one-shot UI event like this.
  */
 class TopReposViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(TopReposUiState())
     val uiState: StateFlow<TopReposUiState> = _uiState.asStateFlow()
+
+    private val _snackbarEvents = Channel<String>(Channel.BUFFERED)
+    val snackbarEvents: Flow<String> = _snackbarEvents.receiveAsFlow()
 
     init {
         load(uiState.value.selectedLanguage)
@@ -224,6 +253,18 @@ class TopReposViewModel : ViewModel() {
                 }
                 val body = response.body()
                 if (!response.isSuccessful || body == null) {
+                    val rateLimitInfo = parseRateLimitHeaders(response.headers())
+                    val isRateLimited = response.code() == 403 && rateLimitInfo?.remaining == 0
+                    if (isLoadMore && isRateLimited) {
+                        // Deliberately leave canLoadMore/currentPage untouched —
+                        // see class doc comment. Only the footer's loading
+                        // state clears; the button itself is unaffected.
+                        _uiState.update { it.copy(isLoadingMore = false) }
+                        _snackbarEvents.trySend(
+                            "GitHub's search rate limit was reached — try again shortly",
+                        )
+                        return@launch
+                    }
                     val message = "GitHub returned an error (HTTP ${response.code()})"
                     _uiState.update {
                         if (isLoadMore) {
