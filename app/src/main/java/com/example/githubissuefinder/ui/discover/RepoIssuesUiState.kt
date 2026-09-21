@@ -1,28 +1,21 @@
 package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.model.Issue
-import com.example.githubissuefinder.model.IssueLabelFilter
 
+/**
+ * v0.42, REVISED after removing this screen's in-screen label picker:
+ * there's no longer any way to view a label other than the app's
+ * active Issue Mode, so there's nothing left to track besides the
+ * issues themselves. selectedLabel and otherLabelKnownEmpty (which
+ * existed to support switching to the OTHER label) are both gone —
+ * neither could ever differ from a single fixed value once that
+ * affordance doesn't exist. isLoading and errorMessage are gone too:
+ * populating this screen is now a pure, synchronous assignment from
+ * RepoIssueGroup.issues (already fetched to build the group in the
+ * first place) — there is no network call left anywhere on this
+ * screen's path, so nothing here can ever be "loading" or "errored."
+ * See RepoIssuesViewModel's doc comment for the full reasoning.
+ */
 data class RepoIssuesUiState(
     val issues: List<Issue> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val selectedLabel: IssueLabelFilter = IssueLabelFilter.GOOD_FIRST_ISSUE,
-    /**
-     * True once a load for whichever label ISN'T the repo's own
-     * pre-fetched mode has come back with zero issues this session —
-     * renamed from helpWantedKnownEmpty (v0.41), which hardcoded the
-     * assumption that "the other label" always meant specifically
-     * Help Wanted. Once Issue Mode meant the pre-fetched label could
-     * just as easily BE Help Wanted (with Good First Issue as "the
-     * other one"), that hardcoding stopped being safe. Learned live,
-     * since (unlike the repo's own active-mode count) there's no
-     * pre-fetched count for whichever label this is. Sticky for the
-     * rest of this screen's session once set; never reset back to
-     * false even if a later load somehow finds issues, since the
-     * underlying issue set isn't expected to fluctuate within one
-     * session. A deliberate, modest simplification, not re-verified
-     * on every load — unchanged from before this rename.
-     */
-    val otherLabelKnownEmpty: Boolean = false,
 )

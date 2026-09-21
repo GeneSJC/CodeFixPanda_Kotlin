@@ -4,14 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.parseRateLimitHeaders
-import com.example.githubissuefinder.data.scoreAndRankRepos
+import com.example.githubissuefinder.data.toIssue
+import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
-import com.example.githubissuefinder.model.Repo
+import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.network.GitHubApiClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,129 +18,75 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val TOP_N = 20
-private const val COOLDOWN_SECONDS = 60
-
 /**
- * CM 1 of the repo-first "Discover" flow (option C from the architecture
- * discussion): loads a candidate pool of repos for the selected
- * language via repository search, scores them via scoreAndRankRepos(),
- * and keeps the top 20.
+ * v0.42 — THE DATA-LAYER SWAP. This is a full rewrite of how this
+ * screen builds its list, replacing everything CM 1 through v0.41
+ * built the pipeline around. Read this before touching this file.
  *
- * v0.34: annotates each visible repo with its actual open
- * good-first-issue count (a separate call per repo).
+ * OLD PIPELINE (v0.25–v0.41): repository search first (ranked via
+ * scoreAndRankRepos — stars/forks/recency/velocity), take the top 20,
+ * THEN annotate each one with a separate per-repo issue-count check
+ * for whichever Issue Mode is active. Cost: ~21 Search API calls per
+ * load. A repo could rank highly on general health while having ZERO
+ * matching issues for the active mode — the known, explicitly-flagged
+ * limitation this whole rewrite exists to eliminate.
  *
- * v0.35: adds a 60-second cooldown between loads, guarding
- * onLanguageSelected() specifically. This is NOT "block after the 2nd
- * switch in a minute" — it's "every load starts a 60s cooldown before
- * the next one," because the arithmetic makes those the same rule in
- * practice: one load is already 21 Search API calls (1 repo search +
- * 20 per-repo issue checks from v0.34), and a SECOND load within that
- * same 60-second window already reaches ~42 calls — over the 30/min
- * cap on the second attempt, not the third. Guarding every load
- * (including the very first, on screen-open) rather than only
- * "switches" reflects that the expensive thing is the load itself, not
- * specifically the act of changing languages.
+ * NEW PIPELINE (this CM): query GitHub's Issue Search API DIRECTLY for
+ * the active mode's label (the exact same query shape FeedViewModel
+ * has always used), then GROUP the returned issues by their parent
+ * repo (repository_url, via Issue.repoFullName). Each group becomes
+ * one RepoIssueGroup — see that model's doc comment. Cost: ONE Search
+ * API call per load, full stop. And because a repo only appears here
+ * at all if it had a matching issue in this batch, a repo with zero
+ * matching issues literally cannot be shown — not graying, not a
+ * dead-end tap, structurally impossible.
  *
- * retry() is DELIBERATELY exempt from the cooldown: a failed load may
- * not have fired all 20 per-repo calls in the first place (e.g. if the
- * repo search itself failed, zero of them did), so blocking a genuine
- * error-recovery retry for a full minute seemed like the wrong
- * tradeoff. This is a real design choice, not an oversight.
+ * WHAT THIS COSTS: RepoIssueGroup carries none of Repo's old
+ * stars/forks/description/composite-score fields — GitHub's issue
+ * search response never included them, only ever came from the
+ * now-removed per-repo annotation step and the repo search itself.
+ * Ranking here is match-count only (RepoIssueGroup.matchCount,
+ * descending) — genuinely less rich than the old composite score, and
+ * a deliberate, discussed tradeoff, not an oversight: per-repo
+ * enrichment (a bounded number of extra calls, one per UNIQUE repo in
+ * the result page rather than one per issue) remains a real, optional
+ * follow-up if match-count-only ranking ever feels too thin once seen
+ * running — not attempted here.
  *
- * v0.36: onLanguageSelected() now returns a Boolean (accepted/blocked)
- * so TopReposScreen can show a Snackbar when a tap is actually blocked
- * by the cooldown, rather than the tap being silently swallowed.
- *
- * Reuses the same LanguageFilter enum Feed uses (v0.8), including its
- * ANY option, rather than a second parallel set of language options.
- * GitHub's search endpoint requires a non-empty query, so ANY
- * (queryValue = null) uses "stars:>0" — a qualifier every real repo
- * satisfies — instead of a language restriction, rather than silently
- * falling back to a specific language.
+ * THE COOLDOWN IS GONE. v0.35's 60-second cooldown existed specifically
+ * because the old pipeline's ~21-calls-per-load made a second load
+ * within 60 seconds mathematically risk the 30/min Search API cap.
+ * This pipeline's ENTIRE load is one call — the arithmetic that
+ * justified the cooldown no longer applies, so onLanguageSelected()
+ * below is a plain, unblocked, Unit-returning function now, and
+ * TopReposScreen no longer needs the accepted/blocked Snackbar dance
+ * either. A real, direct side benefit of this rewrite, not a
+ * separately-decided simplification.
  *
  * No sample-data fallback yet (see TopReposUiState) — this screen
- * requires a configured GitHub token.
+ * still requires a configured GitHub token, unchanged from before.
  *
- * v0.41 ("Issue Mode" shell): the per-repo annotation is no longer
- * hardcoded to "good first issue" — it queries whichever label
- * IssueMode.current represents, read directly from that shared object
- * (see IssueMode.kt for why; same "read a plain shared value without a
- * live subscription" pattern GitHubApiClient.hasToken already uses
- * here). DiscoverNavHost guarantees a mode is chosen before this
- * ViewModel is ever created, so the fallback to GOOD_FIRST_ISSUE below
- * is defensive, not an expected path.
- *
- * onModeSelected() mirrors onLanguageSelected() exactly — same
- * cooldown, same accepted/blocked Boolean contract, same full reload —
- * because switching Mode costs exactly what switching language does:
- * a fresh repo search plus a fresh per-repo annotation pass. Both
- * share the same cooldown timer rather than tracking two separate
- * ones, since the underlying expense (one load()) is identical either
- * way. It writes IssueMode.current itself, and only once accepted —
- * see its own doc comment for why that ordering matters.
- *
- * NOT yet changed in this CM: still repo-search-first, annotated
- * per-repo after the fact — the same pipeline this screen has always
- * used, just parameterized by Mode instead of hardcoded. Replacing
- * this with issue-search-first (query issues directly, group by parent
- * repo, so a repo can never appear with zero matching issues) is a
- * separate, deliberately later CM — this one is only the Mode
- * state/UI shell.
+ * IssueMode.current is read directly in load(), same "shared object,
+ * not threaded through the constructor" pattern established in v0.41
+ * — see IssueMode.kt. There is no onModeSelected() here anymore: the
+ * mode dropdown this screen briefly had was removed in this same CM
+ * (see TopReposScreen's doc comment) — Mode is now only ever set from
+ * IssueModeGateScreen, once, at the start of a session.
  */
 class TopReposViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(TopReposUiState())
     val uiState: StateFlow<TopReposUiState> = _uiState.asStateFlow()
 
-    private var lastLoadAtMs = 0L
-    private var cooldownJob: Job? = null
-
     init {
         load(uiState.value.selectedLanguage)
     }
 
-    /**
-     * Returns true if the switch was accepted, false if it was blocked
-     * by the cooldown (v0.36) — the caller (TopReposScreen) uses this to
-     * decide whether to show a "please wait" Snackbar, so the ViewModel
-     * doesn't need any special one-off-event machinery just for this.
-     */
-    fun onLanguageSelected(language: LanguageFilter): Boolean {
-        if (isCoolingDown()) return false
+    fun onLanguageSelected(language: LanguageFilter) {
         _uiState.update { it.copy(selectedLanguage = language) }
         load(language)
-        return true
     }
 
-    /**
-     * Mirrors onLanguageSelected() exactly — see class doc comment for
-     * why a Mode switch shares the exact same cooldown and reload logic
-     * a language switch does. Deliberately does NOT write
-     * IssueMode.current until AFTER confirming the switch is accepted
-     * (same reason onLanguageSelected() only updates uiState's
-     * selectedLanguage after that check) — writing it earlier would let
-     * the top bar show a new mode while the list underneath silently
-     * kept showing the OLD mode's data because the reload got blocked.
-     */
-    fun onModeSelected(mode: IssueLabelFilter): Boolean {
-        if (isCoolingDown()) return false
-        IssueMode.current = mode
-        load(uiState.value.selectedLanguage)
-        return true
-    }
-
-    private fun isCoolingDown(): Boolean {
-        val elapsedMs = System.currentTimeMillis() - lastLoadAtMs
-        // Still cooling down from the last load — ignore this switch
-        // attempt rather than risk exceeding the Search API's 30/min
-        // cap. The visible countdown (started by the previous load)
-        // is already telling the user why; the caller additionally
-        // surfaces a Snackbar on a blocked tap specifically.
-        return lastLoadAtMs != 0L && elapsedMs < COOLDOWN_SECONDS * 1000L
-    }
-
-    /** Deliberately exempt from the cooldown — see class doc comment. */
     fun retry() = load(uiState.value.selectedLanguage)
 
     private fun load(language: LanguageFilter) {
@@ -152,18 +97,19 @@ class TopReposViewModel : ViewModel() {
 
         // Defensive fallback only — DiscoverNavHost never creates this
         // screen (and therefore this ViewModel) while IssueMode.current
-        // is null. See class doc comment.
+        // is null. See IssueMode.kt.
         val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
-
-        lastLoadAtMs = System.currentTimeMillis()
-        startCooldownCountdown()
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
             try {
-                val query = language.queryValue?.let { "language:$it" } ?: "stars:>0"
+                val query = buildString {
+                    append("label:\"${activeMode.queryValue}\"")
+                    append(" state:open")
+                    language.queryValue?.let { append(" language:$it") }
+                }
                 val response = withContext(Dispatchers.IO) {
-                    GitHubApiClient.api.searchRepositories(query = query)
+                    GitHubApiClient.api.searchIssues(query = query)
                 }
                 val body = response.body()
                 if (!response.isSuccessful || body == null) {
@@ -176,71 +122,47 @@ class TopReposViewModel : ViewModel() {
                     return@launch
                 }
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                val ranked = scoreAndRankRepos(body.items).take(TOP_N)
-                _uiState.update { it.copy(repos = ranked, isLoading = false) }
-                annotateIssueCounts(ranked, activeMode)
+                val issues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
+                _uiState.update {
+                    it.copy(
+                        repoGroups = groupByRepo(issues),
+                        isLoading = false,
+                        totalIssueCount = body.totalCount,
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Couldn't load repos: ${e.message ?: "unknown error"}",
+                        errorMessage = "Couldn't load issues: ${e.message ?: "unknown error"}",
                     )
                 }
             }
         }
     }
 
-    private fun startCooldownCountdown() {
-        cooldownJob?.cancel()
-        cooldownJob = viewModelScope.launch {
-            var remaining = COOLDOWN_SECONDS
-            while (remaining > 0) {
-                _uiState.update { it.copy(cooldownSecondsRemaining = remaining) }
-                delay(1000)
-                remaining--
-            }
-            _uiState.update { it.copy(cooldownSecondsRemaining = 0) }
-        }
-    }
-
     /**
-     * Fires one Search API call per repo, each independent — updates
-     * that repo's card as soon as its own count arrives, rather than
-     * waiting for all 20 before showing any of them.
-     *
-     * v0.41: queries `label` (whichever Issue Mode is active) instead
-     * of a hardcoded "good first issue" string — renamed from
-     * annotateGoodFirstIssueCounts to match. Writes to
-     * Repo.issueCount, renamed from goodFirstIssueCount for the same
-     * reason (see Repo.kt).
+     * Groups already-fetched issues by parent repo and sorts the
+     * resulting groups by match count, descending — the v0.42 ranking
+     * signal (see class doc comment for why this replaces the old
+     * composite score). No artificial cap on the number of groups
+     * shown (the old TOP_N = 20 is gone): whatever groups form from
+     * this one page of results (GitHub's default 30 per page) are all
+     * shown, which bounds card count naturally without a separate
+     * constant to keep in sync.
      */
-    private fun annotateIssueCounts(repos: List<Repo>, label: IssueLabelFilter) {
-        repos.forEach { repo ->
-            viewModelScope.launch {
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        GitHubApiClient.api.searchIssues(
-                            query = "repo:${repo.ownerLogin}/${repo.name} label:\"${label.queryValue}\" state:open",
-                            perPage = 1,
-                        )
-                    }
-                    val body = response.body()
-                    if (response.isSuccessful && body != null) {
-                        RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                        val count = body.totalCount
-                        _uiState.update { state ->
-                            state.copy(
-                                repos = state.repos.map {
-                                    if (it.id == repo.id) it.copy(issueCount = count) else it
-                                },
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Leave this repo's count as null (never loaded) on failure —
-                    // one repo's lookup failing shouldn't disrupt the rest of the list.
-                }
+    private fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
+        issues
+            .groupBy { it.repoFullName }
+            .map { (fullName, groupIssues) ->
+                val first = groupIssues.first()
+                RepoIssueGroup(
+                    repoOwner = first.repoOwner,
+                    repoName = first.repoName,
+                    repoFullName = fullName,
+                    repoDisplayTitle = first.repoDisplayTitle,
+                    issues = groupIssues,
+                )
             }
-        }
-    }
+            .sortedByDescending { it.matchCount }
 }

@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.network
 
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
-import com.example.githubissuefinder.network.dto.RepoSearchResponseDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -9,10 +8,16 @@ import retrofit2.http.Query
 /**
  * Thin wrapper over GitHub's public REST API.
  *
- * searchIssues and searchRepositories both use the Search API — the SAME
- * rate-limit bucket, confirmed in the API surface reference — so both are
- * wrapped in Response<> and both feed RateLimitState (see their
- * respective ViewModels).
+ * searchIssues uses the Search API — wrapped in Response<> and feeds
+ * RateLimitState (see the ViewModels that call it).
+ *
+ * v0.42: searchRepositories (and RepoDto/RepoSearchResponseDto) removed
+ * — the repo-first Discover flow no longer queries GitHub's repository
+ * search at all. It now builds its repo list entirely by grouping
+ * searchIssues results by their parent repo (see RepoIssueGroup.kt and
+ * TopReposViewModel's doc comment for the full reasoning). Nothing
+ * else in this codebase called searchRepositories — confirmed before
+ * removing it, not assumed.
  *
  * Note: an earlier version of this file also had a getIssueComments()
  * method, targeting GitHub's general REST API (a separate rate-limit
@@ -30,12 +35,4 @@ interface GitHubApiService {
         @Query("order") order: String = "desc",
         @Query("per_page") perPage: Int = 30,
     ): Response<IssueSearchResponseDto>
-
-    @GET("search/repositories")
-    suspend fun searchRepositories(
-        @Query("q") query: String,
-        @Query("sort") sort: String = "stars",
-        @Query("order") order: String = "desc",
-        @Query("per_page") perPage: Int = 50,
-    ): Response<RepoSearchResponseDto>
 }
