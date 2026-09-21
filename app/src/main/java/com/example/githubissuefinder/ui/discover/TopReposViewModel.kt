@@ -18,6 +18,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val PER_PAGE = 30
+
+/**
+ * GitHub's Search API hard cap — it will not return results past this
+ * point for any query, however many actually match (this is a
+ * documented GitHub limitation, not something this app imposes).
+ * canRequestNextPage() uses this to stop offering Load More before a
+ * request would fail, rather than surfacing that as an error.
+ */
+private const val SEARCH_API_RESULT_CAP = 1000
+
 /**
  * v0.42 — THE DATA-LAYER SWAP. This is a full rewrite of how this
  * screen builds its list, replacing everything CM 1 through v0.41
@@ -68,10 +79,46 @@ import kotlinx.coroutines.withContext
  *
  * IssueMode.current is read directly in load(), same "shared object,
  * not threaded through the constructor" pattern established in v0.41
- * — see IssueMode.kt. There is no onModeSelected() here anymore: the
- * mode dropdown this screen briefly had was removed in this same CM
- * (see TopReposScreen's doc comment) — Mode is now only ever set from
- * IssueModeGateScreen, once, at the start of a session.
+ * — see IssueMode.kt. onModeSelected(mode) below is a plain in-place
+ * switch — updates IssueMode.current directly and reloads, the same
+ * shape onLanguageSelected() already has — reached from two explicit
+ * items at the bottom of TopReposScreen's hamburger menu ("Find Good
+ * First Issues" / "Find Help Wanted Issues"), NOT a resurrection of
+ * the old v0.41 title-bar dropdown that was removed earlier in this
+ * CM sequence. That dropdown sat directly in the title, visible and
+ * tappable without any deliberate action — exactly what made it feel
+ * accidental rather than a real choice, and why it was removed. Living
+ * at the bottom of a menu the user has to deliberately open keeps the
+ * "this is a real, considered choice" framing intact. See
+ * TopReposScreen's doc comment for the full reasoning, including why
+ * this is a direct in-place switch rather than navigating back to
+ * IssueModeGateScreen (a gate-based design was fully worked out first,
+ * then set aside — reusing the gate is the more scalable choice if a
+ * third mode is ever added, but wasn't worth the added navigation
+ * complexity for exactly two).
+ *
+ * v0.43 (PAGINATION + CROSS-PAGE DEDUP): load() previously fetched
+ * exactly one page and stopped — whatever groups formed from GitHub's
+ * default 30 results were the whole list, with no way to see more.
+ * loadMore() adds a second, explicit page fetch, and — this is the
+ * part worth reading carefully — the result is MERGED into the
+ * existing repoGroups, not appended as new cards. A repo's matching
+ * issues are not guaranteed to land on a single page: if "Apps
+ * Android Commons" has 5 matching issues and 3 landed on page 1, the
+ * other 2 can easily land on page 2. Naively appending page 2's
+ * grouped results would show "Apps Android Commons" as a SECOND,
+ * separate card with match count 2, instead of updating the existing
+ * card to match count 5. mergeIntoGroups() below is what prevents
+ * that — every Load More re-groups its new issues against the
+ * repoFullName keys already on screen before anything is added or
+ * re-sorted.
+ *
+ * A repo's rank can genuinely change after a Load More (a repo that
+ * picks up more matches on this page can overtake one that hasn't) —
+ * that's intentional, not a bug to suppress: the ranking signal is
+ * "how many matches in everything fetched so far," so it should update
+ * as more is fetched, the same way it would if all of it had come back
+ * in one page to begin with.
  */
 class TopReposViewModel : ViewModel() {
 
@@ -87,9 +134,69 @@ class TopReposViewModel : ViewModel() {
         load(language)
     }
 
+    /**
+     * Handler for the two hamburger-menu items TopReposScreen offers
+     * ("Find Good First Issues" / "Find Help Wanted Issues") — see
+     * class doc comment for why this exists as a direct, in-place
+     * switch rather than navigating anywhere. A no-op if the tapped
+     * mode is already active, same guard the old (removed) dropdown
+     * had, avoiding a pointless reload.
+     */
+    fun onModeSelected(mode: IssueLabelFilter) {
+        if (mode == IssueMode.current) return
+        IssueMode.current = mode
+        load(uiState.value.selectedLanguage)
+    }
+
+    /** Retries the INITIAL load — for when the list is empty because the first fetch failed. Unrelated to retryLoadMore() below, which retries a failed Load More instead. */
     fun retry() = load(uiState.value.selectedLanguage)
 
+    /**
+     * Fetches the next page and merges it into what's already shown —
+     * see class doc comment for why "merge," not "append." A no-op if
+     * a Load More is already in flight or canLoadMore is already
+     * false, so this is safe to wire directly to a button's onClick
+     * without the caller needing to check state first.
+     */
+    fun loadMore() {
+        val state = uiState.value
+        if (state.isLoadingMore || !state.canLoadMore) return
+        fetchPage(
+            language = state.selectedLanguage,
+            page = state.currentPage + 1,
+            isLoadMore = true,
+        )
+    }
+
+    /** Retries a Load More that failed — distinct from retry(), which is for the initial load. Clears loadMoreError and re-attempts the SAME next page, not a fresh load. */
+    fun retryLoadMore() {
+        _uiState.update { it.copy(loadMoreError = null) }
+        loadMore()
+    }
+
     private fun load(language: LanguageFilter) {
+        if (!GitHubApiClient.hasToken) {
+            _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
+            return
+        }
+        // Fresh load (language/mode switch or retry): reset pagination
+        // state, but deliberately leave repoGroups AS-IS until the new
+        // data actually arrives — clearing it here would blank the
+        // screen behind a spinner on every language switch, which
+        // isn't how this screen behaved before pagination existed. The
+        // old list gets replaced outright once fetchPage's non-merge
+        // path (isLoadMore = false) succeeds.
+        _uiState.update {
+            it.copy(
+                currentPage = 0,
+                canLoadMore = true,
+                loadMoreError = null,
+            )
+        }
+        fetchPage(language = language, page = 1, isLoadMore = false)
+    }
+
+    private fun fetchPage(language: LanguageFilter, page: Int, isLoadMore: Boolean) {
         if (!GitHubApiClient.hasToken) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
@@ -101,7 +208,11 @@ class TopReposViewModel : ViewModel() {
         val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
+            if (isLoadMore) {
+                _uiState.update { it.copy(isLoadingMore = true, loadMoreError = null) }
+            } else {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
+            }
             try {
                 val query = buildString {
                     append("label:\"${activeMode.queryValue}\"")
@@ -109,36 +220,64 @@ class TopReposViewModel : ViewModel() {
                     language.queryValue?.let { append(" language:$it") }
                 }
                 val response = withContext(Dispatchers.IO) {
-                    GitHubApiClient.api.searchIssues(query = query)
+                    GitHubApiClient.api.searchIssues(query = query, perPage = PER_PAGE, page = page)
                 }
                 val body = response.body()
                 if (!response.isSuccessful || body == null) {
+                    val message = "GitHub returned an error (HTTP ${response.code()})"
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "GitHub returned an error (HTTP ${response.code()})",
-                        )
+                        if (isLoadMore) {
+                            it.copy(isLoadingMore = false, loadMoreError = message)
+                        } else {
+                            it.copy(isLoading = false, errorMessage = message)
+                        }
                     }
                     return@launch
                 }
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                val issues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
-                _uiState.update {
-                    it.copy(
-                        repoGroups = groupByRepo(issues),
+                val newIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
+                _uiState.update { state ->
+                    val mergedGroups = if (isLoadMore) {
+                        mergeIntoGroups(state.repoGroups, newIssues)
+                    } else {
+                        groupByRepo(newIssues)
+                    }
+                    state.copy(
+                        repoGroups = mergedGroups,
                         isLoading = false,
+                        isLoadingMore = false,
                         totalIssueCount = body.totalCount,
+                        currentPage = page,
+                        canLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page),
                     )
                 }
             } catch (e: Exception) {
+                val message = "Couldn't load issues: ${e.message ?: "unknown error"}"
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Couldn't load issues: ${e.message ?: "unknown error"}",
-                    )
+                    if (isLoadMore) {
+                        it.copy(isLoadingMore = false, loadMoreError = message)
+                    } else {
+                        it.copy(isLoading = false, errorMessage = message)
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * False once there's nothing left worth requesting: either this
+     * page came back short (fewer than PER_PAGE items — the true end
+     * of this query's results, not just an empty page), or the NEXT
+     * page would start past GitHub's 1,000-result Search API cap.
+     * Checked against the page just fetched, not the total the API
+     * reports — total_count itself is only an estimate once a query
+     * has more matches than the cap allows, so it isn't trustworthy
+     * for this decision on its own.
+     */
+    private fun canRequestNextPage(fetchedThisPage: Int, justFetchedPage: Int): Boolean {
+        if (fetchedThisPage < PER_PAGE) return false
+        val nextPageStartIndex = justFetchedPage * PER_PAGE
+        return nextPageStartIndex < SEARCH_API_RESULT_CAP
     }
 
     /**
@@ -146,23 +285,45 @@ class TopReposViewModel : ViewModel() {
      * resulting groups by match count, descending — the v0.42 ranking
      * signal (see class doc comment for why this replaces the old
      * composite score). No artificial cap on the number of groups
-     * shown (the old TOP_N = 20 is gone): whatever groups form from
-     * this one page of results (GitHub's default 30 per page) are all
-     * shown, which bounds card count naturally without a separate
+     * shown — whatever groups form from the page(s) fetched so far are
+     * all shown, which bounds card count naturally without a separate
      * constant to keep in sync.
      */
     private fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
-        issues
-            .groupBy { it.repoFullName }
-            .map { (fullName, groupIssues) ->
-                val first = groupIssues.first()
-                RepoIssueGroup(
-                    repoOwner = first.repoOwner,
-                    repoName = first.repoName,
-                    repoFullName = fullName,
-                    repoDisplayTitle = first.repoDisplayTitle,
-                    issues = groupIssues,
+        mergeIntoGroups(emptyList(), issues)
+
+    /**
+     * v0.43: the actual cross-page merge — see class doc comment for
+     * the motivating scenario (one repo's matches spread across two
+     * pages). Re-keys existing groups by repoFullName in a
+     * LinkedHashMap (preserving their current order, so ties in the
+     * final sort stay deterministic rather than depending on an
+     * unordered HashMap's iteration), folds each new issue into its
+     * repo's existing group if one exists (skipping it if that exact
+     * issue id is somehow already present — defensive, in case
+     * GitHub's result set shifts slightly between two page requests),
+     * or starts a new group if this is the first issue seen for that
+     * repo, then re-sorts everything by the now-current match count.
+     * groupByRepo() above is just this function called with an empty
+     * starting list — the very first page is "merged" into nothing.
+     */
+    private fun mergeIntoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
+        val byRepo = LinkedHashMap<String, RepoIssueGroup>()
+        existing.forEach { byRepo[it.repoFullName] = it }
+        newIssues.forEach { issue ->
+            val current = byRepo[issue.repoFullName]
+            if (current == null) {
+                byRepo[issue.repoFullName] = RepoIssueGroup(
+                    repoOwner = issue.repoOwner,
+                    repoName = issue.repoName,
+                    repoFullName = issue.repoFullName,
+                    repoDisplayTitle = issue.repoDisplayTitle,
+                    issues = listOf(issue),
                 )
+            } else if (current.issues.none { it.id == issue.id }) {
+                byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
             }
-            .sortedByDescending { it.matchCount }
+        }
+        return byRepo.values.sortedByDescending { it.matchCount }
+    }
 }

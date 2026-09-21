@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -107,6 +108,43 @@ import com.example.githubissuefinder.ui.splash.SplashScreen
  * now a plain, non-interactive Text(currentMode.displayName) — same
  * removal, same reasoning, applied to RepoIssuesScreen's own
  * in-screen label picker too (see that file).
+ *
+ * v0.43 (pagination): the list now ends in a footer row (a plain
+ * `item { }`, not part of the `items()` block) reflecting
+ * uiState.canLoadMore / isLoadingMore / loadMoreError — a "Load More"
+ * button, a small inline spinner while that fetch is in flight, an
+ * inline retry row if it failed (the existing list stays exactly as
+ * it was either way — only the footer changes), or a plain "that's
+ * everything" line once GitHub genuinely has nothing further for this
+ * query. See TopReposViewModel's doc comment for the cross-page
+ * merge/dedup this relies on — a repo whose matches span two pages
+ * updates the SAME card here, it doesn't appear a second time.
+ *
+ * ALSO IN v0.43: two explicitly-worded items now sit at the bottom of
+ * the hamburger menu — "Find Good First Issues" and "Find Help Wanted
+ * Issues" — calling viewModel.onModeSelected(mode) directly, switching
+ * the active Issue Mode in place without leaving this screen. This is
+ * NOT a resurrection of the old v0.41 title-bar dropdown, despite
+ * switching Mode from within Top Repos either way: that dropdown sat
+ * directly in the title, visible and tappable without any deliberate
+ * action, which is exactly what made it feel accidental rather than a
+ * real choice, and why it was removed. Living at the bottom of a menu
+ * the user has to deliberately open keeps the "this is a real,
+ * considered choice" framing intact.
+ *
+ * A gate-screen-based design (a menu item navigating back to
+ * IssueModeGateScreen, popping this screen off the back stack first so
+ * the stack didn't accumulate stale entries) was fully worked out
+ * first, then deliberately set aside in favor of this simpler,
+ * direct-switch version — reusing the gate would be the more scalable
+ * choice if a third mode is ever added (IssueModeGateScreen already
+ * loops IssueLabelFilter.entries, so a third mode shows up there for
+ * free), but wasn't worth the added navigation complexity for exactly
+ * two modes. Worth remembering if a third mode does show up: THIS
+ * file's two menu items are hardcoded, not generated from
+ * IssueLabelFilter.entries, and would need direct edits — they won't
+ * grow to cover a third mode on their own the way the gate screen
+ * would.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -165,6 +203,21 @@ fun TopReposScreen(
                                         replayAnimation = "coin"
                                     },
                                 )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Find Good First Issues") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.onModeSelected(IssueLabelFilter.GOOD_FIRST_ISSUE)
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Find Help Wanted Issues") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.onModeSelected(IssueLabelFilter.HELP_WANTED)
+                                    },
+                                )
                             }
                         }
                     },
@@ -220,6 +273,15 @@ fun TopReposScreen(
                     ) {
                         items(uiState.repoGroups, key = { it.repoFullName }) { group ->
                             RepoCard(group = group, onClick = { onRepoClick(group) })
+                        }
+                        item(key = "loadMoreFooter") {
+                            LoadMoreFooter(
+                                isLoadingMore = uiState.isLoadingMore,
+                                canLoadMore = uiState.canLoadMore,
+                                loadMoreError = uiState.loadMoreError,
+                                onLoadMore = viewModel::loadMore,
+                                onRetry = viewModel::retryLoadMore,
+                            )
                         }
                     }
                 }
@@ -339,4 +401,54 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
 }
 
 private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
+
+/**
+ * v0.43: the pagination footer — one of four states, exactly one shown
+ * at a time. Deliberately a manual "Load More" tap rather than
+ * auto-loading on scroll: an explicit action keeps the "one Search API
+ * call per fetch" cost visible and intentional, the same instinct
+ * behind this whole redesign not spending calls the user didn't ask
+ * for.
+ */
+@Composable
+private fun LoadMoreFooter(
+    isLoadingMore: Boolean,
+    canLoadMore: Boolean,
+    loadMoreError: String?,
+    onLoadMore: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    when {
+        loadMoreError != null -> Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                loadMoreError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+            )
+            Button(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Retry")
+            }
+        }
+        isLoadingMore -> Box(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp))
+        }
+        canLoadMore -> Button(onClick = onLoadMore, modifier = Modifier.fillMaxWidth()) {
+            Text("Load More")
+        }
+        else -> Text(
+            "That's everything GitHub has for this search.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        )
+    }
+}
 

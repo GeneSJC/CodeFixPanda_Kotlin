@@ -19,6 +19,11 @@ import retrofit2.http.Query
  * else in this codebase called searchRepositories — confirmed before
  * removing it, not assumed.
  *
+ * v0.43: added the page parameter, for Top Repos' "Load More" —
+ * GitHub's Search API is 1-indexed (page 1 is the first page, not 0).
+ * Everything else about this call is unchanged; existing callers that
+ * don't pass page keep working exactly as before via the default.
+ *
  * Note: an earlier version of this file also had a getIssueComments()
  * method, targeting GitHub's general REST API (a separate rate-limit
  * bucket) for the Detail-screen Comments tab. That whole feature was
@@ -34,5 +39,6 @@ interface GitHubApiService {
         @Query("sort") sort: String = "updated",
         @Query("order") order: String = "desc",
         @Query("per_page") perPage: Int = 30,
+        @Query("page") page: Int = 1,
     ): Response<IssueSearchResponseDto>
 }
