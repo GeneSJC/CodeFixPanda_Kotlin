@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.scoreAndRankRepos
+import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.network.GitHubApiClient
@@ -61,6 +62,32 @@ private const val COOLDOWN_SECONDS = 60
  *
  * No sample-data fallback yet (see TopReposUiState) — this screen
  * requires a configured GitHub token.
+ *
+ * v0.41 ("Issue Mode" shell): the per-repo annotation is no longer
+ * hardcoded to "good first issue" — it queries whichever label
+ * IssueMode.current represents, read directly from that shared object
+ * (see IssueMode.kt for why; same "read a plain shared value without a
+ * live subscription" pattern GitHubApiClient.hasToken already uses
+ * here). DiscoverNavHost guarantees a mode is chosen before this
+ * ViewModel is ever created, so the fallback to GOOD_FIRST_ISSUE below
+ * is defensive, not an expected path.
+ *
+ * onModeSelected() mirrors onLanguageSelected() exactly — same
+ * cooldown, same accepted/blocked Boolean contract, same full reload —
+ * because switching Mode costs exactly what switching language does:
+ * a fresh repo search plus a fresh per-repo annotation pass. Both
+ * share the same cooldown timer rather than tracking two separate
+ * ones, since the underlying expense (one load()) is identical either
+ * way. It writes IssueMode.current itself, and only once accepted —
+ * see its own doc comment for why that ordering matters.
+ *
+ * NOT yet changed in this CM: still repo-search-first, annotated
+ * per-repo after the fact — the same pipeline this screen has always
+ * used, just parameterized by Mode instead of hardcoded. Replacing
+ * this with issue-search-first (query issues directly, group by parent
+ * repo, so a repo can never appear with zero matching issues) is a
+ * separate, deliberately later CM — this one is only the Mode
+ * state/UI shell.
  */
 class TopReposViewModel : ViewModel() {
 
@@ -81,18 +108,37 @@ class TopReposViewModel : ViewModel() {
      * doesn't need any special one-off-event machinery just for this.
      */
     fun onLanguageSelected(language: LanguageFilter): Boolean {
-        val elapsedMs = System.currentTimeMillis() - lastLoadAtMs
-        if (lastLoadAtMs != 0L && elapsedMs < COOLDOWN_SECONDS * 1000L) {
-            // Still cooling down from the last load — ignore this switch
-            // attempt rather than risk exceeding the Search API's 30/min
-            // cap. The visible countdown (started by the previous load)
-            // is already telling the user why; the caller additionally
-            // surfaces a Snackbar on a blocked tap specifically.
-            return false
-        }
+        if (isCoolingDown()) return false
         _uiState.update { it.copy(selectedLanguage = language) }
         load(language)
         return true
+    }
+
+    /**
+     * Mirrors onLanguageSelected() exactly — see class doc comment for
+     * why a Mode switch shares the exact same cooldown and reload logic
+     * a language switch does. Deliberately does NOT write
+     * IssueMode.current until AFTER confirming the switch is accepted
+     * (same reason onLanguageSelected() only updates uiState's
+     * selectedLanguage after that check) — writing it earlier would let
+     * the top bar show a new mode while the list underneath silently
+     * kept showing the OLD mode's data because the reload got blocked.
+     */
+    fun onModeSelected(mode: IssueLabelFilter): Boolean {
+        if (isCoolingDown()) return false
+        IssueMode.current = mode
+        load(uiState.value.selectedLanguage)
+        return true
+    }
+
+    private fun isCoolingDown(): Boolean {
+        val elapsedMs = System.currentTimeMillis() - lastLoadAtMs
+        // Still cooling down from the last load — ignore this switch
+        // attempt rather than risk exceeding the Search API's 30/min
+        // cap. The visible countdown (started by the previous load)
+        // is already telling the user why; the caller additionally
+        // surfaces a Snackbar on a blocked tap specifically.
+        return lastLoadAtMs != 0L && elapsedMs < COOLDOWN_SECONDS * 1000L
     }
 
     /** Deliberately exempt from the cooldown — see class doc comment. */
@@ -103,6 +149,11 @@ class TopReposViewModel : ViewModel() {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
         }
+
+        // Defensive fallback only — DiscoverNavHost never creates this
+        // screen (and therefore this ViewModel) while IssueMode.current
+        // is null. See class doc comment.
+        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
         lastLoadAtMs = System.currentTimeMillis()
         startCooldownCountdown()
@@ -127,7 +178,7 @@ class TopReposViewModel : ViewModel() {
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
                 val ranked = scoreAndRankRepos(body.items).take(TOP_N)
                 _uiState.update { it.copy(repos = ranked, isLoading = false) }
-                annotateGoodFirstIssueCounts(ranked)
+                annotateIssueCounts(ranked, activeMode)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -156,14 +207,20 @@ class TopReposViewModel : ViewModel() {
      * Fires one Search API call per repo, each independent — updates
      * that repo's card as soon as its own count arrives, rather than
      * waiting for all 20 before showing any of them.
+     *
+     * v0.41: queries `label` (whichever Issue Mode is active) instead
+     * of a hardcoded "good first issue" string — renamed from
+     * annotateGoodFirstIssueCounts to match. Writes to
+     * Repo.issueCount, renamed from goodFirstIssueCount for the same
+     * reason (see Repo.kt).
      */
-    private fun annotateGoodFirstIssueCounts(repos: List<Repo>) {
+    private fun annotateIssueCounts(repos: List<Repo>, label: IssueLabelFilter) {
         repos.forEach { repo ->
             viewModelScope.launch {
                 try {
                     val response = withContext(Dispatchers.IO) {
                         GitHubApiClient.api.searchIssues(
-                            query = "repo:${repo.ownerLogin}/${repo.name} label:\"good first issue\" state:open",
+                            query = "repo:${repo.ownerLogin}/${repo.name} label:\"${label.queryValue}\" state:open",
                             perPage = 1,
                         )
                     }
@@ -174,7 +231,7 @@ class TopReposViewModel : ViewModel() {
                         _uiState.update { state ->
                             state.copy(
                                 repos = state.repos.map {
-                                    if (it.id == repo.id) it.copy(goodFirstIssueCount = count) else it
+                                    if (it.id == repo.id) it.copy(issueCount = count) else it
                                 },
                             )
                         }

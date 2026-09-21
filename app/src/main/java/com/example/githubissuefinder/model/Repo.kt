@@ -9,14 +9,18 @@ package com.example.githubissuefinder.model
  * directly, matching this project's "every number traces to something
  * real and visible" convention rather than hiding the ranking logic.
  *
- * goodFirstIssueCount (v0.34) is the actual number of currently-open
- * issues labeled "good first issue" in this repo — null while that
- * check hasn't completed yet (a separate call per repo, made after the
- * ranked list itself loads), never a placeholder for "zero." Added to
- * directly address the known limitation flagged since CM 1: a repo can
- * rank highly on general health while having zero matching issues.
- * Ranking itself does NOT yet factor this in — that's a planned,
- * separate follow-up CM.
+ * issueCount (v0.34, renamed from goodFirstIssueCount in v0.41) is the
+ * actual number of currently-open issues matching whichever tag the
+ * active Issue Mode represents — null while that check hasn't
+ * completed yet (a separate call per repo, made after the ranked list
+ * itself loads), never a placeholder for "zero." Added to directly
+ * address the known limitation flagged since CM 1: a repo can rank
+ * highly on general health while having zero matching issues. Renamed
+ * off "goodFirstIssueCount" once Issue Mode meant this could just as
+ * easily be a Help Wanted count — the field itself was always "count
+ * for whichever tag we're currently checking," the old name just
+ * hardcoded an assumption that stopped being true. Ranking itself does
+ * NOT yet factor this in — that's a planned, separate follow-up CM.
  *
  * starsPerDay (v0.37) is a "how fast is this actually catching on"
  * velocity signal — stars divided by days since the repo was created —
@@ -48,6 +52,6 @@ data class Repo(
     val htmlUrl: String,
     val score: Float,
     val displayTitle: String,
-    val goodFirstIssueCount: Int? = null,
+    val issueCount: Int? = null,
     val starsPerDay: Float? = null,
 )

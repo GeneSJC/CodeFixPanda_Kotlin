@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
+import com.example.githubissuefinder.ui.discover.IssueMode
 import com.example.githubissuefinder.ui.navigation.AppNavHost
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
@@ -20,7 +21,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            GitHubIssueFinderTheme {
+            // App-wide Issue Mode (v0.41): read directly from the shared
+            // IssueMode object (see IssueMode.kt) at this single root
+            // theme call, which wraps the whole app — splash AND
+            // whichever landing experience is active. Null (classic flow,
+            // or repoFirst before a mode's been chosen) falls back to the
+            // original light/dark scheme unchanged.
+            GitHubIssueFinderTheme(issueMode = IssueMode.current) {
                 var showSplash by remember { mutableStateOf(true) }
                 if (showSplash) {
                     val onFinished = { showSplash = false }

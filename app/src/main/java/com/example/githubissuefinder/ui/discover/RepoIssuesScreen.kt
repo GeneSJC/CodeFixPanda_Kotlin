@@ -74,11 +74,20 @@ private const val DESCRIPTION_TRUNCATE_LENGTH = 200
  * expand later if a dialog feels heavier than wanted once seen.
  *
  * v0.40 ("CM C"): the label filter row now grays out whichever option
- * has zero matching issues for this repo. GOOD_FIRST_ISSUE uses the
- * count already fetched back on Top Repos (repo.goodFirstIssueCount);
- * HELP_WANTED has no such pre-fetched count, so it's learned live —
- * see RepoIssuesViewModel's doc comment. Tapping a grayed-out option
- * shows a Snackbar explaining why, rather than reloading nothing.
+ * has zero matching issues for this repo. The repo's own pre-fetched
+ * mode uses the count already fetched back on Top Repos
+ * (repo.issueCount); the other label has no such pre-fetched count, so
+ * it's learned live — see RepoIssuesViewModel's doc comment. Tapping a
+ * grayed-out option shows a Snackbar explaining why, rather than
+ * reloading nothing.
+ *
+ * v0.41 ("Issue Mode" shell) fix: this file was NOT in v0.41's own
+ * file list, but v0.41 renamed Repo.goodFirstIssueCount to issueCount
+ * — left unfixed, this wouldn't compile. Also fixed here, not just the
+ * rename: which label repo.issueCount == 0 should disable is now
+ * IssueMode.current (whichever mode was active when Top Repos fetched
+ * it), not a hardcoded GOOD_FIRST_ISSUE — same fix, same reasoning, as
+ * the one made in RepoIssuesViewModel.kt.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,10 +104,16 @@ fun RepoIssuesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val disabledLabels = remember(repo.goodFirstIssueCount, uiState.helpWantedKnownEmpty) {
+    // The label repo.issueCount was actually fetched for — see the
+    // doc comment above. Defensive fallback only; DiscoverNavHost
+    // guarantees a mode is chosen before this screen is reachable.
+    val fetchedForMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    val disabledLabels = remember(repo.issueCount, uiState.otherLabelKnownEmpty, fetchedForMode) {
         buildSet {
-            if (repo.goodFirstIssueCount == 0) add(IssueLabelFilter.GOOD_FIRST_ISSUE)
-            if (uiState.helpWantedKnownEmpty) add(IssueLabelFilter.HELP_WANTED)
+            if (repo.issueCount == 0) add(fetchedForMode)
+            if (uiState.otherLabelKnownEmpty) {
+                add(IssueLabelFilter.entries.first { it != fetchedForMode })
+            }
         }
     }
 

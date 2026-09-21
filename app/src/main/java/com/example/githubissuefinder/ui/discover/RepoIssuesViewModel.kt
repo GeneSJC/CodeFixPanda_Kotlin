@@ -47,14 +47,28 @@ import kotlinx.coroutines.withContext
  * RepoIssuesScreen's LaunchedEffect.
  *
  * v0.40 ("CM C"): loadIfNeeded() now picks a smarter initial label —
- * if repo.goodFirstIssueCount is already known to be 0 (fetched back
- * on Top Repos, v0.34), it starts on HELP_WANTED instead of the
- * default GOOD_FIRST_ISSUE, so the screen doesn't land on an
- * already-known dead end. load() also tracks helpWantedKnownEmpty,
- * learned live the first time a HELP_WANTED load comes back empty —
- * there's no pre-fetched count for that label the way there is for
- * good first issue, so this is the zero-extra-cost alternative to
- * doubling the per-repo annotation calls on Top Repos.
+ * if repo.issueCount is already known to be 0 (fetched back on Top
+ * Repos, v0.34), it starts on whichever label ISN'T the repo's own
+ * pre-fetched mode, so the screen doesn't land on an already-known
+ * dead end. load() also tracks otherLabelKnownEmpty, learned live the
+ * first time a load for that other label comes back empty — there's
+ * no pre-fetched count for it the way there is for the repo's own
+ * mode, so this is the zero-extra-cost alternative to doubling the
+ * per-repo annotation calls on Top Repos.
+ *
+ * v0.41 ("Issue Mode" shell) fix: this file was NOT in v0.41's own
+ * file list, but v0.41 renamed Repo.goodFirstIssueCount to issueCount
+ * AND changed what that count means — it's no longer always about
+ * Good First Issue specifically, it's about whichever mode was active
+ * when Top Repos fetched it. The rename alone would have been a
+ * compile break; left unfixed, the DEEPER bug is that this file's
+ * "smarter initial label" logic hardcoded GOOD_FIRST_ISSUE as both the
+ * pre-fetched label AND the fallback, which becomes actively wrong the
+ * moment the active mode is Help Wanted — it would evaluate a Help
+ * Wanted count as though it were about Good First Issue. Fixed here by
+ * reading IssueMode.current (same shared-object pattern IssueMode.kt
+ * itself already establishes) to know which label repo.issueCount
+ * actually represents, rather than assuming.
  */
 class RepoIssuesViewModel : ViewModel() {
 
@@ -66,8 +80,12 @@ class RepoIssuesViewModel : ViewModel() {
     fun loadIfNeeded(repo: Repo) {
         if (loadedForRepoFullName == repo.fullName) return
         loadedForRepoFullName = repo.fullName
-        val initialLabel = if (repo.goodFirstIssueCount == 0) {
-            IssueLabelFilter.HELP_WANTED
+        // The label repo.issueCount was actually fetched for — see
+        // class doc comment. Defensive fallback only; DiscoverNavHost
+        // guarantees a mode is chosen before this screen is reachable.
+        val fetchedForMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val initialLabel = if (repo.issueCount == 0) {
+            IssueLabelFilter.entries.first { it != fetchedForMode }
         } else {
             uiState.value.selectedLabel
         }
@@ -102,12 +120,14 @@ class RepoIssuesViewModel : ViewModel() {
                 }
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
                 val issues = body.items.map { it.toIssue(languageFilter = repo.language) }
+                // Same fallback reasoning as loadIfNeeded() above.
+                val fetchedForMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
                 _uiState.update { state ->
                     state.copy(
                         issues = issues,
                         isLoading = false,
-                        helpWantedKnownEmpty = state.helpWantedKnownEmpty ||
-                            (label == IssueLabelFilter.HELP_WANTED && issues.isEmpty()),
+                        otherLabelKnownEmpty = state.otherLabelKnownEmpty ||
+                            (label != fetchedForMode && issues.isEmpty()),
                     )
                 }
             } catch (e: Exception) {

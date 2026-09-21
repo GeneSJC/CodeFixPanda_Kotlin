@@ -24,3 +24,28 @@ val GreenContainerDark = Color(0xFF1E3D34)
 val OnGreenContainerDark = Color(0xFFB6E7D6)
 val BackgroundDark = Color(0xFF14140F)
 val SurfaceDark = Color(0xFF1E1E1A)
+
+// Issue Mode pastel schemes (v0.41) — deliberately their own palette,
+// not a reuse of BrandPurple/BrandGreen above at full strength. Those
+// exist to accent small elements (a label chip, a secondary color) on
+// an otherwise neutral background; Mode's colors need to comfortably
+// BE the background/surface across an entire screen without turning
+// harsh or fatiguing, so they're a good deal lighter and softer than
+// the brand accents they're loosely echoing. Light-only for now — see
+// ModeColorSchemes.kt for why dark variants aren't included yet.
+
+// Good First Issue — light purple pastel
+val ModeGfiBackground = Color(0xFFF5F2FC)
+val ModeGfiSurface = Color(0xFFFFFFFF)
+val ModeGfiPrimary = Color(0xFF6E5FD1)
+val ModeGfiOnPrimary = Color(0xFFFFFFFF)
+val ModeGfiSecondaryContainer = Color(0xFFE6E0F8)
+val ModeGfiOnSecondaryContainer = Color(0xFF2E2566)
+
+// Help Wanted — light green pastel
+val ModeHwBackground = Color(0xFFEFFAF1)
+val ModeHwSurface = Color(0xFFFFFFFF)
+val ModeHwPrimary = Color(0xFF2F9E5C)
+val ModeHwOnPrimary = Color(0xFFFFFFFF)
+val ModeHwSecondaryContainer = Color(0xFFD7F2DF)
+val ModeHwOnSecondaryContainer = Color(0xFF0B4A24)

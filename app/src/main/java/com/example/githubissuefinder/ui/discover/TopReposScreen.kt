@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.Repo
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
@@ -60,9 +61,10 @@ import java.util.Locale
  * uses (v0.27).
  *
  * The "ⓘ" beside the title (v0.28) opens a dialog explaining the ranking
- * formula. Each card also shows its actual open good-first-issue count
- * (v0.34) — "Checking open issues…" while that per-repo lookup is still
- * in flight, then the real count once it resolves. The composite score
+ * formula. Each card also shows its actual open issue count for the
+ * active Issue Mode (v0.34; mode-aware as of v0.41 — see below) —
+ * "Checking open issues…" while that per-repo lookup is still in
+ * flight, then the real count once it resolves. The composite score
  * does NOT yet factor this count in — that's a planned follow-up CM,
  * per the two-step plan (annotate first, re-rank/filter later).
  *
@@ -77,7 +79,8 @@ import java.util.Locale
  * alongside the Snackbar was removed in this same CM ("new v38") as
  * redundant — the Snackbar alone covers it. See TopReposViewModel's
  * doc comment for why retry() is deliberately exempt from this
- * cooldown.
+ * cooldown. The same cooldown now also guards mode switches (v0.41) —
+ * see below.
  *
  * v0.37 adds a "stars/day since creation" velocity label to each card
  * (hidden for repos under 30 days old, where it would be noise, not
@@ -115,6 +118,23 @@ import java.util.Locale
  * (RepoIssuesScreen), with proper back-navigation via DiscoverNavHost
  * — onRepoClick is no longer wired to a no-op. Feed/Insights/Bookmarks
  * scoping to a chosen repo remains a separate, future Commit Milestone.
+ *
+ * v0.41 ("Issue Mode" shell): the static "Top Repos" title is now a
+ * mode dropdown — tapping it shows every IssueLabelFilter.entries
+ * option (not hardcoded to exactly two, same "future modes show up for
+ * free" reasoning as IssueModeGateScreen), with no checkmark since the
+ * CURRENT mode is already shown as the button label itself. Selecting
+ * a different mode calls viewModel.onModeSelected(mode) — reusing the
+ * exact same cooldown + Snackbar pattern onLanguageSelected() already
+ * has, since a mode switch costs exactly what a language switch does
+ * (a full reload + re-annotation). The ViewModel itself is what writes
+ * IssueMode.current, and only once the switch is actually accepted —
+ * see its doc comment for why setting it any earlier would let this
+ * screen's header show a mode the loaded list doesn't actually match.
+ * This screen only ever renders once IssueMode.current is already
+ * non-null (see DiscoverNavHost's gate), so the mode dropdown always
+ * has a real current value to show — no "no mode selected" state to
+ * handle here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,15 +146,56 @@ fun TopReposScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showModeMenu by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    // Guaranteed non-null: DiscoverNavHost never renders this screen
+    // while IssueMode.current is null (see its own doc comment).
+    val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Top Repos") },
+                    title = {
+                        Box {
+                            Row(
+                                modifier = Modifier.clickable { showModeMenu = true },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(currentMode.displayName)
+                                Text(
+                                    " ▾",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(start = 2.dp),
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showModeMenu,
+                                onDismissRequest = { showModeMenu = false },
+                            ) {
+                                IssueLabelFilter.entries.forEach { mode ->
+                                    DropdownMenuItem(
+                                        text = { Text(mode.displayName) },
+                                        onClick = {
+                                            showModeMenu = false
+                                            if (mode != currentMode) {
+                                                val accepted = viewModel.onModeSelected(mode)
+                                                if (!accepted) {
+                                                    coroutineScope.launch {
+                                                        snackbarHostState.showSnackbar(
+                                                            "Please wait ${uiState.cooldownSecondsRemaining}s before switching again",
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    },
                     navigationIcon = {
                         Box {
                             IconButton(onClick = { showMenu = true }) {
@@ -296,10 +357,11 @@ private fun RankingInfoDialog(onDismiss: () -> Unit) {
                 )
                 Text(
                     "This reflects general repo health. Each card also shows its actual " +
-                        "count of currently-open good-first-issues directly (or \"Checking " +
-                        "open issues…\" while that's still loading) — the score above doesn't " +
-                        "factor that count in yet, but you can see both at a glance. A future " +
-                        "update will let you re-rank by open-issue count directly.",
+                        "count of currently-open issues for whichever mode you're in " +
+                        "directly (or \"Checking open issues…\" while that's still " +
+                        "loading) — the score above doesn't factor that count in yet, but " +
+                        "you can see both at a glance. A future update will let you " +
+                        "re-rank by open-issue count directly.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -374,19 +436,32 @@ private fun RepoCard(repo: Repo, onClick: () -> Unit) {
                 Text(repo.updatedAtLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            GoodFirstIssueCountLabel(repo.goodFirstIssueCount)
+            IssueCountLabel(repo.issueCount)
             StarsPerDayLabel(repo.starsPerDay)
         }
     }
 }
 
+/**
+ * Renamed from GoodFirstIssueCountLabel (v0.41) — deliberately does
+ * NOT splice the active mode's displayName into this text (tried
+ * first, then reverted): "good first issue" already contains the word
+ * "issue," so a template like "No open ${mode.displayName} issues"
+ * produced "No open good first issue issues" — a real duplication
+ * bug, not just an awkward phrasing choice, and not something safely
+ * fixable in general for an arbitrary FUTURE mode's own displayName
+ * text. Since the active mode is already shown prominently in the top
+ * bar for the whole screen, repeating it on every single card would
+ * be redundant anyway — this just says how many, generically, and
+ * lets the top bar carry the "which mode" context.
+ */
 @Composable
-private fun GoodFirstIssueCountLabel(count: Int?) {
+private fun IssueCountLabel(count: Int?) {
     val (text, color) = when {
         count == null -> "Checking open issues…" to MaterialTheme.colorScheme.onSurfaceVariant
-        count == 0 -> "No open good-first-issues" to MaterialTheme.colorScheme.onSurfaceVariant
-        count == 1 -> "1 good-first-issue open" to MaterialTheme.colorScheme.primary
-        else -> "$count good-first-issues open" to MaterialTheme.colorScheme.primary
+        count == 0 -> "No open issues" to MaterialTheme.colorScheme.onSurfaceVariant
+        count == 1 -> "1 open issue" to MaterialTheme.colorScheme.primary
+        else -> "$count open issues" to MaterialTheme.colorScheme.primary
     }
     Text(
         text,
