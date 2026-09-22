@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
@@ -162,6 +163,19 @@ import kotlinx.coroutines.flow.collect
  * limit specifically (see that class's doc comment for why this is
  * scoped to Load More only, and why it's a Channel-backed one-shot
  * event rather than a UiState field).
+ *
+ * v0.45 (persistent cache): a small "Updated X ago" line now sits
+ * under the language filter row, driven by uiState.lastUpdatedAtMs —
+ * the only visible sign, most of the time, that this screen might be
+ * showing cached data rather than something just fetched (see
+ * TopReposViewModel and RepoIssueGroupCache doc comments). Two more
+ * hamburger-menu items sit above the mode-switch pair, grouped with
+ * the animation items via their own divider: "Refresh" (forces a live
+ * fetch for the current language/mode, bypassing and then overwriting
+ * the cache) and "Clear Cache" (wipes the ENTIRE persistent cache, not
+ * just the active combination — see RepoIssueGroupCache.clearAll()'s
+ * doc comment for why that's a known, named limitation rather than an
+ * oversight).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -239,6 +253,21 @@ fun TopReposScreen(
                                 )
                                 HorizontalDivider()
                                 DropdownMenuItem(
+                                    text = { Text("Refresh") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.refresh()
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Clear Cache") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.clearCache()
+                                    },
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
                                     text = { Text("Find Good First Issues") },
                                     onClick = {
                                         showMenu = false
@@ -273,6 +302,15 @@ fun TopReposScreen(
                     selected = uiState.selectedLanguage,
                     onSelect = viewModel::onLanguageSelected,
                 )
+
+                uiState.lastUpdatedAtMs?.let { updatedAtMs ->
+                    Text(
+                        "Updated ${formatRelativeTime(updatedAtMs)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                }
 
                 when {
                     uiState.noTokenConfigured -> CenteredMessage(

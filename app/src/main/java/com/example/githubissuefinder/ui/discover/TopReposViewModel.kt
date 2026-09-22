@@ -1,8 +1,10 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.RateLimitState
+import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
@@ -88,17 +90,9 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * items at the bottom of TopReposScreen's hamburger menu ("Find Good
  * First Issues" / "Find Help Wanted Issues"), NOT a resurrection of
  * the old v0.41 title-bar dropdown that was removed earlier in this
- * CM sequence. That dropdown sat directly in the title, visible and
- * tappable without any deliberate action — exactly what made it feel
- * accidental rather than a real choice, and why it was removed. Living
- * at the bottom of a menu the user has to deliberately open keeps the
- * "this is a real, considered choice" framing intact. See
- * TopReposScreen's doc comment for the full reasoning, including why
- * this is a direct in-place switch rather than navigating back to
- * IssueModeGateScreen (a gate-based design was fully worked out first,
- * then set aside — reusing the gate is the more scalable choice if a
- * third mode is ever added, but wasn't worth the added navigation
- * complexity for exactly two).
+ * CM sequence. See TopReposScreen's doc comment for the full
+ * reasoning, including why this is a direct in-place switch rather
+ * than navigating back to IssueModeGateScreen.
  *
  * v0.43 (PAGINATION + CROSS-PAGE DEDUP): load() previously fetched
  * exactly one page and stopped — whatever groups formed from GitHub's
@@ -130,23 +124,39 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * deliberately does NOT touch canLoadMore or currentPage: the button
  * stays exactly as it was, ready to tap again once the limit resets,
  * rather than landing in the same inline-error-with-Retry state a
- * genuine failure would. This is intentionally the full extent of
- * rate-limit handling for now — a persistent visible meter (matching
- * Feed's existing RateLimitChip) is deliberately out of scope here,
- * parked as lower priority; this Snackbar is enough to know it CAN
- * happen without committing to where/how a fuller indicator eventually
- * lives. Scoped to Load More specifically, not the initial load, per
- * how this was asked for — switching language/mode into a rate limit
- * still just surfaces the existing generic errorMessage state.
+ * genuine failure would. Scoped to Load More specifically, not the
+ * initial load. snackbarEvents is a Channel, not part of
+ * TopReposUiState, so each event is delivered exactly once rather than
+ * re-shown on every new collector (e.g. after a configuration change).
  *
- * snackbarEvents is a Channel, not part of TopReposUiState — a
- * StateFlow field would re-emit its last value on every new collector
- * (e.g. after a configuration change), showing the same Snackbar again
- * for an event that already happened. A Channel only ever delivers
- * each event once, to whichever collector is listening at the time —
- * the correct shape for a genuinely one-shot UI event like this.
+ * v0.45 (PERSISTENT CACHE): now an AndroidViewModel instead of a plain
+ * ViewModel — the only reason is Context access for
+ * RepoIssueGroupCache's file I/O (Compose's viewModel() constructs
+ * AndroidViewModel subclasses automatically via the default factory
+ * when hosted from an Activity, so no extra wiring is needed at the
+ * call site in TopReposScreen). load() now checks the cache FIRST for
+ * the (language, mode) pair being requested: a hit populates uiState
+ * instantly with zero network calls — including currentPage and
+ * canLoadMore, so Load More resumes exactly where a previous session
+ * left off, not reset back to page 1. A miss falls through to the
+ * exact v0.42/v0.43 network path unchanged. Every SUCCESSFUL fetch
+ * (both the initial load AND every Load More) saves its result back to
+ * the cache — Load More progress persists too, not just the first
+ * page, since RepoIssueGroupCache.CacheEntry stores the full
+ * accumulated repoGroups plus currentPage/canLoadMore, not a single
+ * page (see that class's own doc comment for why this had to wait
+ * until pagination existed to be designed correctly). Getting fresh
+ * data for an already-cached combination is never automatic — see
+ * refresh() and RepoIssueGroupCache's own doc comment for why.
+ *
+ * The cache check itself runs inside its own viewModelScope.launch
+ * inside load(); on a cache MISS it calls fetchPage(), which launches
+ * its own separate coroutine internally rather than being restructured
+ * to share the outer one — a small, deliberate inefficiency (one extra
+ * coroutine hop) traded for not having to touch fetchPage's own
+ * structure, which is unchanged from v0.43/v0.44 otherwise.
  */
-class TopReposViewModel : ViewModel() {
+class TopReposViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(TopReposUiState())
     val uiState: StateFlow<TopReposUiState> = _uiState.asStateFlow()
@@ -203,18 +213,43 @@ class TopReposViewModel : ViewModel() {
         loadMore()
     }
 
-    private fun load(language: LanguageFilter) {
+    /**
+     * v0.45: forces a live network fetch for the CURRENT (language,
+     * mode) pair, bypassing whatever's cached, and overwrites that
+     * cache entry with the fresh result — the only way to get newer
+     * data for a combination that's already cached, deliberately
+     * explicit rather than automatic (see class + RepoIssueGroupCache
+     * doc comments for why).
+     */
+    fun refresh() = load(uiState.value.selectedLanguage, forceNetwork = true)
+
+    /** v0.45: clears the ENTIRE persistent cache — see RepoIssueGroupCache.clearAll()'s doc comment for why this isn't scoped to just the active (language, mode) pair yet. */
+    fun clearCache() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                RepoIssueGroupCache.clearAll(getApplication())
+            }
+        }
+    }
+
+    private fun load(language: LanguageFilter, forceNetwork: Boolean = false) {
         if (!GitHubApiClient.hasToken) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
         }
-        // Fresh load (language/mode switch or retry): reset pagination
-        // state, but deliberately leave repoGroups AS-IS until the new
-        // data actually arrives — clearing it here would blank the
-        // screen behind a spinner on every language switch, which
-        // isn't how this screen behaved before pagination existed. The
-        // old list gets replaced outright once fetchPage's non-merge
-        // path (isLoadMore = false) succeeds.
+
+        // Defensive fallback only — DiscoverNavHost never creates this
+        // screen (and therefore this ViewModel) while IssueMode.current
+        // is null. See IssueMode.kt.
+        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+
+        // Fresh load (language/mode switch, retry, or refresh): reset
+        // pagination-error state, but deliberately leave repoGroups
+        // AS-IS until new data actually arrives — clearing it here
+        // would blank the screen behind a spinner on every language
+        // switch, which isn't how this screen has ever behaved. The
+        // old list gets replaced outright once either the cache-hit
+        // path below or fetchPage's non-merge path succeeds.
         _uiState.update {
             it.copy(
                 currentPage = 0,
@@ -222,7 +257,32 @@ class TopReposViewModel : ViewModel() {
                 loadMoreError = null,
             )
         }
-        fetchPage(language = language, page = 1, isLoadMore = false)
+
+        if (forceNetwork) {
+            fetchPage(language = language, page = 1, isLoadMore = false)
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
+            val cached = withContext(Dispatchers.IO) {
+                RepoIssueGroupCache.load(getApplication(), language, activeMode)
+            }
+            if (cached != null) {
+                _uiState.update {
+                    it.copy(
+                        repoGroups = cached.repoGroups,
+                        totalIssueCount = cached.totalIssueCount,
+                        currentPage = cached.currentPage,
+                        canLoadMore = cached.canLoadMore,
+                        lastUpdatedAtMs = cached.fetchedAtMs,
+                        isLoading = false,
+                    )
+                }
+            } else {
+                fetchPage(language = language, page = 1, isLoadMore = false)
+            }
+        }
     }
 
     private fun fetchPage(language: LanguageFilter, page: Int, isLoadMore: Boolean) {
@@ -277,19 +337,42 @@ class TopReposViewModel : ViewModel() {
                 }
                 RateLimitState.update(parseRateLimitHeaders(response.headers()))
                 val newIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
+
+                // Computed inside the update{} lambda (which may retry
+                // under contention) and captured out to these vars so
+                // the SAME values that were actually committed to
+                // uiState are what get persisted to the cache below —
+                // not a second, potentially different, independently
+                // recomputed pair of values.
+                var mergedGroups: List<RepoIssueGroup> = emptyList()
+                var newCanLoadMore = false
+                val fetchedAtMs = System.currentTimeMillis()
                 _uiState.update { state ->
-                    val mergedGroups = if (isLoadMore) {
+                    mergedGroups = if (isLoadMore) {
                         mergeIntoGroups(state.repoGroups, newIssues)
                     } else {
                         groupByRepo(newIssues)
                     }
+                    newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
                     state.copy(
                         repoGroups = mergedGroups,
                         isLoading = false,
                         isLoadingMore = false,
                         totalIssueCount = body.totalCount,
                         currentPage = page,
-                        canLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page),
+                        canLoadMore = newCanLoadMore,
+                        lastUpdatedAtMs = fetchedAtMs,
+                    )
+                }
+                withContext(Dispatchers.IO) {
+                    RepoIssueGroupCache.save(
+                        context = getApplication(),
+                        language = language,
+                        mode = activeMode,
+                        repoGroups = mergedGroups,
+                        totalIssueCount = body.totalCount,
+                        currentPage = page,
+                        canLoadMore = newCanLoadMore,
                     )
                 }
             } catch (e: Exception) {

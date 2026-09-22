@@ -50,7 +50,13 @@ object GitHubApiClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    private val moshi = Moshi.Builder()
+    // v0.45: was private — exposed so RepoIssueGroupCache can serialize
+    // its own cache file with the exact same Moshi instance (same
+    // adapters, same config) rather than building a second, separate
+    // Moshi just for that, which would be redundant setup for no
+    // benefit — this project doesn't yet have DI to share it any more
+    // formally than that.
+    val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
 

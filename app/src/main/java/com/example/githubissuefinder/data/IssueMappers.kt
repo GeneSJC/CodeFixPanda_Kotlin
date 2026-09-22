@@ -63,13 +63,25 @@ fun formatRelativeTime(isoTimestamp: String): String {
             timeZone = TimeZone.getTimeZone("UTC")
         }
         val thenMillis = format.parse(isoTimestamp)?.time ?: return "recently"
-        val hoursAgo = (System.currentTimeMillis() - thenMillis) / (1000 * 60 * 60)
-        when {
-            hoursAgo < 1 -> "just now"
-            hoursAgo < 24 -> "${hoursAgo}h ago"
-            else -> "${hoursAgo / 24}d ago"
-        }
+        formatRelativeTime(thenMillis)
     } catch (e: Exception) {
         "recently"
+    }
+}
+
+/**
+ * v0.45: overload taking a plain epoch-millis timestamp directly, for
+ * callers that already have one (e.g. RepoIssueGroupCache's
+ * fetchedAtMs, used for Top Repos' "Updated X ago" label) rather than
+ * a GitHub-format ISO string to parse first. The ISO-string overload
+ * above now delegates here once it's parsed the timestamp, instead of
+ * duplicating the hoursAgo bucketing logic in two places.
+ */
+fun formatRelativeTime(thenMillis: Long): String {
+    val hoursAgo = (System.currentTimeMillis() - thenMillis) / (1000 * 60 * 60)
+    return when {
+        hoursAgo < 1 -> "just now"
+        hoursAgo < 24 -> "${hoursAgo}h ago"
+        else -> "${hoursAgo / 24}d ago"
     }
 }
