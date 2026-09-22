@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,6 +74,22 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * context even with nothing left to pick between. Each IssueCard shows
  * an external-link badge (see IssueCard's doc comment) since tapping
  * one opens GitHub directly, not an in-app screen.
+ *
+ * v0.46 ("Check for More Issues"): the LazyColumn now always ends in a
+ * footer reflecting uiState.isCheckingForMore / allIssuesLoaded /
+ * checkForMoreError — an explicit "Check for More Issues" button (with
+ * a small cost note underneath, "Uses one API call against your rate
+ * limit"), a small inline spinner while that fetch is in flight, an
+ * inline retry row on failure, or a plain "Showing all N issues" line
+ * once the complete set has been fetched. See
+ * RepoIssuesViewModel.checkForMoreIssues()'s doc comment for what this
+ * closes (a real completeness gap — this screen previously had no way
+ * to show more of a repo's issues than happened to be swept up while
+ * Top Repos was built) and why it's deliberately manual rather than
+ * automatic. The empty-state message ("No open issues to show.") moved
+ * INSIDE the LazyColumn as its own item, rather than replacing it
+ * entirely — the footer needs to render either way, so there can't
+ * meaningfully be a screen with a list showing but no footer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,21 +158,23 @@ fun RepoIssuesScreen(
                 )
             }
 
-            if (uiState.issues.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "No open issues to show.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (uiState.issues.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "No open issues to show.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else {
                     items(uiState.issues, key = { it.id }) { issue ->
                         IssueCard(
                             issue = issue,
@@ -166,11 +188,84 @@ fun RepoIssuesScreen(
                         )
                     }
                 }
+                item(key = "checkForMoreFooter") {
+                    CheckForMoreIssuesFooter(
+                        isCheckingForMore = uiState.isCheckingForMore,
+                        allIssuesLoaded = uiState.allIssuesLoaded,
+                        checkForMoreError = uiState.checkForMoreError,
+                        currentIssueCount = uiState.issues.size,
+                        onCheckForMore = { viewModel.checkForMoreIssues(repoGroup) },
+                        onRetry = { viewModel.checkForMoreIssues(repoGroup) },
+                    )
+                }
             }
         }
     }
 
     if (showInfoDialog) {
         LabelInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+}
+
+/**
+ * v0.46: the one place on this screen anything can be "loading" or
+ * "errored" — see RepoIssuesUiState's own doc comment for why that's
+ * scoped narrowly to this footer rather than the whole screen.
+ * Deliberately a manual button, not automatic, with a visible cost
+ * note — same "every network call stays a visible, intentional
+ * choice" instinct Top Repos' own Load More button is built around.
+ */
+@Composable
+private fun CheckForMoreIssuesFooter(
+    isCheckingForMore: Boolean,
+    allIssuesLoaded: Boolean,
+    checkForMoreError: String?,
+    currentIssueCount: Int,
+    onCheckForMore: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    when {
+        checkForMoreError != null -> Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                checkForMoreError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+            )
+            Button(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Retry")
+            }
+        }
+        isCheckingForMore -> Box(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp))
+        }
+        allIssuesLoaded -> Text(
+            "Showing all $currentIssueCount issues.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        )
+        else -> Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Button(onClick = onCheckForMore, modifier = Modifier.fillMaxWidth()) {
+                Text("Check for More Issues")
+            }
+            Text(
+                "Uses one API call against your rate limit.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }

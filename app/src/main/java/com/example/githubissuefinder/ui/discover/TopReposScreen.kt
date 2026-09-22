@@ -176,6 +176,13 @@ import kotlinx.coroutines.flow.collect
  * just the active combination — see RepoIssueGroupCache.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
  * oversight).
+ *
+ * v0.46: a small chip in the top bar's actions slot (next to the "ⓘ"
+ * icon) shows how many repo cards are currently loaded — styled
+ * directly after Feed's own RateLimitChip, the same reference point
+ * this was asked for by name. Just reads uiState.repoGroups.size
+ * directly; no separate tracking needed, updates for free on every
+ * Load More and every mode/language switch.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -285,6 +292,18 @@ fun TopReposScreen(
                         }
                     },
                     actions = {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier.padding(end = 8.dp),
+                        ) {
+                            Text(
+                                repoCountLabel(uiState.repoGroups.size),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            )
+                        }
                         Text(
                             "ⓘ",
                             style = MaterialTheme.typography.titleMedium,
@@ -473,6 +492,18 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
 }
 
 private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
+
+/**
+ * v0.46: the small top-bar chip showing how many repo cards are
+ * currently loaded — styled directly after Feed's existing
+ * RateLimitChip (same Surface/RoundedCornerShape/secondaryContainer/
+ * bodySmall shape), placed in the same actions slot. Counts
+ * uiState.repoGroups.size directly — already exactly "how many repos
+ * are loaded," no separate tracking needed. Updates for free on every
+ * Load More and every mode/language switch, since it just reads
+ * whatever's already in uiState.
+ */
+private fun repoCountLabel(count: Int): String = if (count == 1) "1 repo" else "$count repos"
 
 /**
  * v0.43: the pagination footer — one of four states, exactly one shown
