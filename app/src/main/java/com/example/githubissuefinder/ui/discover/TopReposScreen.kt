@@ -183,11 +183,19 @@ import kotlinx.coroutines.flow.collect
  * this was asked for by name. Just reads uiState.repoGroups.size
  * directly; no separate tracking needed, updates for free on every
  * Load More and every mode/language switch.
+ *
+ * v0.48: added "Bookmarks" as the very first menu item, right after
+ * the version header — a real navigation destination (see
+ * DiscoverNavHost's new ROUTE_REPO_BOOKMARKS and RepoBookmarksScreen),
+ * placed ahead of the animation/settings-style items below it since
+ * it's the one item in this menu someone might actually want to reach
+ * repeatedly, not a one-off action.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopReposScreen(
     onRepoClick: (RepoIssueGroup) -> Unit,
+    onOpenBookmarks: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
 ) {
@@ -235,6 +243,14 @@ fun TopReposScreen(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = { Text("Bookmarks") },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenBookmarks()
+                                    },
                                 )
                                 HorizontalDivider()
                                 DropdownMenuItem(

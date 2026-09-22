@@ -17,9 +17,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.Issue
+import kotlinx.coroutines.launch
 
 /**
  * The core feed card. `isBookmarked` is passed in rather than read from the
@@ -112,6 +115,43 @@ import com.example.githubissuefinder.model.Issue
  * version of the same person, at a computer) enough context to know
  * what the issue actually is without needing to already be looking at
  * the card it came from.
+ *
+ * v0.48 (repo-first bookmarking): a bookmark toggle — a small "★"/"☆"
+ * badge, styled to match the "↗" external-link badge's exact size and
+ * shape (same Surface + RoundedCornerShape + enlarged glyph treatment),
+ * sitting to the LEFT of the Share button in the action row — is
+ * OPTIONAL, controlled by onToggleBookmark being non-null. Feed's
+ * existing call sites pass nothing new and are completely unaffected;
+ * only RepoIssuesScreen and the new RepoBookmarksScreen provide it.
+ * This is deliberate, not an oversight: Feed already has its own,
+ * separate, unrelated bookmarking path via DetailScreen, backed by
+ * AppNavHost's own local state — this CM's bookmark toggle is scoped
+ * to the repo-first flow's RepoBookmarks store specifically (see that
+ * file's own doc comment for why the two aren't unified).
+ *
+ * Tapping it calls onToggleBookmark(), then shows a real Snackbar
+ * ("Bookmarked" / "Unbookmarked") via the caller-supplied
+ * snackbarHostState — a genuine departure from Copy Link's Toast a few
+ * paragraphs up, and worth being direct about why: a Snackbar was the
+ * explicit, specific request for this action, so it's honored here
+ * rather than defaulting to the Toast pattern for consistency's own
+ * sake. The cost is real, not hidden: unlike Copy Link, this action
+ * requires whatever screen wants the bookmark toggle to own and supply
+ * its own SnackbarHostState — RepoIssuesScreen gained one for exactly
+ * this (it didn't have one before this CM), and the new
+ * RepoBookmarksScreen has one from the start. Both actions living on
+ * the same card, one via Toast and one via Snackbar, is a genuine
+ * inconsistency worth knowing about rather than glossing over — kept
+ * this way because it's what was actually asked for, not because it's
+ * the tidier design.
+ *
+ * The message shown ("Bookmarked" vs "Unbookmarked") is predicted from
+ * the CURRENT isBookmarked value this composable already has (not a
+ * return value from onToggleBookmark, which stays a plain () -> Unit)
+ * — safe because the toggle it triggers is synchronous in its
+ * in-memory effect (see RepoBookmarks.toggle()'s own doc comment);
+ * the disk write happens after, off the UI thread, and never blocks
+ * what the user sees or reads here.
  */
 @Composable
 fun IssueCard(
@@ -120,9 +160,12 @@ fun IssueCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     showExternalLinkIndicator: Boolean = false,
+    onToggleBookmark: (() -> Unit)? = null,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val coroutineScope = rememberCoroutineScope()
 
     Card(
         onClick = onClick,
@@ -217,7 +260,31 @@ fun IssueCard(
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    if (onToggleBookmark != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            onClick = {
+                                onToggleBookmark()
+                                val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                snackbarHostState?.let { hostState ->
+                                    coroutineScope.launch { hostState.showSnackbar(message) }
+                                }
+                            },
+                        ) {
+                            Text(
+                                if (isBookmarked) "★" else "☆",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    // Same enlargement as the "↗" badge, for a matched size.
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
+                                ),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
+                            )
+                        }
+                    }
                     Button(
                         onClick = {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {

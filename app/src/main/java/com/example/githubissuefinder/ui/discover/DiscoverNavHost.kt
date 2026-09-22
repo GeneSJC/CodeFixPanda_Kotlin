@@ -14,6 +14,7 @@ import com.example.githubissuefinder.model.RepoIssueGroup
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
+private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
 
 /**
  * Navigation host for the "repoFirst" Discover flow — introduced in
@@ -55,14 +56,22 @@ private const val ROUTE_REPO_ISSUES = "repoIssues"
  * startDestination is computed ONCE, via `remember` (NOT re-read
  * reactively on every IssueMode.current change — NavHost's
  * startDestination is fixed at creation) — gate if no mode is chosen
- * yet, straight to Top Repos if one somehow already is (not reachable
- * yet in practice, since Mode isn't persisted across restarts — see
- * IssueMode.kt — but correct and forward-compatible for whenever
- * persistence lands). Picking a mode on the gate screen calls
+ * yet, straight to Top Repos if one already is. As of v0.44, that
+ * second branch is genuinely reachable, not just forward-compatible —
+ * Mode now persists across launches (see IssueMode.kt), so a returning
+ * user's saved mode is already restored by the time this composes, and
+ * they land directly on Top Repos with the gate skipped entirely.
+ * Picking a mode on the gate screen calls
  * navController.navigate(ROUTE_TOP_REPOS), pushing Top Repos ON TOP of
  * the gate rather than replacing it, so the gate stays in the back
  * stack underneath and system back from Top Repos correctly returns
- * to it.
+ * to it — but ONLY within a session that actually visited the gate.
+ *
+ * v0.48: added ROUTE_REPO_BOOKMARKS, reached from TopReposScreen's
+ * hamburger menu ("Bookmarks") — pushed on top of Top Repos, same
+ * "push, don't replace" pattern every other forward navigation in this
+ * file already uses, so back from it returns to wherever it was opened
+ * from.
  */
 @Composable
 fun DiscoverNavHost(modifier: Modifier = Modifier) {
@@ -92,6 +101,7 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                     selectedRepoGroup = group
                     navController.navigate(ROUTE_REPO_ISSUES)
                 },
+                onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
             )
         }
         composable(ROUTE_REPO_ISSUES) {
@@ -101,6 +111,9 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                     onBack = { navController.popBackStack() },
                 )
             }
+        }
+        composable(ROUTE_REPO_BOOKMARKS) {
+            RepoBookmarksScreen(onBack = { navController.popBackStack() })
         }
     }
 }

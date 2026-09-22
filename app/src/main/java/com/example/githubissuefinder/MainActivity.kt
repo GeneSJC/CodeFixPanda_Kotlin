@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueMode
 import com.example.githubissuefinder.ui.navigation.AppNavHost
@@ -25,6 +26,9 @@ class MainActivity : ComponentActivity() {
         // DiscoverNavHost computes its startDestination on first
         // composition — see IssueMode.init()'s own doc comment.
         IssueMode.init(this)
+        // v0.48: same reasoning, for the repo-first flow's persisted
+        // bookmarks — see RepoBookmarks.init()'s own doc comment.
+        RepoBookmarks.init(this)
         setContent {
             // App-wide Issue Mode (v0.41): read directly from the shared
             // IssueMode object (see IssueMode.kt) at this single root

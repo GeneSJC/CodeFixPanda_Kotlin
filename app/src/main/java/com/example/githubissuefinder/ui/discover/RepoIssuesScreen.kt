@@ -23,6 +23,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.IssueCard
@@ -90,6 +93,15 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * INSIDE the LazyColumn as its own item, rather than replacing it
  * entirely — the footer needs to render either way, so there can't
  * meaningfully be a screen with a list showing but no footer.
+ *
+ * v0.48: isBookmarked (hardcoded false before this CM — nothing wired
+ * it to anything real) now reads RepoBookmarks.isBookmarked(issue.id)
+ * directly, and onToggleBookmark/snackbarHostState are wired through
+ * to IssueCard's new bookmark toggle — see that file's own doc comment
+ * for the full reasoning, including why this specific action uses a
+ * real Snackbar rather than the Toast pattern Copy Link uses. This
+ * screen gained a SnackbarHost for exactly this — it didn't have one
+ * before this CM.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +114,7 @@ fun RepoIssuesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showInfoDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
     // chosen before this screen is ever reachable. See IssueMode.kt.
@@ -113,6 +126,7 @@ fun RepoIssuesScreen(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -178,13 +192,15 @@ fun RepoIssuesScreen(
                     items(uiState.issues, key = { it.id }) { issue ->
                         IssueCard(
                             issue = issue,
-                            isBookmarked = false,
+                            isBookmarked = RepoBookmarks.isBookmarked(issue.id),
                             showExternalLinkIndicator = true,
                             onClick = {
                                 context.startActivity(
                                     Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
                                 )
                             },
+                            onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                            snackbarHostState = snackbarHostState,
                         )
                     }
                 }
