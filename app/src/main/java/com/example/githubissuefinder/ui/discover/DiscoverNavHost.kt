@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -73,6 +75,21 @@ private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
  * file already uses, so back from it returns to wherever it was opened
  * from.
  */
+/**
+ * Rapidly double-tapping a back IconButton can fire onClick twice before
+ * the first pop's transition removes the button from composition, so a
+ * second popBackStack() lands on a back-stack entry that's already
+ * mid-way out — one of those two pops has nothing valid left to land on,
+ * which is what left a blank screen after popping RepoIssues -> Top
+ * Repos -> (nothing). Only the entry that is actually RESUMED (i.e. the
+ * real current top, not one already animating away) is allowed to pop.
+ */
+private fun NavController.popBackStackDebounced() {
+    if (currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+        popBackStack()
+    }
+}
+
 @Composable
 fun DiscoverNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
@@ -108,12 +125,12 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
             selectedRepoGroup?.let { group ->
                 RepoIssuesScreen(
                     repoGroup = group,
-                    onBack = { navController.popBackStack() },
+                    onBack = { navController.popBackStackDebounced() },
                 )
             }
         }
         composable(ROUTE_REPO_BOOKMARKS) {
-            RepoBookmarksScreen(onBack = { navController.popBackStack() })
+            RepoBookmarksScreen(onBack = { navController.popBackStackDebounced() })
         }
     }
 }
