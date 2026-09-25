@@ -66,10 +66,12 @@ private const val GHOST_ALPHA = 0.08f
 // the burst can never drift out of sync with the hit it's marking.
 private val HUB_IMPACT_OFFSET_MS = (HUB_DURATION_MS * 0.55).toInt()
 
-private val BURST_SIZE = 90.dp
-private const val BURST_MAX_SCALE = 2.6f
+private val BURST_SIZE = 120.dp
+private const val BURST_START_SCALE = 0.4f
+private const val BURST_MAX_SCALE = 2.8f
 private const val BURST_START_ALPHA = 0.85f
-private const val BURST_DURATION_MS = 420
+private const val BURST_HOLD_FRACTION = 0.45
+private const val BURST_DURATION_MS = 500
 
 /**
  * A kinetic title-reveal splash: "Git" slides in from the left and
@@ -120,7 +122,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
     val finderOffsetY = remember { Animatable(0f) }
     val finderAlpha = remember { Animatable(0f) }
     val finderGhostAlpha = remember { Animatable(GHOST_ALPHA) }
-    val burstScale = remember { Animatable(0f) }
+    val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
@@ -179,13 +181,29 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
         // uses) — not the reference's literal effect, just a cheap
         // radial-gradient stand-in for the glow visible in Gene's
         // captured frames at that same collision moment.
+        //
+        // Alpha deliberately HOLDS near its starting value for the first
+        // BURST_HOLD_FRACTION of the duration, rather than fading on the
+        // same default easing driving the scale-up — both moving fast
+        // right from the start (as plain default-eased tweens) meant the
+        // circle was already nearly transparent by the time it grew
+        // large enough to actually notice, so in practice nothing
+        // visible ever showed up. Holding alpha up while the scale grows,
+        // THEN fading, is what actually makes the burst readable.
         launch {
             delay((HUB_START_MS + HUB_IMPACT_OFFSET_MS).toLong())
-            burstAlpha.snapTo(BURST_START_ALPHA)
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(BURST_DURATION_MS, easing = FastOutSlowInEasing))
             }
-            burstAlpha.animateTo(0f, tween(BURST_DURATION_MS))
+            burstAlpha.animateTo(
+                targetValue = 0f,
+                animationSpec = keyframes {
+                    durationMillis = BURST_DURATION_MS
+                    BURST_START_ALPHA at 0
+                    BURST_START_ALPHA at (BURST_DURATION_MS * BURST_HOLD_FRACTION).toInt()
+                    0f at BURST_DURATION_MS
+                },
+            )
         }
 
         // "Issue": a straight rise from below into place under "Git",
