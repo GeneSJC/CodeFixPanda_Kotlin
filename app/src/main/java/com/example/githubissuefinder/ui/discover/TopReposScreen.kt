@@ -48,6 +48,7 @@ import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
+import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
@@ -87,22 +88,25 @@ import kotlinx.coroutines.flow.collect
  *    are removed from this screen entirely since nothing shows one
  *    anymore.
  *
- * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33, 5 items
- * once "Play Title Reveal Animation" and its 0.5x-speed sibling were
- * added) opens with a non-interactive "GitHubIssueFinder {CM_VERSION}"
- * header above the animation items, so the on-device version stamp is
- * reachable from Discover the same way VersionLabel makes it reachable
- * from the "classic" flow's TopAppBars. Below that header, the menu
- * offers "Play Origami Animation" / "Play Shape Stack Animation" /
- * "Play Coin Animation" / "Play Title Reveal Animation" / "Play Title
- * Reveal Animation (0.5x Speed)" — all five replay their corresponding
- * splash as an OVERLAY drawn on top of this same composable, not by
- * navigating away — replayAnimation is local state inside THIS
- * function, so viewModel()
- * above is only ever called once per real session. The two Title
- * Reveal entries are the SAME composable called with a different
- * speedMultiplier, not two separate screens — see
- * TitleRevealSplashScreen.kt's doc comment.
+ * The hamburger menu (☰, v0.31, expanded over time as more animations
+ * were added) opens with an OVERLAY-based animation-replay toolkit —
+ * replayAnimation is local state inside THIS function, so viewModel()
+ * above is only ever called once per real session — but what it shows
+ * now depends on the "mode" build flavor (app/build.gradle.kts):
+ * "developer" gets everything that existed before this CM (the
+ * non-interactive "GitHubIssueFinder {CM_VERSION}" header, so the
+ * on-device version stamp is reachable from Discover the same way
+ * VersionLabel makes it reachable from the "classic" flow's
+ * TopAppBars, plus one entry per individual splash: "Play Origami
+ * Animation" / "Play Shape Stack Animation" / "Play Coin Animation" /
+ * "Play Title Reveal Animation" / "Play Title Reveal Animation (0.5x
+ * Speed)" — the two Title Reveal entries are the SAME composable
+ * called with a different speedMultiplier, not two separate screens,
+ * see TitleRevealSplashScreen.kt's doc comment). "production" drops
+ * the version stamp and all five individual entries in favor of one:
+ * "Play App Start Animation", which replays AppStartSplashScreen.kt —
+ * the same dispatch MainActivity itself uses at real cold start, so it
+ * can never show something an actual user wouldn't have actually seen.
  *
  * As of v0.38, tapping a repo opens a real repo-scoped issue list
  * (RepoIssuesScreen), via DiscoverNavHost. As of v0.42, that navigation
@@ -245,13 +249,20 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
-                                Text(
-                                    "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                                HorizontalDivider()
+                                // "developer" keeps the full CM version stamp and every
+                                // individual animation-replay entry, useful for exactly
+                                // the kind of iteration this project does. "production"
+                                // strips both down to what an actual end user would see
+                                // — see app/build.gradle.kts's "mode" flavor dimension.
+                                if (BuildConfig.FLAVOR == "developer") {
+                                    Text(
+                                        "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
+                                    HorizontalDivider()
+                                }
                                 DropdownMenuItem(
                                     text = { Text("Bookmarks") },
                                     onClick = {
@@ -260,41 +271,51 @@ fun TopReposScreen(
                                     },
                                 )
                                 HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("Play Origami Animation") },
-                                    onClick = {
-                                        showMenu = false
-                                        replayAnimation = "origami"
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Play Shape Stack Animation") },
-                                    onClick = {
-                                        showMenu = false
-                                        replayAnimation = "shapeStack"
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Play Coin Animation") },
-                                    onClick = {
-                                        showMenu = false
-                                        replayAnimation = "coin"
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Play Title Reveal Animation") },
-                                    onClick = {
-                                        showMenu = false
-                                        replayAnimation = "titleReveal"
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Play Title Reveal Animation (0.5x Speed)") },
-                                    onClick = {
-                                        showMenu = false
-                                        replayAnimation = "titleRevealHalfSpeed"
-                                    },
-                                )
+                                if (BuildConfig.FLAVOR == "developer") {
+                                    DropdownMenuItem(
+                                        text = { Text("Play Origami Animation") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "origami"
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Play Shape Stack Animation") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "shapeStack"
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Play Coin Animation") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "coin"
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Play Title Reveal Animation") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "titleReveal"
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Play Title Reveal Animation (0.5x Speed)") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "titleRevealHalfSpeed"
+                                        },
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = { Text("Play App Start Animation") },
+                                        onClick = {
+                                            showMenu = false
+                                            replayAnimation = "appStart"
+                                        },
+                                    )
+                                }
                                 HorizontalDivider()
                                 DropdownMenuItem(
                                     text = { Text("Refresh") },
@@ -423,6 +444,7 @@ fun TopReposScreen(
                 "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
                 "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished)
                 "titleRevealHalfSpeed" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
+                "appStart" -> AppStartSplashScreen(onFinished = onFinished)
                 else -> SplashScreen(onFinished = onFinished)
             }
         }
