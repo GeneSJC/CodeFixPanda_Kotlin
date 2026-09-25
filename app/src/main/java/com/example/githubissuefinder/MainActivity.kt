@@ -12,10 +12,7 @@ import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueMode
 import com.example.githubissuefinder.ui.navigation.AppNavHost
-import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
-import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
-import com.example.githubissuefinder.ui.splash.SplashScreen
-import com.example.githubissuefinder.ui.splash.TitleRevealSplashScreen
+import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,25 +38,14 @@ class MainActivity : ComponentActivity() {
                 var showSplash by remember { mutableStateOf(true) }
                 if (showSplash) {
                     val onFinished = { showSplash = false }
-                    // Which splash plays is set via BuildConfig.SPLASH_ANIMATION:
-                    // "coin", "origami" (the real diamond-fold sequence),
-                    // "shapeStack" (the stop-motion layered shapes animation),
-                    // or "titleReveal" (the kinetic word-by-word title reveal)
-                    // — four independently selectable options, not variants
-                    // of one another (v0.33 split "origami" and "shapeStack"
-                    // back apart after they were briefly, mistakenly merged
-                    // in v0.32).
-                    when (BuildConfig.SPLASH_ANIMATION) {
-                        "origami" -> OrigamiSplashScreen(onFinished = onFinished)
-                        "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
-                        // 0.5x: confirmed on-device as giving the reveal
-                        // enough room to actually register instead of
-                        // feeling rushed, without dragging — see the
-                        // Discover hamburger menu's own 1x entry to
-                        // compare directly.
-                        "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
-                        else -> SplashScreen(onFinished = onFinished)
-                    }
+                    // Which splash plays, and with what parameters, lives
+                    // in ONE place now — AppStartSplashScreen.kt — rather
+                    // than switching on BuildConfig.SPLASH_ANIMATION here
+                    // directly, so the "production" flavor's "Play App
+                    // Start Animation" replay (see TopReposScreen.kt) can
+                    // never drift from what a real user actually sees at
+                    // launch.
+                    AppStartSplashScreen(onFinished = onFinished)
                 } else {
                     // Which post-splash experience shows is set in
                     // app/build.gradle.kts via BuildConfig.LANDING_EXPERIENCE
