@@ -51,6 +51,7 @@ import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
+import com.example.githubissuefinder.ui.splash.TitleRevealSplashScreen
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -86,15 +87,17 @@ import kotlinx.coroutines.flow.collect
  *    are removed from this screen entirely since nothing shows one
  *    anymore.
  *
- * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33) opens
- * with a non-interactive "GitHubIssueFinder {CM_VERSION}" header above
- * the animation items, so the on-device version stamp is reachable
- * from Discover the same way VersionLabel makes it reachable from the
+ * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33, 4 items
+ * once "Play Title Reveal Animation" was added) opens with a
+ * non-interactive "GitHubIssueFinder {CM_VERSION}" header above the
+ * animation items, so the on-device version stamp is reachable from
+ * Discover the same way VersionLabel makes it reachable from the
  * "classic" flow's TopAppBars. Below that header, the menu offers
  * "Play Origami Animation" / "Play Shape Stack Animation" / "Play Coin
- * Animation" — all three replay their corresponding splash as an
- * OVERLAY drawn on top of this same composable, not by navigating away
- * — replayAnimation is local state inside THIS function, so viewModel()
+ * Animation" / "Play Title Reveal Animation" — all four replay their
+ * corresponding splash as an OVERLAY drawn on top of this same
+ * composable, not by navigating away — replayAnimation is local state
+ * inside THIS function, so viewModel()
  * above is only ever called once per real session.
  *
  * As of v0.38, tapping a repo opens a real repo-scoped issue list
@@ -274,6 +277,13 @@ fun TopReposScreen(
                                         replayAnimation = "coin"
                                     },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Play Title Reveal Animation") },
+                                    onClick = {
+                                        showMenu = false
+                                        replayAnimation = "titleReveal"
+                                    },
+                                )
                                 HorizontalDivider()
                                 DropdownMenuItem(
                                     text = { Text("Refresh") },
@@ -400,6 +410,7 @@ fun TopReposScreen(
             when (replayAnimation) {
                 "origami" -> OrigamiSplashScreen(onFinished = onFinished)
                 "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
+                "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished)
                 else -> SplashScreen(onFinished = onFinished)
             }
         }
