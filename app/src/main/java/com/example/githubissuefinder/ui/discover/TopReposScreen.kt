@@ -87,18 +87,22 @@ import kotlinx.coroutines.flow.collect
  *    are removed from this screen entirely since nothing shows one
  *    anymore.
  *
- * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33, 4 items
- * once "Play Title Reveal Animation" was added) opens with a
- * non-interactive "GitHubIssueFinder {CM_VERSION}" header above the
- * animation items, so the on-device version stamp is reachable from
- * Discover the same way VersionLabel makes it reachable from the
- * "classic" flow's TopAppBars. Below that header, the menu offers
- * "Play Origami Animation" / "Play Shape Stack Animation" / "Play Coin
- * Animation" / "Play Title Reveal Animation" — all four replay their
- * corresponding splash as an OVERLAY drawn on top of this same
- * composable, not by navigating away — replayAnimation is local state
- * inside THIS function, so viewModel()
- * above is only ever called once per real session.
+ * The hamburger menu (☰, v0.31, expanded to 3 items in v0.33, 5 items
+ * once "Play Title Reveal Animation" and its 0.5x-speed sibling were
+ * added) opens with a non-interactive "GitHubIssueFinder {CM_VERSION}"
+ * header above the animation items, so the on-device version stamp is
+ * reachable from Discover the same way VersionLabel makes it reachable
+ * from the "classic" flow's TopAppBars. Below that header, the menu
+ * offers "Play Origami Animation" / "Play Shape Stack Animation" /
+ * "Play Coin Animation" / "Play Title Reveal Animation" / "Play Title
+ * Reveal Animation (0.5x Speed)" — all five replay their corresponding
+ * splash as an OVERLAY drawn on top of this same composable, not by
+ * navigating away — replayAnimation is local state inside THIS
+ * function, so viewModel()
+ * above is only ever called once per real session. The two Title
+ * Reveal entries are the SAME composable called with a different
+ * speedMultiplier, not two separate screens — see
+ * TitleRevealSplashScreen.kt's doc comment.
  *
  * As of v0.38, tapping a repo opens a real repo-scoped issue list
  * (RepoIssuesScreen), via DiscoverNavHost. As of v0.42, that navigation
@@ -284,6 +288,13 @@ fun TopReposScreen(
                                         replayAnimation = "titleReveal"
                                     },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Play Title Reveal Animation (0.5x Speed)") },
+                                    onClick = {
+                                        showMenu = false
+                                        replayAnimation = "titleRevealHalfSpeed"
+                                    },
+                                )
                                 HorizontalDivider()
                                 DropdownMenuItem(
                                     text = { Text("Refresh") },
@@ -411,6 +422,7 @@ fun TopReposScreen(
                 "origami" -> OrigamiSplashScreen(onFinished = onFinished)
                 "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
                 "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished)
+                "titleRevealHalfSpeed" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
                 else -> SplashScreen(onFinished = onFinished)
             }
         }
