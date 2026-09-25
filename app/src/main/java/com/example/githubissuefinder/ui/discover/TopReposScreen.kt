@@ -182,12 +182,16 @@ import kotlinx.coroutines.flow.collect
  * showing cached data rather than something just fetched (see
  * TopReposViewModel and RepoIssueGroupCache doc comments). Two more
  * hamburger-menu items sit above the mode-switch pair, grouped with
- * the animation items via their own divider: "Refresh" (forces a live
- * fetch for the current language/mode, bypassing and then overwriting
- * the cache) and "Clear Cache" (wipes the ENTIRE persistent cache, not
+ * the animation items via their own divider: "Check for New Repos"
+ * (renamed in v0.49 from "Refresh" — was a forced live fetch that
+ * REPLACED the whole list with just its own results, silently
+ * discarding whatever Load More had accumulated; now merges fresh
+ * results in instead, see TopReposViewModel.checkForNewRepos()'s doc
+ * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
  * just the active combination — see RepoIssueGroupCache.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
- * oversight).
+ * oversight — and, as of v0.49, reloads this screen immediately
+ * afterward rather than leaving stale data visible).
  *
  * v0.46: a small chip in the top bar's actions slot (next to the "ⓘ"
  * icon) shows how many repo cards are currently loaded — styled
@@ -320,10 +324,10 @@ fun TopReposScreen(
                                 }
                                 HorizontalDivider()
                                 DropdownMenuItem(
-                                    text = { Text("Refresh") },
+                                    text = { Text("Check for New Repos") },
                                     onClick = {
                                         showMenu = false
-                                        viewModel.refresh()
+                                        viewModel.checkForNewRepos()
                                     },
                                 )
                                 DropdownMenuItem(

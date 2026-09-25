@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
+import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
@@ -147,7 +148,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * page (see that class's own doc comment for why this had to wait
  * until pagination existed to be designed correctly). Getting fresh
  * data for an already-cached combination is never automatic — see
- * refresh() and RepoIssueGroupCache's own doc comment for why.
+ * checkForNewRepos() and RepoIssueGroupCache's own doc comment for why.
  *
  * The cache check itself runs inside its own viewModelScope.launch
  * inside load(); on a cache MISS it calls fetchPage(), which launches
@@ -155,6 +156,20 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * to share the outer one — a small, deliberate inefficiency (one extra
  * coroutine hop) traded for not having to touch fetchPage's own
  * structure, which is unchanged from v0.43/v0.44 otherwise.
+ *
+ * v0.49 ("Cache-Preserving Refresh"): what used to be refresh() forced
+ * a network fetch through load(), which — because fetchPage()'s
+ * non-Load-More branch calls groupByRepo(), i.e. mergeIntoGroups()
+ * against an EMPTY starting list — replaced the entire accumulated
+ * repoGroups with just page 1's issues. With 200 repos built from ten
+ * Load More taps, one refresh discarded the results of nine of them: a
+ * real data-loss bug, not a labelling problem, since it defeated the
+ * entire point of the v0.45 cache. checkForNewRepos() replaces it: same
+ * one-call page-1 fetch, but merged in via the new
+ * mergeReplacingByIssueId() (see that function's own doc comment),
+ * never replacing. See this CM's own plan doc
+ * (GitHubIssueFinder_CachePreservingRefresh_Plan_2026-09-25.pdf) for
+ * the full reasoning and the discussion that surfaced this.
  */
 class TopReposViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -163,6 +178,9 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
 
     private val _snackbarEvents = Channel<String>(Channel.BUFFERED)
     val snackbarEvents: Flow<String> = _snackbarEvents.receiveAsFlow()
+
+    /** Guards checkForNewRepos() against overlapping calls — not exposed via TopReposUiState since nothing in the UI needs to react to it (the menu item is fire-and-forget; feedback arrives via snackbarEvents once the call resolves). */
+    private var isCheckingForNewRepos = false
 
     init {
         load(uiState.value.selectedLanguage)
@@ -214,21 +232,126 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * v0.45: forces a live network fetch for the CURRENT (language,
-     * mode) pair, bypassing whatever's cached, and overwrites that
-     * cache entry with the fresh result — the only way to get newer
-     * data for a combination that's already cached, deliberately
-     * explicit rather than automatic (see class + RepoIssueGroupCache
-     * doc comments for why).
+     * v0.49 ("Cache-Preserving Refresh"): replaces what "Refresh" used
+     * to do (bypass the cache, REPLACE the whole list with just page
+     * 1's issues — silently discarding everything Load More had
+     * accumulated, a real data-loss bug, not a labelling problem — see
+     * this CM's own plan doc). Answers "what's new since I last
+     * looked?": fetches page 1 exactly as a fresh load would, but MERGES
+     * the result into repoGroups instead of replacing it — new repos
+     * are added, existing repos gain any new matches, and an
+     * already-present issue's fields (comment count, labels, updated
+     * time) get refreshed to the fetched copy via
+     * mergeReplacingByIssueId() below, a dedicated replace-by-id variant
+     * of mergeIntoGroups() — that function's own skip-duplicate
+     * behavior stays exactly as it is for Load More, which is correct
+     * there and would be wrong here.
+     *
+     * currentPage/canLoadMore are deliberately left untouched (unlike
+     * fetchPage(), which always sets currentPage = page just fetched) —
+     * this only ever fetches page 1 again, and a page-1 fetch must never
+     * reset how far Load More has already gotten, or the very data this
+     * CM exists to stop discarding would just be lost a different way.
      */
-    fun refresh() = load(uiState.value.selectedLanguage, forceNetwork = true)
+    fun checkForNewRepos() {
+        if (isCheckingForNewRepos || !GitHubApiClient.hasToken) return
+        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val state = uiState.value
+        val language = state.selectedLanguage
 
-    /** v0.45: clears the ENTIRE persistent cache — see RepoIssueGroupCache.clearAll()'s doc comment for why this isn't scoped to just the active (language, mode) pair yet. */
+        viewModelScope.launch {
+            isCheckingForNewRepos = true
+            try {
+                val query = buildString {
+                    append("label:\"${activeMode.queryValue}\"")
+                    append(" state:open")
+                    language.queryValue?.let { append(" language:$it") }
+                }
+                val response = withContext(Dispatchers.IO) {
+                    GitHubApiClient.api.searchIssues(query = query, perPage = PER_PAGE, page = 1)
+                }
+                val body = response.body()
+                if (!response.isSuccessful || body == null) {
+                    _snackbarEvents.trySend(
+                        "Couldn't check for new repos (HTTP ${response.code()})",
+                    )
+                    return@launch
+                }
+                RateLimitState.update(parseRateLimitHeaders(response.headers()))
+                val fetchedIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
+
+                // Captured out of the update{} lambda (which may retry
+                // under contention, same pattern fetchPage() uses below)
+                // rather than snapshotting state.currentPage/canLoadMore
+                // before this suspending call — a concurrent Load More
+                // completing while this fetch was in flight would
+                // otherwise have its newer currentPage overwritten by a
+                // stale value when this writes back to the cache.
+                var mergedGroups: List<RepoIssueGroup> = emptyList()
+                var newRepoCount = 0
+                var newIssueCount = 0
+                var currentPageAtCommit = state.currentPage
+                var canLoadMoreAtCommit = state.canLoadMore
+                var previousUpdatedAtMs = state.lastUpdatedAtMs
+                val fetchedAtMs = System.currentTimeMillis()
+                _uiState.update { current ->
+                    val result = mergeReplacingByIssueId(current.repoGroups, fetchedIssues)
+                    mergedGroups = result.groups
+                    newRepoCount = result.newRepoCount
+                    newIssueCount = result.newIssueCount
+                    currentPageAtCommit = current.currentPage
+                    canLoadMoreAtCommit = current.canLoadMore
+                    previousUpdatedAtMs = current.lastUpdatedAtMs
+                    current.copy(
+                        repoGroups = mergedGroups,
+                        totalIssueCount = body.totalCount,
+                        lastUpdatedAtMs = fetchedAtMs,
+                    )
+                }
+                withContext(Dispatchers.IO) {
+                    RepoIssueGroupCache.save(
+                        context = getApplication(),
+                        language = language,
+                        mode = activeMode,
+                        repoGroups = mergedGroups,
+                        totalIssueCount = body.totalCount,
+                        currentPage = currentPageAtCommit,
+                        canLoadMore = canLoadMoreAtCommit,
+                    )
+                }
+                _snackbarEvents.trySend(
+                    if (newRepoCount == 0 && newIssueCount == 0) {
+                        "Nothing new since ${formatRelativeTime(previousUpdatedAtMs ?: fetchedAtMs)}"
+                    } else {
+                        "$newRepoCount new repo${if (newRepoCount == 1) "" else "s"}, " +
+                            "$newIssueCount new issue${if (newIssueCount == 1) "" else "s"}"
+                    },
+                )
+            } catch (e: Exception) {
+                _snackbarEvents.trySend("Couldn't check for new repos: ${e.message ?: "unknown error"}")
+            } finally {
+                isCheckingForNewRepos = false
+            }
+        }
+    }
+
+    /**
+     * v0.49: clears the ENTIRE persistent cache — see
+     * RepoIssueGroupCache.clearAll()'s doc comment for why this isn't
+     * scoped to just the active (language, mode) pair yet — THEN
+     * reloads the current screen immediately, rather than leaving
+     * already-visible data on screen that the cache backing it no
+     * longer has (the previous behavior: the list stayed put until the
+     * user switched chips or reopened the screen). load() naturally
+     * falls through to a fresh network fetch here since the cache it
+     * would have checked was just cleared.
+     */
     fun clearCache() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 RepoIssueGroupCache.clearAll(getApplication())
             }
+            load(uiState.value.selectedLanguage)
         }
     }
 
@@ -449,5 +572,60 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
             }
         }
         return byRepo.values.sortedByDescending { it.matchCount }
+    }
+
+    /** What checkForNewRepos() needs to report back — see its own doc comment. groups is the merged result; newRepoCount/newIssueCount are counted DURING the merge below, not recomputed afterward, so they can't drift from what actually changed. */
+    private data class ReplacingMergeResult(
+        val groups: List<RepoIssueGroup>,
+        val newRepoCount: Int,
+        val newIssueCount: Int,
+    )
+
+    /**
+     * v0.49: mergeIntoGroups()'s counterpart for checkForNewRepos() —
+     * see that function's doc comment for why a separate function
+     * rather than a flag on mergeIntoGroups() itself. The key
+     * difference: where mergeIntoGroups() SKIPS an issue whose id is
+     * already present (correct for Load More — the same issue
+     * genuinely showing up again across two page fetches shouldn't be
+     * duplicated, and the copy already on screen is just as current as
+     * a re-fetch would be), this REPLACES it with the freshly-fetched
+     * copy, since the whole point here is picking up changes (comment
+     * count, labels, updated time) to something already on screen.
+     */
+    private fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issue>): ReplacingMergeResult {
+        val byRepo = LinkedHashMap<String, RepoIssueGroup>()
+        existing.forEach { byRepo[it.repoFullName] = it }
+        val preexistingRepoNames = byRepo.keys.toSet()
+        var newIssueCount = 0
+        newIssues.forEach { issue ->
+            val current = byRepo[issue.repoFullName]
+            if (current == null) {
+                byRepo[issue.repoFullName] = RepoIssueGroup(
+                    repoOwner = issue.repoOwner,
+                    repoName = issue.repoName,
+                    repoFullName = issue.repoFullName,
+                    repoDisplayTitle = issue.repoDisplayTitle,
+                    issues = listOf(issue),
+                )
+                newIssueCount++
+                return@forEach
+            }
+            val existingIndex = current.issues.indexOfFirst { it.id == issue.id }
+            if (existingIndex == -1) {
+                byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
+                newIssueCount++
+            } else {
+                byRepo[issue.repoFullName] = current.copy(
+                    issues = current.issues.toMutableList().apply { set(existingIndex, issue) },
+                )
+            }
+        }
+        val newRepoCount = byRepo.keys.count { it !in preexistingRepoNames }
+        return ReplacingMergeResult(
+            groups = byRepo.values.sortedByDescending { it.matchCount },
+            newRepoCount = newRepoCount,
+            newIssueCount = newIssueCount,
+        )
     }
 }
