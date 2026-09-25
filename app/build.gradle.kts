@@ -22,7 +22,7 @@ val localProperties = Properties().apply {
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
 val cmVersion = "v0.48"
-val splashAnimation = "origami" // "coin", "origami", or "shapeStack"
+val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val landingExperience = "repoFirst" // "classic" or "repoFirst"
 
 android {
@@ -54,11 +54,13 @@ android {
         // keep the on-device stamp accurate — no other file needs to change.
         buildConfigField("String", "CM_VERSION", "\"$cmVersion\"")
 
-        // Which splash animation plays on launch — "origami" (the real
-        // diamond-fold sequence) is the default for now while it's the
-        // active focus of iteration; "shapeStack" (a stop-motion layered
-        // shapes animation, v0.33) and "coin" are both fully available
-        // alternatives, not variants of "origami". A build-time config
+        // Which splash animation plays on launch — "titleReveal" (the
+        // kinetic word-by-word title reveal, see
+        // TitleRevealSplashScreen.kt) is the default for now while it's
+        // the active focus of iteration; "origami" (the diamond-fold
+        // sequence), "shapeStack" (a stop-motion layered shapes
+        // animation, v0.33), and "coin" are all fully available
+        // alternatives, not variants of one another. A build-time config
         // value, same pattern as the two fields below — not a runtime
         // user-facing setting. See MainActivity.kt for how this is read.
         buildConfigField("String", "SPLASH_ANIMATION", "\"$splashAnimation\"")
