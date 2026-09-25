@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -57,6 +60,16 @@ private const val GIT_OVERSHOOT_TILT_DEGREES = -4.5f
 // entrance, at 27% — nowhere near Hub's own 28% stage start).
 private const val GHOST_SCALE = 1.6f
 private const val GHOST_ALPHA = 0.08f
+
+// Exactly when, within Hub's own entrance, the collision itself lands —
+// shared between the shudder keyframes below and the impact burst, so
+// the burst can never drift out of sync with the hit it's marking.
+private val HUB_IMPACT_OFFSET_MS = (HUB_DURATION_MS * 0.55).toInt()
+
+private val BURST_SIZE = 90.dp
+private const val BURST_MAX_SCALE = 2.6f
+private const val BURST_START_ALPHA = 0.85f
+private const val BURST_DURATION_MS = 420
 
 /**
  * A kinetic title-reveal splash: "Git" slides in from the left and
@@ -107,6 +120,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
     val finderOffsetY = remember { Animatable(0f) }
     val finderAlpha = remember { Animatable(0f) }
     val finderGhostAlpha = remember { Animatable(GHOST_ALPHA) }
+    val burstScale = remember { Animatable(0f) }
+    val burstAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
@@ -150,12 +165,27 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
                 animationSpec = keyframes {
                     durationMillis = HUB_DURATION_MS
                     offscreenPx at 0
-                    0f at (HUB_DURATION_MS * 0.55).toInt() using FastOutSlowInEasing
+                    0f at HUB_IMPACT_OFFSET_MS using FastOutSlowInEasing
                     with(density) { 10.dp.toPx() } at (HUB_DURATION_MS * 0.7).toInt()
                     with(density) { (-6).dp.toPx() } at (HUB_DURATION_MS * 0.85).toInt()
                     0f at HUB_DURATION_MS
                 },
             )
+        }
+
+        // The impact burst: a soft radial pulse behind the wordmark,
+        // right at the instant "Hub" actually lands (HUB_IMPACT_OFFSET_MS
+        // into Hub's own entrance, same moment its shudder keyframe
+        // uses) — not the reference's literal effect, just a cheap
+        // radial-gradient stand-in for the glow visible in Gene's
+        // captured frames at that same collision moment.
+        launch {
+            delay((HUB_START_MS + HUB_IMPACT_OFFSET_MS).toLong())
+            burstAlpha.snapTo(BURST_START_ALPHA)
+            launch {
+                burstScale.animateTo(BURST_MAX_SCALE, tween(BURST_DURATION_MS, easing = FastOutSlowInEasing))
+            }
+            burstAlpha.animateTo(0f, tween(BURST_DURATION_MS))
         }
 
         // "Issue": a straight rise from below into place under "Git",
@@ -194,6 +224,26 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
+        // Drawn first so it sits BEHIND the wordmark below (draw order
+        // in Compose follows declaration order within a Box).
+        Box(
+            modifier = Modifier
+                .size(BURST_SIZE)
+                .graphicsLayer {
+                    scaleX = burstScale.value
+                    scaleY = burstScale.value
+                    alpha = burstAlpha.value
+                }
+                .background(
+                    Brush.radialGradient(
+                        0f to MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        0.6f to MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                        1f to MaterialTheme.colorScheme.primary.copy(alpha = 0f),
+                    ),
+                    CircleShape,
+                ),
+        )
+
         // Shared by both "Git" and "Hub": a soft colored glow beneath the
         // wordmark, matching the reference's own drop-shadowed look —
         // plain Bold alone read flatter on-device than the reference's
