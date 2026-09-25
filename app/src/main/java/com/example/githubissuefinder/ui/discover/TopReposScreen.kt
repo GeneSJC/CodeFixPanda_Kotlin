@@ -92,7 +92,7 @@ import kotlinx.coroutines.flow.collect
  * were added) opens with an OVERLAY-based animation-replay toolkit —
  * replayAnimation is local state inside THIS function, so viewModel()
  * above is only ever called once per real session — but what it shows
- * now depends on the "mode" build flavor (app/build.gradle.kts):
+ * now depends on the "appMode" build flavor (app/build.gradle.kts):
  * "developer" gets everything that existed before this CM (the
  * non-interactive "GitHubIssueFinder {CM_VERSION}" header, so the
  * on-device version stamp is reachable from Discover the same way
@@ -253,7 +253,7 @@ fun TopReposScreen(
                                 // individual animation-replay entry, useful for exactly
                                 // the kind of iteration this project does. "production"
                                 // strips both down to what an actual end user would see
-                                // — see app/build.gradle.kts's "mode" flavor dimension.
+                                // — see app/build.gradle.kts's "appMode" flavor dimension.
                                 if (BuildConfig.FLAVOR == "developer") {
                                     Text(
                                         "GitHubIssueFinder ${BuildConfig.CM_VERSION}",

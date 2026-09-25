@@ -74,24 +74,24 @@ android {
         buildConfigField("String", "LANDING_EXPERIENCE", "\"$landingExperience\"")
     }
 
-    // "mode" flavor dimension: "developer" keeps the Discover hamburger
-    // menu's full animation-replay toolkit and on-device CM version
-    // stamp (useful for exactly the kind of iteration this project does
-    // — see the earlier splash/animation CMs); "production" strips
-    // those down to a single "Play App Start Animation" entry, what an
-    // actual end user would see on a real release. Read at runtime via
-    // the auto-generated BuildConfig.FLAVOR — see TopReposScreen.kt.
-    // applicationIdSuffix on "developer" lets both variants install
-    // side by side on the same device.
-    flavorDimensions += "mode"
+    // "appMode" flavor dimension: "developer" keeps the Discover
+    // hamburger menu's full animation-replay toolkit and on-device CM
+    // version stamp (useful for exactly the kind of iteration this
+    // project does — see the earlier splash/animation CMs);
+    // "production" strips those down to a single "Play App Start
+    // Animation" entry, what an actual end user would see on a real
+    // release. Read at runtime via the auto-generated BuildConfig.FLAVOR
+    // — see TopReposScreen.kt. applicationIdSuffix on "developer" lets
+    // both variants install side by side on the same device.
+    flavorDimensions += "appMode"
     productFlavors {
         create("developer") {
-            dimension = "mode"
+            dimension = "appMode"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
         }
         create("production") {
-            dimension = "mode"
+            dimension = "appMode"
         }
     }
 

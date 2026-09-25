@@ -15,7 +15,7 @@ import com.example.githubissuefinder.BuildConfig
  * MainActivity's actual cold-start splash calls this directly. It also
  * backs the "production" flavor's single "Play App Start Animation"
  * replay entry in TopReposScreen.kt's hamburger menu — see
- * app/build.gradle.kts's "mode" flavor dimension for developer vs.
+ * app/build.gradle.kts's "appMode" flavor dimension for developer vs.
  * production. Centralizing the dispatch here (rather than each call
  * site separately switching on BuildConfig.SPLASH_ANIMATION) is what
  * guarantees that replay can never drift from what a real user actually
