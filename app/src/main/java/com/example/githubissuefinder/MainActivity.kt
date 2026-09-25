@@ -52,7 +52,12 @@ class MainActivity : ComponentActivity() {
                     when (BuildConfig.SPLASH_ANIMATION) {
                         "origami" -> OrigamiSplashScreen(onFinished = onFinished)
                         "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
-                        "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished)
+                        // 0.5x: confirmed on-device as giving the reveal
+                        // enough room to actually register instead of
+                        // feeling rushed, without dragging — see the
+                        // Discover hamburger menu's own 1x entry to
+                        // compare directly.
+                        "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
                         else -> SplashScreen(onFinished = onFinished)
                     }
                 } else {
