@@ -24,6 +24,7 @@ val localProperties = Properties().apply {
 val cmVersion = "v0.48"
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val landingExperience = "repoFirst" // "classic" or "repoFirst"
+val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
 android {
     namespace = "com.example.githubissuefinder"
@@ -72,6 +73,20 @@ android {
         // build-time "branch by abstraction" pattern as the two fields
         // above — see MainActivity.kt.
         buildConfigField("String", "LANDING_EXPERIENCE", "\"$landingExperience\"")
+
+        // Whether Discover's hamburger menu shows its full animation-
+        // replay toolkit (every individual splash, plus the on-device CM
+        // version stamp — useful while actively iterating on splash/
+        // animation work) or just a single "Play App Start Animation"
+        // entry, what an actual end user would see. Defaults to false so
+        // a fresh clone/run shows the clean, production-like menu rather
+        // than this project's own dev tooling — see TopReposScreen.kt.
+        // Deliberately a plain boolean val, same pattern as the three
+        // fields above, not a Gradle product flavor: this is the only
+        // thing it currently controls, so a flavor's build-variant
+        // machinery (separate installable variants, an application-id
+        // suffix, etc.) would be more than this needs.
+        buildConfigField("Boolean", "SHOW_DETAILED_DRAWER_MENU", "$showDetailedDrawerMenu")
     }
 
     buildTypes {
