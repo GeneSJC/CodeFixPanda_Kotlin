@@ -13,11 +13,12 @@ import com.example.githubissuefinder.BuildConfig
  * register without feeling rushed).
  *
  * MainActivity's actual cold-start splash calls this directly. It also
- * backs the "production" flavor's single "Play App Start Animation"
- * replay entry in TopReposScreen.kt's hamburger menu — see
- * app/build.gradle.kts's "appMode" flavor dimension for developer vs.
- * production. Centralizing the dispatch here (rather than each call
- * site separately switching on BuildConfig.SPLASH_ANIMATION) is what
+ * backs the single "Play App Start Animation" entry TopReposScreen.kt's
+ * hamburger menu falls back to when BuildConfig.SHOW_DETAILED_DRAWER_MENU
+ * is false (see app/build.gradle.kts) — the default, so a fresh clone/
+ * run shows this instead of the full per-animation replay toolkit.
+ * Centralizing the dispatch here (rather than each call site separately
+ * switching on BuildConfig.SPLASH_ANIMATION) is what
  * guarantees that replay can never drift from what a real user actually
  * saw at launch — e.g. it stays in sync with "titleReveal"'s
  * speedMultiplier without that value needing to be duplicated anywhere.

@@ -92,17 +92,18 @@ import kotlinx.coroutines.flow.collect
  * were added) opens with an OVERLAY-based animation-replay toolkit —
  * replayAnimation is local state inside THIS function, so viewModel()
  * above is only ever called once per real session — but what it shows
- * now depends on the "appMode" build flavor (app/build.gradle.kts):
- * "developer" gets everything that existed before this CM (the
- * non-interactive "GitHubIssueFinder {CM_VERSION}" header, so the
- * on-device version stamp is reachable from Discover the same way
- * VersionLabel makes it reachable from the "classic" flow's
- * TopAppBars, plus one entry per individual splash: "Play Origami
- * Animation" / "Play Shape Stack Animation" / "Play Coin Animation" /
- * "Play Title Reveal Animation" / "Play Title Reveal Animation (0.5x
- * Speed)" — the two Title Reveal entries are the SAME composable
- * called with a different speedMultiplier, not two separate screens,
- * see TitleRevealSplashScreen.kt's doc comment). "production" drops
+ * now depends on BuildConfig.SHOW_DETAILED_DRAWER_MENU (a plain
+ * boolean val in app/build.gradle.kts, defaulting to false): true gets
+ * everything that existed before this CM (the non-interactive
+ * "GitHubIssueFinder {CM_VERSION}" header, so the on-device version
+ * stamp is reachable from Discover the same way VersionLabel makes it
+ * reachable from the "classic" flow's TopAppBars, plus one entry per
+ * individual splash: "Play Origami Animation" / "Play Shape Stack
+ * Animation" / "Play Coin Animation" / "Play Title Reveal Animation" /
+ * "Play Title Reveal Animation (0.5x Speed)" — the two Title Reveal
+ * entries are the SAME composable called with a different
+ * speedMultiplier, not two separate screens, see
+ * TitleRevealSplashScreen.kt's doc comment). false (the default) drops
  * the version stamp and all five individual entries in favor of one:
  * "Play App Start Animation", which replays AppStartSplashScreen.kt —
  * the same dispatch MainActivity itself uses at real cold start, so it
@@ -249,12 +250,13 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
-                                // "developer" keeps the full CM version stamp and every
+                                // true keeps the full CM version stamp and every
                                 // individual animation-replay entry, useful for exactly
-                                // the kind of iteration this project does. "production"
-                                // strips both down to what an actual end user would see
-                                // — see app/build.gradle.kts's "appMode" flavor dimension.
-                                if (BuildConfig.FLAVOR == "developer") {
+                                // the kind of iteration this project does. false (the
+                                // default) strips both down to what an actual end user
+                                // would see — see app/build.gradle.kts's
+                                // showDetailedDrawerMenu val.
+                                if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
                                     Text(
                                         "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
                                         style = MaterialTheme.typography.labelMedium,
@@ -271,7 +273,7 @@ fun TopReposScreen(
                                     },
                                 )
                                 HorizontalDivider()
-                                if (BuildConfig.FLAVOR == "developer") {
+                                if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
                                     DropdownMenuItem(
                                         text = { Text("Play Origami Animation") },
                                         onClick = {
