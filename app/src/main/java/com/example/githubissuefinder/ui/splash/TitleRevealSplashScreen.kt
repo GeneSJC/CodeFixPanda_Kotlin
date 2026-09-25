@@ -19,6 +19,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -192,12 +194,23 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
+        // Shared by both "Git" and "Hub": a soft colored glow beneath the
+        // wordmark, matching the reference's own drop-shadowed look —
+        // plain Bold alone read flatter on-device than the reference's
+        // heavier weight + shadow combination.
+        val wordmarkStyle = MaterialTheme.typography.displayMedium.copy(
+            shadow = Shadow(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                offset = Offset(0f, 8f),
+                blurRadius = 28f,
+            ),
+        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row {
                 Text(
                     "Git",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = wordmarkStyle,
+                    fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.graphicsLayer {
                         translationX = gitOffsetX.value
@@ -206,8 +219,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
                 )
                 Text(
                     "Hub",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = wordmarkStyle,
+                    fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
                 )
