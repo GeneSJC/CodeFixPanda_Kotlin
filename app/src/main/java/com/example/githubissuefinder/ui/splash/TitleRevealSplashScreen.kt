@@ -46,6 +46,16 @@ private val VERTICAL_RISE_OFFSET = 140.dp
 private const val GIT_OVERSHOOT_PX = 28f
 private const val GIT_OVERSHOOT_TILT_DEGREES = -4.5f
 
+// The "ghost" each of "Issue"/"Finder" sits as, oversized and barely
+// visible, from the very first frame — long before that word's own rise
+// stage starts — then fades out exactly as the real, correctly-sized
+// word rises into its place. Matches the reference, where every
+// incoming word is visible this way well ahead of its own stage (e.g.
+// a huge, faint "Hub" is already sitting in frame during "Git"'s own
+// entrance, at 27% — nowhere near Hub's own 28% stage start).
+private const val GHOST_SCALE = 1.6f
+private const val GHOST_ALPHA = 0.08f
+
 /**
  * A kinetic title-reveal splash: "Git" slides in from the left and
  * overshoots into a lurch before settling ("Screeching Stop"), "Hub"
@@ -62,14 +72,18 @@ private const val GIT_OVERSHOOT_TILT_DEGREES = -4.5f
  * frame from a separate web prototype (a kinetic-typography player with
  * its own named stages and an explicit "+28px, -4.5° tilt" spec for the
  * "Git" overshoot, which is where those two constants above come from
- * directly). This is a first pass built from that frame sequence and
- * stage spec alone, deliberately simpler than the source in one
- * respect: "Issue" and "Finder" here rise straight to their final size
- * and position, rather than first appearing as an oversized, near-
- * transparent "ghost" that then shrinks into place the way the
- * reference does for every incoming word. That ghost-then-shrink layer
- * is a reasonable follow-up once this simpler version is confirmed
- * working, not something this pass attempts.
+ * directly).
+ *
+ * "Issue" and "Finder" each render as TWO overlapping Text instances
+ * (see the ghost-then-shrink layer below): a static, oversized, barely-
+ * visible "ghost" sitting at the word's final resting spot from the
+ * very first frame, and the real, correctly-sized word that rises from
+ * below and fades in during that word's own stage — the ghost fades
+ * out over exactly that same window, so it reads as one word settling
+ * into place rather than two independent layers. This followed an
+ * initial simpler pass (still how "Git" and "Hub" work, each a single
+ * Text instance) that just rose/slid straight to final size with no
+ * ghost — confirmed working first, then this layer added on top.
  *
  * Each word gets its own Animatable(s) launched in a separate coroutine
  * with a `delay()` to its stage's start time, rather than one shared
@@ -87,8 +101,10 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
     val hubOffsetX = remember { Animatable(0f) }
     val issueOffsetY = remember { Animatable(0f) }
     val issueAlpha = remember { Animatable(0f) }
+    val issueGhostAlpha = remember { Animatable(GHOST_ALPHA) }
     val finderOffsetY = remember { Animatable(0f) }
     val finderAlpha = remember { Animatable(0f) }
+    val finderGhostAlpha = remember { Animatable(GHOST_ALPHA) }
 
     LaunchedEffect(Unit) {
         val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
@@ -140,24 +156,30 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
             )
         }
 
-        // "Issue": a straight rise from below into place under "Git" —
-        // simpler than the reference's ghost-then-shrink treatment, see
-        // this file's doc comment.
+        // "Issue": a straight rise from below into place under "Git",
+        // while its oversized ghost (already sitting there, faintly,
+        // since the first frame) fades out over the same window.
         launch {
             delay(ISSUE_START_MS.toLong())
             issueOffsetY.snapTo(riseOffsetPx)
             launch {
                 issueOffsetY.animateTo(0f, tween(ISSUE_DURATION_MS, easing = FastOutSlowInEasing))
             }
+            launch {
+                issueGhostAlpha.animateTo(0f, tween(ISSUE_DURATION_MS))
+            }
             issueAlpha.animateTo(1f, tween(ISSUE_DURATION_MS))
         }
 
-        // "Finder": the same straight rise, under "Hub".
+        // "Finder": the same straight rise (and ghost fade-out), under "Hub".
         launch {
             delay(FINDER_START_MS.toLong())
             finderOffsetY.snapTo(riseOffsetPx)
             launch {
                 finderOffsetY.animateTo(0f, tween(FINDER_DURATION_MS, easing = FastOutSlowInEasing))
+            }
+            launch {
+                finderGhostAlpha.animateTo(0f, tween(FINDER_DURATION_MS))
             }
             finderAlpha.animateTo(1f, tween(FINDER_DURATION_MS))
         }
@@ -192,29 +214,57 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
-                Text(
-                    "ISSUE",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontSize = 16.sp,
-                    letterSpacing = 2.sp,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.graphicsLayer {
-                        translationY = issueOffsetY.value
-                        alpha = issueAlpha.value
-                    },
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        "ISSUE",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 16.sp,
+                        letterSpacing = 2.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = GHOST_SCALE
+                            scaleY = GHOST_SCALE
+                            alpha = issueGhostAlpha.value
+                        },
+                    )
+                    Text(
+                        "ISSUE",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 16.sp,
+                        letterSpacing = 2.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.graphicsLayer {
+                            translationY = issueOffsetY.value
+                            alpha = issueAlpha.value
+                        },
+                    )
+                }
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    "Finder",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.graphicsLayer {
-                        translationY = finderOffsetY.value
-                        alpha = finderAlpha.value
-                    },
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        "Finder",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = GHOST_SCALE
+                            scaleY = GHOST_SCALE
+                            alpha = finderGhostAlpha.value
+                        },
+                    )
+                    Text(
+                        "Finder",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.graphicsLayer {
+                            translationY = finderOffsetY.value
+                            alpha = finderAlpha.value
+                        },
+                    )
+                }
             }
         }
     }
