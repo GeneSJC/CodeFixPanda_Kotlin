@@ -178,8 +178,13 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         // "Hub": slides in from off-right, then a quick decaying
         // shudder on collision with "Git" before settling flush.
         launch {
-            delay(hubStartMs.toLong())
+            // Off-screen from the very first frame, same as "Git"'s own
+            // immediate snapTo above — snapping AFTER the delay instead
+            // (the original bug here) left Hub sitting fully visible at
+            // its final resting spot for the entire wait, since nothing
+            // had moved it yet.
             hubOffsetX.snapTo(offscreenPx)
+            delay(hubStartMs.toLong())
             hubOffsetX.animateTo(
                 targetValue = 0f,
                 animationSpec = keyframes {
