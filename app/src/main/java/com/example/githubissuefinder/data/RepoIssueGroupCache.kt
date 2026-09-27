@@ -98,6 +98,16 @@ object RepoIssueGroupCache {
         totalIssueCount: Int,
         currentPage: Int,
         canLoadMore: Boolean,
+        /**
+         * v0.50 ("Refresh this repo" write-back): defaults to now, same
+         * as always, for every existing caller (a real list-level fetch
+         * DID just happen). replaceRepoGroup() below is the one caller
+         * that passes the entry's ORIGINAL fetchedAtMs through instead —
+         * refreshing a single repo from its own screen isn't a list-level
+         * fetch, so it shouldn't make Top Repos' "Updated X ago" label
+         * claim to be fresher than it actually is.
+         */
+        fetchedAtMs: Long = System.currentTimeMillis(),
     ) {
         val updated = readAll(context).toMutableMap()
         updated[keyFor(language, mode)] = CacheEntry(
@@ -105,10 +115,68 @@ object RepoIssueGroupCache {
             totalIssueCount = totalIssueCount,
             currentPage = currentPage,
             canLoadMore = canLoadMore,
-            fetchedAtMs = System.currentTimeMillis(),
+            fetchedAtMs = fetchedAtMs,
         )
         writeAll(context, updated)
     }
+
+    /**
+     * v0.50 ("Refresh this repo" write-back): updates (or removes) ONE
+     * repo's group within an already-cached (language, mode) entry —
+     * everything else in that entry (other repos' groups, currentPage,
+     * canLoadMore, totalIssueCount, fetchedAtMs) is left exactly as it
+     * was. Called after RepoIssuesScreen's own "Refresh this repo"
+     * fetch resolves, so the Top Repos card the user navigated from
+     * agrees with what the repo screen now shows, without needing a
+     * second Top-Repos-level network call.
+     *
+     * updatedGroup == null means "this repo now has zero open matching
+     * issues — remove it," per the plan's "empty repos drop off Top
+     * Repos" rule. A no-op if there's no cached entry for this
+     * (language, mode) at all — nothing to write back into, e.g. if the
+     * repo was somehow reached without Top Repos ever having cached
+     * this combination.
+     */
+    fun replaceRepoGroup(
+        context: Context,
+        language: LanguageFilter,
+        mode: IssueLabelFilter,
+        repoFullName: String,
+        updatedGroup: RepoIssueGroup?,
+    ) {
+        val key = keyFor(language, mode)
+        val all = readAll(context)
+        val entry = all[key] ?: return
+        save(
+            context = context,
+            language = language,
+            mode = mode,
+            repoGroups = applyRepoGroupReplacement(entry.repoGroups, repoFullName, updatedGroup),
+            totalIssueCount = entry.totalIssueCount,
+            currentPage = entry.currentPage,
+            canLoadMore = entry.canLoadMore,
+            fetchedAtMs = entry.fetchedAtMs,
+        )
+    }
+
+    /**
+     * The actual list transform replaceRepoGroup() above needs — split
+     * out as its own function purely so it's directly unit-testable
+     * without a Context (no file I/O here, unlike the rest of this
+     * object): removes any existing group for repoFullName, adds
+     * updatedGroup back in if non-null (null means "remove," per
+     * replaceRepoGroup()'s own doc comment), and re-sorts by match
+     * count — the same ranking order every other list of RepoIssueGroup
+     * in this app maintains.
+     */
+    fun applyRepoGroupReplacement(
+        groups: List<RepoIssueGroup>,
+        repoFullName: String,
+        updatedGroup: RepoIssueGroup?,
+    ): List<RepoIssueGroup> =
+        groups.filterNot { it.repoFullName == repoFullName }
+            .let { withoutRepo -> if (updatedGroup != null) withoutRepo + updatedGroup else withoutRepo }
+            .sortedByDescending { it.matchCount }
 
     /**
      * Clears EVERY cached (language, mode) combination, not just the

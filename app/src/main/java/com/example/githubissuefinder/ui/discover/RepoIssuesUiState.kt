@@ -19,35 +19,45 @@ import com.example.githubissuefinder.model.Issue
  * state, but scoped narrowly to the optional, explicit completeness
  * check below — NOT a return to a whole-screen isLoading/errorMessage
  * pair. The issues already shown are never gated behind any of these
- * three fields; they only ever affect the footer.
+ * fields; they only ever affect the footer.
+ *
+ * v0.50 ("Refresh this repo" write-back): renamed from the v0.46
+ * "Check for More Issues" names to match — isCheckingForMore ->
+ * isRefreshing, allIssuesLoaded -> hasRefreshed, checkForMoreError ->
+ * refreshError. The rename isn't cosmetic: hasRefreshed no longer means
+ * "hide the button forever," it means "a result line has something to
+ * report" — the button stays reusable, see RepoIssuesViewModel's
+ * refreshThisRepo() doc comment.
  */
 data class RepoIssuesUiState(
     val issues: List<Issue> = emptyList(),
     /**
-     * v0.46 ("Check for More Issues"): true while the one-shot complete
-     * fetch is in flight. Deliberately separate from anything
-     * resembling a full-screen loading state — the issues already
-     * shown (from RepoIssueGroup, zero-cost) stay visible the whole
-     * time; only the footer reflects this.
+     * True while the one-shot complete fetch is in flight. Deliberately
+     * separate from anything resembling a full-screen loading state —
+     * the issues already shown (from RepoIssueGroup, zero-cost, or a
+     * previous refresh) stay visible the whole time; only the footer
+     * reflects this.
      */
-    val isCheckingForMore: Boolean = false,
+    val isRefreshing: Boolean = false,
     /**
-     * True once the complete fetch has succeeded — at that point
-     * `issues` holds EVERY open issue GitHub has for this repo and the
-     * active mode (up to the single call's own page-size limit; see
-     * RepoIssuesViewModel's doc comment), not just whatever happened
-     * to be swept up building the Top Repos card. Drives the footer
-     * switching from the "Check for More Issues" button to a plain
-     * "Showing all N issues" line — there's nothing left to check for
-     * once this is true, so re-showing the button would be misleading.
+     * True once at least one refresh has completed successfully this
+     * session — at that point `issues` holds EVERY open issue GitHub
+     * has for this repo and the active mode as of that refresh (up to
+     * the single call's own page-size limit; see
+     * RepoIssuesViewModel's doc comment), not just whatever happened to
+     * be swept up building the Top Repos card. Drives the footer's
+     * result line ("All 7 open issues · checked 2m ago"); does NOT hide
+     * the "Refresh this repo" button, which stays available for
+     * repeated use.
      */
-    val allIssuesLoaded: Boolean = false,
+    val hasRefreshed: Boolean = false,
+    /** When the last successful refresh completed — drives the result line's "checked X ago". Null until hasRefreshed is first true. */
+    val lastRefreshedAtMs: Long? = null,
     /**
-     * Set when the complete-fetch call fails — deliberately NOT
-     * touching `issues`, matching Top Repos' loadMoreError: a failed
-     * "Check for More" leaves whatever was already shown exactly as
-     * it was; only the footer reflects the failure, with its own retry
-     * affordance.
+     * Set when a refresh fails — deliberately NOT touching `issues`,
+     * matching Top Repos' loadMoreError: a failed refresh leaves
+     * whatever was already shown exactly as it was; only the footer
+     * reflects the failure, with its own retry affordance.
      */
-    val checkForMoreError: String? = null,
+    val refreshError: String? = null,
 )

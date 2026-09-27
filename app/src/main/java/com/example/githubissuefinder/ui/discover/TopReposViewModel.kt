@@ -358,6 +358,50 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /**
+     * v0.50 ("Refresh this repo" write-back): re-reads the cache for the
+     * CURRENT (language, mode) pair and adopts whatever it finds —
+     * called by TopReposScreen every time it's navigated back to (see
+     * that screen's own comment on where), so a repo refreshed from
+     * RepoIssuesScreen shows its updated match count (or disappears
+     * entirely, if it had zero open issues left) here too, without
+     * needing a second network call.
+     *
+     * This is the resolution to the write-back design question the
+     * v0.49 plan doc left open ("shared nav-graph scope vs. re-reading
+     * the cache on return"): RepoIssuesScreen and this screen have no
+     * direct handle to each other's ViewModel instances (each gets its
+     * own via viewModel()), so RepoIssuesViewModel writes straight to
+     * RepoIssueGroupCache — the same persistence layer this ViewModel
+     * already reads from and writes to — and this function is what
+     * pulls that change back into THIS screen's in-memory state, rather
+     * than the two ViewModels talking to each other directly.
+     *
+     * A no-op if there's nothing cached for this combination (e.g. it
+     * was cleared, or this combination was never actually loaded from
+     * Top Repos to begin with) — repoGroups etc. are left exactly as
+     * they are rather than being blanked out.
+     */
+    fun syncFromCache() {
+        if (!GitHubApiClient.hasToken) return
+        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val language = uiState.value.selectedLanguage
+        viewModelScope.launch {
+            val cached = withContext(Dispatchers.IO) {
+                RepoIssueGroupCache.load(getApplication(), language, activeMode)
+            } ?: return@launch
+            _uiState.update {
+                it.copy(
+                    repoGroups = cached.repoGroups,
+                    totalIssueCount = cached.totalIssueCount,
+                    currentPage = cached.currentPage,
+                    canLoadMore = cached.canLoadMore,
+                    lastUpdatedAtMs = cached.fetchedAtMs,
+                )
+            }
+        }
+    }
+
     private fun load(language: LanguageFilter) {
         if (!GitHubApiClient.hasToken) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }

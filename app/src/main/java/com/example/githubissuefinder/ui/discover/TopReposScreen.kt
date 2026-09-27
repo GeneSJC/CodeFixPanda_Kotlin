@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
@@ -210,7 +211,7 @@ import kotlinx.coroutines.flow.collect
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopReposScreen(
-    onRepoClick: (RepoIssueGroup) -> Unit,
+    onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
     onOpenBookmarks: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
@@ -228,6 +229,19 @@ fun TopReposScreen(
         viewModel.snackbarEvents.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
+    }
+
+    // v0.50: re-reads the cache on every fresh composition of this
+    // screen — including, deliberately, when returning from
+    // RepoIssuesScreen (which is exactly when it matters: a "Refresh
+    // this repo" there writes straight to the cache, not to this
+    // screen's own ViewModel, since the two have no direct handle to
+    // each other — see TopReposViewModel.syncFromCache()'s own doc
+    // comment). Also fires on this screen's very first appearance,
+    // which is a harmless, cheap (local file, no network) re-read of
+    // what init{}'s own load() just populated.
+    LaunchedEffect(Unit) {
+        viewModel.syncFromCache()
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -427,7 +441,7 @@ fun TopReposScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(uiState.repoGroups, key = { it.repoFullName }) { group ->
-                            RepoCard(group = group, onClick = { onRepoClick(group) })
+                            RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
                         }
                         item(key = "loadMoreFooter") {
                             LoadMoreFooter(

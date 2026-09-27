@@ -42,7 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.RepoBookmarks
+import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
@@ -78,21 +80,26 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * an external-link badge (see IssueCard's doc comment) since tapping
  * one opens GitHub directly, not an in-app screen.
  *
- * v0.46 ("Check for More Issues"): the LazyColumn now always ends in a
- * footer reflecting uiState.isCheckingForMore / allIssuesLoaded /
- * checkForMoreError — an explicit "Check for More Issues" button (with
- * a small cost note underneath, "Uses one API call against your rate
- * limit"), a small inline spinner while that fetch is in flight, an
- * inline retry row on failure, or a plain "Showing all N issues" line
- * once the complete set has been fetched. See
- * RepoIssuesViewModel.checkForMoreIssues()'s doc comment for what this
+ * v0.46 ("Check for More Issues"), renamed and reshaped by v0.50
+ * ("Refresh this repo" write-back): the LazyColumn now always ends in a
+ * footer reflecting uiState.isRefreshing / hasRefreshed / refreshError
+ * — an explicit "Refresh this repo" button (with a small cost note
+ * underneath, "Uses one API call against your rate limit"), a small
+ * inline spinner while that fetch is in flight, an inline retry row on
+ * failure, or (once hasRefreshed) a small result line ABOVE the button,
+ * not replacing it — v0.46's version hid the button for the rest of the
+ * session once used; this one stays reusable. See
+ * RepoIssuesViewModel.refreshThisRepo()'s doc comment for what this
  * closes (a real completeness gap — this screen previously had no way
  * to show more of a repo's issues than happened to be swept up while
- * Top Repos was built) and why it's deliberately manual rather than
- * automatic. The empty-state message ("No open issues to show.") moved
- * INSIDE the LazyColumn as its own item, rather than replacing it
- * entirely — the footer needs to render either way, so there can't
- * meaningfully be a screen with a list showing but no footer.
+ * Top Repos was built, or to discover closed ones) and for the write-
+ * back into Top Repos' own cache. The empty-state message ("No open
+ * matching issues remain.") moved INSIDE the LazyColumn as its own
+ * item, rather than replacing it entirely — the footer needs to render
+ * either way, so there can't meaningfully be a screen with a list
+ * showing but no footer. That message can only actually be reached
+ * after a refresh finds zero — repoGroup.issues is never empty on this
+ * screen's initial load (see RepoIssueGroup's own doc comment).
  *
  * v0.48: isBookmarked (hardcoded false before this CM — nothing wired
  * it to anything real) now reads RepoBookmarks.isBookmarked(issue.id)
@@ -107,6 +114,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 @Composable
 fun RepoIssuesScreen(
     repoGroup: RepoIssueGroup,
+    language: LanguageFilter,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
@@ -183,7 +191,7 @@ fun RepoIssuesScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                "No open issues to show.",
+                                "No open matching issues remain.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -204,14 +212,15 @@ fun RepoIssuesScreen(
                         )
                     }
                 }
-                item(key = "checkForMoreFooter") {
-                    CheckForMoreIssuesFooter(
-                        isCheckingForMore = uiState.isCheckingForMore,
-                        allIssuesLoaded = uiState.allIssuesLoaded,
-                        checkForMoreError = uiState.checkForMoreError,
+                item(key = "refreshThisRepoFooter") {
+                    RefreshThisRepoFooter(
+                        isRefreshing = uiState.isRefreshing,
+                        hasRefreshed = uiState.hasRefreshed,
+                        lastRefreshedAtMs = uiState.lastRefreshedAtMs,
+                        refreshError = uiState.refreshError,
                         currentIssueCount = uiState.issues.size,
-                        onCheckForMore = { viewModel.checkForMoreIssues(repoGroup) },
-                        onRetry = { viewModel.checkForMoreIssues(repoGroup) },
+                        onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
+                        onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
                     )
                 }
             }
@@ -224,29 +233,38 @@ fun RepoIssuesScreen(
 }
 
 /**
- * v0.46: the one place on this screen anything can be "loading" or
- * "errored" — see RepoIssuesUiState's own doc comment for why that's
- * scoped narrowly to this footer rather than the whole screen.
- * Deliberately a manual button, not automatic, with a visible cost
- * note — same "every network call stays a visible, intentional
- * choice" instinct Top Repos' own Load More button is built around.
+ * v0.46, renamed/reshaped by v0.50: the one place on this screen
+ * anything can be "loading" or "errored" — see RepoIssuesUiState's own
+ * doc comment for why that's scoped narrowly to this footer rather than
+ * the whole screen. Deliberately a manual button, not automatic, with a
+ * visible cost note — same "every network call stays a visible,
+ * intentional choice" instinct Top Repos' own Load More button is built
+ * around.
+ *
+ * UNLIKE v0.46's version: hasRefreshed no longer hides the button — the
+ * idle state always shows the button (re-tappable indefinitely), and
+ * ADDS a small result line above it once hasRefreshed is true ("All 7
+ * open issues · checked 2m ago", or "No open issues remain · checked
+ * just now" for the zero case — see the LazyColumn's own empty-state
+ * item for what the MAIN list area shows in that same situation).
  */
 @Composable
-private fun CheckForMoreIssuesFooter(
-    isCheckingForMore: Boolean,
-    allIssuesLoaded: Boolean,
-    checkForMoreError: String?,
+private fun RefreshThisRepoFooter(
+    isRefreshing: Boolean,
+    hasRefreshed: Boolean,
+    lastRefreshedAtMs: Long?,
+    refreshError: String?,
     currentIssueCount: Int,
-    onCheckForMore: () -> Unit,
+    onRefresh: () -> Unit,
     onRetry: () -> Unit,
 ) {
     when {
-        checkForMoreError != null -> Column(
+        refreshError != null -> Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                checkForMoreError,
+                refreshError,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.Center,
@@ -255,25 +273,33 @@ private fun CheckForMoreIssuesFooter(
                 Text("Retry")
             }
         }
-        isCheckingForMore -> Box(
+        isRefreshing -> Box(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator(modifier = Modifier.size(28.dp))
         }
-        allIssuesLoaded -> Text(
-            "Showing all $currentIssueCount issues.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        )
         else -> Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Button(onClick = onCheckForMore, modifier = Modifier.fillMaxWidth()) {
-                Text("Check for More Issues")
+            if (hasRefreshed) {
+                val statusText = if (currentIssueCount == 0) {
+                    "No open issues remain"
+                } else {
+                    "All $currentIssueCount open issue${if (currentIssueCount == 1) "" else "s"}"
+                }
+                val checkedText = lastRefreshedAtMs?.let { " · checked ${formatRelativeTime(it)}" }.orEmpty()
+                Text(
+                    "$statusText$checkedText",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
+            Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
+                Text("Refresh this repo")
             }
             Text(
                 "Uses one API call against your rate limit.",
