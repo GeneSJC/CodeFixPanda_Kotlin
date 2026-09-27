@@ -23,15 +23,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,8 +45,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RepoBookmarks
+import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
+import kotlinx.coroutines.launch
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -109,6 +116,18 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * real Snackbar rather than the Toast pattern Copy Link uses. This
  * screen gained a SnackbarHost for exactly this — it didn't have one
  * before this CM.
+ *
+ * v0.51 ("Hide Issue"): uiState.issues stays the RAW list — hidden
+ * issues are filtered out at display time only, from
+ * HiddenIssuesStore.hiddenIds (read directly here, same pattern
+ * RepoBookmarks.isBookmarked() already uses on this screen), never
+ * removed from the underlying state or cache. Tapping the new "✕"
+ * badge calls HiddenIssuesStore.hide() directly, then shows a Snackbar
+ * with an Undo action using a coroutineScope scoped to THIS Composable
+ * (rememberCoroutineScope), not IssueCard's own — the card that
+ * triggered it is about to disappear from the list, which would cancel
+ * a scope owned by that card before Undo could ever be tapped. See
+ * IssueCard's own doc comment for why this couldn't live there.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,6 +135,7 @@ fun RepoIssuesScreen(
     repoGroup: RepoIssueGroup,
     language: LanguageFilter,
     onBack: () -> Unit,
+    onOpenHidden: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
 ) {
@@ -123,6 +143,8 @@ fun RepoIssuesScreen(
     val context = LocalContext.current
     var showInfoDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
     // chosen before this screen is ever reachable. See IssueMode.kt.
@@ -196,8 +218,24 @@ fun RepoIssuesScreen(
                             )
                         }
                     }
+                } else if (visibleIssues.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                "All matching issues in this repo are hidden.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                            TextButton(onClick = onOpenHidden) {
+                                Text("View Hidden")
+                            }
+                        }
+                    }
                 } else {
-                    items(uiState.issues, key = { it.id }) { issue ->
+                    items(visibleIssues, key = { it.id }) { issue ->
                         IssueCard(
                             issue = issue,
                             isBookmarked = RepoBookmarks.isBookmarked(issue.id),
@@ -208,6 +246,19 @@ fun RepoIssuesScreen(
                                 )
                             },
                             onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                            onHide = {
+                                HiddenIssuesStore.hide(context, issue)
+                                coroutineScope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "Issue hidden",
+                                        actionLabel = "Undo",
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        HiddenIssuesStore.unhide(context, issue.id)
+                                    }
+                                }
+                            },
                             snackbarHostState = snackbarHostState,
                         )
                     }

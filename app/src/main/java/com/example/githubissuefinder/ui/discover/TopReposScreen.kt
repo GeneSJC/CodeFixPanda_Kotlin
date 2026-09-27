@@ -44,6 +44,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.data.HiddenIssuesStore
+import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
@@ -207,20 +209,45 @@ import kotlinx.coroutines.flow.collect
  * placed ahead of the animation/settings-style items below it since
  * it's the one item in this menu someone might actually want to reach
  * repeatedly, not a one-off action.
+ *
+ * v0.51 ("Hide Issue", Parts C+D of the Cache-Preserving Refresh
+ * sequence): uiState.repoGroups stays the RAW cached data — hiddenGroups
+ * below is a display-only derivation (each group's issues filtered
+ * against HiddenIssuesStore.hiddenIds, empty groups dropped entirely)
+ * computed fresh on every recomposition, never written back anywhere.
+ * The repo count chip and every match-count badge read from
+ * hiddenGroups, not uiState.repoGroups directly, so hiding an issue
+ * down to a repo's last match makes that whole card disappear, and
+ * unhiding brings it straight back — falls out of Compose recomposition
+ * automatically since HiddenIssuesStore.hiddenIds is itself
+ * Compose-reactive (mutableStateOf), same mechanism RepoBookmarks
+ * already relies on elsewhere in this flow.
+ *
+ * Also added: a "Hidden" drawer item (next to "Bookmarks", same
+ * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
+ * a confirmation dialog in front of "Clear Cache" (Part D) — this menu
+ * previously fired viewModel.clearCache() directly with no
+ * confirmation at all; the dialog's text is explicit that bookmarks
+ * and hidden issues are UNaffected, since clearCache() only ever
+ * touches RepoIssueGroupCache, never RepoBookmarks or
+ * HiddenIssuesStore.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopReposScreen(
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
     onOpenBookmarks: () -> Unit,
+    onOpenHidden: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while IssueMode.current is null (see its own doc comment).
     val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
@@ -290,6 +317,13 @@ fun TopReposScreen(
                                         onOpenBookmarks()
                                     },
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Hidden") },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenHidden()
+                                    },
+                                )
                                 HorizontalDivider()
                                 if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
                                     DropdownMenuItem(
@@ -348,7 +382,7 @@ fun TopReposScreen(
                                     text = { Text("Clear Cache") },
                                     onClick = {
                                         showMenu = false
-                                        viewModel.clearCache()
+                                        showClearCacheConfirm = true
                                     },
                                 )
                                 HorizontalDivider()
@@ -376,7 +410,7 @@ fun TopReposScreen(
                             modifier = Modifier.padding(end = 8.dp),
                         ) {
                             Text(
-                                repoCountLabel(uiState.repoGroups.size),
+                                repoCountLabel(hiddenGroups.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -432,7 +466,7 @@ fun TopReposScreen(
                             }
                         }
                     }
-                    uiState.repoGroups.isEmpty() -> CenteredMessage(
+                    hiddenGroups.isEmpty() -> CenteredMessage(
                         text = "No repos with an open ${currentMode.displayName} issue found for " +
                             "this language right now.",
                     )
@@ -440,7 +474,7 @@ fun TopReposScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(uiState.repoGroups, key = { it.repoFullName }) { group ->
+                        items(hiddenGroups, key = { it.repoFullName }) { group ->
                             RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
                         }
                         item(key = "loadMoreFooter") {
@@ -472,6 +506,32 @@ fun TopReposScreen(
 
     if (showInfoDialog) {
         RankingInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+
+    if (showClearCacheConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheConfirm = false },
+            title = { Text("Clear cache?") },
+            text = {
+                Text(
+                    "Removes every cached repo/issue list so the next load fetches live data. " +
+                        "Bookmarks and hidden issues are kept.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearCacheConfirm = false
+                    viewModel.clearCache()
+                }) {
+                    Text("Clear Cache")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheConfirm = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 

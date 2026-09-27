@@ -152,6 +152,20 @@ import kotlinx.coroutines.launch
  * in-memory effect (see RepoBookmarks.toggle()'s own doc comment);
  * the disk write happens after, off the UI thread, and never blocks
  * what the user sees or reads here.
+ *
+ * v0.51 ("Hide Issue"): an OPTIONAL "✕" hide badge — same Surface/
+ * RoundedCornerShape/enlarged-glyph treatment as the bookmark star and
+ * the "↗" external-link badge, so it reads as the same family of
+ * control — sitting at the START of the action row, controlled by
+ * onHide being non-null. Feed and RepoBookmarksScreen pass nothing new
+ * and are unaffected; only RepoIssuesScreen supplies it. Deliberately
+ * a single fire-and-forget callback, NOT paired with its own Snackbar
+ * here the way the bookmark toggle is: the card that triggered it is
+ * about to be removed from the list (that's the whole point of Hide),
+ * which would cancel a coroutineScope tied to this composable before a
+ * Snackbar-with-Undo could resolve. RepoIssuesScreen owns the
+ * hide/undo Snackbar itself instead, with a scope that outlives any
+ * one card. See that screen's own doc comment.
  */
 @Composable
 fun IssueCard(
@@ -161,6 +175,7 @@ fun IssueCard(
     modifier: Modifier = Modifier,
     showExternalLinkIndicator: Boolean = false,
     onToggleBookmark: (() -> Unit)? = null,
+    onHide: (() -> Unit)? = null,
     snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current
@@ -262,6 +277,22 @@ fun IssueCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    if (onHide != null) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            onClick = onHide,
+                        ) {
+                            Text(
+                                "✕",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
+                                ),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
+                            )
+                        }
+                    }
                     if (onToggleBookmark != null) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
