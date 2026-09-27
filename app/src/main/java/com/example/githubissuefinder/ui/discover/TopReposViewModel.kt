@@ -358,7 +358,7 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun load(language: LanguageFilter, forceNetwork: Boolean = false) {
+    private fun load(language: LanguageFilter) {
         if (!GitHubApiClient.hasToken) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
@@ -369,24 +369,20 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
         // is null. See IssueMode.kt.
         val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
-        // Fresh load (language/mode switch, retry, or refresh): reset
-        // pagination-error state, but deliberately leave repoGroups
-        // AS-IS until new data actually arrives — clearing it here
-        // would blank the screen behind a spinner on every language
-        // switch, which isn't how this screen has ever behaved. The
-        // old list gets replaced outright once either the cache-hit
-        // path below or fetchPage's non-merge path succeeds.
+        // Fresh load (language/mode switch, retry, or a reload right
+        // after Clear Cache — see that function): reset pagination-error
+        // state, but deliberately leave repoGroups AS-IS until new data
+        // actually arrives — clearing it here would blank the screen
+        // behind a spinner on every language switch, which isn't how
+        // this screen has ever behaved. The old list gets replaced
+        // outright once either the cache-hit path below or fetchPage's
+        // non-merge path succeeds.
         _uiState.update {
             it.copy(
                 currentPage = 0,
                 canLoadMore = true,
                 loadMoreError = null,
             )
-        }
-
-        if (forceNetwork) {
-            fetchPage(language = language, page = 1, isLoadMore = false)
-            return
         }
 
         viewModelScope.launch {
