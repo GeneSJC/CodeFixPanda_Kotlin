@@ -11,6 +11,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
@@ -94,6 +95,13 @@ private fun NavController.popBackStackDebounced() {
 fun DiscoverNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     var selectedRepoGroup by remember { mutableStateOf<RepoIssueGroup?>(null) }
+    // v0.50: the LanguageFilter Top Repos was actually showing when the
+    // tapped repo's card was built — needed by RepoIssuesScreen's
+    // "Refresh this repo" write-back to address the correct
+    // (language, mode) cache entry. Held alongside selectedRepoGroup,
+    // same "plain Compose state at THIS level, not through the nav
+    // route" pattern that group already uses.
+    var selectedLanguage by remember { mutableStateOf(LanguageFilter.KOTLIN) }
 
     val startDestination = remember {
         if (IssueMode.current != null) ROUTE_TOP_REPOS else ROUTE_ISSUE_MODE_GATE
@@ -114,8 +122,9 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
         }
         composable(ROUTE_TOP_REPOS) {
             TopReposScreen(
-                onRepoClick = { group ->
+                onRepoClick = { group, language ->
                     selectedRepoGroup = group
+                    selectedLanguage = language
                     navController.navigate(ROUTE_REPO_ISSUES)
                 },
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
@@ -125,6 +134,7 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
             selectedRepoGroup?.let { group ->
                 RepoIssuesScreen(
                     repoGroup = group,
+                    language = selectedLanguage,
                     onBack = { navController.popBackStackDebounced() },
                 )
             }
