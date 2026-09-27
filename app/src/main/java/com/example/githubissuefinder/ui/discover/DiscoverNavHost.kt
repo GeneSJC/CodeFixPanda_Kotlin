@@ -18,6 +18,7 @@ private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
 private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
+private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
 
 /**
  * Navigation host for the "repoFirst" Discover flow — introduced in
@@ -75,6 +76,11 @@ private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
  * "push, don't replace" pattern every other forward navigation in this
  * file already uses, so back from it returns to wherever it was opened
  * from.
+ *
+ * v0.51 ("Hide Issue"): added ROUTE_HIDDEN_ISSUES, reachable from BOTH
+ * TopReposScreen's hamburger menu ("Hidden") and RepoIssuesScreen's
+ * all-hidden empty state ("View Hidden") — same push-on-top pattern,
+ * so back returns to whichever of the two it was opened from.
  */
 /**
  * Rapidly double-tapping a back IconButton can fire onClick twice before
@@ -128,6 +134,7 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                     navController.navigate(ROUTE_REPO_ISSUES)
                 },
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
+                onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
             )
         }
         composable(ROUTE_REPO_ISSUES) {
@@ -136,11 +143,15 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                     repoGroup = group,
                     language = selectedLanguage,
                     onBack = { navController.popBackStackDebounced() },
+                    onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
                 )
             }
         }
         composable(ROUTE_REPO_BOOKMARKS) {
             RepoBookmarksScreen(onBack = { navController.popBackStackDebounced() })
+        }
+        composable(ROUTE_HIDDEN_ISSUES) {
+            HiddenIssuesScreen(onBack = { navController.popBackStackDebounced() })
         }
     }
 }
