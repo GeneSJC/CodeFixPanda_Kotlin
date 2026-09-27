@@ -80,15 +80,15 @@ class HiddenIssueFilteringTest {
     }
 
     @Test
-    fun `flat-list overload filters the same way for RepoIssuesScreen's own issue list`() {
+    fun `flat-list variant filters the same way for RepoIssuesScreen's own issue list`() {
         val issues = listOf(issue(1), issue(2), issue(3))
-        val result = filterHiddenIssues(issues, setOf(2L))
+        val result = filterHiddenIssuesFlat(issues, setOf(2L))
         assertEquals(listOf(1L, 3L), result.map { it.id })
     }
 
     @Test
-    fun `flat-list overload with empty hidden set is a no-op`() {
+    fun `flat-list variant with empty hidden set is a no-op`() {
         val issues = listOf(issue(1), issue(2))
-        assertTrue(filterHiddenIssues(issues, emptySet()) === issues)
+        assertTrue(filterHiddenIssuesFlat(issues, emptySet()) === issues)
     }
 }

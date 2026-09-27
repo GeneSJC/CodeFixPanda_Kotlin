@@ -47,7 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RepoBookmarks
-import com.example.githubissuefinder.data.filterHiddenIssues
+import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
 import kotlinx.coroutines.launch
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -144,7 +144,7 @@ fun RepoIssuesScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val visibleIssues = filterHiddenIssues(uiState.issues, HiddenIssuesStore.hiddenIds)
+    val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
     // chosen before this screen is ever reachable. See IssueMode.kt.

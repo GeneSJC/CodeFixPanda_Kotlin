@@ -27,8 +27,17 @@ fun filterHiddenIssues(groups: List<RepoIssueGroup>, hiddenIds: Set<Long>): List
         .filter { it.issues.isNotEmpty() }
 }
 
-/** Single-repo counterpart of the above, for RepoIssuesScreen's own flat issue list rather than a list of groups. */
-fun filterHiddenIssues(issues: List<Issue>, hiddenIds: Set<Long>): List<Issue> {
+/**
+ * Single-repo counterpart of the above, for RepoIssuesScreen's own flat
+ * issue list rather than a list of groups. NOT an overload of
+ * filterHiddenIssues() above — List<Issue> and List<RepoIssueGroup>
+ * erase to the same JVM signature (generics are erased at the bytecode
+ * level, so both would compile to filterHiddenIssues(List, Set): List),
+ * which Kotlin itself refuses to build ("platform declaration clash").
+ * A distinct name sidesteps that entirely rather than reaching for
+ * @JvmName just to keep an overload that erasure won't actually allow.
+ */
+fun filterHiddenIssuesFlat(issues: List<Issue>, hiddenIds: Set<Long>): List<Issue> {
     if (hiddenIds.isEmpty()) return issues
     return issues.filterNot { it.id in hiddenIds }
 }
