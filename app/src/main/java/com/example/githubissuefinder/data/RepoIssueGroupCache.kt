@@ -52,7 +52,7 @@ import java.io.File
  * no automatic background re-fetch to "freshen" it — doing that would
  * quietly spend the exact calls this cache exists to avoid, on every
  * single visit, defeating the point. Getting live data again is always
- * an explicit, visible choice — see TopReposViewModel.refresh().
+ * an explicit, visible choice — see TopReposViewModel.checkForNewRepos().
  */
 object RepoIssueGroupCache {
 
