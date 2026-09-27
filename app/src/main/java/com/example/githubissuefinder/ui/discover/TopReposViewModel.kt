@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
@@ -242,10 +243,12 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
      * are added, existing repos gain any new matches, and an
      * already-present issue's fields (comment count, labels, updated
      * time) get refreshed to the fetched copy via
-     * mergeReplacingByIssueId() below, a dedicated replace-by-id variant
-     * of mergeIntoGroups() — that function's own skip-duplicate
-     * behavior stays exactly as it is for Load More, which is correct
-     * there and would be wrong here.
+     * data.RepoIssueGroupMerge.kt's mergeReplacingByIssueId() — a
+     * dedicated replace-by-id variant of mergeIntoGroups() below, kept
+     * as a standalone top-level function specifically so it's directly
+     * unit-testable (see its own doc comment for why) — that function's
+     * own skip-duplicate behavior stays exactly as it is for Load More,
+     * which is correct there and would be wrong here.
      *
      * currentPage/canLoadMore are deliberately left untouched (unlike
      * fetchPage(), which always sets currentPage = page just fetched) —
@@ -572,60 +575,5 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
             }
         }
         return byRepo.values.sortedByDescending { it.matchCount }
-    }
-
-    /** What checkForNewRepos() needs to report back — see its own doc comment. groups is the merged result; newRepoCount/newIssueCount are counted DURING the merge below, not recomputed afterward, so they can't drift from what actually changed. */
-    private data class ReplacingMergeResult(
-        val groups: List<RepoIssueGroup>,
-        val newRepoCount: Int,
-        val newIssueCount: Int,
-    )
-
-    /**
-     * v0.49: mergeIntoGroups()'s counterpart for checkForNewRepos() —
-     * see that function's doc comment for why a separate function
-     * rather than a flag on mergeIntoGroups() itself. The key
-     * difference: where mergeIntoGroups() SKIPS an issue whose id is
-     * already present (correct for Load More — the same issue
-     * genuinely showing up again across two page fetches shouldn't be
-     * duplicated, and the copy already on screen is just as current as
-     * a re-fetch would be), this REPLACES it with the freshly-fetched
-     * copy, since the whole point here is picking up changes (comment
-     * count, labels, updated time) to something already on screen.
-     */
-    private fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issue>): ReplacingMergeResult {
-        val byRepo = LinkedHashMap<String, RepoIssueGroup>()
-        existing.forEach { byRepo[it.repoFullName] = it }
-        val preexistingRepoNames = byRepo.keys.toSet()
-        var newIssueCount = 0
-        newIssues.forEach { issue ->
-            val current = byRepo[issue.repoFullName]
-            if (current == null) {
-                byRepo[issue.repoFullName] = RepoIssueGroup(
-                    repoOwner = issue.repoOwner,
-                    repoName = issue.repoName,
-                    repoFullName = issue.repoFullName,
-                    repoDisplayTitle = issue.repoDisplayTitle,
-                    issues = listOf(issue),
-                )
-                newIssueCount++
-                return@forEach
-            }
-            val existingIndex = current.issues.indexOfFirst { it.id == issue.id }
-            if (existingIndex == -1) {
-                byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
-                newIssueCount++
-            } else {
-                byRepo[issue.repoFullName] = current.copy(
-                    issues = current.issues.toMutableList().apply { set(existingIndex, issue) },
-                )
-            }
-        }
-        val newRepoCount = byRepo.keys.count { it !in preexistingRepoNames }
-        return ReplacingMergeResult(
-            groups = byRepo.values.sortedByDescending { it.matchCount },
-            newRepoCount = newRepoCount,
-            newIssueCount = newIssueCount,
-        )
     }
 }
