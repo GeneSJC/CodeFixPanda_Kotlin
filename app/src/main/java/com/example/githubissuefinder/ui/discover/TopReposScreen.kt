@@ -295,7 +295,7 @@ fun TopReposScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showLabelInfoDialog by remember { mutableStateOf(false) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
-    var showNoTokenDialog by remember { mutableStateOf(false) }
+    var showTokenProblemDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
@@ -495,19 +495,26 @@ fun TopReposScreen(
                         // "good first issue" info icon in the title next to
                         // it, since the title bar had no stable reserved
                         // space for it. Tapping it opens RateLimitDialog
-                        // normally, EXCEPT when no token is configured at
-                        // all (GitHubApiClient.hasToken false) — in that
-                        // case "No rate limit data available yet" would be
-                        // misleading (it reads like "wait a moment," not
-                        // "this needs setup"), so NoTokenDialog explains
-                        // the actual local.properties step instead.
+                        // normally, EXCEPT when there's a token problem —
+                        // none configured at all (GitHubApiClient.hasToken
+                        // false) or one configured but rejected by GitHub
+                        // (uiState.tokenRejected, a 401 response) — in
+                        // either case "No rate limit data available yet."
+                        // would be misleading (it reads like "wait a
+                        // moment," not "this needs attention"), so
+                        // TokenProblemDialog explains the actual situation
+                        // instead. Reaching that dialog with hasToken true
+                        // can only mean tokenRejected is what triggered it,
+                        // so hasToken itself is enough to pick the right
+                        // message — no need to also thread tokenRejected
+                        // through as a separate parameter.
                         RateLimitChip(
                             info = rateLimit,
                             onClick = {
-                                if (GitHubApiClient.hasToken) {
+                                if (GitHubApiClient.hasToken && !uiState.tokenRejected) {
                                     showRateLimitDialog = true
                                 } else {
-                                    showNoTokenDialog = true
+                                    showTokenProblemDialog = true
                                 }
                             },
                         )
@@ -634,8 +641,11 @@ fun TopReposScreen(
         )
     }
 
-    if (showNoTokenDialog) {
-        NoTokenDialog(onDismiss = { showNoTokenDialog = false })
+    if (showTokenProblemDialog) {
+        TokenProblemDialog(
+            tokenRejected = GitHubApiClient.hasToken,
+            onDismiss = { showTokenProblemDialog = false },
+        )
     }
 
     if (showClearCacheConfirm) {
@@ -827,17 +837,21 @@ private fun RateLimitRow(label: String, value: String) {
 }
 
 /**
- * Shown instead of RateLimitDialog when GitHubApiClient.hasToken is
- * false — tapping the rate-limit chip with no token configured at all
- * is a setup problem, not a "check back in a moment" one, so this gets
- * its own dialog with the actual fix rather than reusing
+ * Shown instead of RateLimitDialog when there's a token problem —
+ * either GitHubApiClient.hasToken is false (nothing configured at all)
+ * or a configured token is being rejected by GitHub (tokenRejected,
+ * true only once a live search has actually come back with an HTTP 401
+ * — GitHub's own signal for bad/expired/revoked credentials, distinct
+ * from a 403 rate-limit response). Either way, tapping the rate-limit
+ * chip is a setup problem, not a "check back in a moment" one, so this
+ * gets its own dialog with the actual situation rather than reusing
  * RateLimitDialog's generic "No rate limit data available yet." text,
- * which would leave someone with no token wondering what to even do
+ * which would leave someone in either case wondering what to even do
  * about it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NoTokenDialog(onDismiss: () -> Unit) {
+private fun TokenProblemDialog(tokenRejected: Boolean, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -846,9 +860,16 @@ private fun NoTokenDialog(onDismiss: () -> Unit) {
         title = { Text("GitHub API token needed") },
         text = {
             Text(
-                "This app needs a GitHub personal access token to make live requests " +
-                    "against the Search API. Add one as GITHUB_API_TOKEN in your " +
-                    "local.properties file (gitignored, never committed), then rebuild.",
+                if (tokenRejected) {
+                    "We see a value set for GITHUB_API_TOKEN in local.properties, but " +
+                        "GitHub isn't accepting it (expired, revoked, or otherwise " +
+                        "invalid). Generate a new personal access token and update " +
+                        "local.properties, then rebuild."
+                } else {
+                    "This app needs a GitHub personal access token to make live requests " +
+                        "against the Search API. Add one as GITHUB_API_TOKEN in your " +
+                        "local.properties file (gitignored, never committed), then rebuild."
+                },
             )
         },
     )
