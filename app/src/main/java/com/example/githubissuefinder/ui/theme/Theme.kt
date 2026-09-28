@@ -60,10 +60,9 @@ fun GitHubIssueFinderTheme(
     // from the same shared IssueMode object the mode dropdown on
     // TopReposScreen writes to — see IssueMode.kt for why a shared
     // object rather than a threaded parameter. Null (no mode chosen
-    // yet, or the classic flow, which has no concept of Mode at all)
-    // falls back to the original light/dark scheme exactly as before
-    // this CM — Mode is additive, not a replacement for the app's
-    // baseline theme.
+    // yet) falls back to the original light/dark scheme exactly as
+    // before this CM — Mode is additive, not a replacement for the
+    // app's baseline theme.
     issueMode: IssueLabelFilter? = null,
     content: @Composable () -> Unit
 ) {

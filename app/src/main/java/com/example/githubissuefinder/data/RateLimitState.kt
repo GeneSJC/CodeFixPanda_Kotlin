@@ -23,13 +23,14 @@ data class RateLimitInfo(
 
 /**
  * Plain in-memory singleton — same temporary, not-Hilt-managed pattern as
- * IssueCache/CurrentFeedState/GitHubApiClient. Null means "no live search
- * has completed yet," or "currently in sample-data mode" (no token
- * configured), where a rate limit isn't applicable at all.
+ * GitHubApiClient. Null means "no live search has completed yet," or
+ * "currently in sample-data mode" (no token configured), where a rate
+ * limit isn't applicable at all.
  *
- * Deliberately independent of CurrentFeedState/FeedUiState: this reflects
- * account/session state (the credential's shared quota), not anything
- * about the current search's results.
+ * Deliberately independent of the UI state types built from search
+ * results (e.g. TopReposUiState): this reflects account/session state
+ * (the credential's shared quota), not anything about a particular
+ * search's results.
  */
 object RateLimitState {
 

@@ -22,10 +22,10 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 object GitHubApiClient {
 
     /**
-     * Whether a token is configured. FeedViewModel checks this to decide
-     * between live search and local sample-data fallback — kept here
-     * rather than having FeedViewModel read BuildConfig directly, so the
-     * "what counts as configured" logic lives in one place.
+     * Whether a token is configured. The repo-first flow's ViewModels
+     * check this before issuing a live search — kept here rather than
+     * having each caller read BuildConfig directly, so the "what counts
+     * as configured" logic lives in one place.
      */
     val hasToken: Boolean get() = BuildConfig.GITHUB_API_TOKEN.isNotBlank()
 

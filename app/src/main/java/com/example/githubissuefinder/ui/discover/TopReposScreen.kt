@@ -60,8 +60,7 @@ import kotlinx.coroutines.flow.collect
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
- * discussion, agreed for a build-time-switchable redesign via
- * BuildConfig.LANDING_EXPERIENCE — see MainActivity.kt).
+ * discussion).
  *
  * v0.42 ("the data-layer swap"): this screen no longer shows a ranked
  * list of REPOS — it shows repos as they fall out of grouping actual
@@ -100,7 +99,7 @@ import kotlinx.coroutines.flow.collect
  * everything that existed before this CM (the non-interactive
  * "GitHubIssueFinder {CM_VERSION}" header, so the on-device version
  * stamp is reachable from Discover the same way VersionLabel makes it
- * reachable from the "classic" flow's TopAppBars, plus one entry per
+ * reachable elsewhere, plus one entry per
  * individual splash: "Play Origami Animation" / "Play Shape Stack
  * Animation" / "Play Coin Animation" / "Play Title Reveal Animation" /
  * "Play Title Reveal Animation (0.5x Speed)" — the two Title Reveal

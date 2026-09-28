@@ -12,7 +12,6 @@ import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueMode
-import com.example.githubissuefinder.ui.navigation.AppNavHost
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
@@ -35,10 +34,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             // App-wide Issue Mode (v0.41): read directly from the shared
             // IssueMode object (see IssueMode.kt) at this single root
-            // theme call, which wraps the whole app — splash AND
-            // whichever landing experience is active. Null (classic flow,
-            // or repoFirst before a mode's been chosen) falls back to the
-            // original light/dark scheme unchanged.
+            // theme call, which wraps the whole app — splash and the
+            // Discover flow alike. Null (no mode chosen yet) falls back
+            // to the original light/dark scheme unchanged.
             GitHubIssueFinderTheme(issueMode = IssueMode.current) {
                 var showSplash by remember { mutableStateOf(true) }
                 if (showSplash) {
@@ -52,27 +50,17 @@ class MainActivity : ComponentActivity() {
                     // launch.
                     AppStartSplashScreen(onFinished = onFinished)
                 } else {
-                    // Which post-splash experience shows is set in
-                    // app/build.gradle.kts via BuildConfig.LANDING_EXPERIENCE
-                    // ("classic" or "repoFirst") — a build-time config value,
-                    // same "branch by abstraction" pattern as SPLASH_ANIMATION,
-                    // deliberately not a git branch: this lets the existing
-                    // "classic" flow (AppNavHost, FeedTabsScreen, Bookmarks —
-                    // everything working today) stay completely untouched and
-                    // reachable at all times, while "repoFirst" is built up
-                    // incrementally alongside it.
-                    //
-                    // "repoFirst" is the Discover flow (option C from the
-                    // architecture discussion): a ranked Top Repos landing
-                    // screen. As of v0.38, tapping a repo opens a real
-                    // repo-scoped issue list (RepoIssuesScreen) with proper
-                    // back-navigation, via DiscoverNavHost — no longer a
-                    // no-op. Feed/Insights/Bookmarks scoping to the chosen
-                    // repo remains a future Commit Milestone.
-                    when (BuildConfig.LANDING_EXPERIENCE) {
-                        "repoFirst" -> DiscoverNavHost()
-                        else -> AppNavHost()
-                    }
+                    // The Discover flow (option C from the architecture
+                    // discussion): a ranked Top Repos landing screen.
+                    // Tapping a repo opens a real repo-scoped issue list
+                    // (RepoIssuesScreen) with proper back-navigation, via
+                    // DiscoverNavHost. This was formerly one of two
+                    // landing experiences selectable via
+                    // BuildConfig.LANDING_EXPERIENCE — the other,
+                    // "classic" (AppNavHost/FeedTabsScreen/Bookmarks), was
+                    // removed once this flow became the sole supported
+                    // experience.
+                    DiscoverNavHost()
                 }
             }
         }

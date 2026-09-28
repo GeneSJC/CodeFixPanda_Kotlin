@@ -55,10 +55,7 @@ private const val KEY_MODE = "mode"
  *
  * Deliberately scoped to ui/discover, not somewhere more generically
  * "app-wide" like ThemePreference — Issue Mode is specifically a
- * repo-first Discover flow concept. The classic flow (Feed) already
- * has its own, unrelated way of picking a label (a per-load chip,
- * scoped to that screen's own ViewModel) and isn't touched by this at
- * all.
+ * repo-first Discover flow concept.
  *
  * TopReposViewModel reads `current` directly too (not just Composables)
  * — the same "read a plain shared value from a ViewModel without a

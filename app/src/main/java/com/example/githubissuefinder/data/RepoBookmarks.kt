@@ -15,21 +15,6 @@ import java.io.File
  * RepoIssueGroupCache, but for a full issue an the user explicitly
  * chose to save rather than a cached search result.
  *
- * DELIBERATELY SEPARATE from the classic flow's own bookmarking
- * (AppNavHost's local `bookmarkedIssues` Map, unchanged by this CM).
- * That map is a temporary, explicitly-flagged stand-in ("a deliberate,
- * temporary stand-in for what a shared ViewModel + Room will do") that
- * is also purely in-memory — it doesn't survive process death at all.
- * Unifying the two into one shared bookmark system would be a real,
- * separate refactor (which store wins, does the classic flow's Map
- * get replaced or does this get folded into it, does Room finally
- * happen) — out of scope for what was actually asked here, and not
- * attempted. The two flows are already mutually exclusive at runtime
- * (BuildConfig.LANDING_EXPERIENCE picks one or the other), so this
- * isn't creating a user-visible inconsistency today, only a known
- * architectural one worth revisiting if the classic flow's own
- * bookmarking is ever seriously reworked.
- *
  * A JSON file, not SharedPreferences — matching RepoIssueGroupCache's
  * reasoning, not IssueMode's: a bookmark is a full Issue object (title,
  * labels, repo identity, URL...), not a single primitive value, so it

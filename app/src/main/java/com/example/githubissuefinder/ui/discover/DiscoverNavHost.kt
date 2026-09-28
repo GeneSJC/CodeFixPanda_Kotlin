@@ -25,8 +25,7 @@ private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
  * v0.38 alongside RepoIssuesScreen, the drill-in every Discover CM
  * since v0.25 had flagged as deferred (tapping a repo was a no-op).
  *
- * Uses Navigation Compose (already a dependency, already proven by
- * "classic"'s AppNavHost — no new library risk) specifically for real
+ * Uses Navigation Compose specifically for real
  * system back-button support, unlike the simple boolean-state-swap
  * pattern used for the splash-replay overlay (v0.31) — that was a
  * short, self-contained overlay; this is a genuine set of screens a
