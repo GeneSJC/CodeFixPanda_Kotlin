@@ -50,6 +50,7 @@ import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
@@ -242,6 +243,7 @@ fun TopReposScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showLabelInfoDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
@@ -277,7 +279,28 @@ fun TopReposScreen(
                 TopAppBar(
                     title = {
                         Column {
-                            Text(currentMode.displayName)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(currentMode.displayName)
+                                // "good first issue" reads less clearly on its
+                                // own than "help wanted" does, per direct
+                                // feedback after seeing this screen running —
+                                // an info icon here explains what it means.
+                                // "help wanted" doesn't get one: it wasn't
+                                // reported as confusing, and the shared
+                                // LabelInfoDialog explaining both terms is
+                                // still reachable from RepoIssuesScreen for
+                                // anyone who wants it there too.
+                                if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
+                                    Text(
+                                        "ⓘ",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .padding(start = 6.dp)
+                                            .clickable { showLabelInfoDialog = true },
+                                    )
+                                }
+                            }
                             Text(
                                 "Repos",
                                 style = MaterialTheme.typography.bodySmall,
@@ -505,6 +528,10 @@ fun TopReposScreen(
 
     if (showInfoDialog) {
         RankingInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+
+    if (showLabelInfoDialog) {
+        LabelInfoDialog(onDismiss = { showLabelInfoDialog = false })
     }
 
     if (showClearCacheConfirm) {
