@@ -49,3 +49,12 @@ val ModeHwPrimary = Color(0xFF2F9E5C)
 val ModeHwOnPrimary = Color(0xFFFFFFFF)
 val ModeHwSecondaryContainer = Color(0xFFD7F2DF)
 val ModeHwOnSecondaryContainer = Color(0xFF0B4A24)
+
+// Hamburger-menu section backgrounds (TopReposScreen's drawer) —
+// deliberately their own fixed pastel set, NOT derived from the active
+// Issue Mode's palette above: these are structural UI chrome (grouping
+// related menu items), not something that should repaint itself as Mode
+// changes the way the rest of the screen does.
+val DrawerSectionRepoManagement = Color(0xFFE9F1FB) // light blue
+val DrawerSectionFindIssues = Color(0xFFFDF1E0) // light amber
+val DrawerSectionSandbox = Color(0xFFEFEFEF) // light neutral gray

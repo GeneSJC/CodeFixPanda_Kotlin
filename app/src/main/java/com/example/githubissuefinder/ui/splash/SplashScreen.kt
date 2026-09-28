@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.sin
@@ -96,6 +98,10 @@ fun SplashScreen(onFinished: () -> Unit) {
     // connected to the same "how high is it right now" value.
     val heightFraction = sin((progress * PI).toFloat()).coerceIn(0f, 1f)
 
+    // Pinned to the purple Good First Issue palette regardless of the
+    // app's active Issue Mode — see TitleRevealSplashScreen's doc
+    // comment for the full reasoning.
+    MaterialTheme(colorScheme = IssueLabelFilter.GOOD_FIRST_ISSUE.colorScheme()) {
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
@@ -134,5 +140,6 @@ fun SplashScreen(onFinished: () -> Unit) {
                     .graphicsLayer { alpha = nameAlpha.value },
             )
         }
+    }
     }
 }

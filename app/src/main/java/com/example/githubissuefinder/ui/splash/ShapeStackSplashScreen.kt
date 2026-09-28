@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
 
 private const val APPEAR_MS = 400
@@ -86,6 +88,10 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
         onFinished()
     }
 
+    // Pinned to the purple Good First Issue palette regardless of the
+    // app's active Issue Mode — see TitleRevealSplashScreen's doc
+    // comment for the full reasoning.
+    MaterialTheme(colorScheme = IssueLabelFilter.GOOD_FIRST_ISSUE.colorScheme()) {
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
@@ -139,6 +145,7 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
                     .graphicsLayer { alpha = nameAlpha.value },
             )
         }
+    }
     }
 }
 
