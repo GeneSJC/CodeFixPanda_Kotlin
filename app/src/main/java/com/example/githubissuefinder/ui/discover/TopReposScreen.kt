@@ -213,12 +213,15 @@ import kotlinx.coroutines.flow.collect
  * oversight — and, as of v0.49, reloads this screen immediately
  * afterward rather than leaving stale data visible).
  *
- * v0.46: a small chip in the top bar's actions slot (next to the "ⓘ"
- * icon) shows how many repo cards are currently loaded — styled
- * directly after Feed's own RateLimitChip, the same reference point
- * this was asked for by name. Just reads uiState.repoGroups.size
- * directly; no separate tracking needed, updates for free on every
- * Load More and every mode/language switch.
+ * v0.46: a repo-count chip shows how many repo cards are currently
+ * loaded, styled directly after the classic flow's own RateLimitChip,
+ * the same reference point this was asked for by name. Just reads
+ * uiState.repoGroups.size directly; no separate tracking needed,
+ * updates for free on every Load More and every mode/language switch.
+ * Originally lived in the top bar's actions slot; moved down to the
+ * "Updated X ago" row (right-aligned, opposite that text) once the
+ * ported RateLimitChip itself took over that actions slot — see the
+ * newer paragraph below for the full reasoning.
  *
  * v0.48: added "Bookmarks" as the very first menu item, right after
  * the version header — a real navigation destination (see
@@ -263,6 +266,20 @@ import kotlinx.coroutines.flow.collect
  * replaying one from the Sandbox group — or a real cold start with Help
  * Wanted already chosen — no longer repaints it green; see
  * TitleRevealSplashScreen's own doc comment for the full reasoning.
+ *
+ * Ported the classic flow's rate-limit chip/dialog/dial (RateLimitChip
+ * below) into this screen's TopAppBar actions — see RateLimitChip's own
+ * doc comment for why it ALWAYS renders (a placeholder "🔑 —" when
+ * RateLimitState.info is still null) rather than conditionally
+ * appearing only once a live search completes: a cache hit never calls
+ * the network at all, so on a typical revisit the chip could otherwise
+ * stay absent for the entire session, and its sudden appearance
+ * mid-session was colliding with the "good first issue" info icon
+ * right next to it in the title. Taking over the actions slot pushed
+ * the repo-count chip that used to live there down to its own row,
+ * right-aligned opposite "Updated X ago" — a natural fit, since both
+ * are specific to the active language filter rather than being
+ * Mode-level chrome like the title bar itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -469,24 +486,20 @@ fun TopReposScreen(
                         }
                     },
                     actions = {
-                        rateLimit?.let { info ->
-                            RateLimitChip(
-                                info = info,
-                                onClick = { showRateLimitDialog = true },
-                            )
-                        }
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            modifier = Modifier.padding(end = 8.dp),
-                        ) {
-                            Text(
-                                repoCountLabel(hiddenGroups.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            )
-                        }
+                        // Always shown, even with no data yet (a placeholder
+                        // "🔑 —") rather than appearing/disappearing mid-
+                        // session — a chip popping in once the first live
+                        // search completes was visually colliding with the
+                        // "good first issue" info icon in the title next to
+                        // it, since the title bar had no stable reserved
+                        // space for it. Tapping it always opens
+                        // RateLimitDialog, which already handles a null
+                        // info with its own "No rate limit data available
+                        // yet" message.
+                        RateLimitChip(
+                            info = rateLimit,
+                            onClick = { showRateLimitDialog = true },
+                        )
                         Text(
                             "ⓘ",
                             style = MaterialTheme.typography.titleMedium,
@@ -505,13 +518,33 @@ fun TopReposScreen(
                     onSelect = viewModel::onLanguageSelected,
                 )
 
-                uiState.lastUpdatedAtMs?.let { updatedAtMs ->
+                // The repo-count chip moved here (from the TopAppBar's
+                // actions, where the rate-limit chip now sits) since it's
+                // specific to the active language filter, same as
+                // "Updated X ago" on the other side of this row — it never
+                // belonged in the title bar next to Mode-level chrome to
+                // begin with.
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        "Updated ${formatRelativeTime(updatedAtMs)}",
+                        uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Text(
+                            repoCountLabel(hiddenGroups.size),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        )
+                    }
                 }
 
                 when {
@@ -633,7 +666,7 @@ fun TopReposScreen(
  * with the full speedometer-style dial below.
  */
 @Composable
-private fun RateLimitChip(info: RateLimitInfo, onClick: () -> Unit) {
+private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
@@ -641,7 +674,13 @@ private fun RateLimitChip(info: RateLimitInfo, onClick: () -> Unit) {
         modifier = Modifier.padding(end = 8.dp),
     ) {
         Text(
-            "🔑 ${info.remaining}/${info.limit}",
+            // A cache-hit load never calls the network, so info can stay
+            // null for the whole session — "🔑 —" until a real search
+            // response arrives, rather than the chip appearing/
+            // disappearing depending on whether this exact combination
+            // happened to be cached. Still tappable either way: the
+            // dialog handles a null info with its own explanatory text.
+            if (info != null) "🔑 ${info.remaining}/${info.limit}" else "🔑 —",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
