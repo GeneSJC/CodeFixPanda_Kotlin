@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -261,6 +263,16 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         onFinished()
     }
 
+    // Pinned to the Good First Issue (purple) palette regardless of the
+    // app's currently active Issue Mode — the splash is this project's
+    // own fixed brand identity (see SplashBrandMark's doc comment), not
+    // something that should repaint itself green under Help Wanted just
+    // because Theme.kt's root MaterialTheme call happens to be mode-
+    // aware. Without this override, MaterialTheme.colorScheme reads
+    // straight from that ambient, mode-driven scheme, so replaying this
+    // animation (or a real cold start with Help Wanted already chosen)
+    // would show it in green instead of the intended purple.
+    MaterialTheme(colorScheme = IssueLabelFilter.GOOD_FIRST_ISSUE.colorScheme()) {
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
@@ -371,5 +383,6 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
                 }
             }
         }
+    }
     }
 }

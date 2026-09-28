@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.BuildConfig
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +60,9 @@ import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
 import com.example.githubissuefinder.ui.splash.SplashScreen
 import com.example.githubissuefinder.ui.splash.TitleRevealSplashScreen
+import com.example.githubissuefinder.ui.theme.DrawerSectionFindIssues
+import com.example.githubissuefinder.ui.theme.DrawerSectionRepoManagement
+import com.example.githubissuefinder.ui.theme.DrawerSectionSandbox
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -223,7 +229,7 @@ import kotlinx.coroutines.flow.collect
  * Compose-reactive (mutableStateOf), same mechanism RepoBookmarks
  * already relies on elsewhere in this flow.
  *
- * Also added: a "Hidden" drawer item (next to "Bookmarks", same
+ * Also added: a "Hidden Issues" drawer item (next to "Bookmarks", same
  * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
  * a confirmation dialog in front of "Clear Cache" (Part D) — this menu
  * previously fired viewModel.clearCache() directly with no
@@ -231,6 +237,21 @@ import kotlinx.coroutines.flow.collect
  * and hidden issues are UNaffected, since clearCache() only ever
  * touches RepoIssueGroupCache, never RepoBookmarks or
  * HiddenIssuesStore.
+ *
+ * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,
+ * below) after direct feedback that a long flat list was hard to scan:
+ * "Repo Management" (Bookmarks, Hidden Issues, Check for New Repos,
+ * Clear Cache — everything that acts on this screen's own data),
+ * "Find Issues" (the two mode-switch items), and "Sandbox" (the CM
+ * version stamp and animation-replay tooling, deliberately LAST since
+ * it's dev-only and the least likely thing an end user needs). Also
+ * renamed "Hidden" to "Hidden Issues" for the same reason. Each splash
+ * screen (SplashScreen, OrigamiSplashScreen, ShapeStackSplashScreen,
+ * TitleRevealSplashScreen) is now pinned to the Good First Issue
+ * (purple) palette regardless of the app's active Issue Mode, so
+ * replaying one from the Sandbox group — or a real cold start with Help
+ * Wanted already chosen — no longer repaints it green; see
+ * TitleRevealSplashScreen's own doc comment for the full reasoning.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,111 +338,120 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
-                                // true keeps the full CM version stamp and every
-                                // individual animation-replay entry, useful for exactly
-                                // the kind of iteration this project does. false (the
-                                // default) strips both down to what an actual end user
-                                // would see — see app/build.gradle.kts's
-                                // showDetailedDrawerMenu val.
-                                if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
-                                    Text(
-                                        "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    )
-                                    HorizontalDivider()
-                                }
-                                DropdownMenuItem(
-                                    text = { Text("Bookmarks") },
-                                    onClick = {
-                                        showMenu = false
-                                        onOpenBookmarks()
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Hidden") },
-                                    onClick = {
-                                        showMenu = false
-                                        onOpenHidden()
-                                    },
-                                )
-                                HorizontalDivider()
-                                if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
+                                // Three groups — Repo Management, Find Issues,
+                                // Sandbox — each its own pastel-tinted section
+                                // with its own header, separated by dividers.
+                                // "Sandbox" (dev-only tooling) is deliberately
+                                // last: it's the group an end user is least
+                                // likely to need, not the first thing this
+                                // menu shows.
+                                DrawerMenuSection(header = "Repo Management", background = DrawerSectionRepoManagement) {
                                     DropdownMenuItem(
-                                        text = { Text("Play Origami Animation") },
+                                        text = { Text("Bookmarks") },
                                         onClick = {
                                             showMenu = false
-                                            replayAnimation = "origami"
+                                            onOpenBookmarks()
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Play Shape Stack Animation") },
+                                        text = { Text("Hidden Issues") },
                                         onClick = {
                                             showMenu = false
-                                            replayAnimation = "shapeStack"
+                                            onOpenHidden()
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Play Coin Animation") },
+                                        text = { Text("Check for New Repos") },
                                         onClick = {
                                             showMenu = false
-                                            replayAnimation = "coin"
+                                            viewModel.checkForNewRepos()
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Play Title Reveal Animation") },
+                                        text = { Text("Clear Cache") },
                                         onClick = {
                                             showMenu = false
-                                            replayAnimation = "titleReveal"
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("Play Title Reveal Animation (0.5x Speed)") },
-                                        onClick = {
-                                            showMenu = false
-                                            replayAnimation = "titleRevealHalfSpeed"
-                                        },
-                                    )
-                                } else {
-                                    DropdownMenuItem(
-                                        text = { Text("Play App Start Animation") },
-                                        onClick = {
-                                            showMenu = false
-                                            replayAnimation = "appStart"
+                                            showClearCacheConfirm = true
                                         },
                                     )
                                 }
                                 HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("Check for New Repos") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.checkForNewRepos()
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Clear Cache") },
-                                    onClick = {
-                                        showMenu = false
-                                        showClearCacheConfirm = true
-                                    },
-                                )
+                                DrawerMenuSection(header = "Find Issues", background = DrawerSectionFindIssues) {
+                                    DropdownMenuItem(
+                                        text = { Text("Find Good First Issues") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.onModeSelected(IssueLabelFilter.GOOD_FIRST_ISSUE)
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Find Help Wanted Issues") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.onModeSelected(IssueLabelFilter.HELP_WANTED)
+                                        },
+                                    )
+                                }
                                 HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text("Find Good First Issues") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.onModeSelected(IssueLabelFilter.GOOD_FIRST_ISSUE)
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Find Help Wanted Issues") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.onModeSelected(IssueLabelFilter.HELP_WANTED)
-                                    },
-                                )
+                                DrawerMenuSection(header = "Sandbox", background = DrawerSectionSandbox) {
+                                    // true keeps the full CM version stamp and every
+                                    // individual animation-replay entry, useful for exactly
+                                    // the kind of iteration this project does. false (the
+                                    // default) strips both down to what an actual end user
+                                    // would see — see app/build.gradle.kts's
+                                    // showDetailedDrawerMenu val.
+                                    if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
+                                        Text(
+                                            "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Play Origami Animation") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "origami"
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Play Shape Stack Animation") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "shapeStack"
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Play Coin Animation") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "coin"
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Play Title Reveal Animation") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "titleReveal"
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("Play Title Reveal Animation (0.5x Speed)") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "titleRevealHalfSpeed"
+                                            },
+                                        )
+                                    } else {
+                                        DropdownMenuItem(
+                                            text = { Text("Play App Start Animation") },
+                                            onClick = {
+                                                showMenu = false
+                                                replayAnimation = "appStart"
+                                            },
+                                        )
+                                    }
+                                }
                             }
                         }
                     },
@@ -558,6 +588,30 @@ fun TopReposScreen(
                 }
             },
         )
+    }
+}
+
+/**
+ * One visually-grouped section of the hamburger menu's DropdownMenu — a
+ * pastel-tinted background, a small bold header, then its items. Each
+ * group is what "before there is a divider to the next group" means:
+ * callers place a HorizontalDivider() between sections, not within one.
+ */
+@Composable
+private fun DrawerMenuSection(
+    header: String,
+    background: Color,
+    content: @Composable () -> Unit,
+) {
+    Column(modifier = Modifier.background(background)) {
+        Text(
+            header,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, top = 8.dp, bottom = 2.dp),
+        )
+        content()
     }
 }
 
