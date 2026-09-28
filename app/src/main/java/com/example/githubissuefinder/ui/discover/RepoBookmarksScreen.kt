@@ -32,8 +32,7 @@ import com.example.githubissuefinder.ui.components.IssueCard
  * currently saved via the bookmark toggle IssueCard now offers (see
  * that file's own doc comment). Deliberately its own screen, not a
  * tab or a section grafted onto an existing one — a genuinely separate
- * place to come back to, matching how the classic flow's own
- * Bookmarks has always been its own destination too.
+ * place to come back to.
  *
  * "Same buttons and layout as from the repo view," per how this was
  * asked for: every card here uses IssueCard with

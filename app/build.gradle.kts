@@ -23,7 +23,6 @@ val localProperties = Properties().apply {
 // here; nothing else needs to change to pick it up.
 val cmVersion = "v0.48"
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
-val landingExperience = "repoFirst" // "classic" or "repoFirst"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
 android {
@@ -66,14 +65,6 @@ android {
         // user-facing setting. See MainActivity.kt for how this is read.
         buildConfigField("String", "SPLASH_ANIMATION", "\"$splashAnimation\"")
 
-        // Which post-splash experience shows: "repoFirst" (the Discover
-        // landing screen — now the default as of v0.28) or "classic" (the
-        // original tabs flow, still fully intact and reachable by setting
-        // this back). Same
-        // build-time "branch by abstraction" pattern as the two fields
-        // above — see MainActivity.kt.
-        buildConfigField("String", "LANDING_EXPERIENCE", "\"$landingExperience\"")
-
         // Whether Discover's hamburger menu shows its full animation-
         // replay toolkit (every individual splash, plus the on-device CM
         // version stamp — useful while actively iterating on splash/
@@ -81,8 +72,8 @@ android {
         // entry, what an actual end user would see. Defaults to false so
         // a fresh clone/run shows the clean, production-like menu rather
         // than this project's own dev tooling — see TopReposScreen.kt.
-        // Deliberately a plain boolean val, same pattern as the three
-        // fields above, not a Gradle product flavor: this is the only
+        // Deliberately a plain boolean val, same pattern as the field
+        // above, not a Gradle product flavor: this is the only
         // thing it currently controls, so a flavor's build-variant
         // machinery (separate installable variants, an application-id
         // suffix, etc.) would be more than this needs.
@@ -119,7 +110,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.drafter)
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi.kotlin)

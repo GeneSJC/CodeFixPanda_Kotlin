@@ -33,10 +33,10 @@ import com.example.githubissuefinder.model.Issue
 import kotlinx.coroutines.launch
 
 /**
- * The core feed card. `isBookmarked` is passed in rather than read from the
- * Issue model, since bookmark state now lives in shared state at the
- * navigation level (see AppNavHost.kt) — this keeps the sample data
- * immutable and the bookmark state as the single source of truth.
+ * The core issue card. `isBookmarked` is passed in rather than read from the
+ * Issue model, since bookmark state lives separately (see
+ * RepoBookmarks.kt) — this keeps Issue immutable and the bookmark state
+ * as the single source of truth.
  *
  * v0.39 ("CM B"): the repo identity row is now two-tier — repoDisplayTitle
  * (a humanized, readable name) as the more prominent line, with
@@ -120,14 +120,10 @@ import kotlinx.coroutines.launch
  * badge, styled to match the "↗" external-link badge's exact size and
  * shape (same Surface + RoundedCornerShape + enlarged glyph treatment),
  * sitting to the LEFT of the Share button in the action row — is
- * OPTIONAL, controlled by onToggleBookmark being non-null. Feed's
- * existing call sites pass nothing new and are completely unaffected;
- * only RepoIssuesScreen and the new RepoBookmarksScreen provide it.
- * This is deliberate, not an oversight: Feed already has its own,
- * separate, unrelated bookmarking path via DetailScreen, backed by
- * AppNavHost's own local state — this CM's bookmark toggle is scoped
- * to the repo-first flow's RepoBookmarks store specifically (see that
- * file's own doc comment for why the two aren't unified).
+ * OPTIONAL, controlled by onToggleBookmark being non-null.
+ * RepoIssuesScreen and RepoBookmarksScreen provide it, backed by the
+ * repo-first flow's RepoBookmarks store (see that file's own doc
+ * comment).
  *
  * Tapping it calls onToggleBookmark(), then shows a real Snackbar
  * ("Bookmarked" / "Unbookmarked") via the caller-supplied
