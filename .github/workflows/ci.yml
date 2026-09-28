@@ -1,0 +1,49 @@
+name: CI
+
+# Runs on every push and pull request against develop/main — this is what
+# actually catches a real compile error (like the platform declaration
+# clash from v0.51, or the Modifier.padding overload mismatch from the
+# rate-limit indicator work) before it lands, rather than relying on
+# manual review or a local build alone. GitHub's own runners have normal
+# internet access, so the Gradle toolchain download that's blocked in the
+# Claude Code sandbox works fine here.
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Only the JDK Gradle itself launches under — the project's own
+      # compile toolchain (a newer JDK, resolved via the foojay plugin in
+      # settings.gradle.kts) is downloaded separately by Gradle at build
+      # time, same as it would be on a real machine with network access.
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Compile (debug)
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/testDebugUnitTest/
+          retention-days: 14
