@@ -62,6 +62,7 @@ import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
@@ -294,6 +295,7 @@ fun TopReposScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showLabelInfoDialog by remember { mutableStateOf(false) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
+    var showNoTokenDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
@@ -492,13 +494,22 @@ fun TopReposScreen(
                         // search completes was visually colliding with the
                         // "good first issue" info icon in the title next to
                         // it, since the title bar had no stable reserved
-                        // space for it. Tapping it always opens
-                        // RateLimitDialog, which already handles a null
-                        // info with its own "No rate limit data available
-                        // yet" message.
+                        // space for it. Tapping it opens RateLimitDialog
+                        // normally, EXCEPT when no token is configured at
+                        // all (GitHubApiClient.hasToken false) — in that
+                        // case "No rate limit data available yet" would be
+                        // misleading (it reads like "wait a moment," not
+                        // "this needs setup"), so NoTokenDialog explains
+                        // the actual local.properties step instead.
                         RateLimitChip(
                             info = rateLimit,
-                            onClick = { showRateLimitDialog = true },
+                            onClick = {
+                                if (GitHubApiClient.hasToken) {
+                                    showRateLimitDialog = true
+                                } else {
+                                    showNoTokenDialog = true
+                                }
+                            },
                         )
                         Text(
                             "ⓘ",
@@ -621,6 +632,10 @@ fun TopReposScreen(
             info = rateLimit,
             onDismiss = { showRateLimitDialog = false },
         )
+    }
+
+    if (showNoTokenDialog) {
+        NoTokenDialog(onDismiss = { showNoTokenDialog = false })
     }
 
     if (showClearCacheConfirm) {
@@ -809,6 +824,34 @@ private fun RateLimitRow(label: String, value: String) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
+}
+
+/**
+ * Shown instead of RateLimitDialog when GitHubApiClient.hasToken is
+ * false — tapping the rate-limit chip with no token configured at all
+ * is a setup problem, not a "check back in a moment" one, so this gets
+ * its own dialog with the actual fix rather than reusing
+ * RateLimitDialog's generic "No rate limit data available yet." text,
+ * which would leave someone with no token wondering what to even do
+ * about it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NoTokenDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Got it") }
+        },
+        title = { Text("GitHub API token needed") },
+        text = {
+            Text(
+                "This app needs a GitHub personal access token to make live requests " +
+                    "against the Search API. Add one as GITHUB_API_TOKEN in your " +
+                    "local.properties file (gitignored, never committed), then rebuild.",
+            )
+        },
+    )
 }
 
 /**
