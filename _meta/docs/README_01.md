@@ -1,5 +1,29 @@
 # GitHubIssueFinder — Setup Docs (Draft)
 
+## TO-DO
+
+- [ ] **Flip this repo to public, then enforce CI on `develop`.** The repo is
+  intentionally private today, but the actual intent is for it to be public
+  for portfolio/demo access. GitHub's Free plan only enforces branch
+  protection rules/rulesets (blocking a merge on red CI) on **public**
+  repos — on a private repo it's paywalled behind GitHub Team ($4/user/
+  month). Once public: GitHub Actions minutes are unlimited/free too (a
+  private repo has a free-tier monthly cap, though CI usage here is well
+  within it either way). Steps once ready to flip:
+  1. Settings → General → Danger Zone → "Change repository visibility" →
+     Public. Do a quick gut-check on commit history first for anything
+     that shouldn't be public (the real GITHUB_API_TOKEN itself is safe —
+     it only ever lives in `local.properties`, gitignored, never
+     committed — but worth a last look regardless, since this is hard to
+     fully undo: anyone who forks/clones while it's public keeps their
+     copy even if the repo is flipped back to private later).
+  2. The `develop protection` ruleset (Settings → Rules → Rulesets)
+     already exists with `build-and-test` as a required status check —
+     it should start actually enforcing automatically once the repo is
+     public, no reconfiguration needed.
+  3. Confirm by opening a throwaway PR with a deliberately broken commit
+     and checking that GitHub actually blocks the merge button.
+
 > **Status: TBD / iterative.** This is a first-pass doc living under `/_meta` while it takes
 > shape — not yet promoted into the top-level `README.md`. Content and structure here can
 > change freely; nothing links to this file as a stable reference yet.
