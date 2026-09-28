@@ -491,12 +491,20 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
                         )
                         return@launch
                     }
+                    // 401 specifically means GitHub rejected the configured
+                    // credentials (expired, revoked, or simply wrong) — GitHub's
+                    // own distinction from a 403 rate-limit response, handled
+                    // separately above. Surfaced via tokenRejected rather than
+                    // just errorMessage's generic text so the rate-limit chip's
+                    // tap handler can tell "no token" and "a token that doesn't
+                    // work" apart. See TopReposScreen's TokenProblemDialog.
+                    val isTokenRejected = response.code() == 401
                     val message = "GitHub returned an error (HTTP ${response.code()})"
                     _uiState.update {
                         if (isLoadMore) {
                             it.copy(isLoadingMore = false, loadMoreError = message)
                         } else {
-                            it.copy(isLoading = false, errorMessage = message)
+                            it.copy(isLoading = false, errorMessage = message, tokenRejected = isTokenRejected)
                         }
                     }
                     return@launch
@@ -528,6 +536,7 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
                         currentPage = page,
                         canLoadMore = newCanLoadMore,
                         lastUpdatedAtMs = fetchedAtMs,
+                        tokenRejected = false,
                     )
                 }
                 withContext(Dispatchers.IO) {

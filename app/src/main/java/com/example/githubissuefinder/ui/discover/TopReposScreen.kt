@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.BuildConfig
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,18 +43,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
+import com.example.githubissuefinder.data.RateLimitInfo
+import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
@@ -63,6 +73,8 @@ import com.example.githubissuefinder.ui.splash.TitleRevealSplashScreen
 import com.example.githubissuefinder.ui.theme.DrawerSectionFindIssues
 import com.example.githubissuefinder.ui.theme.DrawerSectionRepoManagement
 import com.example.githubissuefinder.ui.theme.DrawerSectionSandbox
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -202,12 +214,15 @@ import kotlinx.coroutines.flow.collect
  * oversight — and, as of v0.49, reloads this screen immediately
  * afterward rather than leaving stale data visible).
  *
- * v0.46: a small chip in the top bar's actions slot (next to the "ⓘ"
- * icon) shows how many repo cards are currently loaded — styled
- * directly after Feed's own RateLimitChip, the same reference point
- * this was asked for by name. Just reads uiState.repoGroups.size
- * directly; no separate tracking needed, updates for free on every
- * Load More and every mode/language switch.
+ * v0.46: a repo-count chip shows how many repo cards are currently
+ * loaded, styled directly after the classic flow's own RateLimitChip,
+ * the same reference point this was asked for by name. Just reads
+ * uiState.repoGroups.size directly; no separate tracking needed,
+ * updates for free on every Load More and every mode/language switch.
+ * Originally lived in the top bar's actions slot; moved down to the
+ * "Updated X ago" row (right-aligned, opposite that text) once the
+ * ported RateLimitChip itself took over that actions slot — see the
+ * newer paragraph below for the full reasoning.
  *
  * v0.48: added "Bookmarks" as the very first menu item, right after
  * the version header — a real navigation destination (see
@@ -252,6 +267,20 @@ import kotlinx.coroutines.flow.collect
  * replaying one from the Sandbox group — or a real cold start with Help
  * Wanted already chosen — no longer repaints it green; see
  * TitleRevealSplashScreen's own doc comment for the full reasoning.
+ *
+ * Ported the classic flow's rate-limit chip/dialog/dial (RateLimitChip
+ * below) into this screen's TopAppBar actions — see RateLimitChip's own
+ * doc comment for why it ALWAYS renders (a placeholder "🔑 —" when
+ * RateLimitState.info is still null) rather than conditionally
+ * appearing only once a live search completes: a cache hit never calls
+ * the network at all, so on a typical revisit the chip could otherwise
+ * stay absent for the entire session, and its sudden appearance
+ * mid-session was colliding with the "good first issue" info icon
+ * right next to it in the title. Taking over the actions slot pushed
+ * the repo-count chip that used to live there down to its own row,
+ * right-aligned opposite "Updated X ago" — a natural fit, since both
+ * are specific to the active language filter rather than being
+ * Mode-level chrome like the title bar itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -265,10 +294,13 @@ fun TopReposScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
     var showLabelInfoDialog by remember { mutableStateOf(false) }
+    var showRateLimitDialog by remember { mutableStateOf(false) }
+    var showTokenProblemDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while IssueMode.current is null (see its own doc comment).
@@ -456,18 +488,36 @@ fun TopReposScreen(
                         }
                     },
                     actions = {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            modifier = Modifier.padding(end = 8.dp),
-                        ) {
-                            Text(
-                                repoCountLabel(hiddenGroups.size),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            )
-                        }
+                        // Always shown, even with no data yet (a placeholder
+                        // "🔑 —") rather than appearing/disappearing mid-
+                        // session — a chip popping in once the first live
+                        // search completes was visually colliding with the
+                        // "good first issue" info icon in the title next to
+                        // it, since the title bar had no stable reserved
+                        // space for it. Tapping it opens RateLimitDialog
+                        // normally, EXCEPT when there's a token problem —
+                        // none configured at all (GitHubApiClient.hasToken
+                        // false) or one configured but rejected by GitHub
+                        // (uiState.tokenRejected, a 401 response) — in
+                        // either case "No rate limit data available yet."
+                        // would be misleading (it reads like "wait a
+                        // moment," not "this needs attention"), so
+                        // TokenProblemDialog explains the actual situation
+                        // instead. Reaching that dialog with hasToken true
+                        // can only mean tokenRejected is what triggered it,
+                        // so hasToken itself is enough to pick the right
+                        // message — no need to also thread tokenRejected
+                        // through as a separate parameter.
+                        RateLimitChip(
+                            info = rateLimit,
+                            onClick = {
+                                if (GitHubApiClient.hasToken && !uiState.tokenRejected) {
+                                    showRateLimitDialog = true
+                                } else {
+                                    showTokenProblemDialog = true
+                                }
+                            },
+                        )
                         Text(
                             "ⓘ",
                             style = MaterialTheme.typography.titleMedium,
@@ -486,13 +536,33 @@ fun TopReposScreen(
                     onSelect = viewModel::onLanguageSelected,
                 )
 
-                uiState.lastUpdatedAtMs?.let { updatedAtMs ->
+                // The repo-count chip moved here (from the TopAppBar's
+                // actions, where the rate-limit chip now sits) since it's
+                // specific to the active language filter, same as
+                // "Updated X ago" on the other side of this row — it never
+                // belonged in the title bar next to Mode-level chrome to
+                // begin with.
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        "Updated ${formatRelativeTime(updatedAtMs)}",
+                        uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Text(
+                            repoCountLabel(hiddenGroups.size),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        )
+                    }
                 }
 
                 when {
@@ -564,6 +634,20 @@ fun TopReposScreen(
         LabelInfoDialog(onDismiss = { showLabelInfoDialog = false })
     }
 
+    if (showRateLimitDialog) {
+        RateLimitDialog(
+            info = rateLimit,
+            onDismiss = { showRateLimitDialog = false },
+        )
+    }
+
+    if (showTokenProblemDialog) {
+        TokenProblemDialog(
+            tokenRejected = GitHubApiClient.hasToken,
+            onDismiss = { showTokenProblemDialog = false },
+        )
+    }
+
     if (showClearCacheConfirm) {
         AlertDialog(
             onDismissRequest = { showClearCacheConfirm = false },
@@ -592,6 +676,206 @@ fun TopReposScreen(
 }
 
 /**
+ * Persistent, tappable rate-limit indicator for the repo-first flow —
+ * ported over from the classic flow's own FeedTabsScreen (see git
+ * history), which had this same chip/dialog/dial but was removed along
+ * with the rest of classic mode. repoFirst's data layer (RateLimitState,
+ * fed by every successful TopReposViewModel/RepoIssuesViewModel search
+ * response) already tracked this the whole time — this flow just never
+ * displayed it anywhere, a known gap named in this project's own
+ * RepoFirst_FeatureSet report. Added to TopReposScreen only for now;
+ * RepoIssuesScreen is a reasonable follow-up.
+ *
+ * "🔑 remaining/limit" in a compact chip — there genuinely isn't room
+ * for a legible dial in the TopAppBar itself. Tapping it opens a dialog
+ * with the full speedometer-style dial below.
+ */
+@Composable
+private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.padding(end = 8.dp),
+    ) {
+        Text(
+            // A cache-hit load never calls the network, so info can stay
+            // null for the whole session — "🔑 —" until a real search
+            // response arrives, rather than the chip appearing/
+            // disappearing depending on whether this exact combination
+            // happened to be cached. Still tappable either way: the
+            // dialog handles a null info with its own explanatory text.
+            if (info != null) "🔑 ${info.remaining}/${info.limit}" else "🔑 —",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+        title = { Text("Search API rate limit") },
+        text = {
+            if (info == null) {
+                Text("No rate limit data available yet.")
+            } else {
+                Column {
+                    RateLimitDial(info = info)
+                    RateLimitRow("Remaining", "${info.remaining}")
+                    RateLimitRow("Limit", "${info.limit}")
+                    RateLimitRow("Used", "${info.used}")
+                    RateLimitRow("Resets in", info.resetsInLabel)
+                    Text(
+                        "This reflects GitHub's Search API limit specifically, which is " +
+                            "separate from and stricter than the general REST API limit.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                }
+            }
+        },
+    )
+}
+
+/**
+ * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
+ * evenly stepped through orange and yellow — a classic speedometer
+ * red-line convention, independent of the current value. A separate
+ * pointer dot marks where the current remaining/limit ratio actually
+ * falls along that fixed track. Text ("29 Remaining") is rendered as
+ * ordinary Compose Text below the Canvas, rather than drawn inside the
+ * arc via Canvas.drawText — simpler and safer to lay out correctly than
+ * measuring/centering native text inside a curved region.
+ */
+@Composable
+private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
+    val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val dialogBackground = MaterialTheme.colorScheme.surface
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
+    ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+            val strokeWidthPx = 20.dp.toPx()
+            val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
+            val center = Offset(size.width / 2f, size.height - strokeWidthPx / 2f)
+            val arcTopLeft = Offset(center.x - radius, center.y - radius)
+            val arcSize = Size(radius * 2f, radius * 2f)
+
+            // Fixed track: red at 180° (left/"0" end) through orange and
+            // yellow, to green at 360°/0° (right/"max" end) — the visible
+            // half of a full sweepGradient. The 0.0-0.5 stops (the
+            // invisible bottom-right-to-left half) are never drawn by the
+            // drawArc call below, so their exact color doesn't matter.
+            val trackBrush = Brush.sweepGradient(
+                0.0f to Color(0xFF43A047),
+                0.5f to Color(0xFFE53935),
+                0.667f to Color(0xFFFB8C00),
+                0.833f to Color(0xFFFDD835),
+                1.0f to Color(0xFF43A047),
+                center = center,
+            )
+
+            drawArc(
+                brush = trackBrush,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+            )
+
+            // Pointer position: ratio=0 (empty) -> 180° (left/red).
+            // ratio=1 (full) -> 360°/0° (right/green).
+            val pointerAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
+            val pointerX = center.x + radius * cos(pointerAngleRad).toFloat()
+            val pointerY = center.y + radius * sin(pointerAngleRad).toFloat()
+            val pointerRadius = strokeWidthPx / 2f + 4.dp.toPx()
+
+            drawCircle(color = dialogBackground, radius = pointerRadius, center = Offset(pointerX, pointerY))
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.3f),
+                radius = pointerRadius,
+                center = Offset(pointerX, pointerY),
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
+
+        Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
+        Text("Remaining", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariant)
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("0", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+            Text("${info.limit}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun RateLimitRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+    }
+}
+
+/**
+ * Shown instead of RateLimitDialog when there's a token problem —
+ * either GitHubApiClient.hasToken is false (nothing configured at all)
+ * or a configured token is being rejected by GitHub (tokenRejected,
+ * true only once a live search has actually come back with an HTTP 401
+ * — GitHub's own signal for bad/expired/revoked credentials, distinct
+ * from a 403 rate-limit response). Either way, tapping the rate-limit
+ * chip is a setup problem, not a "check back in a moment" one, so this
+ * gets its own dialog with the actual situation rather than reusing
+ * RateLimitDialog's generic "No rate limit data available yet." text,
+ * which would leave someone in either case wondering what to even do
+ * about it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TokenProblemDialog(tokenRejected: Boolean, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Got it") }
+        },
+        title = { Text("GitHub API token needed") },
+        text = {
+            Text(
+                if (tokenRejected) {
+                    "We see a value set for GITHUB_API_TOKEN in local.properties, but " +
+                        "GitHub isn't accepting it (expired, revoked, or otherwise " +
+                        "invalid). Generate a new personal access token and update " +
+                        "local.properties, then rebuild."
+                } else {
+                    "This app needs a GitHub personal access token to make live requests " +
+                        "against the Search API. Add one as GITHUB_API_TOKEN in your " +
+                        "local.properties file (gitignored, never committed), then rebuild."
+                },
+            )
+        },
+    )
+}
+
+/**
  * One visually-grouped section of the hamburger menu's DropdownMenu — a
  * pastel-tinted background, a small bold header, then its items. Each
  * group is what "before there is a divider to the next group" means:
@@ -609,7 +893,7 @@ private fun DrawerMenuSection(
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, top = 8.dp, bottom = 2.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 2.dp),
         )
         content()
     }

@@ -15,6 +15,17 @@ data class TopReposUiState(
      * proven out. A token is required to see anything here for now.
      */
     val noTokenConfigured: Boolean = false,
+    /**
+     * True when a token IS configured (noTokenConfigured false) but
+     * GitHub's own API rejected it — an HTTP 401, which GitHub returns
+     * for bad/expired/revoked credentials specifically, distinct from
+     * a 403 rate-limit response. Deliberately its own field rather than
+     * folded into errorMessage: the rate-limit chip's tap handler needs
+     * to tell "no token at all" and "a token that doesn't work" apart
+     * to show the right explanation (see TopReposScreen's
+     * TokenProblemDialog).
+     */
+    val tokenRejected: Boolean = false,
     /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
     val selectedLanguage: LanguageFilter = LanguageFilter.KOTLIN,
     /**
