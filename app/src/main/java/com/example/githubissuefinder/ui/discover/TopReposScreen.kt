@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.BuildConfig
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,13 +43,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
+import com.example.githubissuefinder.data.RateLimitInfo
+import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -63,6 +72,8 @@ import com.example.githubissuefinder.ui.splash.TitleRevealSplashScreen
 import com.example.githubissuefinder.ui.theme.DrawerSectionFindIssues
 import com.example.githubissuefinder.ui.theme.DrawerSectionRepoManagement
 import com.example.githubissuefinder.ui.theme.DrawerSectionSandbox
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -265,10 +276,12 @@ fun TopReposScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
     var showLabelInfoDialog by remember { mutableStateOf(false) }
+    var showRateLimitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while IssueMode.current is null (see its own doc comment).
@@ -456,6 +469,12 @@ fun TopReposScreen(
                         }
                     },
                     actions = {
+                        rateLimit?.let { info ->
+                            RateLimitChip(
+                                info = info,
+                                onClick = { showRateLimitDialog = true },
+                            )
+                        }
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.secondaryContainer,
@@ -564,6 +583,13 @@ fun TopReposScreen(
         LabelInfoDialog(onDismiss = { showLabelInfoDialog = false })
     }
 
+    if (showRateLimitDialog) {
+        RateLimitDialog(
+            info = rateLimit,
+            onDismiss = { showRateLimitDialog = false },
+        )
+    }
+
     if (showClearCacheConfirm) {
         AlertDialog(
             onDismissRequest = { showClearCacheConfirm = false },
@@ -588,6 +614,161 @@ fun TopReposScreen(
                 }
             },
         )
+    }
+}
+
+/**
+ * Persistent, tappable rate-limit indicator for the repo-first flow —
+ * ported over from the classic flow's own FeedTabsScreen (see git
+ * history), which had this same chip/dialog/dial but was removed along
+ * with the rest of classic mode. repoFirst's data layer (RateLimitState,
+ * fed by every successful TopReposViewModel/RepoIssuesViewModel search
+ * response) already tracked this the whole time — this flow just never
+ * displayed it anywhere, a known gap named in this project's own
+ * RepoFirst_FeatureSet report. Added to TopReposScreen only for now;
+ * RepoIssuesScreen is a reasonable follow-up.
+ *
+ * "🔑 remaining/limit" in a compact chip — there genuinely isn't room
+ * for a legible dial in the TopAppBar itself. Tapping it opens a dialog
+ * with the full speedometer-style dial below.
+ */
+@Composable
+private fun RateLimitChip(info: RateLimitInfo, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.padding(end = 8.dp),
+    ) {
+        Text(
+            "🔑 ${info.remaining}/${info.limit}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+        title = { Text("Search API rate limit") },
+        text = {
+            if (info == null) {
+                Text("No rate limit data available yet.")
+            } else {
+                Column {
+                    RateLimitDial(info = info)
+                    RateLimitRow("Remaining", "${info.remaining}")
+                    RateLimitRow("Limit", "${info.limit}")
+                    RateLimitRow("Used", "${info.used}")
+                    RateLimitRow("Resets in", info.resetsInLabel)
+                    Text(
+                        "This reflects GitHub's Search API limit specifically, which is " +
+                            "separate from and stricter than the general REST API limit.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                }
+            }
+        },
+    )
+}
+
+/**
+ * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
+ * evenly stepped through orange and yellow — a classic speedometer
+ * red-line convention, independent of the current value. A separate
+ * pointer dot marks where the current remaining/limit ratio actually
+ * falls along that fixed track. Text ("29 Remaining") is rendered as
+ * ordinary Compose Text below the Canvas, rather than drawn inside the
+ * arc via Canvas.drawText — simpler and safer to lay out correctly than
+ * measuring/centering native text inside a curved region.
+ */
+@Composable
+private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
+    val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val dialogBackground = MaterialTheme.colorScheme.surface
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
+    ) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+            val strokeWidthPx = 20.dp.toPx()
+            val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
+            val center = Offset(size.width / 2f, size.height - strokeWidthPx / 2f)
+            val arcTopLeft = Offset(center.x - radius, center.y - radius)
+            val arcSize = Size(radius * 2f, radius * 2f)
+
+            // Fixed track: red at 180° (left/"0" end) through orange and
+            // yellow, to green at 360°/0° (right/"max" end) — the visible
+            // half of a full sweepGradient. The 0.0-0.5 stops (the
+            // invisible bottom-right-to-left half) are never drawn by the
+            // drawArc call below, so their exact color doesn't matter.
+            val trackBrush = Brush.sweepGradient(
+                0.0f to Color(0xFF43A047),
+                0.5f to Color(0xFFE53935),
+                0.667f to Color(0xFFFB8C00),
+                0.833f to Color(0xFFFDD835),
+                1.0f to Color(0xFF43A047),
+                center = center,
+            )
+
+            drawArc(
+                brush = trackBrush,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+            )
+
+            // Pointer position: ratio=0 (empty) -> 180° (left/red).
+            // ratio=1 (full) -> 360°/0° (right/green).
+            val pointerAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
+            val pointerX = center.x + radius * cos(pointerAngleRad).toFloat()
+            val pointerY = center.y + radius * sin(pointerAngleRad).toFloat()
+            val pointerRadius = strokeWidthPx / 2f + 4.dp.toPx()
+
+            drawCircle(color = dialogBackground, radius = pointerRadius, center = Offset(pointerX, pointerY))
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.3f),
+                radius = pointerRadius,
+                center = Offset(pointerX, pointerY),
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
+
+        Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
+        Text("Remaining", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariant)
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("0", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+            Text("${info.limit}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun RateLimitRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }
 
