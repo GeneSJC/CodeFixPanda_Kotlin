@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.BuildConfig
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,8 +50,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -299,6 +302,21 @@ import kotlinx.coroutines.flow.collect
  * under the mode pill, where "Repos" used to be alone — clearing a
  * full row of vertical space from the content layout, per direct
  * instruction.
+ *
+ * Landscape Compact Header: the first concrete step of a direct
+ * request to improve landscape layout, after seeing this screen
+ * running rotated — a landscape phone screen is short on height, not
+ * width, and the title's own two text rows (mode pill; repo-count
+ * chip + "Updated X ago") were eating a disproportionate share of
+ * that scarce vertical space. isLandscape reads
+ * LocalConfiguration.current.orientation directly (no ViewModel
+ * involvement — purely a rendering choice, nothing about the
+ * underlying data changes) and merges those two rows into one when
+ * true. A fuller two-column split-view layout (a narrow header/filter
+ * rail beside a full-height card list) was discussed as a further,
+ * larger step in the same direction — deliberately NOT attempted yet;
+ * this compact header is the smaller, lower-risk piece agreed on
+ * first.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -347,9 +365,10 @@ fun TopReposScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
+                val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                 TopAppBar(
                     title = {
-                        Column {
+                        val modePill: @Composable () -> Unit = {
                             Box(
                                 modifier = Modifier
                                     .background(currentMode.colorScheme().primary, RoundedCornerShape(8.dp))
@@ -382,27 +401,51 @@ fun TopReposScreen(
                                     }
                                 }
                             }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = 4.dp),
+                        }
+                        val repoCountAndUpdated: @Composable (Dp) -> Unit = { startPadding ->
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                modifier = Modifier.padding(start = startPadding),
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                ) {
-                                    Text(
-                                        repoCountLabel(hiddenGroups.size),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    )
-                                }
                                 Text(
-                                    uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(start = 8.dp),
+                                    repoCountLabel(hiddenGroups.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 )
+                            }
+                            Text(
+                                uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                        // Landscape ("compact header"): the repo-count chip and
+                        // "Updated X ago" join the mode pill on ONE row instead
+                        // of sitting on their own line beneath it — reclaims a
+                        // full text line of vertical space on a landscape
+                        // screen, where height is the scarce dimension (see
+                        // this file's top doc comment, "Landscape Compact
+                        // Header"). Portrait keeps the original two-row shape
+                        // unchanged — there, width is already generous enough
+                        // that merging them would gain little and just cramp
+                        // the mode pill against the chip.
+                        if (isLandscape) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                modePill()
+                                repoCountAndUpdated(12.dp)
+                            }
+                        } else {
+                            Column {
+                                modePill()
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                ) {
+                                    repoCountAndUpdated(0.dp)
+                                }
                             }
                         }
                     },
