@@ -188,14 +188,19 @@ import kotlinx.coroutines.launch
  * filter row (next to the active Issue Mode pill), not on this shared
  * card component at all. See RepoIssuesScreen's own doc comment.
  *
- * COLLAPSIBLE CARD PASS: the whole card is now an expand/collapse
- * widget. Only the title (plus the corner badge stack beside it) shows
- * by default; everything else — labels, Hide/Bookmark/Share/Copy Link,
- * the comment-count/updated-at line — is wrapped in an
- * AnimatedVisibility, hidden until the new expand-chevron badge is
- * tapped. `expanded` is plain per-composable `remember` state, not
- * hoisted to the caller — nothing outside this card needs to know or
- * control whether any given card is expanded, and RepoIssuesScreen's
+ * COLLAPSIBLE CARD PASS: the card is now a partial expand/collapse
+ * widget. Title and labels (if any) ALWAYS show — only the actions row
+ * (Hide/Bookmark/Share/Copy Link + the comment-count/updated-at line)
+ * is wrapped in an AnimatedVisibility, hidden until the expand-chevron
+ * badge is tapped. Labels were originally inside that same
+ * AnimatedVisibility too, in an earlier version of this pass — moved
+ * back out to the always-visible collapsed state per direct follow-up
+ * instruction, once seen running: a label like "good first issue" is
+ * identifying information worth seeing before expanding, not an action
+ * worth hiding alongside Hide/Bookmark/Share/Copy Link. `expanded` is
+ * plain per-composable `remember` state, not hoisted to the caller —
+ * nothing outside this card needs to know or control whether any given
+ * card is expanded, and RepoIssuesScreen's
  * `items(visibleIssues, key = { it.id })` already keys each card by
  * issue id, so each card's own expanded/collapsed state survives
  * ordinary recomposition correctly.
@@ -207,10 +212,14 @@ import kotlinx.coroutines.launch
  * Share badge moved out of the top-right corner stack and into the
  * (now-collapsible) actions row alongside Hide/Bookmark/Copy Link —
  * freeing that corner for the new expand-chevron badge, placed
- * directly beneath the "→" badge with a tight 4dp gap between them
- * (the same spacing Share's old corner slot used), per direct
- * instruction to keep the two squeezed together rather than spread
- * out. The chevron rotates 180° on toggle, using a quick 300ms
+ * directly beneath the "→" badge with a 2dp gap between them —
+ * confirmed acceptable on-device as-is, deliberately not tuned further
+ * (the badges' own enlarged 1.67x glyph size means this stack still
+ * won't land pixel-perfect against a two-line title, a known, accepted
+ * gap rather than something worth more iteration here). The whole
+ * stack's top offset is 7.dp (not matching the Column's own 14.dp
+ * padding) — pulled up further per direct instruction once seen
+ * running. The chevron rotates 180° on toggle, using a quick 300ms
  * tween — deliberately NOT the README widget's 2-second "hero"
  * duration (ReadmeToggleButton/ReadmeExpandableBody), since this
  * triggers on every card in a scrolling list rather than being a
@@ -255,6 +264,15 @@ fun IssueCard(
                     modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
                 )
 
+                if (issue.labels.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        issue.labels.take(3).forEach { label -> LabelChip(label) }
+                    }
+                }
+
                 AnimatedVisibility(
                     visible = expanded,
                     enter = expandVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
@@ -262,90 +280,74 @@ fun IssueCard(
                     exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
                         fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
                 ) {
-                    Column {
-                        if (issue.labels.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                issue.labels.take(3).forEach { label -> LabelChip(label) }
-                            }
-                        }
-
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = if (issue.labels.isEmpty()) 10.dp else 0.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                if (onHide != null) {
-                                    CardBadge(glyph = "✕", onClick = onHide)
-                                }
-                                if (onToggleBookmark != null) {
-                                    CardBadge(
-                                        glyph = if (isBookmarked) "★" else "☆",
-                                        onClick = {
-                                            onToggleBookmark()
-                                            val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
-                                            snackbarHostState?.let { hostState ->
-                                                coroutineScope.launch { hostState.showSnackbar(message) }
-                                            }
-                                        },
-                                    )
-                                }
+                            if (onHide != null) {
+                                CardBadge(glyph = "✕", onClick = onHide)
+                            }
+                            if (onToggleBookmark != null) {
                                 CardBadge(
-                                    glyph = "📤",
+                                    glyph = if (isBookmarked) "★" else "☆",
                                     onClick = {
-                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_SUBJECT, issue.title)
-                                            putExtra(
-                                                Intent.EXTRA_TEXT,
-                                                "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
-                                            )
+                                        onToggleBookmark()
+                                        val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                        snackbarHostState?.let { hostState ->
+                                            coroutineScope.launch { hostState.showSnackbar(message) }
                                         }
-                                        context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
-                                    },
-                                )
-                                CardBadge(
-                                    glyph = "📋",
-                                    onClick = {
-                                        clipboardManager.setText(AnnotatedString(issue.htmlUrl))
-                                        Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
                                     },
                                 )
                             }
-
-                            Text(
-                                text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            CardBadge(
+                                glyph = "📤",
+                                onClick = {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_SUBJECT, issue.title)
+                                        putExtra(
+                                            Intent.EXTRA_TEXT,
+                                            "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
+                                        )
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
+                                },
+                            )
+                            CardBadge(
+                                glyph = "📋",
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(issue.htmlUrl))
+                                    Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+                                },
                             )
                         }
+
+                        Text(
+                            text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
 
             // Top-right badge stack: the external-link indicator (if
-            // shown) directly above the expand/collapse chevron, squeezed
-            // to a 2.dp gap per direct instruction — on a two-line title,
-            // this keeps the whole stack's height close to the title's
-            // own two-line height, so the chevron lands close to the
-            // title's second line rather than floating below it (a
-            // reasonable-effort estimate, not pixel-verified against a
-            // running device). Top-aligned via the 14.dp offset, matching
-            // the Column's own 14.dp padding, regardless of whether the
-            // title wraps to one or two lines.
+            // shown) directly above the expand/collapse chevron, kept at
+            // a 2.dp gap — confirmed on-device as an acceptable spacing,
+            // not worth further tightening. Top offset reduced to 7.dp
+            // (down from matching the Column's own 14.dp padding), per
+            // direct instruction to pull the whole stack further up
+            // toward the title's first line.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 14.dp, end = 14.dp),
+                    .padding(top = 7.dp, end = 14.dp),
             ) {
                 if (showExternalLinkIndicator) {
                     CardBadge(glyph = "→", onClick = onClick)
