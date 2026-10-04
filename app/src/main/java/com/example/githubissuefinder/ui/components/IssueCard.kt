@@ -2,29 +2,36 @@ package com.example.githubissuefinder.ui.components
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -54,47 +61,14 @@ import kotlinx.coroutines.launch
  * cut by one third) and halved the badge's vertical padding, per
  * direct feedback that 2.5x read as larger than intended.
  *
- * v0.47 ("share to yourself"): every card now ends in a Share +
- * Copy Link action row. Deliberately a SHARED addition, not scoped to
- * just RepoIssuesScreen where this whole conversation had been
- * focused — IssueCard is used by Feed too, and "send myself this
- * issue to work on later" is just as real a need from a mixed
- * cross-repo list as from a repo-scoped one.
- *
- * REVISED within the same CM, before being confirmed committed: the
- * first draft put both actions behind a small "⋮" overflow menu in the
- * top-right corner — too small relative to the rest of the card, per
- * direct feedback comparing it against the "↗" badge's size. Replaced
- * with two real, always-visible buttons in their own row at the
- * bottom of the card — a standard Material card pattern (content, then
- * an actions row), not a custom invention. Both are plain
- * androidx.compose.material3.Button/OutlinedButton — the SAME
- * components already used elsewhere in this app for Load More, Check
- * for More Issues, and Retry — deliberately reused rather than
- * hand-rolled, which resolves every part of the request at once:
- * genuinely bigger than the arrow badge by construction, pixel-
- * identical typography to every other button in the app because it
- * IS that same component, and a color (primary/onPrimary for Share,
- * an outlined primary-tinted style for Copy Link) already distinct
- * from both the "↗" badge's secondaryContainer and the GitHub-colored
- * label chips — all from the components' own sensible defaults, no
- * custom styling needed to achieve any of it.
- *
- * Share is filled (Button), Copy Link is outlined (OutlinedButton) —
- * a standard, common Material pairing for "primary action + secondary
- * action" sitting side by side, giving Share the slightly heavier
- * visual weight per the specific request to make IT more prominent,
- * without making Copy Link disappear entirely (it's still a full,
- * properly-sized button, just visually secondary to Share).
- *
- * WORTH KNOWING: promoting these from a subtle corner glyph to two
- * full buttons on every card adds real height and visual weight to
- * each card — a genuine tradeoff in a long list (Feed especially),
- * traded deliberately for the requested prominence. If this ever
- * reads as too heavy in a long scrolling list once seen running, a
- * reasonable middle ground would be showing this row only on tap/
- * long-press rather than always-visible — not attempted here since
- * "prominent" was the explicit, direct request.
+ * v0.47 ("share to yourself"): every card gained a Share + Copy Link
+ * action pair. ORIGINALLY shipped as two full Button/OutlinedButton
+ * components in their own row at the card's bottom — see the density
+ * pass below for why that's no longer the current shape. Kept here as
+ * real history, not deleted: the original reasoning (why real buttons
+ * over a small "⋮" overflow menu, why Share filled vs. Copy Link
+ * outlined for relative prominence) genuinely informed the badge
+ * sizing/coloring choices the current CardBadge treatment still uses.
  *
  * "Share" is a plain Intent.ACTION_SEND wrapped in
  * Intent.createChooser — the system share sheet, not a hardcoded
@@ -118,9 +92,8 @@ import kotlinx.coroutines.launch
  *
  * v0.48 (repo-first bookmarking): a bookmark toggle — a small "★"/"☆"
  * badge, styled to match the "↗" external-link badge's exact size and
- * shape (same Surface + RoundedCornerShape + enlarged glyph treatment),
- * sitting to the LEFT of the Share button in the action row — is
- * OPTIONAL, controlled by onToggleBookmark being non-null.
+ * shape (same Surface + RoundedCornerShape + enlarged glyph treatment)
+ * — is OPTIONAL, controlled by onToggleBookmark being non-null.
  * RepoIssuesScreen and RepoBookmarksScreen provide it, backed by the
  * repo-first flow's RepoBookmarks store (see that file's own doc
  * comment).
@@ -152,16 +125,106 @@ import kotlinx.coroutines.launch
  * v0.51 ("Hide Issue"): an OPTIONAL "✕" hide badge — same Surface/
  * RoundedCornerShape/enlarged-glyph treatment as the bookmark star and
  * the "↗" external-link badge, so it reads as the same family of
- * control — sitting at the START of the action row, controlled by
- * onHide being non-null. Feed and RepoBookmarksScreen pass nothing new
- * and are unaffected; only RepoIssuesScreen supplies it. Deliberately
- * a single fire-and-forget callback, NOT paired with its own Snackbar
- * here the way the bookmark toggle is: the card that triggered it is
- * about to be removed from the list (that's the whole point of Hide),
- * which would cancel a coroutineScope tied to this composable before a
+ * control — controlled by onHide being non-null. Feed and
+ * RepoBookmarksScreen pass nothing new and are unaffected; only
+ * RepoIssuesScreen supplies it. Deliberately a single fire-and-forget
+ * callback, NOT paired with its own Snackbar here the way the
+ * bookmark toggle is: the card that triggered it is about to be
+ * removed from the list (that's the whole point of Hide), which would
+ * cancel a coroutineScope tied to this composable before a
  * Snackbar-with-Undo could resolve. RepoIssuesScreen owns the
  * hide/undo Snackbar itself instead, with a scope that outlives any
  * one card. See that screen's own doc comment.
+ *
+ * DENSITY PASS (per direct feedback that one card took up too much
+ * vertical space in a long list): four layout changes, all aimed at
+ * reclaiming real height rather than just moving things around —
+ *  - The identity row drops repoFullName entirely — repoDisplayTitle
+ *    alone is enough to identify the repo on a screen (RepoIssuesScreen)
+ *    that's already scoped to one repo, and Feed's own cards still get
+ *    full identity context from the title below it. Losing a whole
+ *    text line here is the single biggest height win in this pass.
+ *  - The language dot+label (previously its own row, SpaceBetween
+ *    against the comment-count text) now shares the labels row instead
+ *    — language rendered at the END of that same Row, labels at the
+ *    START. The whole row is skipped only when there are genuinely
+ *    neither labels nor a language to show.
+ *  - Share and Copy Link are no longer full Button/OutlinedButton
+ *    components in their own bottom row — both are now CardBadge
+ *    icons (📤 / 📋), matching the Hide/Bookmark/external-link badges'
+ *    existing family exactly (same helper now, see CardBadge below).
+ *    Share specifically moved OUT of the action row entirely and into
+ *    a small vertical stack in the top-right corner, directly under
+ *    the "↗" external-link badge — both are "leaves this card" actions
+ *    (open in browser / hand off to someone else), so grouping them
+ *    together reads more sensibly than splitting Share across two
+ *    different corners of the card.
+ *  - Hide, Bookmark, and Copy Link — what's left of the old bottom
+ *    action row — now live in the SAME row as the comment-count/
+ *    updated-at text, which used to share a row with the language
+ *    indicator before language moved up to the labels row. Net effect:
+ *    this card went from five content rows (identity, title, labels,
+ *    language/comments, actions) down to three (identity, title,
+ *    labels+language, actions+comments) plus the title's own top-right
+ *    badge stack — the same information, no row purely for one glyph
+ *    or one line of text anymore.
+ *
+ * DENSITY PASS, follow-up: the identity row above (repoDisplayTitle +
+ * the "★ saved" tag) is now gone entirely, not just trimmed to one
+ * line — on a per-repo screen the repo name is already redundant with
+ * the screen it's on, and the bookmark star's own filled/outline state
+ * on its CardBadge already conveys "saved" without a separate text
+ * label. The title is now the card's first content row, full width.
+ * The top-right badge stack's offset was adjusted to match: it now
+ * aligns with the title row directly, since there's no identity row
+ * above it to offset past.
+ *
+ * DENSITY PASS, second follow-up: a static "Kotlin" pill briefly lived
+ * on every card, to the title's right (see history above/below this
+ * paragraph's own prior revisions). It's gone again — this app
+ * currently only ever searches Kotlin issues, so repeating that tag on
+ * every single card in a list was genuinely redundant. It now appears
+ * exactly ONCE per screen, as a static pill in RepoIssuesScreen's own
+ * filter row (next to the active Issue Mode pill), not on this shared
+ * card component at all. See RepoIssuesScreen's own doc comment.
+ *
+ * COLLAPSIBLE CARD PASS: the card is now a partial expand/collapse
+ * widget. Title and labels (if any) ALWAYS show — only the actions row
+ * (Hide/Bookmark/Share/Copy Link + the comment-count/updated-at line)
+ * is wrapped in an AnimatedVisibility, hidden until the expand-chevron
+ * badge is tapped. Labels were originally inside that same
+ * AnimatedVisibility too, in an earlier version of this pass — moved
+ * back out to the always-visible collapsed state per direct follow-up
+ * instruction, once seen running: a label like "good first issue" is
+ * identifying information worth seeing before expanding, not an action
+ * worth hiding alongside Hide/Bookmark/Share/Copy Link. `expanded` is
+ * plain per-composable `remember` state, not hoisted to the caller —
+ * nothing outside this card needs to know or control whether any given
+ * card is expanded, and RepoIssuesScreen's
+ * `items(visibleIssues, key = { it.id })` already keys each card by
+ * issue id, so each card's own expanded/collapsed state survives
+ * ordinary recomposition correctly.
+ *
+ * The external-link badge's glyph changed from "↗" (diagonal) to "→"
+ * (straight right) — it still does exactly what it always did (opens
+ * the issue in GitHub via onClick), just a direct instruction to make
+ * its direction read as forward/right rather than diagonal-out. The
+ * Share badge moved out of the top-right corner stack and into the
+ * (now-collapsible) actions row alongside Hide/Bookmark/Copy Link —
+ * freeing that corner for the new expand-chevron badge, placed
+ * directly beneath the "→" badge with a 2dp gap between them —
+ * confirmed acceptable on-device as-is, deliberately not tuned further
+ * (the badges' own enlarged 1.67x glyph size means this stack still
+ * won't land pixel-perfect against a two-line title, a known, accepted
+ * gap rather than something worth more iteration here). The whole
+ * stack's top offset is 7.dp (not matching the Column's own 14.dp
+ * padding) — pulled up further per direct instruction once seen
+ * running. The chevron rotates 180° on toggle, using a quick 300ms
+ * tween — deliberately NOT the README widget's 2-second "hero"
+ * duration (ReadmeToggleButton/ReadmeExpandableBody), since this
+ * triggers on every card in a scrolling list rather than being a
+ * single deliberate action per screen; a 2-second animation repeated
+ * per-card would read as sluggish rather than deliberate.
  */
 @Composable
 fun IssueCard(
@@ -177,6 +240,12 @@ fun IssueCard(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS),
+        label = "issueCardChevronRotation",
+    )
 
     Card(
         onClick = onClick,
@@ -188,189 +257,144 @@ fun IssueCard(
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
-                    )
-                    Column(modifier = Modifier.padding(start = 8.dp)) {
-                        Text(
-                            text = issue.repoDisplayTitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = issue.repoFullName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (isBookmarked) {
-                        Text(
-                            text = "★ saved",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
-
                 Text(
                     text = issue.title,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
-                    modifier = Modifier.padding(
-                        top = 8.dp,
-                        bottom = 10.dp,
-                        end = if (showExternalLinkIndicator) 56.dp else 0.dp,
-                    ),
+                    modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
                 )
 
                 if (issue.labels.isNotEmpty()) {
                     Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.padding(bottom = 10.dp),
                     ) {
                         issue.labels.take(3).forEach { label -> LabelChip(label) }
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                        fadeIn(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
+                    exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                        fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
                 ) {
-                    if (issue.language != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary),
-                            )
-                            Text(
-                                text = issue.language,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 6.dp),
-                            )
-                        }
-                    } else {
-                        Box(modifier = Modifier)
-                    }
-
-                    Text(
-                        text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (onHide != null) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            onClick = onHide,
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                "✕",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
-                                ),
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
-                            )
-                        }
-                    }
-                    if (onToggleBookmark != null) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            onClick = {
-                                onToggleBookmark()
-                                val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
-                                snackbarHostState?.let { hostState ->
-                                    coroutineScope.launch { hostState.showSnackbar(message) }
-                                }
-                            },
-                        ) {
-                            Text(
-                                if (isBookmarked) "★" else "☆",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    // Same enlargement as the "↗" badge, for a matched size.
-                                    fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
-                                ),
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
-                            )
-                        }
-                    }
-                    Button(
-                        onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, issue.title)
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
+                            if (onHide != null) {
+                                CardBadge(glyph = "✕", onClick = onHide)
+                            }
+                            if (onToggleBookmark != null) {
+                                CardBadge(
+                                    glyph = if (isBookmarked) "★" else "☆",
+                                    onClick = {
+                                        onToggleBookmark()
+                                        val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                        snackbarHostState?.let { hostState ->
+                                            coroutineScope.launch { hostState.showSnackbar(message) }
+                                        }
+                                    },
                                 )
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
-                        },
-                    ) {
-                        Text("Share")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(issue.htmlUrl))
-                            Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-                        },
-                    ) {
-                        Text("Copy Link")
+                            CardBadge(
+                                glyph = "📤",
+                                onClick = {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_SUBJECT, issue.title)
+                                        putExtra(
+                                            Intent.EXTRA_TEXT,
+                                            "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
+                                        )
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
+                                },
+                            )
+                            CardBadge(
+                                glyph = "📋",
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(issue.htmlUrl))
+                                    Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+                                },
+                            )
+                        }
+
+                        Text(
+                            text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
 
-            if (showExternalLinkIndicator) {
-                // TopEnd with an approximate top offset, NOT CenterEnd —
-                // this badge was designed to sit next to the title
-                // specifically (see the title's own matching end=56.dp
-                // reservation above). CenterEnd centers relative to the
-                // WHOLE card, which was fine when the card was shorter;
-                // now that a Share/Copy Link row sits below the footer,
-                // the card is taller, and CenterEnd would drift this
-                // badge down into the labels or footer row instead of
-                // staying by the title. TopEnd anchors to the top of the
-                // card regardless of how much content follows below it.
-                // The 46.dp offset is a reasonable-effort estimate of
-                // where the title line actually starts (14.dp Column
-                // padding + the identity row's own height above it), not
-                // pixel-verified against a running device.
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 46.dp, end = 14.dp),
-                ) {
-                    Text(
-                        "↗",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            // Reduced from 2.5x by one third per feedback: 2.5 * (2/3) ≈ 1.67x.
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
-                        ),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
-                    )
+            // Top-right badge stack: the external-link indicator (if
+            // shown) directly above the expand/collapse chevron, kept at
+            // a 2.dp gap — confirmed on-device as an acceptable spacing,
+            // not worth further tightening. Top offset reduced to 7.dp
+            // (down from matching the Column's own 14.dp padding), per
+            // direct instruction to pull the whole stack further up
+            // toward the title's first line.
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 7.dp, end = 14.dp),
+            ) {
+                if (showExternalLinkIndicator) {
+                    CardBadge(glyph = "→", onClick = onClick)
+                    Box(modifier = Modifier.height(2.dp))
                 }
+                CardBadge(
+                    glyph = "⌄",
+                    onClick = { expanded = !expanded },
+                    rotation = chevronRotation,
+                )
             }
         }
+    }
+}
+
+private const val CARD_EXPAND_COLLAPSE_DURATION_MS = 300
+
+/**
+ * The shared small-glyph badge — Surface + RoundedCornerShape(8.dp) +
+ * an enlarged (1.67x titleMedium) Text — used for every single-glyph
+ * action on this card (Hide, Bookmark, Copy Link, Share, the external-
+ * link indicator, the expand/collapse chevron). Extracted during the
+ * density pass once Share and Copy Link joined this same visual family
+ * instead of being full Button/OutlinedButton components — five
+ * near-identical call sites was the signal to pull this out, not a
+ * change made ahead of need.
+ *
+ * `rotation` (added for the expand/collapse chevron) is a plain degree
+ * value applied via Modifier.rotate — the caller owns the actual
+ * animation (animateFloatAsState), this composable just renders
+ * whatever angle it's handed. Every other badge leaves it at the
+ * default 0f.
+ */
+@Composable
+private fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        onClick = onClick,
+    ) {
+        Text(
+            glyph,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
+            ),
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp).rotate(rotation),
+        )
     }
 }
