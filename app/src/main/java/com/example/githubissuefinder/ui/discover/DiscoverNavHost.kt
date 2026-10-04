@@ -19,7 +19,6 @@ private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
 private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
 private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
-private const val ROUTE_REPO_README = "repoReadme"
 
 /**
  * Navigation host for the "repoFirst" Discover flow — introduced in
@@ -82,11 +81,15 @@ private const val ROUTE_REPO_README = "repoReadme"
  * all-hidden empty state ("View Hidden") — same push-on-top pattern,
  * so back returns to whichever of the two it was opened from.
  *
- * Added ROUTE_REPO_README, reachable from RepoIssuesScreen's "📄"
- * action — same "reuse selectedRepoGroup, no nav-argument ceremony"
- * pattern ROUTE_REPO_ISSUES already uses, just reading repoOwner/
- * repoName/repoFullName/repoDisplayTitle off that same held group
- * rather than passing the whole object through.
+ * A ROUTE_REPO_README destination (a separate full-screen README
+ * viewer, reached from a "📄" toolbar action) briefly existed here and
+ * was removed once RepoIssuesScreen gained its own inline, expandable
+ * README widget (ReadmeExpandableSection) — the originally-discussed
+ * design, built once the card-density pass it was deliberately
+ * deferred behind had landed. A separate nav destination for the same
+ * content would have been a redundant second access point, not a
+ * reasonable fallback, so it came out rather than staying alongside
+ * the new widget.
  */
 /**
  * Rapidly double-tapping a back IconButton can fire onClick twice before
@@ -150,7 +153,6 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                     language = selectedLanguage,
                     onBack = { navController.popBackStackDebounced() },
                     onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
-                    onOpenReadme = { navController.navigate(ROUTE_REPO_README) },
                 )
             }
         }
@@ -159,17 +161,6 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
         }
         composable(ROUTE_HIDDEN_ISSUES) {
             HiddenIssuesScreen(onBack = { navController.popBackStackDebounced() })
-        }
-        composable(ROUTE_REPO_README) {
-            selectedRepoGroup?.let { group ->
-                RepoReadmeScreen(
-                    repoOwner = group.repoOwner,
-                    repoName = group.repoName,
-                    repoFullName = group.repoFullName,
-                    repoDisplayTitle = group.repoDisplayTitle,
-                    onBack = { navController.popBackStackDebounced() },
-                )
-            }
         }
     }
 }

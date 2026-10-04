@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -163,13 +162,19 @@ import kotlinx.coroutines.launch
  * line — on a per-repo screen the repo name is already redundant with
  * the screen it's on, and the bookmark star's own filled/outline state
  * on its CardBadge already conveys "saved" without a separate text
- * label. The title is now the card's first content row. In its place,
- * a static "Kotlin" pill (KotlinPill, below) sits to the title's right
- * on that same row — a fixed visual tag, not read from issue.language
- * or any other per-issue data, matching what this card displayed
- * before the language indicator existed. The top-right badge stack's
- * offset was adjusted to match: it now aligns with the title row
- * directly, since there's no identity row above it to offset past.
+ * label. The title is now the card's first content row, full width.
+ * The top-right badge stack's offset was adjusted to match: it now
+ * aligns with the title row directly, since there's no identity row
+ * above it to offset past.
+ *
+ * DENSITY PASS, second follow-up: a static "Kotlin" pill briefly lived
+ * on every card, to the title's right (see history above/below this
+ * paragraph's own prior revisions). It's gone again — this app
+ * currently only ever searches Kotlin issues, so repeating that tag on
+ * every single card in a list was genuinely redundant. It now appears
+ * exactly ONCE per screen, as a static pill in RepoIssuesScreen's own
+ * filter row (next to the active Issue Mode pill), not on this shared
+ * card component at all. See RepoIssuesScreen's own doc comment.
  */
 @Composable
 fun IssueCard(
@@ -196,19 +201,12 @@ fun IssueCard(
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(
+                Text(
+                    text = issue.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
                     modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Text(
-                        text = issue.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Box(modifier = Modifier.width(8.dp))
-                    KotlinPill()
-                }
+                )
 
                 if (issue.labels.isNotEmpty()) {
                     Row(
@@ -321,29 +319,6 @@ private fun CardBadge(glyph: String, onClick: () -> Unit) {
             ),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
-        )
-    }
-}
-
-/**
- * A static "Kotlin" pill, reintroduced at the request that it come
- * back as a fixed, non-interactive element — unlike every other tag
- * on this card (labels, the language indicator it replaced), it does
- * NOT read from the issue's own data. It always reads "Kotlin"
- * regardless of issue.language, since it is not currently wired to
- * the Issue model at all.
- */
-@Composable
-private fun KotlinPill() {
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.primaryContainer,
-    ) {
-        Text(
-            text = "Kotlin",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }

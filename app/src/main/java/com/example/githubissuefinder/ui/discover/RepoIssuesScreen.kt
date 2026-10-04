@@ -3,14 +3,11 @@ package com.example.githubissuefinder.ui.discover
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -129,13 +127,32 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * a scope owned by that card before Undo could ever be tapped. See
  * IssueCard's own doc comment for why this couldn't live there.
  *
- * Added a "📄" action in the TopAppBar opening RepoReadmeScreen — the
- * repo's README, fetched live via GitHub's Contents API and rendered
- * natively with Markwon (explicitly not a WebView, per direct
- * instruction). See RepoReadmeViewModel and RepoReadmeScreen's own
- * doc comments for why that screen's one network call is deliberately
- * NOT tracked by the RateLimitState chip this app shows elsewhere —
- * it's a different API with a different, much larger quota.
+ * README access went through two shapes. First, a "📄" TopAppBar action
+ * opening a separate full-screen destination (RepoReadmeScreen). That
+ * was replaced with ReadmeExpandableSection — an inline expand/collapse
+ * widget living right in the filter row below, per the originally-
+ * discussed "expansion widget at the top of the view" design, built
+ * once deliberately deferred behind the IssueCard density pass. See
+ * that file's own doc comment for the full reasoning, including why
+ * the separate screen came out entirely rather than staying as a
+ * second access point. The underlying fetch (RepoReadmeViewModel) is
+ * unchanged either way — still GitHub's Contents API, still
+ * deliberately NOT tracked by the RateLimitState chip this app shows
+ * elsewhere, since it's a different API with a different, much larger
+ * quota.
+ *
+ * The per-issue language tag (previously shown once per IssueCard) is
+ * also gone from this screen's cards as of the same change — this app
+ * currently only ever searches Kotlin issues in practice, so showing
+ * it on every single card was genuinely redundant. It now appears
+ * exactly ONCE, as a static pill in this screen's filter row, next to
+ * the active Issue Mode pill, directly followed by the README toggle.
+ *
+ * The "ⓘ" info icon moved out of that same filter row and into the
+ * TopAppBar's actions slot, once the row filled up with the Issue
+ * Mode pill + the static Kotlin pill + the new README toggle button —
+ * freeing that row back up rather than letting it wrap or get
+ * cramped on narrower screens.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,13 +161,13 @@ fun RepoIssuesScreen(
     language: LanguageFilter,
     onBack: () -> Unit,
     onOpenHidden: () -> Unit,
-    onOpenReadme: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showInfoDialog by remember { mutableStateOf(false) }
+    var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
@@ -184,35 +201,56 @@ fun RepoIssuesScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onOpenReadme) {
-                        Text("📄", style = MaterialTheme.typography.titleLarge)
+                    IconButton(onClick = { showInfoDialog = true }) {
+                        Text("ⓘ", style = MaterialTheme.typography.titleLarge)
                     }
                 },
             )
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(activeMode.colorScheme().primary, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        activeMode.displayName,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
+                    Box(
+                        modifier = Modifier
+                            .background(activeMode.colorScheme().primary, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            activeMode.displayName,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                RoundedCornerShape(8.dp),
+                            )
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            "Kotlin",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                    }
+                    ReadmeToggleButton(
+                        expanded = readmeExpanded,
+                        onClick = { readmeExpanded = !readmeExpanded },
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    "ⓘ",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { showInfoDialog = true },
+                ReadmeExpandableBody(
+                    expanded = readmeExpanded,
+                    repoOwner = repoGroup.repoOwner,
+                    repoName = repoGroup.repoName,
+                    repoFullName = repoGroup.repoFullName,
                 )
             }
 
