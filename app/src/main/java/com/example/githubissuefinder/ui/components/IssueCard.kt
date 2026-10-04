@@ -2,7 +2,6 @@ package com.example.githubissuefinder.ui.components
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -160,6 +157,19 @@ import kotlinx.coroutines.launch
  *    labels+language, actions+comments) plus the title's own top-right
  *    badge stack — the same information, no row purely for one glyph
  *    or one line of text anymore.
+ *
+ * DENSITY PASS, follow-up: the identity row above (repoDisplayTitle +
+ * the "★ saved" tag) is now gone entirely, not just trimmed to one
+ * line — on a per-repo screen the repo name is already redundant with
+ * the screen it's on, and the bookmark star's own filled/outline state
+ * on its CardBadge already conveys "saved" without a separate text
+ * label. The title is now the card's first content row. In its place,
+ * a static "Kotlin" pill (KotlinPill, below) sits to the title's right
+ * on that same row — a fixed visual tag, not read from issue.language
+ * or any other per-issue data, matching what this card displayed
+ * before the language indicator existed. The top-right badge stack's
+ * offset was adjusted to match: it now aligns with the title row
+ * directly, since there's no identity row above it to offset past.
  */
 @Composable
 fun IssueCard(
@@ -186,66 +196,33 @@ fun IssueCard(
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
                     Text(
-                        text = issue.repoDisplayTitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(start = 8.dp),
+                        text = issue.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        modifier = Modifier.weight(1f),
                     )
-                    if (isBookmarked) {
-                        Text(
-                            text = "★ saved",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
+                    Box(modifier = Modifier.width(8.dp))
+                    KotlinPill()
                 }
 
-                Text(
-                    text = issue.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 10.dp, end = 56.dp),
-                )
-
-                if (issue.labels.isNotEmpty() || issue.language != null) {
+                if (issue.labels.isNotEmpty()) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            issue.labels.take(3).forEach { label -> LabelChip(label) }
-                        }
-                        if (issue.language != null) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary),
-                                )
-                                Text(
-                                    text = issue.language,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(start = 6.dp),
-                                )
-                            }
-                        }
+                        issue.labels.take(3).forEach { label -> LabelChip(label) }
                     }
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = if (issue.labels.isEmpty()) 10.dp else 0.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -287,18 +264,16 @@ fun IssueCard(
 
             // Top-right badge stack: the external-link indicator (if
             // shown) above the always-present Share badge, both
-            // "leaves this card" actions. The 30.dp top offset is a
-            // reasonable-effort estimate of where the title line starts
-            // now that the identity row is back to a single line (14.dp
-            // Column padding + that row's own ~20.dp height) — not
-            // pixel-verified against a running device, same caveat the
-            // original 46.dp estimate carried before the identity row
-            // lost its second line.
+            // "leaves this card" actions. The title row is now the
+            // card's first content, so this stack aligns with it
+            // directly — the 14.dp top offset simply matches the
+            // Column's own 14.dp padding, no longer an estimate of an
+            // identity row's height above it.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 30.dp, end = 14.dp),
+                    .padding(top = 14.dp, end = 14.dp),
             ) {
                 if (showExternalLinkIndicator) {
                     CardBadge(glyph = "↗", onClick = onClick)
@@ -346,6 +321,29 @@ private fun CardBadge(glyph: String, onClick: () -> Unit) {
             ),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
+        )
+    }
+}
+
+/**
+ * A static "Kotlin" pill, reintroduced at the request that it come
+ * back as a fixed, non-interactive element — unlike every other tag
+ * on this card (labels, the language indicator it replaced), it does
+ * NOT read from the issue's own data. It always reads "Kotlin"
+ * regardless of issue.language, since it is not currently wired to
+ * the Issue model at all.
+ */
+@Composable
+private fun KotlinPill() {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.primaryContainer,
+    ) {
+        Text(
+            text = "Kotlin",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }
