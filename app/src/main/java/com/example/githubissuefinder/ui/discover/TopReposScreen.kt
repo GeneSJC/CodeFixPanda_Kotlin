@@ -11,13 +11,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -312,11 +316,40 @@ import kotlinx.coroutines.flow.collect
  * LocalConfiguration.current.orientation directly (no ViewModel
  * involvement — purely a rendering choice, nothing about the
  * underlying data changes) and merges those two rows into one when
- * true. A fuller two-column split-view layout (a narrow header/filter
- * rail beside a full-height card list) was discussed as a further,
- * larger step in the same direction — deliberately NOT attempted yet;
- * this compact header is the smaller, lower-risk piece agreed on
- * first.
+ * true.
+ *
+ * Landscape Split View: the larger step discussed alongside the
+ * compact header above, now built. In landscape, the whole screen
+ * splits into two columns instead of stacking everything in one: a
+ * narrow (180dp), independently vertically-scrolling LEFT column
+ * holding everything that otherwise sits ABOVE the card list — the
+ * mode pill, repo-count/updated (modePill/repoCountAndUpdated, both
+ * hoisted to this function's own scope so the TopAppBar's title slot
+ * AND this left column can both render them, without duplicating
+ * either), and LanguageFilterRow — and a RIGHT column (RepoListBody,
+ * extracted below so it isn't duplicated between this layout and
+ * portrait's) that's nothing but the card list, filling the screen's
+ * full height. This is what actually delivers the original ask: the
+ * card list gets every pixel of vertical space landscape has to give
+ * it, rather than losing a large chunk of it to stacked header
+ * content above.
+ *
+ * LanguageFilterRow is passed `wrap = true` here specifically — this
+ * column is narrow, so the row's chips need multiple lines rather than
+ * the portrait default of one scrolling line. A second horizontally-
+ * scrolling row nested inside an already vertically-scrolling column
+ * was deliberately ruled out (two competing scroll gestures in the
+ * same small area), and wrapping also means every language option
+ * stays visible at once rather than some being scrolled off-screen
+ * with no visual hint they're there. See LanguageFilterRow's own doc
+ * comment for the `wrap` parameter itself.
+ *
+ * Portrait is entirely unchanged: the TopAppBar's title renders the
+ * mode pill + repo-count row as it always has, LanguageFilterRow stays
+ * its original single scrolling line, and RepoListBody sits in a plain
+ * Column beneath it — the exact same composable, just placed
+ * differently, which is the whole reason RepoListBody exists as its
+ * own function rather than being written out twice.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -341,6 +374,64 @@ fun TopReposScreen(
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while IssueMode.current is null (see its own doc comment).
     val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Hoisted to function scope (not local to the TopAppBar's title
+    // slot) so the landscape split-view body below can render this
+    // same content too — see "Landscape Split View" further down in
+    // this doc comment.
+    val modePill: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier
+                .background(currentMode.colorScheme().primary, RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    currentMode.displayName,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                )
+                // "good first issue" reads less clearly on its own than
+                // "help wanted" does, per direct feedback after seeing
+                // this screen running — an info icon here explains what
+                // it means. "help wanted" doesn't get one: it wasn't
+                // reported as confusing, and the shared LabelInfoDialog
+                // explaining both terms is still reachable from
+                // RepoIssuesScreen for anyone who wants it there too.
+                if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
+                    Text(
+                        "ⓘ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .clickable { showLabelInfoDialog = true },
+                    )
+                }
+            }
+        }
+    }
+    val repoCountAndUpdated: @Composable (Dp) -> Unit = { startPadding ->
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.padding(start = startPadding),
+        ) {
+            Text(
+                repoCountLabel(hiddenGroups.size),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            )
+        }
+        Text(
+            uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 8.dp),
+        )
+    }
 
     LaunchedEffect(Unit) {
         viewModel.snackbarEvents.collect { message ->
@@ -365,79 +456,16 @@ fun TopReposScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                 TopAppBar(
                     title = {
-                        val modePill: @Composable () -> Unit = {
-                            Box(
-                                modifier = Modifier
-                                    .background(currentMode.colorScheme().primary, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        currentMode.displayName,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = Color.White,
-                                    )
-                                    // "good first issue" reads less clearly on its
-                                    // own than "help wanted" does, per direct
-                                    // feedback after seeing this screen running —
-                                    // an info icon here explains what it means.
-                                    // "help wanted" doesn't get one: it wasn't
-                                    // reported as confusing, and the shared
-                                    // LabelInfoDialog explaining both terms is
-                                    // still reachable from RepoIssuesScreen for
-                                    // anyone who wants it there too.
-                                    if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
-                                        Text(
-                                            "ⓘ",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White,
-                                            modifier = Modifier
-                                                .padding(start = 6.dp)
-                                                .clickable { showLabelInfoDialog = true },
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        val repoCountAndUpdated: @Composable (Dp) -> Unit = { startPadding ->
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.padding(start = startPadding),
-                            ) {
-                                Text(
-                                    repoCountLabel(hiddenGroups.size),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                )
-                            }
-                            Text(
-                                uiState.lastUpdatedAtMs?.let { "Updated ${formatRelativeTime(it)}" }.orEmpty(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 8.dp),
-                            )
-                        }
-                        // Landscape ("compact header"): the repo-count chip and
-                        // "Updated X ago" join the mode pill on ONE row instead
-                        // of sitting on their own line beneath it — reclaims a
-                        // full text line of vertical space on a landscape
-                        // screen, where height is the scarce dimension (see
-                        // this file's top doc comment, "Landscape Compact
-                        // Header"). Portrait keeps the original two-row shape
-                        // unchanged — there, width is already generous enough
-                        // that merging them would gain little and just cramp
-                        // the mode pill against the chip.
-                        if (isLandscape) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                modePill()
-                                repoCountAndUpdated(12.dp)
-                            }
-                        } else {
+                        // In landscape, this content moved into the split
+                        // view's left column below (see "Landscape Split
+                        // View" in this file's top doc comment) — the
+                        // TopAppBar title renders nothing there, rather
+                        // than showing it twice. Portrait is unchanged:
+                        // the mode pill, then the repo-count chip +
+                        // "Updated X ago" on the row beneath it.
+                        if (!isLandscape) {
                             Column {
                                 modePill()
                                 Row(
@@ -618,56 +646,58 @@ fun TopReposScreen(
                 )
             },
         ) { padding ->
-            Column(modifier = Modifier.padding(padding)) {
-                LanguageFilterRow(
-                    selected = uiState.selectedLanguage,
-                    onSelect = viewModel::onLanguageSelected,
-                )
-
-                when {
-                    uiState.noTokenConfigured -> CenteredMessage(
-                        text = "This screen needs a live GitHub connection — add a token to " +
-                            "local.properties to see ranked repos here. No sample-data " +
-                            "fallback yet for this screen.",
+            if (isLandscape) {
+                // Landscape split view: a narrow, independently-scrolling
+                // left column holding everything that used to sit ABOVE
+                // the card list (mode pill, repo-count/updated, language
+                // picker) — freeing the right column to be nothing but
+                // the card list, at the screen's full height. See
+                // "Landscape Split View" in this file's top doc comment.
+                Row(modifier = Modifier.padding(padding).fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .width(180.dp)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    ) {
+                        modePill()
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) {
+                            repoCountAndUpdated(0.dp)
+                        }
+                        LanguageFilterRow(
+                            selected = uiState.selectedLanguage,
+                            onSelect = viewModel::onLanguageSelected,
+                            wrap = true,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
+                    RepoListBody(
+                        uiState = uiState,
+                        hiddenGroups = hiddenGroups,
+                        currentMode = currentMode,
+                        viewModel = viewModel,
+                        onRepoClick = onRepoClick,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
-                    uiState.isLoading && uiState.repoGroups.isEmpty() -> Box(
+                }
+            } else {
+                Column(modifier = Modifier.padding(padding)) {
+                    LanguageFilterRow(
+                        selected = uiState.selectedLanguage,
+                        onSelect = viewModel::onLanguageSelected,
+                    )
+                    RepoListBody(
+                        uiState = uiState,
+                        hiddenGroups = hiddenGroups,
+                        currentMode = currentMode,
+                        viewModel = viewModel,
+                        onRepoClick = onRepoClick,
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                    uiState.errorMessage != null && uiState.repoGroups.isEmpty() -> Box(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
-                            Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
-                                Text("Retry")
-                            }
-                        }
-                    }
-                    hiddenGroups.isEmpty() -> CenteredMessage(
-                        text = "No repos with an open ${currentMode.displayName} issue found for " +
-                            "this language right now.",
                     )
-                    else -> LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(hiddenGroups, key = { it.repoFullName }) { group ->
-                            RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
-                        }
-                        item(key = "loadMoreFooter") {
-                            LoadMoreFooter(
-                                isLoadingMore = uiState.isLoadingMore,
-                                canLoadMore = uiState.canLoadMore,
-                                loadMoreError = uiState.loadMoreError,
-                                onLoadMore = viewModel::loadMore,
-                                onRetry = viewModel::retryLoadMore,
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -731,6 +761,78 @@ fun TopReposScreen(
                 }
             },
         )
+    }
+}
+
+/**
+/**
+ * The repo list's main body — one of four states (no token, loading,
+ * error, empty, or the actual list + Load More footer), exactly one
+ * shown at a time. Extracted out of TopReposScreen itself once the
+ * landscape split view needed to render this SAME body in a
+ * differently-shaped parent (a weighted column beside the left rail,
+ * rather than stacked under LanguageFilterRow in a plain Column) —
+ * rather than duplicate this whole `when` block for both layouts,
+ * both call sites pass their own `modifier` (fillMaxSize either way,
+ * but constrained differently by their respective parents) and get
+ * identical content.
+ */
+@Composable
+private fun RepoListBody(
+    uiState: TopReposUiState,
+    hiddenGroups: List<RepoIssueGroup>,
+    currentMode: IssueLabelFilter,
+    viewModel: TopReposViewModel,
+    onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        when {
+            uiState.noTokenConfigured -> CenteredMessage(
+                text = "This screen needs a live GitHub connection — add a token to " +
+                    "local.properties to see ranked repos here. No sample-data " +
+                    "fallback yet for this screen.",
+            )
+            uiState.isLoading && uiState.repoGroups.isEmpty() -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+            uiState.errorMessage != null && uiState.repoGroups.isEmpty() -> Box(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                    Button(onClick = viewModel::retry, modifier = Modifier.padding(top = 12.dp)) {
+                        Text("Retry")
+                    }
+                }
+            }
+            hiddenGroups.isEmpty() -> CenteredMessage(
+                text = "No repos with an open ${currentMode.displayName} issue found for " +
+                    "this language right now.",
+            )
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(hiddenGroups, key = { it.repoFullName }) { group ->
+                    RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
+                }
+                item(key = "loadMoreFooter") {
+                    LoadMoreFooter(
+                        isLoadingMore = uiState.isLoadingMore,
+                        canLoadMore = uiState.canLoadMore,
+                        loadMoreError = uiState.loadMoreError,
+                        onLoadMore = viewModel::loadMore,
+                        onRetry = viewModel::retryLoadMore,
+                    )
+                }
+            }
+        }
     }
 }
 
