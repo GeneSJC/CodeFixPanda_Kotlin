@@ -65,6 +65,7 @@ import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
+import com.example.githubissuefinder.ui.theme.colorScheme
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
@@ -281,6 +282,14 @@ import kotlinx.coroutines.flow.collect
  * right-aligned opposite "Updated X ago" — a natural fit, since both
  * are specific to the active language filter rather than being
  * Mode-level chrome like the title bar itself.
+ *
+ * The title's mode label (currentMode.displayName, plus its "ⓘ" for
+ * Good First Issue) now renders inside a colored pill — same
+ * background-pill convention RepoIssuesScreen's own active-mode badge
+ * uses (Modifier.background(mode.colorScheme().primary,
+ * RoundedCornerShape(8.dp)), white labelLarge text), rather than plain
+ * TopAppBar title text. Also: RepoCard's repoFullName subtitle is gone
+ * (see that composable's own doc comment).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,32 +341,43 @@ fun TopReposScreen(
                 TopAppBar(
                     title = {
                         Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(currentMode.displayName)
-                                // "good first issue" reads less clearly on its
-                                // own than "help wanted" does, per direct
-                                // feedback after seeing this screen running —
-                                // an info icon here explains what it means.
-                                // "help wanted" doesn't get one: it wasn't
-                                // reported as confusing, and the shared
-                                // LabelInfoDialog explaining both terms is
-                                // still reachable from RepoIssuesScreen for
-                                // anyone who wants it there too.
-                                if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
+                            Box(
+                                modifier = Modifier
+                                    .background(currentMode.colorScheme().primary, RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "ⓘ",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .padding(start = 6.dp)
-                                            .clickable { showLabelInfoDialog = true },
+                                        currentMode.displayName,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = Color.White,
                                     )
+                                    // "good first issue" reads less clearly on its
+                                    // own than "help wanted" does, per direct
+                                    // feedback after seeing this screen running —
+                                    // an info icon here explains what it means.
+                                    // "help wanted" doesn't get one: it wasn't
+                                    // reported as confusing, and the shared
+                                    // LabelInfoDialog explaining both terms is
+                                    // still reachable from RepoIssuesScreen for
+                                    // anyone who wants it there too.
+                                    if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
+                                        Text(
+                                            "ⓘ",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.White,
+                                            modifier = Modifier
+                                                .padding(start = 6.dp)
+                                                .clickable { showLabelInfoDialog = true },
+                                        )
+                                    }
                                 }
                             }
                             Text(
                                 "Repos",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
                             )
                         }
                     },
@@ -956,9 +976,14 @@ private fun CenteredMessage(text: String) {
 
 /**
  * v0.42: rewritten from the ground up for RepoIssueGroup instead of
- * Repo. Deliberately simple compared to the old card — title, path,
- * and a match-count badge is genuinely all there is to show now (see
- * this file's top doc comment for what's gone and why).
+ * Repo. Deliberately simple compared to the old card — title and a
+ * match-count badge is genuinely all there is to show now (see this
+ * file's top doc comment for what's gone and why).
+ *
+ * The repoFullName (owner/repo path) subtitle that used to sit under
+ * the title is gone, same reasoning as IssueCard's own identity-row
+ * removal: a screen already scoped to listing repos doesn't need each
+ * card repeating a raw path alongside its own humanized title.
  */
 @Composable
 private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
@@ -969,17 +994,11 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        group.repoDisplayTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        group.repoFullName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    group.repoDisplayTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.secondaryContainer,
