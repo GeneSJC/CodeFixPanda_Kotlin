@@ -72,6 +72,7 @@ import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
+import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.theme.colorScheme
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
@@ -123,10 +124,7 @@ import kotlinx.coroutines.flow.collect
  * above is only ever called once per real session — but what it shows
  * now depends on BuildConfig.SHOW_DETAILED_DRAWER_MENU (a plain
  * boolean val in app/build.gradle.kts, defaulting to false): true gets
- * everything that existed before this CM (the non-interactive
- * "GitHubIssueFinder {CM_VERSION}" header, so the on-device version
- * stamp is reachable from Discover the same way VersionLabel makes it
- * reachable elsewhere, plus one entry per
+ * everything that existed before this CM, plus one entry per
  * individual splash: "Play Origami Animation" / "Play Shape Stack
  * Animation" / "Play Coin Animation" / "Play Title Reveal Animation" /
  * "Play Title Reveal Animation (0.5x Speed)" — the two Title Reveal
@@ -486,6 +484,24 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
+                                // Always-visible header (Project Conventions
+                                // doc, section 6): app name + VersionLabel
+                                // ("Build A.B"), so the build actually running
+                                // on a device can be checked against the
+                                // version line a chat message ends with — NOT
+                                // gated behind SHOW_DETAILED_DRAWER_MENU the
+                                // way the old CM version stamp was, since this
+                                // needs to be checkable regardless of that
+                                // dev-only setting.
+                                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                    Text(
+                                        "GitHubIssueFinder",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    VersionLabel()
+                                }
+                                HorizontalDivider()
                                 // Three groups — Repo Management, Find Issues,
                                 // Sandbox — each its own pastel-tinted section
                                 // with its own header, separated by dividers.
@@ -542,19 +558,17 @@ fun TopReposScreen(
                                 }
                                 HorizontalDivider()
                                 DrawerMenuSection(header = "Sandbox", background = DrawerSectionSandbox) {
-                                    // true keeps the full CM version stamp and every
-                                    // individual animation-replay entry, useful for exactly
-                                    // the kind of iteration this project does. false (the
-                                    // default) strips both down to what an actual end user
-                                    // would see — see app/build.gradle.kts's
-                                    // showDetailedDrawerMenu val.
+                                    // true keeps every individual animation-replay
+                                    // entry, useful for exactly the kind of
+                                    // iteration this project does. false (the
+                                    // default) strips that down to a single "Play
+                                    // App Start Animation" entry, what an actual
+                                    // end user would see — see app/build.gradle.kts's
+                                    // showDetailedDrawerMenu val. The version stamp
+                                    // this section used to show here (gated behind
+                                    // the same flag) moved to the always-visible
+                                    // header above, see VersionLabel.
                                     if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
-                                        Text(
-                                            "GitHubIssueFinder ${BuildConfig.CM_VERSION}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                        )
                                         DropdownMenuItem(
                                             text = { Text("Play Origami Animation") },
                                             onClick = {
