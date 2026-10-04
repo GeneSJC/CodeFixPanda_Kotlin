@@ -765,7 +765,6 @@ fun TopReposScreen(
 }
 
 /**
-/**
  * The repo list's main body — one of four states (no token, loading,
  * error, empty, or the actual list + Load More footer), exactly one
  * shown at a time. Extracted out of TopReposScreen itself once the
