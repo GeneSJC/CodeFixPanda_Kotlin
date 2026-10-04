@@ -332,11 +332,15 @@ fun IssueCard(
             }
 
             // Top-right badge stack: the external-link indicator (if
-            // shown) directly above the expand/collapse chevron, tightly
-            // spaced (4dp gap) per direct instruction — the title row is
-            // the card's first content, so this stack aligns with it
-            // directly via the 14.dp top offset, matching the Column's
-            // own 14.dp padding.
+            // shown) directly above the expand/collapse chevron, squeezed
+            // to a 2.dp gap per direct instruction — on a two-line title,
+            // this keeps the whole stack's height close to the title's
+            // own two-line height, so the chevron lands close to the
+            // title's second line rather than floating below it (a
+            // reasonable-effort estimate, not pixel-verified against a
+            // running device). Top-aligned via the 14.dp offset, matching
+            // the Column's own 14.dp padding, regardless of whether the
+            // title wraps to one or two lines.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
@@ -345,7 +349,7 @@ fun IssueCard(
             ) {
                 if (showExternalLinkIndicator) {
                     CardBadge(glyph = "→", onClick = onClick)
-                    Box(modifier = Modifier.height(4.dp))
+                    Box(modifier = Modifier.height(2.dp))
                 }
                 CardBadge(
                     glyph = "⌄",
