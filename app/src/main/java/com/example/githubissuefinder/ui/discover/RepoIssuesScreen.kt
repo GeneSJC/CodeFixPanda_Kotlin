@@ -128,6 +128,14 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * triggered it is about to disappear from the list, which would cancel
  * a scope owned by that card before Undo could ever be tapped. See
  * IssueCard's own doc comment for why this couldn't live there.
+ *
+ * Added a "📄" action in the TopAppBar opening RepoReadmeScreen — the
+ * repo's README, fetched live via GitHub's Contents API and rendered
+ * natively with Markwon (explicitly not a WebView, per direct
+ * instruction). See RepoReadmeViewModel and RepoReadmeScreen's own
+ * doc comments for why that screen's one network call is deliberately
+ * NOT tracked by the RateLimitState chip this app shows elsewhere —
+ * it's a different API with a different, much larger quota.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,6 +144,7 @@ fun RepoIssuesScreen(
     language: LanguageFilter,
     onBack: () -> Unit,
     onOpenHidden: () -> Unit,
+    onOpenReadme: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
 ) {
@@ -172,6 +181,11 @@ fun RepoIssuesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOpenReadme) {
+                        Text("📄", style = MaterialTheme.typography.titleLarge)
                     }
                 },
             )
