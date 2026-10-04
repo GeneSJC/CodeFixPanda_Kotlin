@@ -52,7 +52,6 @@ import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.IssueCard
-import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
@@ -78,12 +77,15 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * you're already in. This mirrors removing the mode dropdown from Top
  * Repos, for the same reason: Mode is a single, deliberate, whole-app
  * choice made once at the gate screen, and no screen at any depth
- * offers a second way to change it. The "ⓘ" info icon stays — it opens
- * the same shared LabelInfoDialog Feed uses, explaining what "good
- * first issue" / "help wanted" actually mean, which is still useful
- * context even with nothing left to pick between. Each IssueCard shows
- * an external-link badge (see IssueCard's doc comment) since tapping
- * one opens GitHub directly, not an in-app screen.
+ * offers a second way to change it. Each IssueCard shows an
+ * external-link badge (see IssueCard's doc comment) since tapping one
+ * opens GitHub directly, not an in-app screen.
+ *
+ * The "ⓘ" info icon (opening the same shared LabelInfoDialog Feed
+ * uses) was removed from this screen entirely, per direct instruction,
+ * along with the repoFullName subtitle under the title — this screen's
+ * header is simplified down to just the repo's display title.
+ * TopReposScreen keeps its own "ⓘ" for the same dialog.
  *
  * v0.46 ("Check for More Issues"), renamed and reshaped by v0.50
  * ("Refresh this repo" write-back): the LazyColumn now always ends in a
@@ -148,11 +150,16 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * exactly ONCE, as a static pill in this screen's filter row, next to
  * the active Issue Mode pill, directly followed by the README toggle.
  *
- * The "ⓘ" info icon moved out of that same filter row and into the
- * TopAppBar's actions slot, once the row filled up with the Issue
- * Mode pill + the static Kotlin pill + the new README toggle button —
- * freeing that row back up rather than letting it wrap or get
- * cramped on narrower screens.
+ * The TopAppBar's actions slot briefly held the "ⓘ" info icon (moved
+ * there to free up the filter row), then was replaced again — the "ⓘ"
+ * came out of this screen entirely (see above), and that slot now
+ * holds a single action opening the repo's main GitHub page directly
+ * (https://github.com/{repoFullName}), using the same "↗" glyph/badge
+ * look IssueCard's own external-link badge used before ITS glyph
+ * changed to "→" (see IssueCard's doc comment, "COLLAPSIBLE CARD
+ * PASS") — this header action is a distinct destination (the repo
+ * itself, not any one issue), so it deliberately kept the diagonal
+ * glyph rather than following that same rename.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,7 +173,6 @@ fun RepoIssuesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var showInfoDialog by remember { mutableStateOf(false) }
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -186,14 +192,7 @@ fun RepoIssuesScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            repoGroup.repoFullName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -201,8 +200,17 @@ fun RepoIssuesScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showInfoDialog = true }) {
-                        Text("ⓘ", style = MaterialTheme.typography.titleLarge)
+                    IconButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/${repoGroup.repoFullName}"),
+                                ),
+                            )
+                        },
+                    ) {
+                        Text("↗", style = MaterialTheme.typography.titleLarge)
                     }
                 },
             )
@@ -328,10 +336,6 @@ fun RepoIssuesScreen(
                 }
             }
         }
-    }
-
-    if (showInfoDialog) {
-        LabelInfoDialog(onDismiss = { showInfoDialog = false })
     }
 }
 

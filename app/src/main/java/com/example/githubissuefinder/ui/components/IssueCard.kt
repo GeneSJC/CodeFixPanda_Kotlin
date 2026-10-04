@@ -2,6 +2,13 @@ package com.example.githubissuefinder.ui.components
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +24,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -175,6 +187,35 @@ import kotlinx.coroutines.launch
  * exactly ONCE per screen, as a static pill in RepoIssuesScreen's own
  * filter row (next to the active Issue Mode pill), not on this shared
  * card component at all. See RepoIssuesScreen's own doc comment.
+ *
+ * COLLAPSIBLE CARD PASS: the whole card is now an expand/collapse
+ * widget. Only the title (plus the corner badge stack beside it) shows
+ * by default; everything else — labels, Hide/Bookmark/Share/Copy Link,
+ * the comment-count/updated-at line — is wrapped in an
+ * AnimatedVisibility, hidden until the new expand-chevron badge is
+ * tapped. `expanded` is plain per-composable `remember` state, not
+ * hoisted to the caller — nothing outside this card needs to know or
+ * control whether any given card is expanded, and RepoIssuesScreen's
+ * `items(visibleIssues, key = { it.id })` already keys each card by
+ * issue id, so each card's own expanded/collapsed state survives
+ * ordinary recomposition correctly.
+ *
+ * The external-link badge's glyph changed from "↗" (diagonal) to "→"
+ * (straight right) — it still does exactly what it always did (opens
+ * the issue in GitHub via onClick), just a direct instruction to make
+ * its direction read as forward/right rather than diagonal-out. The
+ * Share badge moved out of the top-right corner stack and into the
+ * (now-collapsible) actions row alongside Hide/Bookmark/Copy Link —
+ * freeing that corner for the new expand-chevron badge, placed
+ * directly beneath the "→" badge with a tight 4dp gap between them
+ * (the same spacing Share's old corner slot used), per direct
+ * instruction to keep the two squeezed together rather than spread
+ * out. The chevron rotates 180° on toggle, using a quick 300ms
+ * tween — deliberately NOT the README widget's 2-second "hero"
+ * duration (ReadmeToggleButton/ReadmeExpandableBody), since this
+ * triggers on every card in a scrolling list rather than being a
+ * single deliberate action per screen; a 2-second animation repeated
+ * per-card would read as sluggish rather than deliberate.
  */
 @Composable
 fun IssueCard(
@@ -190,6 +231,12 @@ fun IssueCard(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS),
+        label = "issueCardChevronRotation",
+    )
 
     Card(
         onClick = onClick,
@@ -208,65 +255,88 @@ fun IssueCard(
                     modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
                 )
 
-                if (issue.labels.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        issue.labels.take(3).forEach { label -> LabelChip(label) }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = if (issue.labels.isEmpty()) 10.dp else 0.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                AnimatedVisibility(
+                    visible = expanded,
+                    enter = expandVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                        fadeIn(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
+                    exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                        fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (onHide != null) {
-                            CardBadge(glyph = "✕", onClick = onHide)
+                    Column {
+                        if (issue.labels.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                issue.labels.take(3).forEach { label -> LabelChip(label) }
+                            }
                         }
-                        if (onToggleBookmark != null) {
-                            CardBadge(
-                                glyph = if (isBookmarked) "★" else "☆",
-                                onClick = {
-                                    onToggleBookmark()
-                                    val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
-                                    snackbarHostState?.let { hostState ->
-                                        coroutineScope.launch { hostState.showSnackbar(message) }
-                                    }
-                                },
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = if (issue.labels.isEmpty()) 10.dp else 0.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (onHide != null) {
+                                    CardBadge(glyph = "✕", onClick = onHide)
+                                }
+                                if (onToggleBookmark != null) {
+                                    CardBadge(
+                                        glyph = if (isBookmarked) "★" else "☆",
+                                        onClick = {
+                                            onToggleBookmark()
+                                            val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                            snackbarHostState?.let { hostState ->
+                                                coroutineScope.launch { hostState.showSnackbar(message) }
+                                            }
+                                        },
+                                    )
+                                }
+                                CardBadge(
+                                    glyph = "📤",
+                                    onClick = {
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_SUBJECT, issue.title)
+                                            putExtra(
+                                                Intent.EXTRA_TEXT,
+                                                "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
+                                            )
+                                        }
+                                        context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
+                                    },
+                                )
+                                CardBadge(
+                                    glyph = "📋",
+                                    onClick = {
+                                        clipboardManager.setText(AnnotatedString(issue.htmlUrl))
+                                        Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+                                    },
+                                )
+                            }
+
+                            Text(
+                                text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        CardBadge(
-                            glyph = "📋",
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(issue.htmlUrl))
-                                Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-                            },
-                        )
                     }
-
-                    Text(
-                        text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
             }
 
             // Top-right badge stack: the external-link indicator (if
-            // shown) above the always-present Share badge, both
-            // "leaves this card" actions. The title row is now the
-            // card's first content, so this stack aligns with it
-            // directly — the 14.dp top offset simply matches the
-            // Column's own 14.dp padding, no longer an estimate of an
-            // identity row's height above it.
+            // shown) directly above the expand/collapse chevron, tightly
+            // spaced (4dp gap) per direct instruction — the title row is
+            // the card's first content, so this stack aligns with it
+            // directly via the 14.dp top offset, matching the Column's
+            // own 14.dp padding.
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
@@ -274,39 +344,39 @@ fun IssueCard(
                     .padding(top = 14.dp, end = 14.dp),
             ) {
                 if (showExternalLinkIndicator) {
-                    CardBadge(glyph = "↗", onClick = onClick)
+                    CardBadge(glyph = "→", onClick = onClick)
                     Box(modifier = Modifier.height(4.dp))
                 }
                 CardBadge(
-                    glyph = "📤",
-                    onClick = {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, issue.title)
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
-                            )
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
-                    },
+                    glyph = "⌄",
+                    onClick = { expanded = !expanded },
+                    rotation = chevronRotation,
                 )
             }
         }
     }
 }
 
+private const val CARD_EXPAND_COLLAPSE_DURATION_MS = 300
+
 /**
  * The shared small-glyph badge — Surface + RoundedCornerShape(8.dp) +
  * an enlarged (1.67x titleMedium) Text — used for every single-glyph
  * action on this card (Hide, Bookmark, Copy Link, Share, the external-
- * link indicator). Extracted during the density pass once Share and
- * Copy Link joined this same visual family instead of being full
- * Button/OutlinedButton components — five near-identical call sites
- * was the signal to pull this out, not a change made ahead of need.
+ * link indicator, the expand/collapse chevron). Extracted during the
+ * density pass once Share and Copy Link joined this same visual family
+ * instead of being full Button/OutlinedButton components — five
+ * near-identical call sites was the signal to pull this out, not a
+ * change made ahead of need.
+ *
+ * `rotation` (added for the expand/collapse chevron) is a plain degree
+ * value applied via Modifier.rotate — the caller owns the actual
+ * animation (animateFloatAsState), this composable just renders
+ * whatever angle it's handed. Every other badge leaves it at the
+ * default 0f.
  */
 @Composable
-private fun CardBadge(glyph: String, onClick: () -> Unit) {
+private fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f) {
     Surface(
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -318,7 +388,7 @@ private fun CardBadge(glyph: String, onClick: () -> Unit) {
                 fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
             ),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp).rotate(rotation),
         )
     }
 }
