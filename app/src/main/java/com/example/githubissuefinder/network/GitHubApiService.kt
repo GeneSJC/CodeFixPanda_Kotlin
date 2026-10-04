@@ -1,8 +1,10 @@
 package com.example.githubissuefinder.network
 
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
+import com.example.githubissuefinder.network.dto.ReadmeDto
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -30,6 +32,12 @@ import retrofit2.http.Query
  * shelved and never applied to this project, so that method — and its
  * CommentDto return type, which doesn't exist here — are not included.
  * If that work is picked back up later, re-add it then.
+ *
+ * getReadme (added for the repo README viewer) is this codebase's
+ * first ACTUALLY-applied use of that general REST API bucket — the
+ * Contents API, not Search. Its own doc comment, and ReadmeDto's,
+ * cover why its rate-limit quota is deliberately not tracked by
+ * RateLimitState the way searchIssues' is.
  */
 interface GitHubApiService {
 
@@ -41,4 +49,17 @@ interface GitHubApiService {
         @Query("per_page") perPage: Int = 30,
         @Query("page") page: Int = 1,
     ): Response<IssueSearchResponseDto>
+
+    /**
+     * GitHub's Contents API, not Search — see ReadmeDto's own doc
+     * comment for the rate-limit and base64-encoding consequences of
+     * that. 404s when a repo genuinely has no README at the root of
+     * its default branch (RepoReadmeViewModel treats that as a real,
+     * expected outcome, not an error).
+     */
+    @GET("repos/{owner}/{repo}/readme")
+    suspend fun getReadme(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String,
+    ): Response<ReadmeDto>
 }
