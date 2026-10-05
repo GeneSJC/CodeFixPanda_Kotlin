@@ -15,6 +15,24 @@ import com.example.githubissuefinder.ui.discover.IssueMode
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
+/**
+ * `android:configChanges` in the manifest (orientation/screenSize/
+ * screenLayout/smallestScreenSize/keyboardHidden/uiMode) tells the
+ * system NOT to destroy and recreate this Activity on rotation —
+ * added after two real, confirmed-on-device bugs traced back to the
+ * same root cause: without it, Android's default behavior fully
+ * destroys and recreates the Activity on every rotation, which
+ * (1) reset `showSplash` below back to `true` on every rotation,
+ * replaying the start animation on an already-running app, not just
+ * at real cold start, and (2) was the suspected cause of a white
+ * screen the app couldn't be navigated out of after rotating into
+ * landscape — likely some piece of state (Navigation Compose's own
+ * back stack among the candidates) not surviving that
+ * destroy/recreate cycle cleanly. With this flag set, Compose instead
+ * just recomposes in place on a configuration change — which is
+ * already exactly how TopReposScreen's own landscape detection
+ * (LocalConfiguration.current.orientation) expects to work.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
