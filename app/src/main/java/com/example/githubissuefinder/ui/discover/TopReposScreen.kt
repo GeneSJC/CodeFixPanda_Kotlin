@@ -3,6 +3,8 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.BuildConfig
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -1142,23 +1145,32 @@ private fun CenteredMessage(text: String) {
  * card repeating a raw path alongside its own humanized title.
  *
  * README PREVIEW (added October 5, 2026, per direct instruction): a
- * short, plain-text snippet of the repo's README — up to
- * SNIPPET_MAX_CHARS characters (currently 150), capped at 3 lines via
- * maxLines + TextOverflow.Ellipsis as a visual safety net on top of
- * that character cap — renders beneath the title row, at normal body
- * text size. Fetched via RepoReadmeSnippetStore (see that file's own
- * doc comment, including the real per-card network-call cost this
- * adds). Static only for now: no tap-to-expand here, unlike
- * RepoIssuesScreen's own README widget — explicitly deferred as a
- * possible next step, not attempted in this pass. Renders nothing
- * (not even a placeholder) when no snippet is available yet or the
- * repo has no README — this card's layout was deliberately kept
- * simple, and a loading spinner or "no README" message for a purely
- * decorative preview would be more clutter than it's worth.
+ * short, plain-text snippet of the repo's README (HTML tags stripped —
+ * see RepoReadmeSnippetStore.buildSnippet) renders beneath the title
+ * row, at normal body text size. Collapsed to 2 lines by default
+ * (maxLines + TextOverflow.Ellipsis); a small chevron toggle beneath it
+ * expands to show the rest of the already-fetched snippet (up to
+ * RepoReadmeSnippetStore's SNIPPET_MAX_CHARS) — no additional network
+ * call on expand, just a maxLines change against text already in hand.
+ * The toggle is its own Surface(onClick), not part of the Card's own
+ * onClick, so tapping it doesn't also navigate into the repo.
+ * Fetched via RepoReadmeSnippetStore (see that file's own doc comment,
+ * including the real per-card network-call cost this adds, and the
+ * retry-on-transient-failure fix). Renders nothing (not even a
+ * placeholder) when no snippet is available yet or the repo has no
+ * README — this card's layout was deliberately kept simple, and a
+ * loading spinner or "no README" message for a purely decorative
+ * preview would be more clutter than it's worth.
  */
 @Composable
 private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
     val snippet = RepoReadmeSnippetStore.snippetFor(group.repoFullName)
+    var expanded by remember { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "repoCardSnippetChevron",
+    )
     LaunchedEffect(group.repoFullName) {
         RepoReadmeSnippetStore.loadIfNeeded(group.repoOwner, group.repoName, group.repoFullName)
     }
@@ -1192,10 +1204,25 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                     snippet,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
+                    maxLines = if (expanded) Int.MAX_VALUE else 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 6.dp),
                 )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.padding(top = 6.dp),
+                ) {
+                    Text(
+                        "⌄",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp, vertical = 1.dp)
+                            .rotate(chevronRotation),
+                    )
+                }
             }
         }
     }
