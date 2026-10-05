@@ -21,7 +21,21 @@ val localProperties = Properties().apply {
 // below just reference these via string interpolation, instead of each
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
-val cmVersion = "v0.48"
+//
+// Build label (Project Conventions doc, section 6): "A.B" — A is the
+// number of the pull request this work will land in; B is a running
+// push counter that goes up by one on every push that changes this
+// label and is NEVER reset when A changes (B alone orders any two
+// builds; A just says which PR each belongs to). Bump this in the SAME
+// commit as the work it labels, and read the value back before
+// committing — a scripted edit can silently fail. Supersedes the old
+// "cmVersion"/CM_VERSION stamp (last value "v0.48", already stale and
+// never actually wired into any screen) with the scheme in that
+// convention doc. Started fresh at 13.1 (PR #13, the open PR this
+// convention was adopted on) — there is no prior A.B history to
+// continue from.
+val buildLabelA = 13
+val buildLabelB = 1
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -46,13 +60,14 @@ android {
             "\"${localProperties.getProperty("GITHUB_API_TOKEN", "")}\"",
         )
 
-        // Single source of truth for the on-device Commit Milestone version
-        // stamp (see ui/components/VersionLabel.kt). Distinct from
-        // versionName/versionCode above, which track real Android app
-        // releases, not this project's internal CM numbering. Bumping the
-        // cmVersion val above is the ONLY per-CM maintenance required to
-        // keep the on-device stamp accurate — no other file needs to change.
-        buildConfigField("String", "CM_VERSION", "\"$cmVersion\"")
+        // Single source of truth for the on-device build label (see
+        // ui/components/VersionLabel.kt and TopReposScreen's drawer
+        // header). Distinct from versionName/versionCode above, which
+        // track real Android app releases, not this project's own
+        // per-push build identifier. Bumping buildLabelA/buildLabelB
+        // above is the ONLY maintenance required to keep the on-device
+        // stamp accurate — no other file needs to change.
+        buildConfigField("String", "BUILD_LABEL", "\"$buildLabelA.$buildLabelB\"")
 
         // Which splash animation plays on launch — "titleReveal" (the
         // kinetic word-by-word title reveal, see
