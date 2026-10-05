@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -164,21 +165,37 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * glyph rather than following that same rename.
  *
  * README FULL-HEIGHT EXPAND (added October 5, 2026, per direct
- * instruction, after seeing the expanded README on-device): the outer
- * Column gained fillMaxSize() — needed for weight(1f) below to mean
- * anything, since a Column with unbounded height has no "remaining
- * space" to distribute to a weighted child. ReadmeExpandableBody gets
- * weight(1f) ONLY while readmeExpanded is true, and the issue
- * LazyColumn is skipped entirely (not just scrolled past — not
- * composed at all) while it's true, instead of both being visible at
- * once. Before this, the README was height-capped (400dp) with the
- * issue list still rendered directly beneath it — the direct complaint
- * this fixes: the two visually blended together, reading like the
- * list's own cards were part of the README content. issueListState is
- * hoisted to this function (not created inside the LazyColumn call) so
- * scroll position survives the list being conditionally un-composed
- * and re-composed as readmeExpanded toggles, rather than resetting to
- * the top every time the README collapses back.
+ * instruction, after seeing the expanded README on-device) — TWO
+ * revisions in the same day, second one superseding the first:
+ *
+ * v1 (same-day, since replaced): gave ReadmeExpandableBody weight(1f)
+ * in the main Column and skipped composing the issue LazyColumn
+ * entirely while expanded. This filled the content area correctly,
+ * but broke the expand animation: weight(1f) with Column's default
+ * fill=true FORCES a child to exactly that weighted size on every
+ * frame, which fights AnimatedVisibility's own size interpolation —
+ * the README jumped straight to full size instead of visibly growing
+ * into it. Collapse still animated (weight(1f) was removed the moment
+ * readmeExpanded went false), but the list reappeared un-animated
+ * underneath it and visibly shifted position as the README kept
+ * shrinking beside it in the same Column — reported as "the issue
+ * cards move up with it."
+ *
+ * v2 (this version): the README is a genuine OVERLAY, not a layout
+ * participant competing for space with the list. The issue LazyColumn
+ * is now ALWAYS composed, always fillMaxSize() inside a Box — nothing
+ * conditional about it anymore, so issueListState no longer needs to
+ * survive a disappear/reappear cycle (kept anyway; harmless, and still
+ * good practice to hoist it). ReadmeExpandableBody is a SECOND child of
+ * that same Box, composed after the LazyColumn so it draws on top, with
+ * its own opaque background (see ReadmeBody in
+ * ReadmeExpandableSection.kt) so the list is never visible through a
+ * partially-expanded README. Because Box children don't support
+ * weight() at all, nothing forces ReadmeExpandableBody's size — its own
+ * AnimatedVisibility is free to animate smoothly in both directions:
+ * expanding, it visibly grows over the content; collapsing, it visibly
+ * shrinks away and reveals the already-static, already-full-height list
+ * sitting underneath it the whole time — exactly the effect asked for.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,11 +257,6 @@ fun RepoIssuesScreen(
             )
         },
     ) { padding ->
-        // fillMaxSize() here is what lets ReadmeExpandableBody's
-        // weight(1f) below actually mean something — a Column with
-        // unbounded height can't distribute "remaining space" to a
-        // weighted child, since there isn't a bounded total to measure
-        // "remaining" against.
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Row(
@@ -285,34 +297,17 @@ fun RepoIssuesScreen(
                 }
             }
 
-            // FULL-HEIGHT EXPAND (added October 5, 2026, per direct
-            // instruction): when expanded, the README fills every
-            // remaining pixel down to the bottom of the content area
-            // (weight(1f) in this now-bounded-height Column) and the
-            // issue list below is skipped entirely — not just scrolled
-            // past, genuinely not composed — so it's never visible
-            // peeking out underneath the README. The direct complaint
-            // this fixes: with the README capped at a fixed height and
-            // the list still rendered right below it, the two visually
-            // blended together, reading like the list's own cards were
-            // part of the README content. issueListState (hoisted above)
-            // keeps the list's scroll position intact across being
-            // removed and re-added as readmeExpanded toggles, rather
-            // than resetting to the top every time the README collapses.
-            ReadmeExpandableBody(
-                expanded = readmeExpanded,
-                repoOwner = repoGroup.repoOwner,
-                repoName = repoGroup.repoName,
-                repoFullName = repoGroup.repoFullName,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .then(if (readmeExpanded) Modifier.weight(1f) else Modifier),
-            )
-
-            if (!readmeExpanded) {
+            // The issue list is now ALWAYS composed, always full-size —
+            // the README overlay (below) is a second Box child drawn on
+            // top of it, not a competitor for the Column's weighted
+            // space. See this function's own doc comment, "README
+            // FULL-HEIGHT EXPAND," for why this replaced an earlier,
+            // same-day version that gave the README weight(1f) directly
+            // in this Column instead.
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyColumn(
                     state = issueListState,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -385,6 +380,18 @@ fun RepoIssuesScreen(
                         )
                     }
                 }
+
+                ReadmeExpandableBody(
+                    expanded = readmeExpanded,
+                    repoOwner = repoGroup.repoOwner,
+                    repoName = repoGroup.repoName,
+                    repoFullName = repoGroup.repoFullName,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(horizontal = 16.dp),
+                )
             }
         }
     }

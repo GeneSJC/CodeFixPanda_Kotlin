@@ -9,6 +9,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -160,7 +161,19 @@ fun ReadmeExpandableBody(
 
 @Composable
 private fun ReadmeBody(uiState: RepoReadmeUiState, repoFullName: String) {
-    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = 10.dp)) {
+    // Opaque background (not just fillMaxHeight) — this renders as an
+    // OVERLAY on top of the issue list now (see RepoIssuesScreen's own
+    // doc comment, "README FULL-HEIGHT EXPAND, v2"), so whatever
+    // portion of it is currently visible during the expand/collapse
+    // animation needs to fully occlude the list underneath, not let it
+    // show through.
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(top = 10.dp),
+    ) {
         when {
             uiState.isLoading -> Box(
                 modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(vertical = 16.dp),

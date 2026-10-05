@@ -360,6 +360,7 @@ fun TopReposScreen(
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
     onOpenBookmarks: () -> Unit,
     onOpenHidden: () -> Unit,
+    onResetApp: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
 ) {
@@ -541,6 +542,23 @@ fun TopReposScreen(
                                         onClick = {
                                             showMenu = false
                                             showClearCacheConfirm = true
+                                        },
+                                    )
+                                    // Resets IssueMode.current and returns to
+                                    // IssueModeGateScreen — see
+                                    // DiscoverNavHost's own doc comment
+                                    // ("Reset App") for why that gate screen
+                                    // was otherwise unreachable again once a
+                                    // mode was chosen. Deliberately no
+                                    // confirmation dialog, unlike Clear
+                                    // Cache: nothing here is destructive —
+                                    // bookmarks, hidden issues, and the repo
+                                    // cache are all untouched.
+                                    DropdownMenuItem(
+                                        text = { Text("Reset App") },
+                                        onClick = {
+                                            showMenu = false
+                                            onResetApp()
                                         },
                                     )
                                 }
