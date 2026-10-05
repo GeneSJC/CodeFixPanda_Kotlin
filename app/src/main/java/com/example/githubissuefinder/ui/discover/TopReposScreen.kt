@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +65,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
+import com.example.githubissuefinder.data.RepoReadmeSnippetStore
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -1138,9 +1140,29 @@ private fun CenteredMessage(text: String) {
  * the title is gone, same reasoning as IssueCard's own identity-row
  * removal: a screen already scoped to listing repos doesn't need each
  * card repeating a raw path alongside its own humanized title.
+ *
+ * README PREVIEW (added October 5, 2026, per direct instruction): a
+ * short, plain-text snippet of the repo's README — up to
+ * SNIPPET_MAX_CHARS characters (currently 150), capped at 3 lines via
+ * maxLines + TextOverflow.Ellipsis as a visual safety net on top of
+ * that character cap — renders beneath the title row, at normal body
+ * text size. Fetched via RepoReadmeSnippetStore (see that file's own
+ * doc comment, including the real per-card network-call cost this
+ * adds). Static only for now: no tap-to-expand here, unlike
+ * RepoIssuesScreen's own README widget — explicitly deferred as a
+ * possible next step, not attempted in this pass. Renders nothing
+ * (not even a placeholder) when no snippet is available yet or the
+ * repo has no README — this card's layout was deliberately kept
+ * simple, and a loading spinner or "no README" message for a purely
+ * decorative preview would be more clutter than it's worth.
  */
 @Composable
 private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
+    val snippet = RepoReadmeSnippetStore.snippetFor(group.repoFullName)
+    LaunchedEffect(group.repoFullName) {
+        RepoReadmeSnippetStore.loadIfNeeded(group.repoOwner, group.repoName, group.repoFullName)
+    }
+
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -1164,6 +1186,16 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
+            }
+            if (!snippet.isNullOrBlank()) {
+                Text(
+                    snippet,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
             }
         }
     }
