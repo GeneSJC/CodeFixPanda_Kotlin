@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -67,11 +68,22 @@ import io.noties.markwon.Markwon
  *
  * Rendering is Markwon + a wrapped TextView (AndroidView interop),
  * same approach the removed full-screen version used — still no
- * first-party Compose API for Markwon itself. Capped at a max height
- * (400dp) with its own internal scroll, since this now lives inline in
- * a LazyColumn alongside the issue list rather than owning the whole
- * screen — an uncapped README could otherwise push the entire issue
- * list an arbitrary distance down the page.
+ * first-party Compose API for Markwon itself.
+ *
+ * FULL-HEIGHT EXPAND (added October 5, 2026, per direct instruction):
+ * originally capped at a fixed max height (400dp) with its own
+ * internal scroll, so an uncapped README couldn't push the issue list
+ * an arbitrary distance down the page below it. That cap is gone —
+ * ReadmeBody/ReadmeMarkdownContent now fillMaxHeight() instead, and
+ * the issue list is no longer rendered behind/below the README at all
+ * while expanded (see RepoIssuesScreen's own doc comment for the
+ * weight(1f)-swap that makes that true). The 400dp cap was solving a
+ * problem — the README and the issue list visually blending together,
+ * since the list was still right there below whatever the README
+ * didn't fill — that no longer exists once the list simply isn't
+ * drawn underneath it; capping the height was no longer buying
+ * anything once that fix landed, just leaving dead space below a
+ * short README instead.
  */
 private const val EXPAND_COLLAPSE_DURATION_MS = 2000
 
@@ -148,10 +160,10 @@ fun ReadmeExpandableBody(
 
 @Composable
 private fun ReadmeBody(uiState: RepoReadmeUiState, repoFullName: String) {
-    Box(modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = 10.dp)) {
         when {
             uiState.isLoading -> Box(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(modifier = Modifier.heightIn(max = 28.dp))
@@ -168,7 +180,7 @@ private fun ReadmeBody(uiState: RepoReadmeUiState, repoFullName: String) {
 @Composable
 private fun CenteredReadmeMessage(text: String) {
     Box(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(vertical = 16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -190,7 +202,7 @@ private fun ReadmeMarkdownContent(markdown: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(max = 400.dp)
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState()),
     ) {
         AndroidView(

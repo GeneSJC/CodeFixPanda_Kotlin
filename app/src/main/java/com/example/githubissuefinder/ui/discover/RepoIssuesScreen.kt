@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -160,6 +162,23 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * PASS") — this header action is a distinct destination (the repo
  * itself, not any one issue), so it deliberately kept the diagonal
  * glyph rather than following that same rename.
+ *
+ * README FULL-HEIGHT EXPAND (added October 5, 2026, per direct
+ * instruction, after seeing the expanded README on-device): the outer
+ * Column gained fillMaxSize() — needed for weight(1f) below to mean
+ * anything, since a Column with unbounded height has no "remaining
+ * space" to distribute to a weighted child. ReadmeExpandableBody gets
+ * weight(1f) ONLY while readmeExpanded is true, and the issue
+ * LazyColumn is skipped entirely (not just scrolled past — not
+ * composed at all) while it's true, instead of both being visible at
+ * once. Before this, the README was height-capped (400dp) with the
+ * issue list still rendered directly beneath it — the direct complaint
+ * this fixes: the two visually blended together, reading like the
+ * list's own cards were part of the README content. issueListState is
+ * hoisted to this function (not created inside the LazyColumn call) so
+ * scroll position survives the list being conditionally un-composed
+ * and re-composed as readmeExpanded toggles, rather than resetting to
+ * the top every time the README collapses back.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +195,11 @@ fun RepoIssuesScreen(
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    // Hoisted so the issue list's scroll position survives being
+    // conditionally un-composed while the README is expanded (see the
+    // README full-height section below) — a LazyColumn created fresh
+    // each time would otherwise reset to the top.
+    val issueListState = rememberLazyListState()
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
@@ -216,7 +240,12 @@ fun RepoIssuesScreen(
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        // fillMaxSize() here is what lets ReadmeExpandableBody's
+        // weight(1f) below actually mean something — a Column with
+        // unbounded height can't distribute "remaining space" to a
+        // weighted child, since there isn't a bounded total to measure
+        // "remaining" against.
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -254,85 +283,107 @@ fun RepoIssuesScreen(
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
-                ReadmeExpandableBody(
-                    expanded = readmeExpanded,
-                    repoOwner = repoGroup.repoOwner,
-                    repoName = repoGroup.repoName,
-                    repoFullName = repoGroup.repoFullName,
-                )
             }
 
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (uiState.issues.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                "No open matching issues remain.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else if (visibleIssues.isEmpty()) {
-                    item {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                "All matching issues in this repo are hidden.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                            )
-                            TextButton(onClick = onOpenHidden) {
-                                Text("View Hidden")
+            // FULL-HEIGHT EXPAND (added October 5, 2026, per direct
+            // instruction): when expanded, the README fills every
+            // remaining pixel down to the bottom of the content area
+            // (weight(1f) in this now-bounded-height Column) and the
+            // issue list below is skipped entirely — not just scrolled
+            // past, genuinely not composed — so it's never visible
+            // peeking out underneath the README. The direct complaint
+            // this fixes: with the README capped at a fixed height and
+            // the list still rendered right below it, the two visually
+            // blended together, reading like the list's own cards were
+            // part of the README content. issueListState (hoisted above)
+            // keeps the list's scroll position intact across being
+            // removed and re-added as readmeExpanded toggles, rather
+            // than resetting to the top every time the README collapses.
+            ReadmeExpandableBody(
+                expanded = readmeExpanded,
+                repoOwner = repoGroup.repoOwner,
+                repoName = repoGroup.repoName,
+                repoFullName = repoGroup.repoFullName,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .then(if (readmeExpanded) Modifier.weight(1f) else Modifier),
+            )
+
+            if (!readmeExpanded) {
+                LazyColumn(
+                    state = issueListState,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (uiState.issues.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "No open matching issues remain.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
-                    }
-                } else {
-                    items(visibleIssues, key = { it.id }) { issue ->
-                        IssueCard(
-                            issue = issue,
-                            isBookmarked = RepoBookmarks.isBookmarked(issue.id),
-                            showExternalLinkIndicator = true,
-                            onClick = {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
+                    } else if (visibleIssues.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    "All matching issues in this repo are hidden.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
                                 )
-                            },
-                            onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
-                            onHide = {
-                                HiddenIssuesStore.hide(context, issue)
-                                coroutineScope.launch {
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "Issue hidden",
-                                        actionLabel = "Undo",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        HiddenIssuesStore.unhide(context, issue.id)
-                                    }
+                                TextButton(onClick = onOpenHidden) {
+                                    Text("View Hidden")
                                 }
-                            },
-                            snackbarHostState = snackbarHostState,
+                            }
+                        }
+                    } else {
+                        items(visibleIssues, key = { it.id }) { issue ->
+                            IssueCard(
+                                issue = issue,
+                                isBookmarked = RepoBookmarks.isBookmarked(issue.id),
+                                showExternalLinkIndicator = true,
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
+                                    )
+                                },
+                                onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                                onHide = {
+                                    HiddenIssuesStore.hide(context, issue)
+                                    coroutineScope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "Issue hidden",
+                                            actionLabel = "Undo",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            HiddenIssuesStore.unhide(context, issue.id)
+                                        }
+                                    }
+                                },
+                                snackbarHostState = snackbarHostState,
+                            )
+                        }
+                    }
+                    item(key = "refreshThisRepoFooter") {
+                        RefreshThisRepoFooter(
+                            isRefreshing = uiState.isRefreshing,
+                            hasRefreshed = uiState.hasRefreshed,
+                            lastRefreshedAtMs = uiState.lastRefreshedAtMs,
+                            refreshError = uiState.refreshError,
+                            currentIssueCount = uiState.issues.size,
+                            onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
+                            onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
                         )
                     }
-                }
-                item(key = "refreshThisRepoFooter") {
-                    RefreshThisRepoFooter(
-                        isRefreshing = uiState.isRefreshing,
-                        hasRefreshed = uiState.hasRefreshed,
-                        lastRefreshedAtMs = uiState.lastRefreshedAtMs,
-                        refreshError = uiState.refreshError,
-                        currentIssueCount = uiState.issues.size,
-                        onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
-                        onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
-                    )
                 }
             }
         }
