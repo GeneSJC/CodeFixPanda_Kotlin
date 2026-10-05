@@ -1200,28 +1200,55 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                 }
             }
             if (!snippet.isNullOrBlank()) {
-                Text(
-                    snippet,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = if (expanded) Int.MAX_VALUE else 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    onClick = { expanded = !expanded },
-                    modifier = Modifier.padding(top = 6.dp),
-                ) {
-                    Text(
-                        "⌄",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp, vertical = 1.dp)
-                            .rotate(chevronRotation),
-                    )
+                if (expanded) {
+                    // Expanded: the card is already taller to fit the full
+                    // snippet, so the chevron gets its own row underneath,
+                    // same as before — no vertical space being reclaimed
+                    // here the way there is in the 2-line collapsed state.
+                    Column(modifier = Modifier.padding(top = 6.dp)) {
+                        Text(
+                            snippet,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        ReadmeSnippetChevron(
+                            rotation = chevronRotation,
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                    }
+                } else {
+                    // Collapsed: the chevron sits INLINE at the end of the
+                    // text block instead of on its own row beneath it, per
+                    // direct instruction — trims the card back down to
+                    // exactly 2 lines of vertical space instead of 2 lines
+                    // plus a separate chevron row. Bottom-aligning a
+                    // weighted Text next to a fixed-size trailing Surface
+                    // is an approximation, not a true "icon inline with
+                    // only the last wrapped line" layout (which Compose's
+                    // Text doesn't support without custom text-layout
+                    // math) — both lines narrow slightly to make room for
+                    // the chevron, not just the second one, but the
+                    // chevron itself stays as small as its own content,
+                    // not a full extra column's width.
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        Text(
+                            snippet,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        ReadmeSnippetChevron(
+                            rotation = chevronRotation,
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
+                    }
                 }
             }
         }
@@ -1229,6 +1256,31 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
 }
 
 private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
+
+/**
+ * The small expand/collapse chevron badge for a RepoCard's README
+ * preview — pulled out once it needed to render from two different
+ * call sites (inline at the end of the 2-line collapsed text, on its
+ * own row when expanded) with identical styling either way.
+ */
+@Composable
+private fun ReadmeSnippetChevron(rotation: Float, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        onClick = onClick,
+        modifier = modifier,
+    ) {
+        Text(
+            "⌄",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 1.dp)
+                .rotate(rotation),
+        )
+    }
+}
 
 /**
  * v0.46: the small top-bar chip showing how many repo cards are
