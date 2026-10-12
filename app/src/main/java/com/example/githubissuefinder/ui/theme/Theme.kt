@@ -57,9 +57,9 @@ fun GitHubIssueFinderTheme(
     // color explicitly if desired.
     dynamicColor: Boolean = false,
     // The active Issue Mode (v0.41), read at the root in MainActivity.kt
-    // from the same shared IssueMode object the mode dropdown on
-    // TopReposScreen writes to — see IssueMode.kt for why a shared
-    // object rather than a threaded parameter. Null (no mode chosen
+    // through IssueModeViewModel, which observes the same
+    // IssueModeRepository state the mode menu on TopReposScreen writes
+    // to — see IssueModeRepository.kt. Null (no mode chosen
     // yet) falls back to the original light/dark scheme exactly as
     // before this CM — Mode is additive, not a replacement for the
     // app's baseline theme.

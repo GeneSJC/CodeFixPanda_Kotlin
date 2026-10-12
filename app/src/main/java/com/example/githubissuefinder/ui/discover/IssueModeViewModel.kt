@@ -1,0 +1,46 @@
+package com.example.githubissuefinder.ui.discover
+
+import androidx.lifecycle.ViewModel
+import com.example.githubissuefinder.data.IssueModeRepository
+import com.example.githubissuefinder.model.IssueLabelFilter
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * The UI's one interface to the app-wide Issue Mode: the places that
+ * need to react to it at the very top of the app (MainActivity, to pick
+ * a color scheme) or to change it before any screen-level ViewModel
+ * exists (DiscoverNavHost, for the gate screen's choice and for picking
+ * the start destination) go through this, never straight to the
+ * repository or to storage.
+ *
+ * Scope: obtained with viewModel() from the root composition, which
+ * means it is scoped to the Activity — MainActivity and DiscoverNavHost
+ * therefore receive the SAME instance, and the theme re-renders the
+ * moment the gate screen's choice lands. (TopReposViewModel and
+ * RepoIssuesViewModel are scoped to their own nav destinations, so they
+ * talk to the repository directly for the same mode rather than going
+ * through this one.)
+ *
+ * Why the repository is a constructor argument defaulting to the
+ * app-wide instance: production code (viewModel() with no factory)
+ * gets the real one, while a unit test passes its own backed by a fake
+ * IssueModeStorage. A ViewModel with an all-defaults constructor still
+ * has a no-argument constructor on the JVM, which is what the default
+ * ViewModel factory needs.
+ *
+ * Why [mode] just re-exposes the repository's StateFlow instead of
+ * copying it into its own: there is only one source of truth for the
+ * mode, and a second copy could drift out of sync with it.
+ */
+class IssueModeViewModel(
+    private val repository: IssueModeRepository = IssueModeRepository.instance,
+) : ViewModel() {
+
+    /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
+    val mode: StateFlow<IssueLabelFilter?> = repository.mode
+
+    /** Called when the user picks a mode on the gate screen. Persistence is the repository's job, not this class's. */
+    fun selectMode(newMode: IssueLabelFilter) {
+        repository.setMode(newMode)
+    }
+}

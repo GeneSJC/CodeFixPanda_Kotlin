@@ -370,8 +370,9 @@ fun TopReposScreen(
     val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
-    // while IssueMode.current is null (see its own doc comment).
-    val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    // while the mode is null (see its own doc comment).
+    val mode by viewModel.mode.collectAsStateWithLifecycle()
+    val currentMode = mode ?: IssueLabelFilter.GOOD_FIRST_ISSUE
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Hoisted to function scope (not local to the TopAppBar's title

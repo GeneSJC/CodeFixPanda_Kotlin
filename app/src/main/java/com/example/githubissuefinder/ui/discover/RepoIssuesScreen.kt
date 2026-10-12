@@ -179,8 +179,10 @@ fun RepoIssuesScreen(
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
-    // chosen before this screen is ever reachable. See IssueMode.kt.
-    val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    // chosen before this screen is ever reachable. See
+    // IssueModeRepository.
+    val mode by viewModel.mode.collectAsStateWithLifecycle()
+    val activeMode = mode ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
     LaunchedEffect(repoGroup.repoFullName) {
         viewModel.loadIfNeeded(repoGroup)

@@ -23,7 +23,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
  * The Issue Mode gate (v0.41): shown by DiscoverNavHost instead of the
- * normal repo-first flow whenever IssueMode.current is null — a real,
+ * normal repo-first flow whenever the Issue Mode is null — a real,
  * literal gate rather than a silent default to one mode or the other,
  * per how this was explicitly asked for ("you have to set it into the
  * mode you're looking for").

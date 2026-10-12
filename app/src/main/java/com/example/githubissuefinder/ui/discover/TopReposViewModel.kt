@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.formatRelativeTime
@@ -84,10 +85,12 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * No sample-data fallback yet (see TopReposUiState) — this screen
  * still requires a configured GitHub token, unchanged from before.
  *
- * IssueMode.current is read directly in load(), same "shared object,
- * not threaded through the constructor" pattern established in v0.41
- * — see IssueMode.kt. onModeSelected(mode) below is a plain in-place
- * switch — updates IssueMode.current directly and reloads, the same
+ * The Issue Mode is read from IssueModeRepository (see its doc comment
+ * for why that is the one owner of it), via a constructor argument so
+ * a test can supply a fake. [mode] re-exposes it so TopReposScreen
+ * observes it through this ViewModel rather than reading a global.
+ * onModeSelected(mode) below is a plain in-place switch — asks the
+ * repository to change the mode and reloads, the same
  * shape onLanguageSelected() already has — reached from two explicit
  * items at the bottom of TopReposScreen's hamburger menu ("Find Good
  * First Issues" / "Find Help Wanted Issues"), NOT a resurrection of
@@ -172,7 +175,19 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * (GitHubIssueFinder_CachePreservingRefresh_Plan_2026-09-25.pdf) for
  * the full reasoning and the discussion that surfaced this.
  */
-class TopReposViewModel(application: Application) : AndroidViewModel(application) {
+class TopReposViewModel @JvmOverloads constructor(
+    application: Application,
+    private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
+) : AndroidViewModel(application) {
+
+    /**
+     * The active Issue Mode, or null while none is chosen (which
+     * DiscoverNavHost prevents from ever being observed here — see
+     * IssueModeGateScreen). @JvmOverloads on the constructor above keeps
+     * the single-Application-argument constructor that Compose's default
+     * AndroidViewModel factory looks for.
+     */
+    val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
 
     private val _uiState = MutableStateFlow(TopReposUiState())
     val uiState: StateFlow<TopReposUiState> = _uiState.asStateFlow()
@@ -201,8 +216,8 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
      * had, avoiding a pointless reload.
      */
     fun onModeSelected(mode: IssueLabelFilter) {
-        if (mode == IssueMode.current) return
-        IssueMode.current = mode
+        if (mode == modeRepository.mode.value) return
+        modeRepository.setMode(mode)
         load(uiState.value.selectedLanguage)
     }
 
@@ -258,7 +273,7 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
      */
     fun checkForNewRepos() {
         if (isCheckingForNewRepos || !GitHubApiClient.hasToken) return
-        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
         val state = uiState.value
         val language = state.selectedLanguage
 
@@ -384,7 +399,7 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
      */
     fun syncFromCache() {
         if (!GitHubApiClient.hasToken) return
-        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
         val language = uiState.value.selectedLanguage
         viewModelScope.launch {
             val cached = withContext(Dispatchers.IO) {
@@ -409,9 +424,9 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
         }
 
         // Defensive fallback only — DiscoverNavHost never creates this
-        // screen (and therefore this ViewModel) while IssueMode.current
-        // is null. See IssueMode.kt.
-        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        // screen (and therefore this ViewModel) while the mode is null.
+        // See IssueModeRepository.
+        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
         // Fresh load (language/mode switch, retry, or a reload right
         // after Clear Cache — see that function): reset pagination-error
@@ -458,9 +473,9 @@ class TopReposViewModel(application: Application) : AndroidViewModel(application
         }
 
         // Defensive fallback only — DiscoverNavHost never creates this
-        // screen (and therefore this ViewModel) while IssueMode.current
-        // is null. See IssueMode.kt.
-        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        // screen (and therefore this ViewModel) while the mode is null.
+        // See IssueModeRepository.
+        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
         viewModelScope.launch {
             if (isLoadMore) {

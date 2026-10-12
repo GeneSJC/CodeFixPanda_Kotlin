@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,11 +58,11 @@ private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
  * structure forward rather than reintroducing the early-return shape.
  *
  * startDestination is computed ONCE, via `remember` (NOT re-read
- * reactively on every IssueMode.current change — NavHost's
+ * reactively on every Issue Mode change — NavHost's
  * startDestination is fixed at creation) — gate if no mode is chosen
  * yet, straight to Top Repos if one already is. As of v0.44, that
  * second branch is genuinely reachable, not just forward-compatible —
- * Mode now persists across launches (see IssueMode.kt), so a returning
+ * Mode now persists across launches (see IssueModeRepository.kt), so a returning
  * user's saved mode is already restored by the time this composes, and
  * they land directly on Top Repos with the gate skipped entirely.
  * Picking a mode on the gate screen calls
@@ -107,7 +108,10 @@ private fun NavController.popBackStackDebounced() {
 }
 
 @Composable
-fun DiscoverNavHost(modifier: Modifier = Modifier) {
+fun DiscoverNavHost(
+    modifier: Modifier = Modifier,
+    issueModeViewModel: IssueModeViewModel = viewModel(),
+) {
     val navController = rememberNavController()
     var selectedRepoGroup by remember { mutableStateOf<RepoIssueGroup?>(null) }
     // v0.50: the LanguageFilter Top Repos was actually showing when the
@@ -119,7 +123,7 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
     var selectedLanguage by remember { mutableStateOf(LanguageFilter.KOTLIN) }
 
     val startDestination = remember {
-        if (IssueMode.current != null) ROUTE_TOP_REPOS else ROUTE_ISSUE_MODE_GATE
+        if (issueModeViewModel.mode.value != null) ROUTE_TOP_REPOS else ROUTE_ISSUE_MODE_GATE
     }
 
     NavHost(
@@ -130,7 +134,7 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
         composable(ROUTE_ISSUE_MODE_GATE) {
             IssueModeGateScreen(
                 onModeSelected = { mode ->
-                    IssueMode.current = mode
+                    issueModeViewModel.selectMode(mode)
                     navController.navigate(ROUTE_TOP_REPOS)
                 },
             )

@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.parseRateLimitHeaders
@@ -126,7 +127,18 @@ private const val MAX_PER_PAGE = 100
  * matching how RepoBookmarks is already called directly from
  * RepoIssuesScreen with a per-call Context.
  */
-class RepoIssuesViewModel : ViewModel() {
+class RepoIssuesViewModel(
+    private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
+) : ViewModel() {
+
+    /**
+     * The active Issue Mode, re-exposed from IssueModeRepository so
+     * RepoIssuesScreen observes it through this ViewModel instead of
+     * reading a global. A ViewModel whose constructor arguments all
+     * have defaults still has the no-argument constructor viewModel()
+     * needs.
+     */
+    val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
 
     private val _uiState = MutableStateFlow(RepoIssuesUiState())
     val uiState: StateFlow<RepoIssuesUiState> = _uiState.asStateFlow()
@@ -152,8 +164,9 @@ class RepoIssuesViewModel : ViewModel() {
         if (!GitHubApiClient.hasToken) return
 
         // Defensive fallback only — DiscoverNavHost guarantees a mode
-        // is chosen before this screen is ever reachable. See IssueMode.kt.
-        val activeMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        // is chosen before this screen is ever reachable. See
+        // IssueModeRepository.
+        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
 
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, refreshError = null) }
