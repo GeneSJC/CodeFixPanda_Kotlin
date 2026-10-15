@@ -13,9 +13,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RepoBookmarks
+import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueModeViewModel
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
+import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
 /**
@@ -52,6 +54,9 @@ class MainActivity : ComponentActivity() {
         // hidden-issue store — see HiddenIssuesStore.init()'s own doc
         // comment.
         HiddenIssuesStore.init(this)
+        // Whether this device has already seen the full start animation —
+        // same reasoning, see StartupSplashViewModel.
+        StartupSplashRepository.init(this)
         setContent {
             // App-wide Issue Mode (v0.41): observed through
             // IssueModeViewModel at this single root theme call, which
@@ -66,7 +71,14 @@ class MainActivity : ComponentActivity() {
             GitHubIssueFinderTheme(issueMode = issueMode) {
                 var showSplash by remember { mutableStateOf(true) }
                 if (showSplash) {
-                    val onFinished = { showSplash = false }
+                    // Full animation on the first launch, a short fade-in
+                    // of the app name on every launch after — decided once
+                    // per launch, see StartupSplashViewModel.
+                    val splashViewModel: StartupSplashViewModel = viewModel()
+                    val onFinished = {
+                        splashViewModel.onSplashFinished()
+                        showSplash = false
+                    }
                     // Which splash plays, and with what parameters, lives
                     // in ONE place now — AppStartSplashScreen.kt — rather
                     // than switching on BuildConfig.SPLASH_ANIMATION here
@@ -74,7 +86,10 @@ class MainActivity : ComponentActivity() {
                     // Start Animation" replay (see TopReposScreen.kt) can
                     // never drift from what a real user actually sees at
                     // launch.
-                    AppStartSplashScreen(onFinished = onFinished)
+                    AppStartSplashScreen(
+                        onFinished = onFinished,
+                        playFullAnimation = splashViewModel.playFullAnimation,
+                    )
                 } else {
                     // The Discover flow (option C from the architecture
                     // discussion): a ranked Top Repos landing screen.
