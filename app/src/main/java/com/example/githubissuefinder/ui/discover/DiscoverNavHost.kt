@@ -90,6 +90,20 @@ private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
  * content would have been a redundant second access point, not a
  * reasonable fallback, so it came out rather than staying alongside
  * the new widget.
+ *
+ * "Reset App" (TopReposScreen's hamburger menu): the gate
+ * (ROUTE_ISSUE_MODE_GATE) is otherwise genuinely unreachable again once
+ * a mode is chosen — picking a mode only ever pushes Top Repos on top
+ * of it, and the two in-place mode-switch menu items change
+ * IssueMode.current without touching navigation at all, so there was no
+ * way back to the gate short of clearing app data. Reset App clears
+ * IssueMode.current and navigates to ROUTE_ISSUE_MODE_GATE with
+ * popUpTo(graph.id) { inclusive = true }, wiping the ENTIRE back stack
+ * (not just popping once) — a plain navigate() would instead push a
+ * second, duplicate gate entry on top of whatever screens were open,
+ * leaving them reachable again via back. Bookmarks, hidden issues, and
+ * the repo cache are deliberately untouched — only IssueMode and
+ * navigation position reset.
  */
 /**
  * Rapidly double-tapping a back IconButton can fire onClick twice before
@@ -144,6 +158,13 @@ fun DiscoverNavHost(modifier: Modifier = Modifier) {
                 },
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
                 onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
+                onResetApp = {
+                    IssueMode.current = null
+                    navController.navigate(ROUTE_ISSUE_MODE_GATE) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
         composable(ROUTE_REPO_ISSUES) {

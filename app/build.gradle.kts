@@ -34,8 +34,16 @@ val localProperties = Properties().apply {
 // convention doc. Started fresh at 13.1 (PR #13, the open PR this
 // convention was adopted on) — there is no prior A.B history to
 // continue from.
-val buildLabelA = 13
-val buildLabelB = 1
+//
+// A went stale for several pushes (stayed at 13 through PR #14's merge
+// and five commits into PR #15, which is what's actually open now) —
+// a real lapse in the per-push bump this comment calls the ONLY
+// required maintenance, caught directly by on-device observation
+// ("I'm still seeing 13.1"). Corrected here to 15 (PR #15, the
+// currently-open PR). B continues climbing from its last value (per
+// above, it never resets on an A change) rather than restarting at 1.
+val buildLabelA = 15
+val buildLabelB = 5
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
