@@ -12,6 +12,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.githubissuefinder.data.needsModeGate
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 
@@ -123,7 +124,7 @@ fun DiscoverNavHost(
     var selectedLanguage by remember { mutableStateOf(LanguageFilter.KOTLIN) }
 
     val startDestination = remember {
-        if (issueModeViewModel.mode.value != null) ROUTE_TOP_REPOS else ROUTE_ISSUE_MODE_GATE
+        if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
     }
 
     NavHost(

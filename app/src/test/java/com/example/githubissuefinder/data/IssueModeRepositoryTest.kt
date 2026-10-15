@@ -66,4 +66,44 @@ class IssueModeRepositoryTest {
         IssueModeRepository(storage)
         assertEquals(0, storage.saveCount)
     }
+
+    @Test
+    fun settingTheSameModeTwiceKeepsTheValue() {
+        val repository = IssueModeRepository(FakeStorage())
+        repository.setMode(IssueLabelFilter.HELP_WANTED)
+        repository.setMode(IssueLabelFilter.HELP_WANTED)
+        assertEquals(IssueLabelFilter.HELP_WANTED, repository.mode.value)
+    }
+
+    @Test
+    fun lastModeSetWins() {
+        val repository = IssueModeRepository(FakeStorage())
+        repository.setMode(IssueLabelFilter.GOOD_FIRST_ISSUE)
+        repository.setMode(IssueLabelFilter.HELP_WANTED)
+        assertEquals(IssueLabelFilter.HELP_WANTED, repository.mode.value)
+    }
+
+    /**
+     * A new repository over the same storage stands in for the app
+     * process being killed and relaunched: the choice must survive.
+     */
+    @Test
+    fun aNewRepositoryOverTheSameStorageRestoresTheLastChoice() {
+        val storage = FakeStorage()
+        IssueModeRepository(storage).setMode(IssueLabelFilter.HELP_WANTED)
+
+        val afterRestart = IssueModeRepository(storage)
+
+        assertEquals(IssueLabelFilter.HELP_WANTED, afterRestart.mode.value)
+    }
+
+    @Test
+    fun aClearedModeStaysClearedAfterARestart() {
+        val storage = FakeStorage()
+        val first = IssueModeRepository(storage)
+        first.setMode(IssueLabelFilter.GOOD_FIRST_ISSUE)
+        first.setMode(null)
+
+        assertNull(IssueModeRepository(storage).mode.value)
+    }
 }

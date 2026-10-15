@@ -9,6 +9,8 @@ import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.parseRateLimitHeaders
+import com.example.githubissuefinder.data.resolveActiveMode
+import com.example.githubissuefinder.data.shouldSwitchMode
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -216,7 +218,7 @@ class TopReposViewModel @JvmOverloads constructor(
      * had, avoiding a pointless reload.
      */
     fun onModeSelected(mode: IssueLabelFilter) {
-        if (mode == modeRepository.mode.value) return
+        if (!shouldSwitchMode(modeRepository.mode.value, mode)) return
         modeRepository.setMode(mode)
         load(uiState.value.selectedLanguage)
     }
@@ -273,7 +275,7 @@ class TopReposViewModel @JvmOverloads constructor(
      */
     fun checkForNewRepos() {
         if (isCheckingForNewRepos || !GitHubApiClient.hasToken) return
-        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = resolveActiveMode(modeRepository.mode.value)
         val state = uiState.value
         val language = state.selectedLanguage
 
@@ -399,7 +401,7 @@ class TopReposViewModel @JvmOverloads constructor(
      */
     fun syncFromCache() {
         if (!GitHubApiClient.hasToken) return
-        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = resolveActiveMode(modeRepository.mode.value)
         val language = uiState.value.selectedLanguage
         viewModelScope.launch {
             val cached = withContext(Dispatchers.IO) {
@@ -426,7 +428,7 @@ class TopReposViewModel @JvmOverloads constructor(
         // Defensive fallback only — DiscoverNavHost never creates this
         // screen (and therefore this ViewModel) while the mode is null.
         // See IssueModeRepository.
-        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = resolveActiveMode(modeRepository.mode.value)
 
         // Fresh load (language/mode switch, retry, or a reload right
         // after Clear Cache — see that function): reset pagination-error
@@ -475,7 +477,7 @@ class TopReposViewModel @JvmOverloads constructor(
         // Defensive fallback only — DiscoverNavHost never creates this
         // screen (and therefore this ViewModel) while the mode is null.
         // See IssueModeRepository.
-        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = resolveActiveMode(modeRepository.mode.value)
 
         viewModelScope.launch {
             if (isLoadMore) {

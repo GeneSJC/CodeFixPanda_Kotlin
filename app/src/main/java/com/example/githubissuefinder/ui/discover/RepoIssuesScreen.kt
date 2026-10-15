@@ -48,6 +48,7 @@ import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
 import kotlinx.coroutines.launch
+import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -182,7 +183,7 @@ fun RepoIssuesScreen(
     // chosen before this screen is ever reachable. See
     // IssueModeRepository.
     val mode by viewModel.mode.collectAsStateWithLifecycle()
-    val activeMode = mode ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    val activeMode = resolveActiveMode(mode)
 
     LaunchedEffect(repoGroup.repoFullName) {
         viewModel.loadIfNeeded(repoGroup)

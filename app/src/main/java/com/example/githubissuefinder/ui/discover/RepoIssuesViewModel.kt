@@ -7,6 +7,7 @@ import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.parseRateLimitHeaders
+import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
@@ -166,7 +167,7 @@ class RepoIssuesViewModel(
         // Defensive fallback only — DiscoverNavHost guarantees a mode
         // is chosen before this screen is ever reachable. See
         // IssueModeRepository.
-        val activeMode = modeRepository.mode.value ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+        val activeMode = resolveActiveMode(modeRepository.mode.value)
 
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, refreshError = null) }

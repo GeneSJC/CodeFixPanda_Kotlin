@@ -66,6 +66,7 @@ import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -372,7 +373,7 @@ fun TopReposScreen(
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while the mode is null (see its own doc comment).
     val mode by viewModel.mode.collectAsStateWithLifecycle()
-    val currentMode = mode ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    val currentMode = resolveActiveMode(mode)
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Hoisted to function scope (not local to the TopAppBar's title
