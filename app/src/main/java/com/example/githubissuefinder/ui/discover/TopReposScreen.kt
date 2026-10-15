@@ -71,6 +71,7 @@ import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoReadmeSnippetStore
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -376,8 +377,9 @@ fun TopReposScreen(
     val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
-    // while IssueMode.current is null (see its own doc comment).
-    val currentMode = IssueMode.current ?: IssueLabelFilter.GOOD_FIRST_ISSUE
+    // while the mode is null (see its own doc comment).
+    val mode by viewModel.mode.collectAsStateWithLifecycle()
+    val currentMode = resolveActiveMode(mode)
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Hoisted to function scope (not local to the TopAppBar's title
@@ -544,7 +546,7 @@ fun TopReposScreen(
                                             showClearCacheConfirm = true
                                         },
                                     )
-                                    // Resets IssueMode.current and returns to
+                                    // Clears the Issue Mode and returns to
                                     // IssueModeGateScreen — see
                                     // DiscoverNavHost's own doc comment
                                     // ("Reset App") for why that gate screen

@@ -42,7 +42,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
  * The Issue Mode gate (v0.41): shown by DiscoverNavHost instead of the
- * normal repo-first flow whenever IssueMode.current is null — a real,
+ * normal repo-first flow whenever the Issue Mode is null — a real,
  * literal gate rather than a silent default to one mode or the other,
  * per how this was explicitly asked for ("you have to set it into the
  * mode you're looking for").
@@ -62,7 +62,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  *
  * NESTED GitHubIssueFinderTheme(issueMode = null): added after a real,
  * reported artifact — tapping a card calls onModeSelected, which sets
- * IssueMode.current synchronously, and MainActivity's single root theme
+ * the Issue Mode synchronously, and MainActivity's single root theme
  * call reads that same value, so EVERY currently-composed screen
  * (including this one, still visible/fading during the nav transition
  * to Top Repos) recomposes with the new mode's colors immediately.
@@ -78,7 +78,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * switch the app theme"). Wrapping this screen's own content in a
  * second, explicitly issueMode = null GitHubIssueFinderTheme pins
  * MaterialTheme.colorScheme to the neutral baseline for everything in
- * this subtree, regardless of what IssueMode.current becomes mid-tap —
+ * this subtree, regardless of what the Issue Mode becomes mid-tap —
  * restoring that stated intent rather than adding a new one.
  *
  * APP TITLE: added a plain TopAppBar (title only, no navigation icon —

@@ -16,7 +16,7 @@ import java.io.File
  * chose to save rather than a cached search result.
  *
  * A JSON file, not SharedPreferences — matching RepoIssueGroupCache's
- * reasoning, not IssueMode's: a bookmark is a full Issue object (title,
+ * reasoning, not IssueModeRepository's: a bookmark is a full Issue object (title,
  * labels, repo identity, URL...), not a single primitive value, so it
  * needs real serialization the way RepoIssueGroupCache's cached search
  * results already do.
@@ -30,7 +30,7 @@ import java.io.File
  * be observable, since that's the only thing UI reads to decide
  * whether to show a filled or empty star.
  *
- * init(context) mirrors IssueMode's and RepoIssueGroupCache's own
+ * init(context) mirrors IssueModeRepository's and RepoIssueGroupCache's own
  * setup — called once from MainActivity.onCreate, before setContent,
  * so bookmarks are already loaded by the time any screen needs them.
  * toggle() updates the in-memory state SYNCHRONOUSLY (so the star
