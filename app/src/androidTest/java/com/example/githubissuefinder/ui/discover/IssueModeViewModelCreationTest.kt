@@ -17,10 +17,10 @@ import org.junit.runner.RunWith
  * ViewModelProvider machinery — the same reflection-based factory
  * Compose's viewModel() uses — which JVM unit tests can't do because
  * TopReposViewModel needs an Application. This guards the riskiest part
- * of the MVVM refactor: constructors with default arguments (and
- * @JvmOverloads on TopReposViewModel) must still be found by that
- * factory, or the app would crash the moment a screen asks for its
- * ViewModel.
+ * of the MVVM refactor: constructors with default arguments, plus the
+ * JvmOverloads annotation on TopReposViewModel's, must still be found
+ * by that factory, or the app would crash the moment a screen asks for
+ * its ViewModel.
  *
  * Runs on a device or emulator. Creating TopReposViewModel starts its
  * initial load, which makes a real network request if a token is

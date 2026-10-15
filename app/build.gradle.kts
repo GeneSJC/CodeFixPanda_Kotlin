@@ -35,7 +35,7 @@ val localProperties = Properties().apply {
 // convention was adopted on) — there is no prior A.B history to
 // continue from.
 val buildLabelA = 16
-val buildLabelB = 7
+val buildLabelB = 8
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
