@@ -22,7 +22,7 @@ import java.io.File
  * This project's own established pattern (see RepoBookmarks' doc
  * comment, and the "Persistence: three mechanisms, each sized to its
  * job" note in this project's hand-off history) uses SharedPreferences
- * only for a single primitive value (IssueMode) and a plain JSON file
+ * only for a single primitive value (IssueModeRepository) and a plain JSON file
  * for real object lists (RepoBookmarks, RepoIssueGroupCache). A growing
  * list of HiddenIssue snapshots is the latter shape, not the former, so
  * this follows RepoBookmarks' JSON-file pattern instead, for consistency
