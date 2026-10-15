@@ -39,6 +39,15 @@ class IssueModeViewModel(
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode
 
+    /**
+     * Called by Reset App: clears the chosen mode so the gate screen is
+     * the start destination again. Bookmarks, hidden issues and the repo
+     * cache are separate stores and are not touched.
+     */
+    fun clearMode() {
+        repository.setMode(null)
+    }
+
     /** Called when the user picks a mode on the gate screen. Persistence is the repository's job, not this class's. */
     fun selectMode(newMode: IssueLabelFilter) {
         repository.setMode(newMode)

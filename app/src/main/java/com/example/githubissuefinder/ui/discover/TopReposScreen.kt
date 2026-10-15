@@ -3,6 +3,8 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.BuildConfig
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -57,6 +60,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +68,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
+import com.example.githubissuefinder.data.RepoReadmeSnippetStore
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.resolveActiveMode
@@ -356,6 +361,7 @@ fun TopReposScreen(
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
     onOpenBookmarks: () -> Unit,
     onOpenHidden: () -> Unit,
+    onResetApp: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
 ) {
@@ -538,6 +544,23 @@ fun TopReposScreen(
                                         onClick = {
                                             showMenu = false
                                             showClearCacheConfirm = true
+                                        },
+                                    )
+                                    // Clears the Issue Mode and returns to
+                                    // IssueModeGateScreen — see
+                                    // DiscoverNavHost's own doc comment
+                                    // ("Reset App") for why that gate screen
+                                    // was otherwise unreachable again once a
+                                    // mode was chosen. Deliberately no
+                                    // confirmation dialog, unlike Clear
+                                    // Cache: nothing here is destructive —
+                                    // bookmarks, hidden issues, and the repo
+                                    // cache are all untouched.
+                                    DropdownMenuItem(
+                                        text = { Text("Reset App") },
+                                        onClick = {
+                                            showMenu = false
+                                            onResetApp()
                                         },
                                     )
                                 }
@@ -1140,9 +1163,38 @@ private fun CenteredMessage(text: String) {
  * the title is gone, same reasoning as IssueCard's own identity-row
  * removal: a screen already scoped to listing repos doesn't need each
  * card repeating a raw path alongside its own humanized title.
+ *
+ * README PREVIEW (added October 5, 2026, per direct instruction): a
+ * short, plain-text snippet of the repo's README (HTML tags stripped —
+ * see RepoReadmeSnippetStore.buildSnippet) renders beneath the title
+ * row, at normal body text size. Collapsed to 2 lines by default
+ * (maxLines + TextOverflow.Ellipsis); a small chevron toggle beneath it
+ * expands to show the rest of the already-fetched snippet (up to
+ * RepoReadmeSnippetStore's SNIPPET_MAX_CHARS) — no additional network
+ * call on expand, just a maxLines change against text already in hand.
+ * The toggle is its own Surface(onClick), not part of the Card's own
+ * onClick, so tapping it doesn't also navigate into the repo.
+ * Fetched via RepoReadmeSnippetStore (see that file's own doc comment,
+ * including the real per-card network-call cost this adds, and the
+ * retry-on-transient-failure fix). Renders nothing (not even a
+ * placeholder) when no snippet is available yet or the repo has no
+ * README — this card's layout was deliberately kept simple, and a
+ * loading spinner or "no README" message for a purely decorative
+ * preview would be more clutter than it's worth.
  */
 @Composable
 private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
+    val snippet = RepoReadmeSnippetStore.snippetFor(group.repoFullName)
+    var expanded by remember { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(300),
+        label = "repoCardSnippetChevron",
+    )
+    LaunchedEffect(group.repoFullName) {
+        RepoReadmeSnippetStore.loadIfNeeded(group.repoOwner, group.repoName, group.repoFullName)
+    }
+
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -1167,11 +1219,88 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                     )
                 }
             }
+            if (!snippet.isNullOrBlank()) {
+                if (expanded) {
+                    // Expanded: the card is already taller to fit the full
+                    // snippet, so the chevron gets its own row underneath,
+                    // same as before — no vertical space being reclaimed
+                    // here the way there is in the 2-line collapsed state.
+                    Column(modifier = Modifier.padding(top = 6.dp)) {
+                        Text(
+                            snippet,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        ReadmeSnippetChevron(
+                            rotation = chevronRotation,
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                    }
+                } else {
+                    // Collapsed: the chevron sits INLINE at the end of the
+                    // text block instead of on its own row beneath it, per
+                    // direct instruction — trims the card back down to
+                    // exactly 2 lines of vertical space instead of 2 lines
+                    // plus a separate chevron row. Bottom-aligning a
+                    // weighted Text next to a fixed-size trailing Surface
+                    // is an approximation, not a true "icon inline with
+                    // only the last wrapped line" layout (which Compose's
+                    // Text doesn't support without custom text-layout
+                    // math) — both lines narrow slightly to make room for
+                    // the chevron, not just the second one, but the
+                    // chevron itself stays as small as its own content,
+                    // not a full extra column's width.
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        Text(
+                            snippet,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        ReadmeSnippetChevron(
+                            rotation = chevronRotation,
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
+
+/**
+ * The small expand/collapse chevron badge for a RepoCard's README
+ * preview — pulled out once it needed to render from two different
+ * call sites (inline at the end of the 2-line collapsed text, on its
+ * own row when expanded) with identical styling either way.
+ */
+@Composable
+private fun ReadmeSnippetChevron(rotation: Float, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        onClick = onClick,
+        modifier = modifier,
+    ) {
+        Text(
+            "⌄",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 1.dp)
+                .rotate(rotation),
+        )
+    }
+}
 
 /**
  * v0.46: the small top-bar chip showing how many repo cards are

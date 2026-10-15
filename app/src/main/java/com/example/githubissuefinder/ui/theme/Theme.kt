@@ -3,7 +3,6 @@ package com.example.githubissuefinder.ui.theme
 import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -48,7 +47,20 @@ private const val MODE_TRANSITION_MS = 350
 
 @Composable
 fun GitHubIssueFinderTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    // Deliberately NOT isSystemInDarkTheme() — that was the real bug behind
+    // a device-in-system-dark-mode user seeing a dark IssueModeGateScreen
+    // (the only screen reachable with issueMode == null, so the only one
+    // this param's value actually affects) followed immediately by an
+    // always-light TopReposScreen (once a mode is picked, the `issueMode
+    // != null -> issueMode.colorScheme()` branch below wins regardless of
+    // darkTheme — Mode's own pastel schemes are light-only, per
+    // ModeColorSchemes.kt). That made the app look like it randomly
+    // flipped from dark to light between two consecutive screens, when
+    // really only the gate screen was ever following the system setting.
+    // Hardcoded false so the whole app defaults to light, consistently,
+    // until a real in-app dark-mode preference exists to wire this to
+    // instead.
+    darkTheme: Boolean = false,
     // Dynamic color (Android 12+) derives its palette from the device's
     // wallpaper, which would silently override our brand colors below —
     // that's why earlier screenshots showed a generic purple/gray look

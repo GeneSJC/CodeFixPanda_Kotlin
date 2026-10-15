@@ -52,6 +52,18 @@ class IssueModeViewModelTest {
     }
 
     @Test
+    fun clearModeResetsToNoneAndClearsStorage() {
+        val storage = FakeStorage()
+        val viewModel = IssueModeViewModel(IssueModeRepository(storage))
+        viewModel.selectMode(IssueLabelFilter.HELP_WANTED)
+
+        viewModel.clearMode()
+
+        assertNull(viewModel.mode.value)
+        assertNull(storage.stored)
+    }
+
+    @Test
     fun twoViewModelsOverOneRepositoryAgree() {
         val repository = IssueModeRepository(FakeStorage())
         val first = IssueModeViewModel(repository)
