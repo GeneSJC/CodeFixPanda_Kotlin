@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -160,6 +163,39 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * PASS") — this header action is a distinct destination (the repo
  * itself, not any one issue), so it deliberately kept the diagonal
  * glyph rather than following that same rename.
+ *
+ * README FULL-HEIGHT EXPAND (added October 5, 2026, per direct
+ * instruction, after seeing the expanded README on-device) — TWO
+ * revisions in the same day, second one superseding the first:
+ *
+ * v1 (same-day, since replaced): gave ReadmeExpandableBody weight(1f)
+ * in the main Column and skipped composing the issue LazyColumn
+ * entirely while expanded. This filled the content area correctly,
+ * but broke the expand animation: weight(1f) with Column's default
+ * fill=true FORCES a child to exactly that weighted size on every
+ * frame, which fights AnimatedVisibility's own size interpolation —
+ * the README jumped straight to full size instead of visibly growing
+ * into it. Collapse still animated (weight(1f) was removed the moment
+ * readmeExpanded went false), but the list reappeared un-animated
+ * underneath it and visibly shifted position as the README kept
+ * shrinking beside it in the same Column — reported as "the issue
+ * cards move up with it."
+ *
+ * v2 (this version): the README is a genuine OVERLAY, not a layout
+ * participant competing for space with the list. The issue LazyColumn
+ * is now ALWAYS composed, always fillMaxSize() inside a Box — nothing
+ * conditional about it anymore, so issueListState no longer needs to
+ * survive a disappear/reappear cycle (kept anyway; harmless, and still
+ * good practice to hoist it). ReadmeExpandableBody is a SECOND child of
+ * that same Box, composed after the LazyColumn so it draws on top, with
+ * its own opaque background (see ReadmeBody in
+ * ReadmeExpandableSection.kt) so the list is never visible through a
+ * partially-expanded README. Because Box children don't support
+ * weight() at all, nothing forces ReadmeExpandableBody's size — its own
+ * AnimatedVisibility is free to animate smoothly in both directions:
+ * expanding, it visibly grows over the content; collapsing, it visibly
+ * shrinks away and reveals the already-static, already-full-height list
+ * sitting underneath it the whole time — exactly the effect asked for.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +212,11 @@ fun RepoIssuesScreen(
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    // Hoisted so the issue list's scroll position survives being
+    // conditionally un-composed while the README is expanded (see the
+    // README full-height section below) — a LazyColumn created fresh
+    // each time would otherwise reset to the top.
+    val issueListState = rememberLazyListState()
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
@@ -216,7 +257,7 @@ fun RepoIssuesScreen(
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -254,86 +295,103 @@ fun RepoIssuesScreen(
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
+            }
+
+            // The issue list is now ALWAYS composed, always full-size —
+            // the README overlay (below) is a second Box child drawn on
+            // top of it, not a competitor for the Column's weighted
+            // space. See this function's own doc comment, "README
+            // FULL-HEIGHT EXPAND," for why this replaced an earlier,
+            // same-day version that gave the README weight(1f) directly
+            // in this Column instead.
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                LazyColumn(
+                    state = issueListState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (uiState.issues.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "No open matching issues remain.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    } else if (visibleIssues.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    "All matching issues in this repo are hidden.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                )
+                                TextButton(onClick = onOpenHidden) {
+                                    Text("View Hidden")
+                                }
+                            }
+                        }
+                    } else {
+                        items(visibleIssues, key = { it.id }) { issue ->
+                            IssueCard(
+                                issue = issue,
+                                isBookmarked = RepoBookmarks.isBookmarked(issue.id),
+                                showExternalLinkIndicator = true,
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
+                                    )
+                                },
+                                onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                                onHide = {
+                                    HiddenIssuesStore.hide(context, issue)
+                                    coroutineScope.launch {
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "Issue hidden",
+                                            actionLabel = "Undo",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            HiddenIssuesStore.unhide(context, issue.id)
+                                        }
+                                    }
+                                },
+                                snackbarHostState = snackbarHostState,
+                            )
+                        }
+                    }
+                    item(key = "refreshThisRepoFooter") {
+                        RefreshThisRepoFooter(
+                            isRefreshing = uiState.isRefreshing,
+                            hasRefreshed = uiState.hasRefreshed,
+                            lastRefreshedAtMs = uiState.lastRefreshedAtMs,
+                            refreshError = uiState.refreshError,
+                            currentIssueCount = uiState.issues.size,
+                            onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
+                            onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
+                        )
+                    }
+                }
+
                 ReadmeExpandableBody(
                     expanded = readmeExpanded,
                     repoOwner = repoGroup.repoOwner,
                     repoName = repoGroup.repoName,
                     repoFullName = repoGroup.repoFullName,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(horizontal = 16.dp),
                 )
-            }
-
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (uiState.issues.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                "No open matching issues remain.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                } else if (visibleIssues.isEmpty()) {
-                    item {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                "All matching issues in this repo are hidden.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                            )
-                            TextButton(onClick = onOpenHidden) {
-                                Text("View Hidden")
-                            }
-                        }
-                    }
-                } else {
-                    items(visibleIssues, key = { it.id }) { issue ->
-                        IssueCard(
-                            issue = issue,
-                            isBookmarked = RepoBookmarks.isBookmarked(issue.id),
-                            showExternalLinkIndicator = true,
-                            onClick = {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
-                                )
-                            },
-                            onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
-                            onHide = {
-                                HiddenIssuesStore.hide(context, issue)
-                                coroutineScope.launch {
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "Issue hidden",
-                                        actionLabel = "Undo",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        HiddenIssuesStore.unhide(context, issue.id)
-                                    }
-                                }
-                            },
-                            snackbarHostState = snackbarHostState,
-                        )
-                    }
-                }
-                item(key = "refreshThisRepoFooter") {
-                    RefreshThisRepoFooter(
-                        isRefreshing = uiState.isRefreshing,
-                        hasRefreshed = uiState.hasRefreshed,
-                        lastRefreshedAtMs = uiState.lastRefreshedAtMs,
-                        refreshError = uiState.refreshError,
-                        currentIssueCount = uiState.issues.size,
-                        onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
-                        onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
-                    )
-                }
             }
         }
     }
