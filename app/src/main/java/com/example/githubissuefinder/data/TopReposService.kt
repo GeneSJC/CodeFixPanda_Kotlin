@@ -145,7 +145,7 @@ sealed interface TopReposEvent {
  * Why this is a singleton: the list state must live somewhere that
  * outlives any one composition. open() resets it for a fresh visit to
  * the screen, so nothing from an earlier visit leaks into the next, and
- * cancels any work still running from that visit. The work runs in this
+ * cancels any work still running from that visit. The work runs in the
  * shared [AppScope], not in a ViewModel's.
  *
  * Tests build their own instance with fakes and install it with
