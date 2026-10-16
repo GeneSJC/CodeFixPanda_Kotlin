@@ -5,7 +5,6 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
@@ -147,7 +146,7 @@ sealed interface TopReposEvent {
  * outlives any one composition. open() resets it for a fresh visit to
  * the screen, so nothing from an earlier visit leaks into the next, and
  * cancels any work still running from that visit. The work runs in this
- * service's own [scope], not in a ViewModel's.
+ * shared [AppScope], not in a ViewModel's.
  *
  * Tests build their own instance with fakes and install it with
  * [replaceInstanceForTests].
@@ -157,7 +156,7 @@ class TopReposService(
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
     private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
     private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    private val scope: CoroutineScope = AppScope.scope,
 ) {
 
     private val _state = MutableStateFlow(TopReposState())
