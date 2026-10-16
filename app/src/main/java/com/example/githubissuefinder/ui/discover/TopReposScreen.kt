@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -938,6 +939,20 @@ private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
     }
 }
 
+/**
+ * How much bigger the text below the big "remaining" number is in the
+ * rate-limit dialog (50% larger): the "Remaining" caption, the 0/limit
+ * scale labels, the four detail rows and the explanatory note. The big
+ * number itself is unchanged.
+ */
+private const val RATE_LIMIT_DIALOG_TEXT_SCALE = 1.5f
+
+/** This style with its font size and line height scaled by [RATE_LIMIT_DIALOG_TEXT_SCALE]. */
+private fun TextStyle.rateLimitDialogScaled(): TextStyle = copy(
+    fontSize = fontSize * RATE_LIMIT_DIALOG_TEXT_SCALE,
+    lineHeight = lineHeight * RATE_LIMIT_DIALOG_TEXT_SCALE,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
@@ -946,12 +961,14 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = onDismiss) { Text("Close") }
         },
-        title = { Text("Search API rate limit") },
+        title = { Text("Search API Rate Limit") },
         text = {
             if (info == null) {
                 Text("No rate limit data available yet.")
             } else {
-                Column {
+                // Scrollable because the larger text can make the dialog
+                // taller than the screen, e.g. in landscape.
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     RateLimitDial(info = info)
                     RateLimitRow("Remaining", "${info.remaining}")
                     RateLimitRow("Limit", "${info.limit}")
@@ -960,7 +977,7 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                     Text(
                         "This reflects GitHub's Search API limit specifically, which is " +
                             "separate from and stricter than the general REST API limit.",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp),
                     )
@@ -1047,14 +1064,22 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
         }
 
         Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
-        Text("Remaining", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariant)
+        Text(
+            "Remaining",
+            style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
+            color = onSurfaceVariant,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("0", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
-            Text("${info.limit}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+            Text("0", style = MaterialTheme.typography.labelSmall.rateLimitDialogScaled(), color = onSurfaceVariant)
+            Text(
+                "${info.limit}",
+                style = MaterialTheme.typography.labelSmall.rateLimitDialogScaled(),
+                color = onSurfaceVariant,
+            )
         }
     }
 }
@@ -1065,8 +1090,12 @@ private fun RateLimitRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(label, style = MaterialTheme.typography.bodyMedium.rateLimitDialogScaled())
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium.rateLimitDialogScaled(),
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 
