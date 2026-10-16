@@ -70,7 +70,7 @@ class SharedPreferencesIssueModeStorage(context: Context) : IssueModeStorage {
  * runtime of their own) can read and observe it the same way a
  * composable can, via collectAsStateWithLifecycle(). The private
  * [_mode] / public [mode] pair is the standard encapsulation pattern
- * (see also RateLimitState): only this class can change the value, and
+ * (see also IssueSearchRepository.rateLimit): only this class can change the value, and
  * everyone else gets a read-only view of it.
  *
  * Null means no mode has been chosen yet. DiscoverNavHost shows

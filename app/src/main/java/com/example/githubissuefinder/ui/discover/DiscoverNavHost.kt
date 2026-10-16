@@ -43,7 +43,7 @@ private const val ROUTE_SETTINGS = "settings"
  *
  * v0.42: holds a RepoIssueGroup instead of a Repo, following
  * TopReposScreen's data-layer swap — see that screen and
- * TopReposViewModel's doc comments. Nothing about this file's own
+ * TopReposService's class comment. Nothing about this file's own
  * navigation STRUCTURE changed for that; only the type flowing
  * through it did.
  *

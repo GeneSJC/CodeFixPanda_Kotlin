@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.settings
 
-import androidx.lifecycle.ViewModel
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.TokenSource
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class ApiTokenViewModel(
     private val repository: ApiTokenRepository = ApiTokenRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
     /** The token the user saved, or empty if none. */
     val userToken: StateFlow<String> = repository.userToken

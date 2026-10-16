@@ -42,8 +42,8 @@ val localProperties = Properties().apply {
 // ("I'm still seeing 13.1"). Corrected here to 15 (PR #15, the
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
-val buildLabelA = 24
-val buildLabelB = 3
+val buildLabelA = 25
+val buildLabelB = 13
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -149,3 +149,23 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+// Prints the build label ("Build A.B", the same text the app shows in its
+// drawer) as the last output of a build or test run, so the version can be
+// read straight off the console without opening the app. A finalizer
+// task, so it also prints when the build fails. Gradle's own "BUILD
+// SUCCESSFUL" summary line comes after it; this is the last task output.
+//
+// The label is copied into a local String first: the task action must not
+// reach back into this script's properties, which the configuration cache
+// (enabled in gradle.properties) cannot store.
+val printBuildLabel = tasks.register("printBuildLabel") {
+    val label = "Build $buildLabelA.$buildLabelB"
+    doLast {
+        println()
+        println(label)
+    }
+}
+
+tasks.matching { it.name in setOf("assembleDebug", "assembleRelease", "installDebug", "testDebugUnitTest") }
+    .configureEach { finalizedBy(printBuildLabel) }

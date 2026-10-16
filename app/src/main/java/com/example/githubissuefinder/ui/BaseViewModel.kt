@@ -2,13 +2,20 @@ package com.example.githubissuefinder.ui
 
 import androidx.lifecycle.ViewModel
 import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
+import com.example.githubissuefinder.model.Issue
+import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Shared parent for screen ViewModels whose views need the app's
- * build-time configuration. It exposes each config value as a plain
- * scalar getter, so a view calls viewModel.showDetailedDrawerMenu and
- * knows nothing about BuildConfig, AppConfig or where the value comes
- * from.
+ * Shared parent for screen ViewModels: what several screens need from
+ * the app as a whole, exposed as plain getters so a view only ever talks
+ * to its own ViewModel.
+ *
+ * Today that is the app's build-time configuration (a view calls
+ * viewModel.showDetailedDrawerMenu and knows nothing about BuildConfig,
+ * AppConfig or where the value comes from), and the hidden-issue and
+ * bookmark pass-throughs that more than one screen uses.
  *
  * Why a base class and not a line in each ViewModel: the repository
  * argument, its storage and the getters are written once here. A
@@ -44,4 +51,21 @@ abstract class BaseViewModel(
 
     /** True when the drawer lists every individual animation replay (a developer aid). */
     val showDetailedDrawerMenu: Boolean get() = appConfigRepository.config.showDetailedDrawerMenu
+
+    /**
+     * Ids the user hid, to filter hidden issues out of a list at display
+     * time. Shared by the screens that list issues (promoted here when a
+     * second ViewModel needed it: the rule of two). A pass-through, so it
+     * lives here and not in a service; resolved when read, so a ViewModel
+     * that never uses it needs the repository to be neither set up nor
+     * installed. Tests install their own with
+     * HiddenIssuesRepository.replaceInstanceForTests().
+     */
+    val hiddenIds: StateFlow<Set<Long>> get() = HiddenIssuesRepository.instance.hiddenIds
+
+    /** Ids of bookmarked issues, to draw each issue card's star. */
+    val bookmarkedIds: StateFlow<Set<Long>> get() = BookmarksRepository.instance.bookmarkedIds
+
+    /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
+    fun toggleBookmark(issue: Issue): Boolean = BookmarksRepository.instance.toggle(issue)
 }

@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
  * therefore receive the SAME instance, and the theme re-renders the
  * moment the gate screen's choice lands. (TopReposViewModel and
  * RepoIssuesViewModel are scoped to their own nav destinations, so they
- * talk to the repository directly for the same mode rather than going
+ * (TopReposViewModel through TopReposService) talk to the repository directly for the same mode rather than going
  * through this one.)
  *
  * Why the repository is a constructor argument defaulting to the
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class IssueModeViewModel(
     private val repository: IssueModeRepository = IssueModeRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode

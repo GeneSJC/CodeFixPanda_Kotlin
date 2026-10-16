@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -97,7 +98,7 @@ import kotlinx.coroutines.flow.collect
  *
  * v0.42 ("the data-layer swap"): this screen no longer shows a ranked
  * list of REPOS — it shows repos as they fall out of grouping actual
- * matching ISSUES by their parent repo. See TopReposViewModel and
+ * matching ISSUES by their parent repo. See TopReposService and
  * RepoIssueGroup's doc comments for the full reasoning. Concretely,
  * this means:
  *  - Each card shows a match count (RepoIssueGroup.matchCount),
@@ -119,7 +120,7 @@ import kotlinx.coroutines.flow.collect
  *    fact.
  *  - No more cooldown, no more blocked-switch Snackbar: switching
  *    language or mode is a single Search API call now, not ~21 — see
- *    TopReposViewModel's doc comment. SnackbarHost/SnackbarHostState
+ *    TopReposService's class comment. SnackbarHost/SnackbarHostState
  *    are removed from this screen entirely since nothing shows one
  *    anymore.
  *
@@ -165,8 +166,8 @@ import kotlinx.coroutines.flow.collect
  * inline retry row if it failed (the existing list stays exactly as
  * it was either way — only the footer changes), or a plain "that's
  * everything" line once GitHub genuinely has nothing further for this
- * query. See TopReposViewModel's doc comment for the cross-page
- * merge/dedup this relies on — a repo whose matches span two pages
+ * query. See TopReposService's class comment for the cross-page
+ * grouping/dedup this relies on — a repo whose matches span two pages
  * updates the SAME card here, it doesn't appear a second time.
  *
  * ALSO IN v0.43: two explicitly-worded items now sit at the bottom of
@@ -212,13 +213,13 @@ import kotlinx.coroutines.flow.collect
  * under the language filter row, driven by uiState.lastUpdatedAtMs —
  * the only visible sign, most of the time, that this screen might be
  * showing cached data rather than something just fetched (see
- * TopReposViewModel and RepoIssueGroupRepository doc comments). Two more
+ * TopReposService and RepoIssueGroupRepository doc comments). Two more
  * hamburger-menu items sit above the mode-switch pair, grouped with
  * the animation items via their own divider: "Check for New Repos"
  * (renamed in v0.49 from "Refresh" — was a forced live fetch that
  * REPLACED the whole list with just its own results, silently
- * discarding whatever Load More had accumulated; now merges fresh
- * results in instead, see TopReposViewModel.checkForNewRepos()'s doc
+ * discarding whatever Load More had accumulated; now updates the list with fresh
+ * results instead, see TopReposService.checkForNewRepos()'s doc
  * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
  * just the active combination — see RepoIssueGroupRepository.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
@@ -280,8 +281,8 @@ import kotlinx.coroutines.flow.collect
  *
  * Ported the classic flow's rate-limit chip/dialog/dial (RateLimitChip
  * below) into this screen's TopAppBar actions — see RateLimitChip's own
- * doc comment for why it ALWAYS renders (a placeholder "🔑 —" when
- * RateLimitState.info is still null) rather than conditionally
+ * doc comment for why it ALWAYS renders (a placeholder "—" when
+ * IssueSearchRepository.rateLimit is still null) rather than conditionally
  * appearing only once a live search completes: a cache hit never calls
  * the network at all, so on a typical revisit the chip could otherwise
  * stay absent for the entire session, and its sudden appearance
@@ -317,7 +318,7 @@ import kotlinx.coroutines.flow.collect
  * that scarce vertical space. isLandscape reads
  * LocalConfiguration.current.orientation directly (no ViewModel
  * involvement — purely a rendering choice, nothing about the
- * underlying data changes) and merges those two rows into one when
+ * underlying data changes) and combines those two rows into one when
  * true.
  *
  * Landscape Split View: the larger step discussed alongside the
@@ -451,7 +452,7 @@ fun TopReposScreen(
     // RepoIssuesScreen (which is exactly when it matters: a "Refresh
     // this repo" there writes straight to the cache, not to this
     // screen's own ViewModel, since the two have no direct handle to
-    // each other — see TopReposViewModel.syncFromCache()'s own doc
+    // each other — see TopReposService.syncFromCache()'s own doc
     // comment). Also fires on this screen's very first appearance,
     // which is a harmless, cheap (local file, no network) re-read of
     // what init{}'s own load() just populated.
@@ -652,7 +653,7 @@ fun TopReposScreen(
                     },
                     actions = {
                         // Always shown, even with no data yet (a placeholder
-                        // "🔑 —") rather than appearing/disappearing mid-
+                        // "—") rather than appearing/disappearing mid-
                         // session — a chip popping in once the first live
                         // search completes was visually colliding with the
                         // "good first issue" info icon in the title next to
@@ -902,16 +903,20 @@ private const val RATE_LIMIT_CHIP_SCALE = 1.5f
  * Persistent, tappable rate-limit indicator for the repo-first flow —
  * ported over from the classic flow's own FeedTabsScreen (see git
  * history), which had this same chip/dialog/dial but was removed along
- * with the rest of classic mode. repoFirst's data layer (RateLimitState,
+ * with the rest of classic mode. repoFirst's data layer (IssueSearchRepository.rateLimit,
  * fed by every successful TopReposViewModel/RepoIssuesViewModel search
  * response) already tracked this the whole time — this flow just never
  * displayed it anywhere, a known gap named in this project's own
  * RepoFirst_FeatureSet report. Added to TopReposScreen only for now;
  * RepoIssuesScreen is a reasonable follow-up.
  *
- * "🔑 remaining/limit" in a compact chip — there genuinely isn't room
- * for a legible dial in the TopAppBar itself. Tapping it opens a dialog
- * with the full speedometer-style dial below.
+ * A small meter icon and "remaining/limit" in a compact chip — there
+ * genuinely isn't room for a legible dial in the TopAppBar itself.
+ * Tapping it opens a dialog with the full speedometer-style dial below.
+ *
+ * The icon is [RateLimitMeterIcon], a fixed drawing that does not react
+ * to the numbers. (It replaced a key emoji, 🔑, which was too small to
+ * make out on a phone.)
  *
  * Sized 50% larger than its original bodySmall/10dp/4dp version
  * ([RATE_LIMIT_CHIP_SCALE]) so the numbers are easier to read at a
@@ -927,24 +932,88 @@ private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp),
     ) {
-        Text(
-            // The numbers normally arrive with the first list: a live
-            // search supplies them, and a cache-hit load has
-            // TopReposViewModel look them up from GitHub's free
-            // /rate_limit endpoint. "🔑 —" now only shows briefly, or if
-            // that lookup fails. Still tappable either way: the dialog
-            // handles a null info with its own explanatory text.
-            if (info != null) "🔑 ${info.remaining}/${info.limit}" else "🔑 —",
-            style = base.copy(
-                fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
-                lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
-            ),
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(
                 horizontal = (10 * RATE_LIMIT_CHIP_SCALE).dp,
                 vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
             ),
+        ) {
+            RateLimitMeterIcon()
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                // The numbers normally arrive with the first list: a live
+                // search supplies them, and a cache-hit load has
+                // TopReposViewModel look them up from GitHub's free
+                // /rate_limit endpoint. "—" now only shows briefly, or if
+                // that lookup fails. Still tappable either way: the dialog
+                // handles a null info with its own explanatory text.
+                if (info != null) "${info.remaining}/${info.limit}" else "—",
+                style = base.copy(
+                    fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
+                    lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
+                ),
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        }
+    }
+}
+
+/**
+ * A fixed, small speedometer glyph for the rate-limit chip: a half-circle
+ * in three bold segments (red, amber, green, left to right, the same
+ * convention as the dial in the dialog) with a needle and a hub. It is
+ * deliberately static: it says "this is a meter" and nothing about the
+ * current value, which the numbers beside it give. (A version that
+ * changes with the remaining quota is on the backlog.)
+ *
+ * Drawn with Canvas, like the dial, because this project uses no icon
+ * library, and thick segments with gaps stay legible at this size where a
+ * thin emoji does not.
+ */
+@Composable
+private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
+    val needleColor = MaterialTheme.colorScheme.onSecondaryContainer
+    Canvas(
+        modifier = modifier
+            .size(width = 24.dp, height = 15.dp)
+            .semantics { contentDescription = "Search API rate limit" },
+    ) {
+        val strokeWidthPx = 4.dp.toPx()
+        val hubRadiusPx = 2.5.dp.toPx()
+        val radius = size.width / 2f - strokeWidthPx / 2f
+        val center = Offset(size.width / 2f, size.height - hubRadiusPx)
+        val arcTopLeft = Offset(center.x - radius, center.y - radius)
+        val arcSize = Size(radius * 2f, radius * 2f)
+
+        // Three 56-degree segments with 6-degree gaps across the top half.
+        val segmentColors = listOf(Color(0xFFE53935), Color(0xFFFB8C00), Color(0xFF43A047))
+        segmentColors.forEachIndexed { index, color ->
+            drawArc(
+                color = color,
+                startAngle = 180f + index * 62f + 3f,
+                sweepAngle = 56f,
+                useCenter = false,
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx),
+            )
+        }
+
+        // A fixed needle, pointing up and a little to the right.
+        val needleAngleRad = Math.toRadians(305.0)
+        val needleTip = Offset(
+            center.x + (radius - 1.dp.toPx()) * cos(needleAngleRad).toFloat(),
+            center.y + (radius - 1.dp.toPx()) * sin(needleAngleRad).toFloat(),
         )
+        drawLine(
+            color = needleColor,
+            start = center,
+            end = needleTip,
+            strokeWidth = 2.dp.toPx(),
+            cap = StrokeCap.Round,
+        )
+        drawCircle(color = needleColor, radius = hubRadiusPx, center = center)
     }
 }
 

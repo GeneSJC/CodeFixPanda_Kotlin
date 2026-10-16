@@ -7,7 +7,7 @@ package com.example.githubissuefinder.network.dto
  * rate-limit chip without spending a search.
  *
  * Only the Search API's bucket is modeled: that is the one
- * RateLimitState tracks (see its doc comment for why the general REST
+ * IssueSearchRepository.rateLimit tracks (see its doc comment for why the general REST
  * bucket is deliberately kept out). Moshi ignores the other buckets in
  * the response.
  */

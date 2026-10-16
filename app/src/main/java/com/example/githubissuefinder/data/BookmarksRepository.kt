@@ -132,15 +132,20 @@ class BookmarksRepository(private val storage: BookmarksStorage) {
         /**
          * The app-wide instance, same plain-singleton-with-init(context)
          * pattern as the other repositories (this project has no DI
-         * framework yet). ViewModels take the repository as a
-         * constructor argument defaulting to this so tests can pass
-         * their own.
+         * framework yet). ViewModels use it as a plain member (or through
+         * BaseViewModel); tests install their own with
+         * [replaceInstanceForTests].
          */
         val instance: BookmarksRepository
             get() = checkNotNull(_instance) {
                 "BookmarksRepository.init(context) must be called before use " +
                     "(MainActivity.onCreate does this before setContent)."
             }
+
+        /** For tests only: installs [repository] as the instance, or with null drops it. Pair a call in setup with a null call in teardown. */
+        fun replaceInstanceForTests(repository: BookmarksRepository?) {
+            _instance = repository
+        }
 
         /** Safe to call more than once: only the first call constructs the instance. */
         fun init(context: Context) {
