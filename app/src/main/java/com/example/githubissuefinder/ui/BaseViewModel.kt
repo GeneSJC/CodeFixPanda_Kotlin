@@ -22,13 +22,15 @@ import com.example.githubissuefinder.data.AppConfigRepository
  * tested with a different config takes an AppConfigRepository argument
  * of its own and passes it up.
  *
- * What belongs here is a judgment call, not a head count: a standard
- * capability that several screen ViewModels share, even if not all of
- * them use it. Anything stateful, coroutine-launching, or specific to
- * one or two screens is a plain delegate class that the ViewModel takes
- * through its constructor instead (Kotlin allows one parent class, so
- * this slot is scarce, and a base class that collects odd helpers stops
- * being a standard).
+ * What belongs here is decided by one question: is this app-level, or
+ * specific to one view? App-level data or capability that a ViewModel
+ * would reach for (the build config is the model case) belongs here even
+ * if only one ViewModel uses it today; that is the standard. Anything
+ * specific to one screen's behavior stays in that ViewModel or in a
+ * collaborator it takes through its constructor. Stateful or
+ * coroutine-launching helpers are plain delegate classes as well (Kotlin
+ * allows one parent class, so this slot is scarce, and a base class that
+ * collects odd helpers stops being a standard).
  */
 abstract class BaseViewModel(
     private val appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
