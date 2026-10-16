@@ -69,15 +69,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.RateLimitInfo
-import com.example.githubissuefinder.data.RateLimitState
-import com.example.githubissuefinder.data.RepoReadmeSnippetStore
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.components.VersionLabel
@@ -377,7 +374,8 @@ fun TopReposScreen(
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
+    val rateLimit by viewModel.rateLimit.collectAsStateWithLifecycle()
+    val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
@@ -677,7 +675,7 @@ fun TopReposScreen(
                         RateLimitChip(
                             info = rateLimit,
                             onClick = {
-                                if (GitHubApiClient.hasToken && !uiState.tokenRejected) {
+                                if (hasToken && !uiState.tokenRejected) {
                                     showRateLimitDialog = true
                                 } else {
                                     showTokenProblemDialog = true
@@ -784,7 +782,7 @@ fun TopReposScreen(
 
     if (showTokenProblemDialog) {
         TokenProblemDialog(
-            tokenRejected = GitHubApiClient.hasToken,
+            tokenRejected = hasToken,
             onOpenSettings = onOpenSettings,
             onDismiss = { showTokenProblemDialog = false },
         )
@@ -839,6 +837,7 @@ private fun RepoListBody(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snippets by viewModel.snippets.collectAsStateWithLifecycle()
     val rawGroupsByName = remember(uiState.repoGroups) { uiState.repoGroups.associateBy { it.repoFullName } }
     Box(modifier = modifier) {
         when {
@@ -878,6 +877,8 @@ private fun RepoListBody(
                     // issues are all hidden.
                     RepoCard(
                         group = group,
+                        snippet = snippets[group.repoFullName],
+                        onShown = { viewModel.onRepoCardShown(group.repoOwner, group.repoName, group.repoFullName) },
                         onClick = { onRepoClick(rawGroupsByName[group.repoFullName] ?: group, uiState.selectedLanguage) },
                     )
                 }
@@ -1281,15 +1282,16 @@ private fun CenteredMessage(text: String) {
  *
  * README PREVIEW (added October 5, 2026, per direct instruction): a
  * short, plain-text snippet of the repo's README (HTML tags stripped —
- * see RepoReadmeSnippetStore.buildSnippet) renders beneath the title
+ * see buildReadmeSnippet in ReadmeSnippetRepository.kt) renders beneath the title
  * row, at normal body text size. Collapsed to 2 lines by default
  * (maxLines + TextOverflow.Ellipsis); a small chevron toggle beneath it
  * expands to show the rest of the already-fetched snippet (up to
- * RepoReadmeSnippetStore's SNIPPET_MAX_CHARS) — no additional network
+ * ReadmeSnippetRepository's SNIPPET_MAX_CHARS) — no additional network
  * call on expand, just a maxLines change against text already in hand.
  * The toggle is its own Surface(onClick), not part of the Card's own
  * onClick, so tapping it doesn't also navigate into the repo.
- * Fetched via RepoReadmeSnippetStore (see that file's own doc comment,
+ * Fetched by ReadmeSnippetRepository, asked to load by TopReposViewModel
+ * when the card first appears (see that file's own doc comment,
  * including the real per-card network-call cost this adds, and the
  * retry-on-transient-failure fix). Renders nothing (not even a
  * placeholder) when no snippet is available yet or the repo has no
@@ -1298,8 +1300,12 @@ private fun CenteredMessage(text: String) {
  * preview would be more clutter than it's worth.
  */
 @Composable
-private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
-    val snippet = RepoReadmeSnippetStore.snippetFor(group.repoFullName)
+private fun RepoCard(
+    group: RepoIssueGroup,
+    snippet: String?,
+    onShown: () -> Unit,
+    onClick: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -1307,7 +1313,7 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
         label = "repoCardSnippetChevron",
     )
     LaunchedEffect(group.repoFullName) {
-        RepoReadmeSnippetStore.loadIfNeeded(group.repoOwner, group.repoName, group.repoFullName)
+        onShown()
     }
 
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
