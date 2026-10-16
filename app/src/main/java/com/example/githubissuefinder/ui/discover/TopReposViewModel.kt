@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
@@ -11,6 +12,7 @@ import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.shouldSwitchMode
+import com.example.githubissuefinder.data.toSearchRateLimitInfo
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -180,6 +183,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
 class TopReposViewModel @JvmOverloads constructor(
     application: Application,
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
+    private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
 ) : AndroidViewModel(application) {
 
     /**
@@ -202,6 +206,25 @@ class TopReposViewModel @JvmOverloads constructor(
 
     init {
         load(uiState.value.selectedLanguage)
+
+        // When the token changes (saved in Settings) while the list is
+        // stuck on a token problem — none set, or one GitHub rejected —
+        // clear that problem and try again with the new token. drop(1)
+        // skips the value the flow already holds when collection starts.
+        // A token change while the list is working is ignored: the next
+        // request just uses the new token.
+        viewModelScope.launch {
+            tokenRepository.effectiveToken.drop(1).collect {
+                // The old token's rate-limit numbers don't describe the
+                // new one; drop them and look the new ones up.
+                RateLimitState.update(null)
+                refreshRateLimitIfUnknown()
+                if (uiState.value.needsTokenFix) {
+                    _uiState.update { it.copy(tokenRejected = false, errorMessage = null) }
+                    load(uiState.value.selectedLanguage)
+                }
+            }
+        }
     }
 
     fun onLanguageSelected(language: LanguageFilter) {
@@ -462,8 +485,35 @@ class TopReposViewModel @JvmOverloads constructor(
                         isLoading = false,
                     )
                 }
+                // A cache hit never touches the network, so nothing has
+                // told RateLimitState anything yet this session.
+                refreshRateLimitIfUnknown()
             } else {
                 fetchPage(language = language, page = 1, isLoadMore = false)
+            }
+        }
+    }
+
+    /**
+     * Fills in the rate-limit chip when a list loaded from the cache and
+     * no search response has supplied the numbers yet, so the chip shows
+     * real values with the first list instead of "—" until some later
+     * live search happens. Uses GitHub's /rate_limit endpoint, which is
+     * free (it doesn't count against any limit), so this costs no search.
+     * A failure here is ignored on purpose: the chip just stays "—",
+     * exactly as it did before, and the next live search fills it in.
+     */
+    private fun refreshRateLimitIfUnknown() {
+        if (RateLimitState.info.value != null || !GitHubApiClient.hasToken) return
+        viewModelScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) { GitHubApiClient.api.getRateLimit() }
+                val body = response.body()
+                if (response.isSuccessful && body != null && RateLimitState.info.value == null) {
+                    RateLimitState.update(body.toSearchRateLimitInfo())
+                }
+            } catch (e: Exception) {
+                // See the doc comment: the chip simply stays blank.
             }
         }
     }

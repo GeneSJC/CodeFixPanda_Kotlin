@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.network
 
 import com.example.githubissuefinder.BuildConfig
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.Interceptor
@@ -15,9 +16,12 @@ import retrofit2.converter.moshi.MoshiConverterFactory
  * is introduced in a later Commit Milestone and replaces manual wiring
  * like this with proper constructor injection.
  *
- * The GitHub token comes from BuildConfig.GITHUB_API_TOKEN, which is
- * populated at build time from local.properties (see app/build.gradle.kts)
- * — never hardcoded here, never committed to source control.
+ * The GitHub token comes from ApiTokenRepository: a token the user
+ * entered in Settings if there is one, otherwise
+ * BuildConfig.GITHUB_API_TOKEN, which is populated at build time from
+ * local.properties (see app/build.gradle.kts) — never hardcoded here,
+ * never committed to source control. It is read on every request, so a
+ * token saved in Settings takes effect immediately, without a rebuild.
  */
 object GitHubApiClient {
 
@@ -27,15 +31,16 @@ object GitHubApiClient {
      * having each caller read BuildConfig directly, so the "what counts
      * as configured" logic lives in one place.
      */
-    val hasToken: Boolean get() = BuildConfig.GITHUB_API_TOKEN.isNotBlank()
+    val hasToken: Boolean get() = ApiTokenRepository.instance.effectiveToken.value.isNotBlank()
 
     private val authInterceptor = Interceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
             .addHeader("Accept", "application/vnd.github+json")
             .addHeader("X-GitHub-Api-Version", "2022-11-28")
 
-        if (hasToken) {
-            requestBuilder.addHeader("Authorization", "Bearer ${BuildConfig.GITHUB_API_TOKEN}")
+        val token = ApiTokenRepository.instance.effectiveToken.value
+        if (token.isNotBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 
         chain.proceed(requestBuilder.build())
