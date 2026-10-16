@@ -43,8 +43,18 @@ private const val BURST_BASE_DURATION_MS = 500
 
 private val OFFSCREEN_OFFSET = 260.dp
 private val VERTICAL_RISE_OFFSET = 140.dp
-private const val GIT_OVERSHOOT_PX = 28f
-private const val GIT_OVERSHOOT_TILT_DEGREES = -4.5f
+// How hard "Git" lurches when it stops. The reference prototype specified
+// "+28px, -4.5deg"; those were CSS pixels (roughly dp), but this was first
+// ported as 28 raw PIXELS — about 9dp on a typical 3x phone, which read as
+// barely there. Now in dp, and deliberately pushed well past the reference
+// (a bigger lurch, a harder tilt, and a small rebound back) so the stop is
+// an unmistakable bump.
+private val GIT_OVERSHOOT = 44.dp
+private val GIT_REBOUND = 10.dp
+private const val GIT_OVERSHOOT_TILT_DEGREES = -8f
+private const val GIT_REBOUND_TILT_DEGREES = 2.5f
+private const val GIT_OVERSHOOT_AT = 0.70
+private const val GIT_REBOUND_AT = 0.86
 
 // Scaled with the text (see SPLASH_TEXT_SCALE) so the burst keeps its
 // proportions relative to the bigger wordmark.
@@ -112,9 +122,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val holdMs = (HOLD_BASE_MS / speedMultiplier).toInt()
     val burstDurationMs = (BURST_BASE_DURATION_MS / speedMultiplier).toInt()
     // Exactly when, within Hub's own entrance, the collision itself
-    // lands — shared between the shudder keyframes below and the impact
-    // burst, so the burst can never drift out of sync with the hit it's
-    // marking, at any speed.
+    // lands — the moment its shudder keyframes below start settling.
     val hubImpactOffsetMs = (hubDurationMs * 0.55).toInt()
 
     // Every animated value STARTS where its animation begins — "Git" off
@@ -127,6 +135,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     // title, before it jumped to blank and the animation began.
     val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
     val riseOffsetPx = with(density) { VERTICAL_RISE_OFFSET.toPx() }
+    val gitOvershootPx = with(density) { GIT_OVERSHOOT.toPx() }
+    val gitReboundPx = with(density) { GIT_REBOUND.toPx() }
     val gitOffsetX = remember { Animatable(-offscreenPx) }
     val gitRotation = remember { Animatable(0f) }
     val hubOffsetX = remember { Animatable(offscreenPx) }
@@ -164,7 +174,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
                 animationSpec = keyframes {
                     durationMillis = gitDurationMs
                     -offscreenPx at 0
-                    GIT_OVERSHOOT_PX at (gitDurationMs * 0.75).toInt() using FastOutSlowInEasing
+                    gitOvershootPx at (gitDurationMs * GIT_OVERSHOOT_AT).toInt() using FastOutSlowInEasing
+                    -gitReboundPx at (gitDurationMs * GIT_REBOUND_AT).toInt() using FastOutSlowInEasing
                     0f at gitDurationMs using FastOutSlowInEasing
                 },
             )
@@ -175,7 +186,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
                 animationSpec = keyframes {
                     durationMillis = gitDurationMs
                     0f at 0
-                    GIT_OVERSHOOT_TILT_DEGREES at (gitDurationMs * 0.75).toInt() using FastOutSlowInEasing
+                    GIT_OVERSHOOT_TILT_DEGREES at (gitDurationMs * GIT_OVERSHOOT_AT).toInt() using FastOutSlowInEasing
+                    GIT_REBOUND_TILT_DEGREES at (gitDurationMs * GIT_REBOUND_AT).toInt() using FastOutSlowInEasing
                     0f at gitDurationMs using FastOutSlowInEasing
                 },
             )
@@ -204,12 +216,13 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // The impact burst: a soft radial pulse behind the wordmark,
-        // right at the instant "Hub" actually lands (hubImpactOffsetMs
-        // into Hub's own entrance, same moment its shudder keyframe
-        // uses) — not the reference's literal effect, just a cheap
-        // radial-gradient stand-in for the glow visible in Gene's
-        // captured frames at that same collision moment.
+        // The finishing burst: a soft radial pulse behind the wordmark,
+        // fired once EVERYTHING has settled — the moment "Finder" lands,
+        // after "Git", "Hub" and "Issue" are all in place — as the final
+        // flourish of the whole animation. (It used to fire when "Hub"
+        // hit "Git", which put the glow in the middle of the build-up
+        // instead of at the end.) A cheap radial-gradient stand-in for
+        // the glow in Gene's captured reference frames.
         //
         // Alpha deliberately HOLDS near its starting value for the first
         // BURST_HOLD_FRACTION of the duration, rather than fading on the
@@ -220,7 +233,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         // visible ever showed up. Holding alpha up while the scale grows,
         // THEN fading, is what actually makes the burst readable.
         launch {
-            delay((hubStartMs + hubImpactOffsetMs).toLong())
+            delay((finderStartMs + finderDurationMs).toLong())
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
             }
