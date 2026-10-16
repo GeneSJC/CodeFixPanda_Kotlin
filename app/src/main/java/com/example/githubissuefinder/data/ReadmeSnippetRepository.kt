@@ -103,7 +103,6 @@ class GitHubReadmeSource : ReadmeSource {
  * (including a 404 genuinely meaning "no README") is still treated as
  * resolved and not retried, since that's a deterministic answer from
  * GitHub, not a blip.
- */
  *
  * Replaces the old RepoReadmeSnippetStore object, which held Compose
  * state and was called directly by a card's composable, which also
