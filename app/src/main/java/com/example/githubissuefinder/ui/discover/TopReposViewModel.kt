@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
@@ -184,7 +185,11 @@ class TopReposViewModel @JvmOverloads constructor(
     application: Application,
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
+    private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
 ) : AndroidViewModel(application) {
+
+    /** Ids the user hid, to filter out of the repo list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
 
     /**
      * The active Issue Mode, or null while none is chosen (which

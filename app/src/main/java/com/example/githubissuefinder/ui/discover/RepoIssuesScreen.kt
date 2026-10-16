@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
@@ -123,10 +122,10 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  *
  * v0.51 ("Hide Issue"): uiState.issues stays the RAW list — hidden
  * issues are filtered out at display time only, from
- * HiddenIssuesStore.hiddenIds (read directly here, same pattern
- * RepoBookmarks.isBookmarked() already uses on this screen), never
- * removed from the underlying state or cache. Tapping the new "✕"
- * badge calls HiddenIssuesStore.hide() directly, then shows a Snackbar
+ * the hidden ids (RepoIssuesViewModel.hiddenIds, which observes
+ * HiddenIssuesRepository), never removed from the underlying state or
+ * cache. Tapping the new "✕" badge calls viewModel.hideIssue(), then
+ * shows a Snackbar
  * with an Undo action using a coroutineScope scoped to THIS Composable
  * (rememberCoroutineScope), not IssueCard's own — the card that
  * triggered it is about to disappear from the list, which would cancel
@@ -218,7 +217,8 @@ fun RepoIssuesScreen(
     // README full-height section below) — a LazyColumn created fresh
     // each time would otherwise reset to the top.
     val issueListState = rememberLazyListState()
-    val visibleIssues = filterHiddenIssuesFlat(uiState.issues, HiddenIssuesStore.hiddenIds)
+    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val visibleIssues = filterHiddenIssuesFlat(uiState.issues, hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
     // chosen before this screen is ever reachable. See
@@ -355,7 +355,7 @@ fun RepoIssuesScreen(
                                 },
                                 onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
                                 onHide = {
-                                    HiddenIssuesStore.hide(context, issue)
+                                    viewModel.hideIssue(issue)
                                     coroutineScope.launch {
                                         val result = snackbarHostState.showSnackbar(
                                             message = "Issue hidden",
@@ -363,7 +363,7 @@ fun RepoIssuesScreen(
                                             duration = SnackbarDuration.Short,
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {
-                                            HiddenIssuesStore.unhide(context, issue.id)
+                                            viewModel.unhideIssue(issue.id)
                                         }
                                     }
                                 },

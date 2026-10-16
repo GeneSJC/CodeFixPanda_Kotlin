@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoReadmeSnippetStore
@@ -250,15 +249,15 @@ import kotlinx.coroutines.flow.collect
  * v0.51 ("Hide Issue", Parts C+D of the Cache-Preserving Refresh
  * sequence): uiState.repoGroups stays the RAW cached data — hiddenGroups
  * below is a display-only derivation (each group's issues filtered
- * against HiddenIssuesStore.hiddenIds, empty groups dropped entirely)
+ * against the hidden ids from TopReposViewModel.hiddenIds, empty groups
+ * dropped entirely)
  * computed fresh on every recomposition, never written back anywhere.
  * The repo count chip and every match-count badge read from
  * hiddenGroups, not uiState.repoGroups directly, so hiding an issue
  * down to a repo's last match makes that whole card disappear, and
  * unhiding brings it straight back — falls out of Compose recomposition
- * automatically since HiddenIssuesStore.hiddenIds is itself
- * Compose-reactive (mutableStateOf), same mechanism RepoBookmarks
- * already relies on elsewhere in this flow.
+ * automatically since the hidden ids are a StateFlow collected by this
+ * screen, so a change recomposes it.
  *
  * Also added: a "Hidden Issues" drawer item (next to "Bookmarks", same
  * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
@@ -267,7 +266,7 @@ import kotlinx.coroutines.flow.collect
  * confirmation at all; the dialog's text is explicit that bookmarks
  * and hidden issues are UNaffected, since clearCache() only ever
  * touches RepoIssueGroupCache, never RepoBookmarks or
- * HiddenIssuesStore.
+ * HiddenIssuesRepository.
  *
  * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,
  * below) after direct feedback that a long flat list was hard to scan:
@@ -380,7 +379,8 @@ fun TopReposScreen(
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
-    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
+    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while the mode is null (see its own doc comment).
     val mode by viewModel.mode.collectAsStateWithLifecycle()

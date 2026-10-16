@@ -5,14 +5,14 @@ import com.example.githubissuefinder.model.RepoIssueGroup
 
 /**
  * v0.51 ("Hide Issue"): the pure display-time filter both TopReposScreen
- * and RepoIssuesScreen apply against HiddenIssuesStore.hiddenIds — a
+ * and RepoIssuesScreen apply against HiddenIssuesRepository.hiddenIds — a
  * standalone, top-level function (not private to either screen)
  * specifically so it's directly unit-testable with plain JUnit, same
  * reasoning as mergeReplacingByIssueId() in this same package: it
  * touches nothing Android/Compose-specific, so it doesn't need to.
  *
  * Deliberately a display-time filter, never a mutation of the cache —
- * see HiddenIssuesStore's own doc comment. A group left with zero
+ * see HiddenIssuesRepository's own doc comment. A group left with zero
  * visible issues after filtering is dropped entirely, matching the
  * spec's "a repo with no visible issues is not shown" rule — the same
  * rule RepoIssueGroup's own matchCount (issues.size) already relies on

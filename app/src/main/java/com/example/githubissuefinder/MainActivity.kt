@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.HiddenIssuesStore
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.data.StartupSplashRepository
@@ -55,9 +55,9 @@ class MainActivity : ComponentActivity() {
         // bookmarks — see RepoBookmarks.init()'s own doc comment.
         RepoBookmarks.init(this)
         // v0.51: same reasoning, for the repo-first flow's persisted
-        // hidden-issue store — see HiddenIssuesStore.init()'s own doc
+        // hidden-issue repository — see HiddenIssuesRepository's own doc
         // comment.
-        HiddenIssuesStore.init(this)
+        HiddenIssuesRepository.init(this)
         // Whether this device has already seen the full start animation —
         // same reasoning, see StartupSplashViewModel.
         StartupSplashRepository.init(this)

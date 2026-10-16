@@ -112,7 +112,7 @@ class IssueModeRepository(private val storage: IssueModeStorage) {
 
         /**
          * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as RepoBookmarks and HiddenIssuesStore (this project
+         * pattern as RepoBookmarks and HiddenIssuesRepository (this project
          * has no DI framework yet). ViewModels take the repository as a
          * constructor argument defaulting to this, so production code
          * gets the real one while tests pass their own.
