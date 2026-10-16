@@ -1,13 +1,12 @@
 package com.example.githubissuefinder.ui.discover
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
-import com.example.githubissuefinder.data.RepoIssueGroupCache
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.toIssue
@@ -82,7 +81,7 @@ private const val MAX_PER_PAGE = 100
  *
  * WRITE-BACK (new in v0.50): a successful refresh also updates the Top
  * Repos cache entry this repo's group came from
- * (RepoIssueGroupCache.replaceRepoGroup()), so the match count on the
+ * (RepoIssueGroupRepository.replaceRepoGroup()), so the match count on the
  * Top Repos card the user navigated from agrees on return — without
  * that, this screen's own state could show a repo as having 3 open
  * issues while Top Repos still showed 7 until the next full Top Repos
@@ -125,14 +124,14 @@ private const val MAX_PER_PAGE = 100
  * consistency with every other screen in this app — loadedForRepoFullName
  * exists purely so navigating away and back within the same process
  * doesn't redundantly reassign issues to the value they already held.
- * A plain ViewModel, not AndroidViewModel — Context is taken as a
- * refreshThisRepo() parameter (from LocalContext.current at the call
- * site) rather than pulled in via AndroidViewModel's Application.
+ * A plain ViewModel: nothing here needs a Context — the cache work
+ * lives in RepoIssueGroupRepository, which does its own file I/O.
  */
 class RepoIssuesViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
     private val bookmarksRepository: BookmarksRepository = BookmarksRepository.instance,
+    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
 ) : ViewModel() {
 
     /** Ids of bookmarked issues, to draw each card's star. */
@@ -180,7 +179,7 @@ class RepoIssuesViewModel(
      * v0.46's checkForMoreIssues(), NOT gated on hasRefreshed, since
      * this is meant to be re-tappable.
      */
-    fun refreshThisRepo(context: Context, repoGroup: RepoIssueGroup, language: LanguageFilter) {
+    fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) {
         val state = uiState.value
         if (state.isRefreshing) return
         if (!GitHubApiClient.hasToken) return
@@ -218,15 +217,12 @@ class RepoIssuesViewModel(
                         lastRefreshedAtMs = refreshedAtMs,
                     )
                 }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.replaceRepoGroup(
-                        context = context,
-                        language = language,
-                        mode = activeMode,
-                        repoFullName = repoGroup.repoFullName,
-                        updatedGroup = if (completeIssues.isEmpty()) null else repoGroup.copy(issues = completeIssues),
-                    )
-                }
+                cacheRepository.replaceRepoGroup(
+                    language = language,
+                    mode = activeMode,
+                    repoFullName = repoGroup.repoFullName,
+                    updatedGroup = if (completeIssues.isEmpty()) null else repoGroup.copy(issues = completeIssues),
+                )
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(

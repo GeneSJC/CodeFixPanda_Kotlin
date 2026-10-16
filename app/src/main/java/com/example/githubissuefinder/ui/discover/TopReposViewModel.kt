@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
@@ -9,7 +8,7 @@ import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
-import com.example.githubissuefinder.data.RepoIssueGroupCache
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.parseRateLimitHeaders
@@ -145,12 +144,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * TopReposUiState, so each event is delivered exactly once rather than
  * re-shown on every new collector (e.g. after a configuration change).
  *
- * v0.45 (PERSISTENT CACHE): now an AndroidViewModel instead of a plain
- * ViewModel — the only reason is Context access for
- * RepoIssueGroupCache's file I/O (Compose's viewModel() constructs
- * AndroidViewModel subclasses automatically via the default factory
- * when hosted from an Activity, so no extra wiring is needed at the
- * call site in TopReposScreen). load() now checks the cache FIRST for
+ * v0.45 (PERSISTENT CACHE): load() now checks the cache FIRST for
  * the (language, mode) pair being requested: a hit populates uiState
  * instantly with zero network calls — including currentPage and
  * canLoadMore, so Load More resumes exactly where a previous session
@@ -158,12 +152,12 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * exact v0.42/v0.43 network path unchanged. Every SUCCESSFUL fetch
  * (both the initial load AND every Load More) saves its result back to
  * the cache — Load More progress persists too, not just the first
- * page, since RepoIssueGroupCache.CacheEntry stores the full
+ * page, since RepoIssueGroupCacheEntry stores the full
  * accumulated repoGroups plus currentPage/canLoadMore, not a single
  * page (see that class's own doc comment for why this had to wait
  * until pagination existed to be designed correctly). Getting fresh
  * data for an already-cached combination is never automatic — see
- * checkForNewRepos() and RepoIssueGroupCache's own doc comment for why.
+ * checkForNewRepos() and RepoIssueGroupRepository's own doc comment for why.
  *
  * The cache check itself runs inside its own viewModelScope.launch
  * inside load(); on a cache MISS it calls fetchPage(), which launches
@@ -186,13 +180,13 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * (GitHubIssueFinder_CachePreservingRefresh_Plan_2026-09-25.pdf) for
  * the full reasoning and the discussion that surfaced this.
  */
-class TopReposViewModel @JvmOverloads constructor(
-    application: Application,
+class TopReposViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
     private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
     private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
-) : AndroidViewModel(application) {
+    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
+) : ViewModel() {
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
@@ -382,17 +376,14 @@ class TopReposViewModel @JvmOverloads constructor(
                         lastUpdatedAtMs = fetchedAtMs,
                     )
                 }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.save(
-                        context = getApplication(),
-                        language = language,
-                        mode = activeMode,
-                        repoGroups = mergedGroups,
-                        totalIssueCount = body.totalCount,
-                        currentPage = currentPageAtCommit,
-                        canLoadMore = canLoadMoreAtCommit,
-                    )
-                }
+                cacheRepository.save(
+                    language = language,
+                    mode = activeMode,
+                    repoGroups = mergedGroups,
+                    totalIssueCount = body.totalCount,
+                    currentPage = currentPageAtCommit,
+                    canLoadMore = canLoadMoreAtCommit,
+                )
                 _snackbarEvents.trySend(
                     if (newRepoCount == 0 && newIssueCount == 0) {
                         "Nothing new since ${formatRelativeTime(previousUpdatedAtMs ?: fetchedAtMs)}"
@@ -411,7 +402,7 @@ class TopReposViewModel @JvmOverloads constructor(
 
     /**
      * v0.49: clears the ENTIRE persistent cache — see
-     * RepoIssueGroupCache.clearAll()'s doc comment for why this isn't
+     * RepoIssueGroupRepository.clearAll()'s doc comment for why this isn't
      * scoped to just the active (language, mode) pair yet — THEN
      * reloads the current screen immediately, rather than leaving
      * already-visible data on screen that the cache backing it no
@@ -422,9 +413,7 @@ class TopReposViewModel @JvmOverloads constructor(
      */
     fun clearCache() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.clearAll(getApplication())
-            }
+            cacheRepository.clearAll()
             load(uiState.value.selectedLanguage)
         }
     }
@@ -443,7 +432,7 @@ class TopReposViewModel @JvmOverloads constructor(
      * the cache on return"): RepoIssuesScreen and this screen have no
      * direct handle to each other's ViewModel instances (each gets its
      * own via viewModel()), so RepoIssuesViewModel writes straight to
-     * RepoIssueGroupCache — the same persistence layer this ViewModel
+     * RepoIssueGroupRepository — the same persistence layer this ViewModel
      * already reads from and writes to — and this function is what
      * pulls that change back into THIS screen's in-memory state, rather
      * than the two ViewModels talking to each other directly.
@@ -458,9 +447,7 @@ class TopReposViewModel @JvmOverloads constructor(
         val activeMode = resolveActiveMode(modeRepository.mode.value)
         val language = uiState.value.selectedLanguage
         viewModelScope.launch {
-            val cached = withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.load(getApplication(), language, activeMode)
-            } ?: return@launch
+            val cached = cacheRepository.load(language, activeMode) ?: return@launch
             _uiState.update {
                 it.copy(
                     repoGroups = cached.repoGroups,
@@ -502,9 +489,7 @@ class TopReposViewModel @JvmOverloads constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
-            val cached = withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.load(getApplication(), language, activeMode)
-            }
+            val cached = cacheRepository.load(language, activeMode)
             if (cached != null) {
                 _uiState.update {
                     it.copy(
@@ -637,17 +622,14 @@ class TopReposViewModel @JvmOverloads constructor(
                         tokenRejected = false,
                     )
                 }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.save(
-                        context = getApplication(),
-                        language = language,
-                        mode = activeMode,
-                        repoGroups = mergedGroups,
-                        totalIssueCount = body.totalCount,
-                        currentPage = page,
-                        canLoadMore = newCanLoadMore,
-                    )
-                }
+                cacheRepository.save(
+                    language = language,
+                    mode = activeMode,
+                    repoGroups = mergedGroups,
+                    totalIssueCount = body.totalCount,
+                    currentPage = page,
+                    canLoadMore = newCanLoadMore,
+                )
             } catch (e: Exception) {
                 val message = "Couldn't load issues: ${e.message ?: "unknown error"}"
                 _uiState.update {

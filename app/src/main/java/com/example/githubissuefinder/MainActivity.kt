@@ -14,6 +14,7 @@ import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueModeViewModel
@@ -54,6 +55,8 @@ class MainActivity : ComponentActivity() {
         // v0.48: same reasoning, for the repo-first flow's persisted
         // bookmarks — see BookmarksRepository's own doc comment.
         BookmarksRepository.init(this)
+        // Top Repos' persisted results (language + mode keyed) — see RepoIssueGroupRepository.
+        RepoIssueGroupRepository.init(this)
         // v0.51: same reasoning, for the repo-first flow's persisted
         // hidden-issue repository — see HiddenIssuesRepository's own doc
         // comment.
