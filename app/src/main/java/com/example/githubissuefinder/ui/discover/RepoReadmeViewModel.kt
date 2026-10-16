@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ReadmeRepository
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
  */
 class RepoReadmeViewModel(
     private val repository: ReadmeRepository = ReadmeRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(RepoReadmeUiState())
     val uiState: StateFlow<RepoReadmeUiState> = _uiState.asStateFlow()
