@@ -166,7 +166,7 @@ import kotlinx.coroutines.flow.collect
  * it was either way — only the footer changes), or a plain "that's
  * everything" line once GitHub genuinely has nothing further for this
  * query. See TopReposViewModel's doc comment for the cross-page
- * merge/dedup this relies on — a repo whose matches span two pages
+ * grouping/dedup this relies on — a repo whose matches span two pages
  * updates the SAME card here, it doesn't appear a second time.
  *
  * ALSO IN v0.43: two explicitly-worded items now sit at the bottom of
@@ -217,8 +217,8 @@ import kotlinx.coroutines.flow.collect
  * the animation items via their own divider: "Check for New Repos"
  * (renamed in v0.49 from "Refresh" — was a forced live fetch that
  * REPLACED the whole list with just its own results, silently
- * discarding whatever Load More had accumulated; now merges fresh
- * results in instead, see TopReposViewModel.checkForNewRepos()'s doc
+ * discarding whatever Load More had accumulated; now updates the list with fresh
+ * results instead, see TopReposViewModel.checkForNewRepos()'s doc
  * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
  * just the active combination — see RepoIssueGroupRepository.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
@@ -317,7 +317,7 @@ import kotlinx.coroutines.flow.collect
  * that scarce vertical space. isLandscape reads
  * LocalConfiguration.current.orientation directly (no ViewModel
  * involvement — purely a rendering choice, nothing about the
- * underlying data changes) and merges those two rows into one when
+ * underlying data changes) and combines those two rows into one when
  * true.
  *
  * Landscape Split View: the larger step discussed alongside the

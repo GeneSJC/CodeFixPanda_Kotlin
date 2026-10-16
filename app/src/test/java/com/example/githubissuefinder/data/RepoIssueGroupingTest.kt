@@ -10,14 +10,14 @@ import org.junit.Test
 /**
  * Covers the exact properties the v0.49 "Cache-Preserving Refresh" plan
  * cares about for checkForNewRepos() (see TopReposViewModel's own doc
- * comment): a repo/issue count that never shrinks from this merge, a
+ * comment): a repo/issue count that never shrinks from this update, a
  * new repo getting added, a new issue appending to an existing repo,
  * and an already-present issue's fields getting replaced — the whole
- * reason this function exists instead of reusing mergeIntoGroups(),
+ * reason this function exists instead of reusing addIssuesToRepoGroups(),
  * which deliberately skips an issue whose id is already present rather
  * than refreshing it.
  */
-class RepoIssueGroupMergeTest {
+class RepoIssueGroupingTest {
 
     private fun issue(id: Long, repoOwner: String, repoName: String, commentCount: Int = 0) = Issue(
         id = id,
@@ -42,12 +42,12 @@ class RepoIssueGroupMergeTest {
 
     @Test
     fun `empty existing plus new issues groups everything as new`() {
-        val result = mergeReplacingByIssueId(
+        val result = updateIssuesInRepoGroups(
             existing = emptyList(),
             newIssues = listOf(issue(1, "octocat", "hello-world"), issue(2, "octocat", "hello-world")),
         )
-        assertEquals(1, result.groups.size)
-        assertEquals(2, result.groups.single().matchCount)
+        assertEquals(1, result.repoGroups.size)
+        assertEquals(2, result.repoGroups.single().matchCount)
         assertEquals(1, result.newRepoCount)
         assertEquals(2, result.newIssueCount)
     }
@@ -55,14 +55,14 @@ class RepoIssueGroupMergeTest {
     @Test
     fun `a new repo in the fetch is added without touching existing repos`() {
         val existing = listOf(group(issue(1, "octocat", "hello-world")))
-        val result = mergeReplacingByIssueId(
+        val result = updateIssuesInRepoGroups(
             existing = existing,
             newIssues = listOf(issue(2, "torvalds", "linux")),
         )
         // The core "never shrinks" property: existing repo/issue still present.
-        assertEquals(2, result.groups.size)
-        assertTrue(result.groups.any { it.repoFullName == "octocat/hello-world" && it.matchCount == 1 })
-        assertTrue(result.groups.any { it.repoFullName == "torvalds/linux" && it.matchCount == 1 })
+        assertEquals(2, result.repoGroups.size)
+        assertTrue(result.repoGroups.any { it.repoFullName == "octocat/hello-world" && it.matchCount == 1 })
+        assertTrue(result.repoGroups.any { it.repoFullName == "torvalds/linux" && it.matchCount == 1 })
         assertEquals(1, result.newRepoCount)
         assertEquals(1, result.newIssueCount)
     }
@@ -70,13 +70,13 @@ class RepoIssueGroupMergeTest {
     @Test
     fun `a new issue for an already-present repo appends rather than replacing the group`() {
         val existing = listOf(group(issue(1, "octocat", "hello-world")))
-        val result = mergeReplacingByIssueId(
+        val result = updateIssuesInRepoGroups(
             existing = existing,
             newIssues = listOf(issue(2, "octocat", "hello-world")),
         )
-        val merged = result.groups.single { it.repoFullName == "octocat/hello-world" }
-        assertEquals(2, merged.matchCount)
-        assertEquals(setOf(1L, 2L), merged.issues.map { it.id }.toSet())
+        val updatedGroup = result.repoGroups.single { it.repoFullName == "octocat/hello-world" }
+        assertEquals(2, updatedGroup.matchCount)
+        assertEquals(setOf(1L, 2L), updatedGroup.issues.map { it.id }.toSet())
         assertEquals(0, result.newRepoCount)
         assertEquals(1, result.newIssueCount)
     }
@@ -85,39 +85,39 @@ class RepoIssueGroupMergeTest {
     fun `an already-present issue id is replaced with the freshly-fetched copy, not duplicated`() {
         val existing = listOf(group(issue(1, "octocat", "hello-world", commentCount = 2)))
         val refreshed = issue(1, "octocat", "hello-world", commentCount = 9)
-        val result = mergeReplacingByIssueId(existing = existing, newIssues = listOf(refreshed))
+        val result = updateIssuesInRepoGroups(existing = existing, newIssues = listOf(refreshed))
 
-        val merged = result.groups.single()
+        val updatedGroup = result.repoGroups.single()
         // Same count as before — the fresh copy REPLACED the stale one, it didn't append.
-        assertEquals(1, merged.matchCount)
-        assertEquals(9, merged.issues.single().commentCount)
+        assertEquals(1, updatedGroup.matchCount)
+        assertEquals(9, updatedGroup.issues.single().commentCount)
         assertEquals(0, result.newRepoCount)
         assertEquals(0, result.newIssueCount)
     }
 
     @Test
-    fun `groups are sorted by match count descending after merging`() {
+    fun `groups are sorted by match count descending after the update`() {
         val existing = listOf(
             group(issue(1, "small", "repo")),
             group(issue(2, "big", "repo"), issue(3, "big", "repo")),
         )
-        val result = mergeReplacingByIssueId(
+        val result = updateIssuesInRepoGroups(
             existing = existing,
             newIssues = listOf(issue(4, "small", "repo"), issue(5, "small", "repo")),
         )
-        assertEquals(listOf("small/repo", "big/repo"), result.groups.map { it.repoFullName })
-        assertEquals(3, result.groups.first().matchCount)
+        assertEquals(listOf("small/repo", "big/repo"), result.repoGroups.map { it.repoFullName })
+        assertEquals(3, result.repoGroups.first().matchCount)
     }
 
     @Test
     fun `a check that finds nothing new reports zero on both counts`() {
         val existing = listOf(group(issue(1, "octocat", "hello-world")))
-        val result = mergeReplacingByIssueId(existing = existing, newIssues = listOf(issue(1, "octocat", "hello-world")))
+        val result = updateIssuesInRepoGroups(existing = existing, newIssues = listOf(issue(1, "octocat", "hello-world")))
         assertEquals(0, result.newRepoCount)
         assertEquals(0, result.newIssueCount)
     }
 
-    // ---- mergeIntoGroups / groupByRepo (moved out of TopReposViewModel) ----
+    // ---- addIssuesToRepoGroups / groupByRepo (moved out of TopReposViewModel) ----
 
     @Test
     fun `groupByRepo groups by repo and ranks by match count`() {
@@ -133,31 +133,31 @@ class RepoIssueGroupMergeTest {
     }
 
     @Test
-    fun `mergeIntoGroups adds a later page's issues to an existing repo and re-ranks`() {
+    fun `addIssuesToRepoGroups adds a later page's issues to an existing repo and re-ranks`() {
         val page1 = groupByRepo(listOf(issue(1, "a", "one"), issue(2, "b", "two")))
 
-        val merged = mergeIntoGroups(page1, listOf(issue(3, "b", "two"), issue(4, "b", "two")))
+        val repoGroups = addIssuesToRepoGroups(page1, listOf(issue(3, "b", "two"), issue(4, "b", "two")))
 
-        assertEquals(listOf("b/two", "a/one"), merged.map { it.repoFullName })
-        assertEquals(3, merged.first().matchCount)
+        assertEquals(listOf("b/two", "a/one"), repoGroups.map { it.repoFullName })
+        assertEquals(3, repoGroups.first().matchCount)
     }
 
     @Test
-    fun `mergeIntoGroups skips an issue id that is already present`() {
+    fun `addIssuesToRepoGroups skips an issue id that is already present`() {
         val existing = groupByRepo(listOf(issue(1, "a", "one", commentCount = 3)))
 
-        val merged = mergeIntoGroups(existing, listOf(issue(1, "a", "one", commentCount = 99)))
+        val repoGroups = addIssuesToRepoGroups(existing, listOf(issue(1, "a", "one", commentCount = 99)))
 
-        assertEquals(1, merged.single().matchCount)
+        assertEquals(1, repoGroups.single().matchCount)
         // Skipped, not replaced: the copy already on screen is kept.
-        assertEquals(3, merged.single().issues.single().commentCount)
+        assertEquals(3, repoGroups.single().issues.single().commentCount)
     }
 
     @Test
-    fun `mergeIntoGroups with nothing new returns the same groups`() {
+    fun `addIssuesToRepoGroups with nothing new returns the same groups`() {
         val existing = groupByRepo(listOf(issue(1, "a", "one")))
 
-        assertEquals(existing, mergeIntoGroups(existing, emptyList()))
+        assertEquals(existing, addIssuesToRepoGroups(existing, emptyList()))
     }
 
     // ---- canRequestNextPage ----

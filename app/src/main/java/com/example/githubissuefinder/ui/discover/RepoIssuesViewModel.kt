@@ -59,11 +59,11 @@ import kotlinx.coroutines.launch
  * fetch: `repo:owner/name label:"..." state:open`, scoped to just this
  * repo and the active mode, asking for up to REPO_ISSUES_MAX_PER_PAGE (100 —
  * GitHub's own per-call max) results in a single call. On success, this
- * REPLACES `issues` outright with the complete result (not a merge —
+ * REPLACES `issues` outright with the complete result (not an incremental update —
  * there's nothing to dedup against, this call already returns
  * everything for this query) — correct here specifically because it IS
- * the complete live set for this one repo, unlike Top Repos' own merge-
- * based checkForNewRepos(), which only ever sees a partial page.
+ * the complete live set for this one repo, unlike Top Repos' own
+ * checkForNewRepos(), which updates a list from a partial page.
  *
  * UNLIKE v0.46: the button never disappears after use — hasRefreshed
  * drives a small result line ("All 7 open issues · checked 2m ago"),

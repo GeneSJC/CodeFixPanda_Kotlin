@@ -3,19 +3,19 @@ package com.example.githubissuefinder.data
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.RepoIssueGroup
 
-/** What mergeReplacingByIssueId() below needs to report back to its caller — see that function's own doc comment. groups is the merged result; newRepoCount/newIssueCount are counted DURING the merge, not recomputed afterward, so they can't drift from what actually changed. */
-data class ReplacingMergeResult(
-    val groups: List<RepoIssueGroup>,
+/** What updateIssuesInRepoGroups() below needs to report back to its caller — see that function's own doc comment. repoGroups is the complete updated list; newRepoCount/newIssueCount are counted DURING the update, not recomputed afterward, so they can't drift from what actually changed. */
+data class RepoGroupUpdate(
+    val repoGroups: List<RepoIssueGroup>,
     val newRepoCount: Int,
     val newIssueCount: Int,
 )
 
 /**
  * v0.49 ("Cache-Preserving Refresh"): TopReposViewModel's
- * mergeIntoGroups()'s counterpart for checkForNewRepos() — see that
+ * addIssuesToRepoGroups()'s counterpart for checkForNewRepos() — see that
  * function's own doc comment for why a separate function rather than a
- * flag on mergeIntoGroups() itself. The key difference: where
- * mergeIntoGroups() SKIPS an issue whose id is already present (correct
+ * flag on addIssuesToRepoGroups() itself. The key difference: where
+ * addIssuesToRepoGroups() SKIPS an issue whose id is already present (correct
  * for Load More — the same issue genuinely showing up again across two
  * page fetches shouldn't be duplicated, and the copy already on screen
  * is just as current as a re-fetch would be), this REPLACES it with the
@@ -31,7 +31,7 @@ data class ReplacingMergeResult(
  * Mockito nor Robolectric as a test dependency. This function touches
  * nothing Android-specific, so it doesn't need either.
  */
-fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issue>): ReplacingMergeResult {
+fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): RepoGroupUpdate {
     val byRepo = LinkedHashMap<String, RepoIssueGroup>()
     existing.forEach { byRepo[it.repoFullName] = it }
     val preexistingRepoNames = byRepo.keys.toSet()
@@ -60,8 +60,8 @@ fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issu
         }
     }
     val newRepoCount = byRepo.keys.count { it !in preexistingRepoNames }
-    return ReplacingMergeResult(
-        groups = byRepo.values.sortedByDescending { it.matchCount },
+    return RepoGroupUpdate(
+        repoGroups = byRepo.values.sortedByDescending { it.matchCount },
         newRepoCount = newRepoCount,
         newIssueCount = newIssueCount,
     )
@@ -77,10 +77,10 @@ fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issu
  * constant to keep in sync.
  */
 fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
-    mergeIntoGroups(emptyList(), issues)
+    addIssuesToRepoGroups(emptyList(), issues)
 
 /**
- * v0.43: the actual cross-page merge — see TopReposViewModel's class doc comment for
+ * v0.43: the actual cross-page step for Load More — see TopReposViewModel's class doc comment for
  * the motivating scenario (one repo's matches spread across two
  * pages). Re-keys existing groups by repoFullName in a
  * LinkedHashMap (preserving their current order, so ties in the
@@ -92,9 +92,9 @@ fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
  * or starts a new group if this is the first issue seen for that
  * repo, then re-sorts everything by the now-current match count.
  * groupByRepo() above is just this function called with an empty
- * starting list — the very first page is "merged" into nothing.
+ * starting list — the very first page is added to nothing.
  */
-fun mergeIntoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
+fun addIssuesToRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
     val byRepo = LinkedHashMap<String, RepoIssueGroup>()
     existing.forEach { byRepo[it.repoFullName] = it }
     newIssues.forEach { issue ->
