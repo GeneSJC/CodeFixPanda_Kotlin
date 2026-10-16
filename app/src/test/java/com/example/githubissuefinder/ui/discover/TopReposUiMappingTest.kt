@@ -1,7 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.data.TopReposEvent
-import com.example.githubissuefinder.data.TopReposFailure
+import com.example.githubissuefinder.data.SearchFailure
 import com.example.githubissuefinder.data.TopReposState
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.testutil.repoGroupOf
@@ -16,13 +16,13 @@ class TopReposUiMappingTest {
 
     @Test
     fun anHttpFailureSaysTheStatusCode() {
-        assertEquals("GitHub returned an error (HTTP 500)", TopReposFailure.Http(500).toMessage())
+        assertEquals("GitHub returned an error (HTTP 500)", SearchFailure.Http(500).toMessage())
     }
 
     @Test
     fun aFailureBeforeGitHubAnsweredSaysWhatWentWrong() {
-        assertEquals("Couldn't load issues: boom", TopReposFailure.Failed("boom").toMessage())
-        assertEquals("Couldn't load issues: unknown error", TopReposFailure.Failed(null).toMessage())
+        assertEquals("Couldn't load issues: boom", SearchFailure.Failed("boom").toMessage())
+        assertEquals("Couldn't load issues: unknown error", SearchFailure.Failed(null).toMessage())
     }
 
     @Test
@@ -63,8 +63,8 @@ class TopReposUiMappingTest {
             isLoadingMore = true,
             noTokenConfigured = true,
             tokenRejected = true,
-            loadFailure = TopReposFailure.Http(401),
-            loadMoreFailure = TopReposFailure.Failed("boom"),
+            loadFailure = SearchFailure.Http(401),
+            loadMoreFailure = SearchFailure.Failed("boom"),
         )
 
         val ui = state.toUiState()

@@ -114,7 +114,7 @@ class TopReposServiceTest {
         val state = opened(f).state.value
 
         assertTrue(state.tokenRejected)
-        assertEquals(TopReposFailure.Http(401), state.loadFailure)
+        assertEquals(SearchFailure.Http(401), state.loadFailure)
         assertFalse(state.isLoading)
     }
 
@@ -126,7 +126,7 @@ class TopReposServiceTest {
         val state = opened(f).state.value
 
         assertFalse(state.tokenRejected)
-        assertEquals(TopReposFailure.Http(500), state.loadFailure)
+        assertEquals(SearchFailure.Http(500), state.loadFailure)
     }
 
     @Test
@@ -136,7 +136,7 @@ class TopReposServiceTest {
 
         val state = opened(f).state.value
 
-        assertEquals(TopReposFailure.Failed("boom"), state.loadFailure)
+        assertEquals(SearchFailure.Failed("boom"), state.loadFailure)
         assertFalse(state.isLoading)
     }
 
@@ -185,7 +185,7 @@ class TopReposServiceTest {
 
         service.loadMore()
 
-        assertEquals(TopReposFailure.Http(500), service.state.value.loadMoreFailure)
+        assertEquals(SearchFailure.Http(500), service.state.value.loadMoreFailure)
         assertFalse(service.state.value.isLoadingMore)
     }
 

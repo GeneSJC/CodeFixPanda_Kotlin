@@ -18,6 +18,7 @@ import com.example.githubissuefinder.data.ReadmeSource
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.RepoIssueGroupStorage
+import com.example.githubissuefinder.data.RepoIssuesService
 import com.example.githubissuefinder.data.TopReposService
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.HiddenIssue
@@ -120,6 +121,17 @@ class ViewModelFixtures(
         CoroutineScope(Dispatchers.Unconfined),
     )
 
+    /** A repo-issues service over the fakes above, running its work immediately on the calling thread. */
+    val repoIssuesService = RepoIssuesService(
+        modeRepository, cacheRepository, searchRepository, tokenRepository,
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    /** Makes RepoIssuesViewModel use [repoIssuesService]; pair with [uninstall] in teardown. */
+    fun installRepoIssuesService() {
+        RepoIssuesService.replaceInstanceForTests(repoIssuesService)
+    }
+
     /** Makes TopReposViewModel use [topReposService]; pair with [uninstall] in teardown. */
     fun installTopReposService() {
         TopReposService.replaceInstanceForTests(topReposService)
@@ -135,6 +147,7 @@ class ViewModelFixtures(
         /** Removes everything the install functions put in place. Call it in teardown. */
         fun uninstall() {
             TopReposService.replaceInstanceForTests(null)
+            RepoIssuesService.replaceInstanceForTests(null)
             HiddenIssuesRepository.replaceInstanceForTests(null)
             BookmarksRepository.replaceInstanceForTests(null)
         }

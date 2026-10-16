@@ -24,7 +24,7 @@ package com.example.githubissuefinder.model
  * here either.
  *
  * issues is deliberately the full List<Issue>, not just a count — see
- * RepoIssuesViewModel, which uses this directly as the repo's issue
+ * RepoIssuesService, which uses this directly as the repo's issue
  * list for the currently active mode with ZERO additional network
  * calls, rather than re-fetching data this screen already fetched to
  * build the group in the first place.
