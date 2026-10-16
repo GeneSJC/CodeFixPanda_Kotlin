@@ -30,7 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.githubissuefinder.data.HiddenIssuesStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.formatRelativeTime
 
 /**
@@ -46,9 +47,9 @@ import com.example.githubissuefinder.data.formatRelativeTime
  * design (see HiddenIssue's own doc comment for why the snapshot stays
  * small). A simple row is all there's real data for.
  *
- * The list comes directly from HiddenIssuesStore.all() — same
- * "no separate loading, no local copy" pattern RepoBookmarksScreen
- * already uses for RepoBookmarks.all(); un-hiding a row makes it
+ * The list comes from HiddenIssuesViewModel (which observes
+ * HiddenIssuesRepository) — no separate loading, no local copy;
+ * un-hiding a row makes it
  * disappear immediately via Compose recomposition, nothing extra
  * wired here for that to happen.
  *
@@ -60,9 +61,13 @@ import com.example.githubissuefinder.data.formatRelativeTime
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HiddenIssuesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun HiddenIssuesScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HiddenIssuesViewModel = viewModel(),
+) {
     val context = LocalContext.current
-    val hiddenIssues = HiddenIssuesStore.all()
+    val hiddenIssues by viewModel.hiddenIssues.collectAsStateWithLifecycle()
     var showUnhideAllConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -121,7 +126,7 @@ fun HiddenIssuesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            TextButton(onClick = { HiddenIssuesStore.unhide(context, hidden.id) }) {
+                            TextButton(onClick = { viewModel.unhide(hidden.id) }) {
                                 Text("Unhide")
                             }
                         }
@@ -138,7 +143,7 @@ fun HiddenIssuesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             text = { Text("They'll reappear wherever they're still cached — Top Repos and repo lists alike.") },
             confirmButton = {
                 TextButton(onClick = {
-                    HiddenIssuesStore.unhideAll(context)
+                    viewModel.unhideAll()
                     showUnhideAllConfirm = false
                 }) {
                     Text("Unhide all")
