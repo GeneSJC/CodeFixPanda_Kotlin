@@ -46,7 +46,7 @@ fun interface ReadmeApi {
  * GitHub's Contents API (GET /repos/{owner}/{repo}/readme), run off the
  * main thread. A different API and quota (5,000/hour authenticated)
  * from the Search API everything else uses, which is why README
- * fetches are deliberately NOT counted by RateLimitState.
+ * fetches are deliberately NOT counted by IssueSearchRepository.rateLimit.
  *
  * This is the only place in the app that talks to GitHub for README
  * text: the README screen and the repo-card previews both go through

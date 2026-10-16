@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class IssueModeViewModel(
     private val repository: IssueModeRepository = IssueModeRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode

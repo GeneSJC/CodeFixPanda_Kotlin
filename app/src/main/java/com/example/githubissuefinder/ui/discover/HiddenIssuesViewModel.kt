@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.model.HiddenIssue
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class HiddenIssuesViewModel(
     private val repository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
     /** Hidden issues, most recently hidden first. */
     val hiddenIssues: StateFlow<List<HiddenIssue>> = repository.hiddenIssues

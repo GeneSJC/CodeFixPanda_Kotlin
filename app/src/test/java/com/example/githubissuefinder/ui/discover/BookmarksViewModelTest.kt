@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.model.Issue
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,6 +16,18 @@ class BookmarksViewModelTest {
         override fun save(issues: List<Issue>) {
             stored = issues
         }
+    }
+
+    @After
+    fun tearDown() {
+        BookmarksRepository.replaceInstanceForTests(null)
+    }
+
+    /** A ViewModel over a repository on [storage], installed as the app-wide one. */
+    private fun viewModelOver(storage: FakeStorage): Pair<BookmarksViewModel, BookmarksRepository> {
+        val repository = BookmarksRepository(storage)
+        BookmarksRepository.replaceInstanceForTests(repository)
+        return BookmarksViewModel() to repository
     }
 
     private fun issue(id: Long) = Issue(
@@ -32,14 +45,14 @@ class BookmarksViewModelTest {
 
     @Test
     fun listsWhatTheRepositoryHolds() {
-        val repository = BookmarksRepository(FakeStorage(listOf(issue(1), issue(2))))
-        val viewModel = BookmarksViewModel(repository)
+        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2))))
+
         assertEquals(listOf(1L, 2L), viewModel.bookmarks.value.map { it.id })
     }
 
     @Test
     fun toggleBookmarkAddsAndReportsTheNewState() {
-        val viewModel = BookmarksViewModel(BookmarksRepository(FakeStorage()))
+        val (viewModel, _) = viewModelOver(FakeStorage())
 
         assertTrue(viewModel.toggleBookmark(issue(1)))
 
@@ -48,7 +61,7 @@ class BookmarksViewModelTest {
 
     @Test
     fun toggleBookmarkRemovesAnExistingBookmark() {
-        val viewModel = BookmarksViewModel(BookmarksRepository(FakeStorage(listOf(issue(1)))))
+        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1))))
 
         assertFalse(viewModel.toggleBookmark(issue(1)))
 
@@ -57,11 +70,19 @@ class BookmarksViewModelTest {
 
     @Test
     fun reflectsBookmarksMadeElsewhere() {
-        val repository = BookmarksRepository(FakeStorage())
-        val viewModel = BookmarksViewModel(repository)
+        val (viewModel, repository) = viewModelOver(FakeStorage())
 
         repository.toggle(issue(4))
 
         assertEquals(listOf(4L), viewModel.bookmarks.value.map { it.id })
+    }
+
+    @Test
+    fun theBookmarkedIdsFollowTheRepository() {
+        val (viewModel, _) = viewModelOver(FakeStorage())
+
+        viewModel.toggleBookmark(issue(2))
+
+        assertEquals(setOf(2L), viewModel.bookmarkedIds.value)
     }
 }

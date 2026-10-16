@@ -20,15 +20,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Why a load, or a Load More, did not produce a list. The ViewModel turns this into message text; this layer only says what happened. */
-sealed interface TopReposFailure {
-    /** GitHub answered with an error status. */
-    data class Http(val code: Int) : TopReposFailure
-
-    /** The request failed before GitHub answered (no network, a timeout, an unreadable response). */
-    data class Failed(val message: String?) : TopReposFailure
-}
-
 /**
  * The Top Repos data state: everything the screen's list is built from,
  * and nothing about how it is shown. TopReposService is the one place it
@@ -56,9 +47,9 @@ data class TopReposState(
     /** True when a token is configured but GitHub rejected it (HTTP 401). */
     val tokenRejected: Boolean = false,
     /** Set when the whole list failed to load. */
-    val loadFailure: TopReposFailure? = null,
+    val loadFailure: SearchFailure? = null,
     /** Set when a Load More failed; the list itself is left exactly as it was. */
-    val loadMoreFailure: TopReposFailure? = null,
+    val loadMoreFailure: SearchFailure? = null,
 ) {
     /** True while the list cannot load because of the token: none is set, or GitHub rejected the one in use. */
     val needsTokenFix: Boolean
@@ -168,6 +159,9 @@ class TopReposService(
     /** The active Issue Mode, or null while none is chosen (which DiscoverNavHost prevents from ever being observed here). */
     val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
 
+    /** The Search API rate-limit numbers for the chip, or null until they are known. */
+    val rateLimit: StateFlow<RateLimitInfo?> = searchRepository.rateLimit
+
     /** Whether a token is in use right now. */
     val hasToken: StateFlow<Boolean> = tokenRepository.effectiveToken
         .map { it.isNotBlank() }
@@ -190,7 +184,7 @@ class TopReposService(
             tokenRepository.effectiveToken.drop(1).collect {
                 // The old token's rate-limit numbers don't describe the
                 // new one; drop them and look the new ones up.
-                RateLimitState.update(null)
+                searchRepository.clearRateLimit()
                 refreshRateLimitIfUnknown()
                 if (_state.value.needsTokenFix) {
                     _state.update { it.copy(tokenRejected = false, loadFailure = null) }
@@ -369,8 +363,8 @@ class TopReposService(
      * disappears entirely, if it had zero open issues left) here too,
      * without a second network call.
      *
-     * RepoIssuesViewModel and this service have no direct handle to each
-     * other, so RepoIssuesViewModel writes straight to
+     * RepoIssuesService and this service have no direct handle to each
+     * other, so RepoIssuesService writes straight to
      * RepoIssueGroupRepository, the same persistence layer this service
      * reads from and writes to, and this function pulls that change back
      * into the held state.
@@ -438,7 +432,7 @@ class TopReposService(
                     )
                 }
                 // A cache hit never touches the network, so nothing has
-                // told RateLimitState anything yet this session.
+                // told the search repository the rate limit yet this session.
                 refreshRateLimitIfUnknown()
             } else {
                 fetchPage(language = language, page = 1, isLoadMore = false)
@@ -536,7 +530,7 @@ class TopReposService(
                         // just a generic failure so the rate-limit chip's tap
                         // handler can tell "no token" and "a token that doesn't
                         // work" apart.
-                        val failure = TopReposFailure.Http(result.code)
+                        val failure = SearchFailure.Http(result.code)
                         val isTokenRejected = result.code == 401
                         _state.update {
                             if (isLoadMore) {
@@ -560,7 +554,7 @@ class TopReposService(
 
     /** A load or Load More that failed before GitHub answered: held for the list (the initial load) or the footer (Load More). */
     private fun showLoadFailure(isLoadMore: Boolean, detail: String?) {
-        val failure = TopReposFailure.Failed(detail)
+        val failure = SearchFailure.Failed(detail)
         _state.update {
             if (isLoadMore) {
                 it.copy(isLoadingMore = false, loadMoreFailure = failure)

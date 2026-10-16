@@ -9,7 +9,7 @@ import com.squareup.moshi.Json
  *
  * 1. It's billed against the general REST API's much larger quota
  *    (5,000 requests/hour authenticated) rather than the Search API's
- *    30/minute — RateLimitState is deliberately NOT updated from this
+ *    30/minute — IssueSearchRepository.rateLimit is deliberately NOT updated from this
  *    call (see RepoReadmeViewModel), since mixing the two quotas into
  *    one tracked number would misrepresent both.
  * 2. content is base64-encoded with embedded newlines, per GitHub's

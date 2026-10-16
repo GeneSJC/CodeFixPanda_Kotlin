@@ -3,11 +3,9 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.RateLimitInfo
-import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeFetch
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.TOP_REPOS_PER_PAGE
-import com.example.githubissuefinder.data.TopReposService
 import com.example.githubissuefinder.data.cacheKeyFor
 import com.example.githubissuefinder.data.topReposQuery
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -26,7 +24,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -42,15 +39,9 @@ class TopReposViewModelTest {
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
 
-    @Before
-    fun resetGlobalRateLimit() {
-        RateLimitState.update(null)
-    }
-
     @After
     fun tearDown() {
-        RateLimitState.update(null)
-        TopReposService.replaceInstanceForTests(null)
+        ViewModelFixtures.uninstall()
     }
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
@@ -59,7 +50,8 @@ class TopReposViewModelTest {
     /** A ViewModel whose service is the one built over [f]'s fakes. */
     private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = AppConfigRepository.instance): TopReposViewModel {
         f.installTopReposService()
-        return TopReposViewModel(f.hiddenIssuesRepository, f.snippetRepository, config)
+        f.installRepositories()
+        return TopReposViewModel(f.snippetRepository, config)
     }
 
     private fun fullPage() = (1L..TOP_REPOS_PER_PAGE).map { issueDto(it, "a", "one") }
@@ -111,6 +103,17 @@ class TopReposViewModelTest {
 
         assertEquals("GitHub returned an error (HTTP 500)", vm.uiState.value.loadMoreError)
         assertNull(vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun theRateLimitComesFromTheSearchRepository() {
+        val f = ViewModelFixtures()
+        val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInLabel = "45s")
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1)), rateLimit = limit) }
+
+        val vm = viewModel(f)
+
+        assertEquals(limit, vm.rateLimit.value)
     }
 
     @Test

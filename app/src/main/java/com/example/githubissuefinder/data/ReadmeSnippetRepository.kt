@@ -75,7 +75,7 @@ fun ReadmeResult.toReadmeFetch(): ReadmeFetch = when (this) {
  * the dozens once Load More is used, and each one's first composition
  * triggers ONE Contents API call here (GET /repos/{owner}/{repo}/readme)
  * — a different, far larger quota (5,000/hour authenticated) than the
- * Search API's 30/minute RateLimitState tracks, same distinction
+ * Search API's 30/minute IssueSearchRepository.rateLimit tracks, same distinction
  * RepoReadmeViewModel's own doc comment makes. loadIfNeeded's dedup
  * guard means a SUCCESSFUL fetch (including a legitimate "no README"
  * 404) only ever happens once per repo per process lifetime — but see

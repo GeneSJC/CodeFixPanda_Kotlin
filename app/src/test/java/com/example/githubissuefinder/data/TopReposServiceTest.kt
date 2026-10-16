@@ -11,12 +11,10 @@ import com.example.githubissuefinder.testutil.searchOk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 /**
@@ -27,11 +25,6 @@ import org.junit.Test
  * in TopReposUiMappingTest and TopReposViewModelTest.
  */
 class TopReposServiceTest {
-
-    @Before @After
-    fun resetGlobalRateLimit() {
-        RateLimitState.update(null)
-    }
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
@@ -76,7 +69,7 @@ class TopReposServiceTest {
 
         opened(f)
 
-        assertEquals(limit, RateLimitState.info.value)
+        assertEquals(limit, f.searchRepository.rateLimit.value)
         assertEquals(1, f.api.rateLimitCalls)
         assertTrue(f.api.calls.isEmpty())
     }
@@ -97,7 +90,7 @@ class TopReposServiceTest {
         assertFalse(state.isLoading)
         assertEquals(Triple(topReposQuery(gfi, kotlin), TOP_REPOS_PER_PAGE, 1), f.api.calls.single())
         assertEquals(setOf(cacheKeyFor(kotlin, gfi)), f.cacheStorage.data.keys)
-        assertEquals(limit, RateLimitState.info.value)
+        assertEquals(limit, f.searchRepository.rateLimit.value)
     }
 
     // ---- loading: problems ----
@@ -121,7 +114,7 @@ class TopReposServiceTest {
         val state = opened(f).state.value
 
         assertTrue(state.tokenRejected)
-        assertEquals(TopReposFailure.Http(401), state.loadFailure)
+        assertEquals(SearchFailure.Http(401), state.loadFailure)
         assertFalse(state.isLoading)
     }
 
@@ -133,7 +126,7 @@ class TopReposServiceTest {
         val state = opened(f).state.value
 
         assertFalse(state.tokenRejected)
-        assertEquals(TopReposFailure.Http(500), state.loadFailure)
+        assertEquals(SearchFailure.Http(500), state.loadFailure)
     }
 
     @Test
@@ -143,7 +136,7 @@ class TopReposServiceTest {
 
         val state = opened(f).state.value
 
-        assertEquals(TopReposFailure.Failed("boom"), state.loadFailure)
+        assertEquals(SearchFailure.Failed("boom"), state.loadFailure)
         assertFalse(state.isLoading)
     }
 
@@ -192,7 +185,7 @@ class TopReposServiceTest {
 
         service.loadMore()
 
-        assertEquals(TopReposFailure.Http(500), service.state.value.loadMoreFailure)
+        assertEquals(SearchFailure.Http(500), service.state.value.loadMoreFailure)
         assertFalse(service.state.value.isLoadingMore)
     }
 
@@ -288,6 +281,20 @@ class TopReposServiceTest {
         f.tokenRepository.setUserToken("another-token")
 
         assertEquals(callsBefore, f.api.calls.size)
+    }
+
+    @Test
+    fun changingTheTokenReplacesTheOldRateLimitWithTheNewTokensNumbers() {
+        val f = ViewModelFixtures()
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1)), rateLimit = limit) }
+        val service = opened(f)
+        assertEquals(limit, service.rateLimit.value)
+        val newTokensLimit = RateLimitInfo(remaining = 5, limit = 30, used = 25, resetsInLabel = "10s")
+        f.api.rateLimit = newTokensLimit
+
+        f.tokenRepository.setUserToken("another-token")
+
+        assertEquals(newTokensLimit, service.rateLimit.value)
     }
 
     @Test

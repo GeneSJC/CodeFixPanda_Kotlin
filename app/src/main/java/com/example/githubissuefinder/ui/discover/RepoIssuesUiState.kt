@@ -12,7 +12,7 @@ import com.example.githubissuefinder.model.Issue
  * affordance doesn't exist. isLoading and errorMessage (in their
  * original, whole-screen-scoped form) are gone too: populating this
  * screen from RepoIssueGroup.issues is a pure, synchronous assignment
- * with no network call — see RepoIssuesViewModel's doc comment for
+ * with no network call — see RepoIssuesService's class comment for
  * the full reasoning.
  *
  * v0.46 ("Check for More Issues") reintroduces network-call-adjacent
@@ -26,7 +26,7 @@ import com.example.githubissuefinder.model.Issue
  * isRefreshing, allIssuesLoaded -> hasRefreshed, checkForMoreError ->
  * refreshError. The rename isn't cosmetic: hasRefreshed no longer means
  * "hide the button forever," it means "a result line has something to
- * report" — the button stays reusable, see RepoIssuesViewModel's
+ * report" — the button stays reusable, see RepoIssuesService's
  * refreshThisRepo() doc comment.
  */
 data class RepoIssuesUiState(
@@ -44,7 +44,7 @@ data class RepoIssuesUiState(
      * session — at that point `issues` holds EVERY open issue GitHub
      * has for this repo and the active mode as of that refresh (up to
      * the single call's own page-size limit; see
-     * RepoIssuesViewModel's doc comment), not just whatever happened to
+     * RepoIssuesService's class comment), not just whatever happened to
      * be swept up building the Top Repos card. Drives the footer's
      * result line ("All 7 open issues · checked 2m ago"); does NOT hide
      * the "Refresh this repo" button, which stays available for
