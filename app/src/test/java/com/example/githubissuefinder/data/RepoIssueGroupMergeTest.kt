@@ -173,9 +173,10 @@ class RepoIssueGroupMergeTest {
     }
 
     @Test
-    fun `the page that would start past GitHub's result cap is not requested`() {
-        val lastPageInsideCap = SEARCH_API_RESULT_CAP / TOP_REPOS_PER_PAGE
-        assertFalse(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = lastPageInsideCap))
-        assertTrue(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = lastPageInsideCap - 1))
+    fun `no page is requested once the pages fetched reach GitHub's result cap`() {
+        // The first page whose end index (page * per-page) reaches the cap: no further page is offered after it.
+        val firstPageThatEndsAtCap = (SEARCH_API_RESULT_CAP + TOP_REPOS_PER_PAGE - 1) / TOP_REPOS_PER_PAGE
+        assertFalse(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = firstPageThatEndsAtCap))
+        assertTrue(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = firstPageThatEndsAtCap - 1))
     }
 }
