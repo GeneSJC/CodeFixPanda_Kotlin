@@ -120,9 +120,24 @@ class ViewModelFixtures(
         CoroutineScope(Dispatchers.Unconfined),
     )
 
-    /** Makes TopReposViewModel use [topReposService]; pair with TopReposService.replaceInstanceForTests(null) in teardown. */
+    /** Makes TopReposViewModel use [topReposService]; pair with [uninstall] in teardown. */
     fun installTopReposService() {
         TopReposService.replaceInstanceForTests(topReposService)
+    }
+
+    /** Makes the hidden-issue and bookmark repositories that BaseViewModel reads the fakes above; pair with [uninstall] in teardown. */
+    fun installRepositories() {
+        HiddenIssuesRepository.replaceInstanceForTests(hiddenIssuesRepository)
+        BookmarksRepository.replaceInstanceForTests(bookmarksRepository)
+    }
+
+    companion object {
+        /** Removes everything the install functions put in place. Call it in teardown. */
+        fun uninstall() {
+            TopReposService.replaceInstanceForTests(null)
+            HiddenIssuesRepository.replaceInstanceForTests(null)
+            BookmarksRepository.replaceInstanceForTests(null)
+        }
     }
 }
 

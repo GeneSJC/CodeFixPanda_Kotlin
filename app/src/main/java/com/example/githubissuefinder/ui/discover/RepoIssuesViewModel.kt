@@ -1,9 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.IssueSearchRepository
@@ -14,6 +12,7 @@ import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -120,21 +119,13 @@ import kotlinx.coroutines.launch
  */
 class RepoIssuesViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
-    private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
-    private val bookmarksRepository: BookmarksRepository = BookmarksRepository.instance,
     private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
     private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
-) : ViewModel() {
+) : BaseViewModel() {
 
-    /** Ids of bookmarked issues, to draw each card's star. */
-    val bookmarkedIds: StateFlow<Set<Long>> = bookmarksRepository.bookmarkedIds
-
-    /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
-    fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)
-
-    /** Ids the user hid, to filter out of the list at display time. */
-    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
+    /** The hidden-issue repository, for hiding and unhiding. The hidden ids themselves come from BaseViewModel. */
+    private val hiddenIssuesRepository = HiddenIssuesRepository.instance
 
     fun hideIssue(issue: Issue) {
         hiddenIssuesRepository.hide(issue)

@@ -6,7 +6,6 @@ import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeFetch
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.TOP_REPOS_PER_PAGE
-import com.example.githubissuefinder.data.TopReposService
 import com.example.githubissuefinder.data.cacheKeyFor
 import com.example.githubissuefinder.data.topReposQuery
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -42,7 +41,7 @@ class TopReposViewModelTest {
 
     @After
     fun tearDown() {
-        TopReposService.replaceInstanceForTests(null)
+        ViewModelFixtures.uninstall()
     }
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
@@ -51,7 +50,8 @@ class TopReposViewModelTest {
     /** A ViewModel whose service is the one built over [f]'s fakes. */
     private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = AppConfigRepository.instance): TopReposViewModel {
         f.installTopReposService()
-        return TopReposViewModel(f.hiddenIssuesRepository, f.snippetRepository, config)
+        f.installRepositories()
+        return TopReposViewModel(f.snippetRepository, config)
     }
 
     private fun fullPage() = (1L..TOP_REPOS_PER_PAGE).map { issueDto(it, "a", "one") }

@@ -12,6 +12,7 @@ import com.example.githubissuefinder.testutil.issueDto
 import com.example.githubissuefinder.testutil.repoGroupOf
 import com.example.githubissuefinder.testutil.searchFailed
 import com.example.githubissuefinder.testutil.searchOk
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -28,10 +29,15 @@ class RepoIssuesViewModelTest {
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
 
-    private fun viewModel(f: ViewModelFixtures) = RepoIssuesViewModel(
-        f.modeRepository, f.hiddenIssuesRepository, f.bookmarksRepository,
-        f.cacheRepository, f.searchRepository, f.tokenRepository,
-    )
+    @After
+    fun tearDown() {
+        ViewModelFixtures.uninstall()
+    }
+
+    private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel {
+        f.installRepositories()
+        return RepoIssuesViewModel(f.modeRepository, f.cacheRepository, f.searchRepository, f.tokenRepository)
+    }
 
     private fun cacheWith(f: ViewModelFixtures, vararg groups: com.example.githubissuefinder.model.RepoIssueGroup) {
         f.cacheStorage.data = mapOf(

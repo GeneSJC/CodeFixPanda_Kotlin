@@ -2,7 +2,6 @@ package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.AppConfigRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.TopReposService
@@ -34,11 +33,11 @@ import kotlinx.coroutines.launch
  *
  * The service is a plain member, the app-wide TopReposService; tests
  * install their own with TopReposService.replaceInstanceForTests().
- * The remaining arguments serve the repo cards (README previews, hidden
- * issues) and are not part of the list's data state.
+ * The remaining argument serves the repo cards (README previews) and is
+ * not part of the list's data state. The hidden ids come from
+ * BaseViewModel.
  */
 class TopReposViewModel(
-    private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
     private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
     appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
 ) : BaseViewModel(appConfigRepository) {
@@ -64,9 +63,6 @@ class TopReposViewModel(
 
     /** Whether a token is in use right now, for the rate-limit chip's tap (a token problem, or the real dialog). */
     val hasToken: StateFlow<Boolean> = service.hasToken
-
-    /** Ids the user hid, to filter out of the repo list at display time. */
-    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
 
     /**
      * The active Issue Mode, or null while none is chosen (which
