@@ -1,7 +1,8 @@
 package com.example.githubissuefinder.ui.splash
 
-import androidx.lifecycle.ViewModel
+import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
+import com.example.githubissuefinder.ui.BaseViewModel
 
 /**
  * Decides, once per launch, whether the start splash is the full
@@ -23,7 +24,8 @@ import com.example.githubissuefinder.data.StartupSplashRepository
  */
 class StartupSplashViewModel(
     private val repository: StartupSplashRepository = StartupSplashRepository.instance,
-) : ViewModel() {
+    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
+) : BaseViewModel(appConfigRepository) {
 
     val playFullAnimation: Boolean = !repository.hasSeenFullAnimation
 

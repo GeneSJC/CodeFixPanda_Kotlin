@@ -4,12 +4,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.githubissuefinder.BuildConfig
 
 /**
  * The on-device build label — "Build A.B" (Project Conventions doc,
- * section 6). Single source of truth is BuildConfig.BUILD_LABEL
- * (app/build.gradle.kts's buildLabelA/buildLabelB) — bumping those two
+ * section 6). The label is passed in by the screen, from its ViewModel's
+ * buildLabel; its single source of truth is BuildConfig.BUILD_LABEL
+ * (app/build.gradle.kts's buildLabelA/buildLabelB), read only by AppConfigRepository — bumping those two
  * vals is the only maintenance required to keep this accurate; no other
  * file needs to change.
  *
@@ -27,9 +27,9 @@ import com.example.githubissuefinder.BuildConfig
  * but was dead code until this).
  */
 @Composable
-fun VersionLabel(modifier: Modifier = Modifier) {
+fun VersionLabel(label: String, modifier: Modifier = Modifier) {
     Text(
-        "Build ${BuildConfig.BUILD_LABEL}",
+        "Build $label",
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier,

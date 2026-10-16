@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
                     // launch.
                     AppStartSplashScreen(
                         onFinished = onFinished,
+                        animation = splashViewModel.splashAnimation,
                         playFullAnimation = splashViewModel.playFullAnimation,
                     )
                 } else {
