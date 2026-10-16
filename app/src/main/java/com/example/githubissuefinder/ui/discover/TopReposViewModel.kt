@@ -11,12 +11,13 @@ import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.RepoIssueGroupRepository
-import com.example.githubissuefinder.data.TOP_REPOS_PER_PAGE
+import com.example.githubissuefinder.data.canRequestNextPage
 import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.data.groupByRepo
+import com.example.githubissuefinder.data.mergeIntoGroups
 import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.shouldSwitchMode
-import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -34,15 +35,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-/**
- * GitHub's Search API hard cap — it will not return results past this
- * point for any query, however many actually match (this is a
- * documented GitHub limitation, not something this app imposes).
- * canRequestNextPage() uses this to stop offering Load More before a
- * request would fail, rather than surfacing that as an error.
- */
-private const val SEARCH_API_RESULT_CAP = 1000
 
 /**
  * v0.42 — THE DATA-LAYER SWAP. This is a full rewrite of how this
@@ -117,7 +109,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * other 2 can easily land on page 2. Naively appending page 2's
  * grouped results would show "Apps Android Commons" as a SECOND,
  * separate card with match count 2, instead of updating the existing
- * card to match count 5. mergeIntoGroups() below is what prevents
+ * card to match count 5. mergeIntoGroups() (data/RepoIssueGroupMerge.kt) is what prevents
  * that — every Load More re-groups its new issues against the
  * repoFullName keys already on screen before anything is added or
  * re-sorted.
@@ -308,7 +300,7 @@ class TopReposViewModel(
      * already-present issue's fields (comment count, labels, updated
      * time) get refreshed to the fetched copy via
      * data.RepoIssueGroupMerge.kt's mergeReplacingByIssueId() — a
-     * dedicated replace-by-id variant of mergeIntoGroups() below, kept
+     * dedicated replace-by-id variant of mergeIntoGroups(), kept
      * as a standalone top-level function specifically so it's directly
      * unit-testable (see its own doc comment for why) — that function's
      * own skip-duplicate behavior stays exactly as it is for Load More,
@@ -628,68 +620,5 @@ class TopReposViewModel(
                 it.copy(isLoading = false, errorMessage = message)
             }
         }
-    }
-
-    /**
-     * False once there's nothing left worth requesting: either this
-     * page came back short (fewer than TOP_REPOS_PER_PAGE items — the true end
-     * of this query's results, not just an empty page), or the NEXT
-     * page would start past GitHub's 1,000-result Search API cap.
-     * Checked against the page just fetched, not the total the API
-     * reports — total_count itself is only an estimate once a query
-     * has more matches than the cap allows, so it isn't trustworthy
-     * for this decision on its own.
-     */
-    private fun canRequestNextPage(fetchedThisPage: Int, justFetchedPage: Int): Boolean {
-        if (fetchedThisPage < TOP_REPOS_PER_PAGE) return false
-        val nextPageStartIndex = justFetchedPage * TOP_REPOS_PER_PAGE
-        return nextPageStartIndex < SEARCH_API_RESULT_CAP
-    }
-
-    /**
-     * Groups already-fetched issues by parent repo and sorts the
-     * resulting groups by match count, descending — the v0.42 ranking
-     * signal (see class doc comment for why this replaces the old
-     * composite score). No artificial cap on the number of groups
-     * shown — whatever groups form from the page(s) fetched so far are
-     * all shown, which bounds card count naturally without a separate
-     * constant to keep in sync.
-     */
-    private fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
-        mergeIntoGroups(emptyList(), issues)
-
-    /**
-     * v0.43: the actual cross-page merge — see class doc comment for
-     * the motivating scenario (one repo's matches spread across two
-     * pages). Re-keys existing groups by repoFullName in a
-     * LinkedHashMap (preserving their current order, so ties in the
-     * final sort stay deterministic rather than depending on an
-     * unordered HashMap's iteration), folds each new issue into its
-     * repo's existing group if one exists (skipping it if that exact
-     * issue id is somehow already present — defensive, in case
-     * GitHub's result set shifts slightly between two page requests),
-     * or starts a new group if this is the first issue seen for that
-     * repo, then re-sorts everything by the now-current match count.
-     * groupByRepo() above is just this function called with an empty
-     * starting list — the very first page is "merged" into nothing.
-     */
-    private fun mergeIntoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
-        val byRepo = LinkedHashMap<String, RepoIssueGroup>()
-        existing.forEach { byRepo[it.repoFullName] = it }
-        newIssues.forEach { issue ->
-            val current = byRepo[issue.repoFullName]
-            if (current == null) {
-                byRepo[issue.repoFullName] = RepoIssueGroup(
-                    repoOwner = issue.repoOwner,
-                    repoName = issue.repoName,
-                    repoFullName = issue.repoFullName,
-                    repoDisplayTitle = issue.repoDisplayTitle,
-                    issues = listOf(issue),
-                )
-            } else if (current.issues.none { it.id == issue.id }) {
-                byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
-            }
-        }
-        return byRepo.values.sortedByDescending { it.matchCount }
     }
 }

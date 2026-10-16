@@ -3,6 +3,7 @@ package com.example.githubissuefinder.data
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.RepoIssueGroup
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -114,5 +115,67 @@ class RepoIssueGroupMergeTest {
         val result = mergeReplacingByIssueId(existing = existing, newIssues = listOf(issue(1, "octocat", "hello-world")))
         assertEquals(0, result.newRepoCount)
         assertEquals(0, result.newIssueCount)
+    }
+
+    // ---- mergeIntoGroups / groupByRepo (moved out of TopReposViewModel) ----
+
+    @Test
+    fun `groupByRepo groups by repo and ranks by match count`() {
+        val groups = groupByRepo(
+            listOf(
+                issue(1, "a", "small"),
+                issue(2, "b", "big"),
+                issue(3, "b", "big"),
+            ),
+        )
+        assertEquals(listOf("b/big", "a/small"), groups.map { it.repoFullName })
+        assertEquals(listOf(2, 1), groups.map { it.matchCount })
+    }
+
+    @Test
+    fun `mergeIntoGroups adds a later page's issues to an existing repo and re-ranks`() {
+        val page1 = groupByRepo(listOf(issue(1, "a", "one"), issue(2, "b", "two")))
+
+        val merged = mergeIntoGroups(page1, listOf(issue(3, "b", "two"), issue(4, "b", "two")))
+
+        assertEquals(listOf("b/two", "a/one"), merged.map { it.repoFullName })
+        assertEquals(3, merged.first().matchCount)
+    }
+
+    @Test
+    fun `mergeIntoGroups skips an issue id that is already present`() {
+        val existing = groupByRepo(listOf(issue(1, "a", "one", commentCount = 3)))
+
+        val merged = mergeIntoGroups(existing, listOf(issue(1, "a", "one", commentCount = 99)))
+
+        assertEquals(1, merged.single().matchCount)
+        // Skipped, not replaced: the copy already on screen is kept.
+        assertEquals(3, merged.single().issues.single().commentCount)
+    }
+
+    @Test
+    fun `mergeIntoGroups with nothing new returns the same groups`() {
+        val existing = groupByRepo(listOf(issue(1, "a", "one")))
+
+        assertEquals(existing, mergeIntoGroups(existing, emptyList()))
+    }
+
+    // ---- canRequestNextPage ----
+
+    @Test
+    fun `a short page means there is nothing more to request`() {
+        assertFalse(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE - 1, justFetchedPage = 1))
+    }
+
+    @Test
+    fun `a full page early in the results allows another request`() {
+        assertTrue(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = 1))
+    }
+
+    @Test
+    fun `the page that would start past GitHub's result cap is not requested`() {
+        val lastPageInsideCap = SEARCH_API_RESULT_CAP / TOP_REPOS_PER_PAGE
+        assertFalse(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = lastPageInsideCap))
+        assertTrue(canRequestNextPage(fetchedThisPage = TOP_REPOS_PER_PAGE, justFetchedPage = lastPageInsideCap - 1))
     }
 }
