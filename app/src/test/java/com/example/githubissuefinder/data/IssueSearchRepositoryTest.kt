@@ -5,12 +5,10 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.network.dto.IssueDto
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 class IssueSearchRepositoryTest {
@@ -52,11 +50,6 @@ class IssueSearchRepositoryTest {
         IssueSearchApiResponse(code = code, isSuccessful = false, body = null, rateLimit = rateLimit)
 
     private fun repository(api: IssueSearchApi, hasToken: Boolean = true) = IssueSearchRepository(api, { hasToken })
-
-    @Before @After
-    fun resetGlobalRateLimit() {
-        RateLimitState.update(null)
-    }
 
     // ---- query builders ----
 
@@ -115,18 +108,26 @@ class IssueSearchRepositoryTest {
     }
 
     @Test
-    fun aSuccessfulSearchUpdatesTheRateLimitState() = runBlocking {
-        repository(FakeApi(search = { ok(1, rateLimit = limit) })).searchTopRepos(gfi, kotlin, 1)
-        assertEquals(limit, RateLimitState.info.value)
+    fun aSuccessfulSearchUpdatesTheRateLimit() = runBlocking {
+        val repo = repository(FakeApi(search = { ok(1, rateLimit = limit) }))
+
+        repo.searchTopRepos(gfi, kotlin, 1)
+
+        assertEquals(limit, repo.rateLimit.value)
     }
 
     @Test
-    fun aFailedSearchDoesNotUpdateTheRateLimitState() = runBlocking {
-        RateLimitState.update(limit)
+    fun aFailedSearchDoesNotUpdateTheRateLimit() = runBlocking {
+        var failing = false
+        val repo = repository(
+            FakeApi(search = { if (failing) failed(500, rateLimit = RateLimitInfo(5, 30, 25, "10s")) else ok(1, rateLimit = limit) }),
+        )
+        repo.searchTopRepos(gfi, kotlin, 1)
+        failing = true
 
-        repository(FakeApi(search = { failed(500, rateLimit = RateLimitInfo(5, 30, 25, "10s")) })).searchTopRepos(gfi, kotlin, 1)
+        repo.searchTopRepos(gfi, kotlin, 1)
 
-        assertEquals(limit, RateLimitState.info.value)
+        assertEquals(limit, repo.rateLimit.value)
     }
 
     @Test
@@ -179,20 +180,23 @@ class IssueSearchRepositoryTest {
     fun theRateLimitIsLookedUpWhenUnknown() = runBlocking {
         val api = FakeApi(rateLimit = limit)
 
-        repository(api).loadRateLimitIfUnknown()
+        val repo = repository(api)
 
-        assertEquals(limit, RateLimitState.info.value)
+        repo.loadRateLimitIfUnknown()
+
+        assertEquals(limit, repo.rateLimit.value)
         assertEquals(1, api.rateLimitCalls)
     }
 
     @Test
     fun theRateLimitIsNotLookedUpWhenAlreadyKnown() = runBlocking {
-        RateLimitState.update(limit)
-        val api = FakeApi(rateLimit = RateLimitInfo(1, 30, 29, "5s"))
+        val api = FakeApi(search = { ok(1, rateLimit = limit) }, rateLimit = RateLimitInfo(1, 30, 29, "5s"))
+        val repo = repository(api)
+        repo.searchTopRepos(gfi, kotlin, 1)
 
-        repository(api).loadRateLimitIfUnknown()
+        repo.loadRateLimitIfUnknown()
 
-        assertEquals(limit, RateLimitState.info.value)
+        assertEquals(limit, repo.rateLimit.value)
         assertEquals(0, api.rateLimitCalls)
     }
 
@@ -200,15 +204,30 @@ class IssueSearchRepositoryTest {
     fun theRateLimitIsNotLookedUpWithoutAToken() = runBlocking {
         val api = FakeApi(rateLimit = limit)
 
-        repository(api, hasToken = false).loadRateLimitIfUnknown()
+        val repo = repository(api, hasToken = false)
 
-        assertNull(RateLimitState.info.value)
+        repo.loadRateLimitIfUnknown()
+
+        assertNull(repo.rateLimit.value)
         assertEquals(0, api.rateLimitCalls)
     }
 
     @Test
     fun aFailedRateLimitLookupLeavesItUnknown() = runBlocking {
-        repository(FakeApi(rateLimit = null)).loadRateLimitIfUnknown()
-        assertFalse(RateLimitState.info.value != null)
+        val repo = repository(FakeApi(rateLimit = null))
+
+        repo.loadRateLimitIfUnknown()
+
+        assertNull(repo.rateLimit.value)
+    }
+
+    @Test
+    fun clearingTheRateLimitForgetsTheNumbers() = runBlocking {
+        val repo = repository(FakeApi(search = { ok(1, rateLimit = limit) }))
+        repo.searchTopRepos(gfi, kotlin, 1)
+
+        repo.clearRateLimit()
+
+        assertNull(repo.rateLimit.value)
     }
 }

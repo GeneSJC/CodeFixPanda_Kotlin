@@ -1,8 +1,5 @@
 package com.example.githubissuefinder.data
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import com.example.githubissuefinder.network.dto.RateLimitResponseDto
 import okhttp3.Headers
 
@@ -21,27 +18,6 @@ data class RateLimitInfo(
     val used: Int,
     val resetsInLabel: String,
 )
-
-/**
- * Plain in-memory singleton — same temporary, not-Hilt-managed pattern as
- * GitHubApiClient. Null means "no live search has completed yet," or
- * "currently in sample-data mode" (no token configured), where a rate
- * limit isn't applicable at all.
- *
- * Deliberately independent of the UI state types built from search
- * results (e.g. TopReposUiState): this reflects account/session state
- * (the credential's shared quota), not anything about a particular
- * search's results.
- */
-object RateLimitState {
-
-    private val _info = MutableStateFlow<RateLimitInfo?>(null)
-    val info: StateFlow<RateLimitInfo?> = _info.asStateFlow()
-
-    fun update(newInfo: RateLimitInfo?) {
-        _info.value = newInfo
-    }
-}
 
 /**
  * Parses GitHub's X-RateLimit-* response headers into a RateLimitInfo, or

@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
  * check and the decoding all live in ReadmeRepository (see its doc
  * comment, and ReadmeDto's, for why this is a different API/quota from
  * everything else in this app and deliberately not tracked by
- * RateLimitState — per direct instruction: no rate-limit indicator for
+ * IssueSearchRepository.rateLimit — per direct instruction: no rate-limit indicator for
  * this screen). This ViewModel only maps what the repository reports to
  * the screen's state (RepoReadmeUiState.toUiState()).
  *

@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.data.REPO_ISSUES_MAX_PER_PAGE
-import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.cacheKeyFor
 import com.example.githubissuefinder.data.repoIssuesQuery
@@ -13,12 +12,10 @@ import com.example.githubissuefinder.testutil.issueDto
 import com.example.githubissuefinder.testutil.repoGroupOf
 import com.example.githubissuefinder.testutil.searchFailed
 import com.example.githubissuefinder.testutil.searchOk
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,11 +24,6 @@ class RepoIssuesViewModelTest {
 
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
-
-    @Before @After
-    fun resetGlobalRateLimit() {
-        RateLimitState.update(null)
-    }
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN

@@ -141,7 +141,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * the separate screen came out entirely rather than staying as a
  * second access point. The underlying fetch (RepoReadmeViewModel) is
  * unchanged either way — still GitHub's Contents API, still
- * deliberately NOT tracked by the RateLimitState chip this app shows
+ * deliberately NOT tracked by the IssueSearchRepository.rateLimit chip this app shows
  * elsewhere, since it's a different API with a different, much larger
  * quota.
  *

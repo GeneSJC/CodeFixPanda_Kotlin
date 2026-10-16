@@ -281,7 +281,7 @@ import kotlinx.coroutines.flow.collect
  * Ported the classic flow's rate-limit chip/dialog/dial (RateLimitChip
  * below) into this screen's TopAppBar actions — see RateLimitChip's own
  * doc comment for why it ALWAYS renders (a placeholder "🔑 —" when
- * RateLimitState.info is still null) rather than conditionally
+ * IssueSearchRepository.rateLimit is still null) rather than conditionally
  * appearing only once a live search completes: a cache hit never calls
  * the network at all, so on a typical revisit the chip could otherwise
  * stay absent for the entire session, and its sudden appearance
@@ -902,7 +902,7 @@ private const val RATE_LIMIT_CHIP_SCALE = 1.5f
  * Persistent, tappable rate-limit indicator for the repo-first flow —
  * ported over from the classic flow's own FeedTabsScreen (see git
  * history), which had this same chip/dialog/dial but was removed along
- * with the rest of classic mode. repoFirst's data layer (RateLimitState,
+ * with the rest of classic mode. repoFirst's data layer (IssueSearchRepository.rateLimit,
  * fed by every successful TopReposViewModel/RepoIssuesViewModel search
  * response) already tracked this the whole time — this flow just never
  * displayed it anywhere, a known gap named in this project's own

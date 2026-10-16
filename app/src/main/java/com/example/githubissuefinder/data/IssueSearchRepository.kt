@@ -7,6 +7,9 @@ import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 /** Issues per page for Top Repos' list. GitHub's Search API is 1-indexed and returns at most this many per request. */
@@ -112,9 +115,12 @@ fun repoIssuesQuery(repoFullName: String, mode: IssueLabelFilter): String =
  * refreshed from every successful search), and lets those rules be
  * unit-tested without a network.
  *
- * The rate-limit chip's numbers are updated here, from the headers of
- * every SUCCESSFUL search. A failed response doesn't update them (it is
- * only inspected to tell a rate-limit 403 apart from other errors).
+ * The rate-limit chip's numbers live here ([rateLimit]), updated from
+ * the headers of every SUCCESSFUL search. A failed response doesn't
+ * update them (it is only inspected to tell a rate-limit 403 apart from
+ * other errors). They describe the credential's shared Search API quota,
+ * not any particular search's results, which is why they are held by this
+ * repository and not by a screen's state.
  *
  * [hasToken] is a parameter so a test can control it.
  */
@@ -122,6 +128,16 @@ class IssueSearchRepository(
     private val api: IssueSearchApi,
     private val hasToken: () -> Boolean = { ApiTokenRepository.instance.effectiveToken.value.isNotBlank() },
 ) {
+
+    private val _rateLimit = MutableStateFlow<RateLimitInfo?>(null)
+
+    /** The Search API rate-limit numbers for the chip, or null until a search (or the free lookup) has supplied them. */
+    val rateLimit: StateFlow<RateLimitInfo?> = _rateLimit.asStateFlow()
+
+    /** Forgets the numbers, for when the token changes: the old token's quota doesn't describe the new one. */
+    fun clearRateLimit() {
+        _rateLimit.value = null
+    }
 
     /** One page of Top Repos' list for [mode] and [language]. [page] is 1-indexed. */
     suspend fun searchTopRepos(mode: IssueLabelFilter, language: LanguageFilter, page: Int): IssueSearchResult =
@@ -139,9 +155,9 @@ class IssueSearchRepository(
      * stays blank, and the next search fills it in.
      */
     suspend fun loadRateLimitIfUnknown() {
-        if (RateLimitState.info.value != null || !hasToken()) return
+        if (_rateLimit.value != null || !hasToken()) return
         val info = api.fetchRateLimit() ?: return
-        if (RateLimitState.info.value == null) RateLimitState.update(info)
+        if (_rateLimit.value == null) _rateLimit.value = info
     }
 
     private suspend fun search(query: String, perPage: Int, page: Int, language: LanguageFilter): IssueSearchResult {
@@ -155,7 +171,7 @@ class IssueSearchRepository(
                     rateLimited = response.code == 403 && response.rateLimit?.remaining == 0,
                 )
             }
-            RateLimitState.update(response.rateLimit)
+            _rateLimit.value = response.rateLimit
             IssueSearchResult.Success(
                 IssueSearchPage(
                     issues = body.items.map { it.toIssue(languageFilter = language.queryValue) },

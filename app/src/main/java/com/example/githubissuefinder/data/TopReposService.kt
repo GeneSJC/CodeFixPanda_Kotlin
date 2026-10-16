@@ -168,6 +168,9 @@ class TopReposService(
     /** The active Issue Mode, or null while none is chosen (which DiscoverNavHost prevents from ever being observed here). */
     val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
 
+    /** The Search API rate-limit numbers for the chip, or null until they are known. */
+    val rateLimit: StateFlow<RateLimitInfo?> = searchRepository.rateLimit
+
     /** Whether a token is in use right now. */
     val hasToken: StateFlow<Boolean> = tokenRepository.effectiveToken
         .map { it.isNotBlank() }
@@ -190,7 +193,7 @@ class TopReposService(
             tokenRepository.effectiveToken.drop(1).collect {
                 // The old token's rate-limit numbers don't describe the
                 // new one; drop them and look the new ones up.
-                RateLimitState.update(null)
+                searchRepository.clearRateLimit()
                 refreshRateLimitIfUnknown()
                 if (_state.value.needsTokenFix) {
                     _state.update { it.copy(tokenRejected = false, loadFailure = null) }
@@ -438,7 +441,7 @@ class TopReposService(
                     )
                 }
                 // A cache hit never touches the network, so nothing has
-                // told RateLimitState anything yet this session.
+                // told the search repository the rate limit yet this session.
                 refreshRateLimitIfUnknown()
             } else {
                 fetchPage(language = language, page = 1, isLoadMore = false)

@@ -12,7 +12,7 @@ import retrofit2.http.Query
  * Thin wrapper over GitHub's public REST API.
  *
  * searchIssues uses the Search API — wrapped in Response<> and feeds
- * RateLimitState (see the ViewModels that call it).
+ * IssueSearchRepository.rateLimit (see the ViewModels that call it).
  *
  * v0.42: searchRepositories (and RepoDto/RepoSearchResponseDto) removed
  * — the repo-first Discover flow no longer queries GitHub's repository
@@ -38,7 +38,7 @@ import retrofit2.http.Query
  * first ACTUALLY-applied use of that general REST API bucket — the
  * Contents API, not Search. Its own doc comment, and ReadmeDto's,
  * cover why its rate-limit quota is deliberately not tracked by
- * RateLimitState the way searchIssues' is.
+ * IssueSearchRepository.rateLimit the way searchIssues' is.
  */
 interface GitHubApiService {
 

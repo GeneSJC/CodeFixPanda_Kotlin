@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
-import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.TopReposService
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -61,7 +60,7 @@ class TopReposViewModel(
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
-    val rateLimit: StateFlow<RateLimitInfo?> = RateLimitState.info
+    val rateLimit: StateFlow<RateLimitInfo?> = service.rateLimit
 
     /** Whether a token is in use right now, for the rate-limit chip's tap (a token problem, or the real dialog). */
     val hasToken: StateFlow<Boolean> = service.hasToken
