@@ -61,6 +61,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -971,9 +973,11 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 /**
  * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
  * evenly stepped through orange and yellow — a classic speedometer
- * red-line convention, independent of the current value. A separate
- * pointer dot marks where the current remaining/limit ratio actually
- * falls along that fixed track. Text ("29 Remaining") is rendered as
+ * red-line convention, independent of the current value. A needle,
+ * swinging from a hub at the arc's center, points at where the current
+ * remaining/limit ratio actually falls along that fixed track. A needle
+ * rather than a round knob on the track on purpose: a knob looks like a
+ * slider thumb that can be dragged, and this gauge is display-only. Text ("29 Remaining") is rendered as
  * ordinary Compose Text below the Canvas, rather than drawn inside the
  * arc via Canvas.drawText — simpler and safer to lay out correctly than
  * measuring/centering native text inside a curved region.
@@ -982,13 +986,18 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
     val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val dialogBackground = MaterialTheme.colorScheme.surface
+    val needleColor = MaterialTheme.colorScheme.onSurface
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .semantics { contentDescription = "Rate limit gauge: ${info.remaining} of ${info.limit} remaining" },
+        ) {
             val strokeWidthPx = 20.dp.toPx()
             val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
             val center = Offset(size.width / 2f, size.height - strokeWidthPx / 2f)
@@ -1021,18 +1030,20 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
 
             // Pointer position: ratio=0 (empty) -> 180° (left/red).
             // ratio=1 (full) -> 360°/0° (right/green).
-            val pointerAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
-            val pointerX = center.x + radius * cos(pointerAngleRad).toFloat()
-            val pointerY = center.y + radius * sin(pointerAngleRad).toFloat()
-            val pointerRadius = strokeWidthPx / 2f + 4.dp.toPx()
-
-            drawCircle(color = dialogBackground, radius = pointerRadius, center = Offset(pointerX, pointerY))
-            drawCircle(
-                color = Color.Black.copy(alpha = 0.3f),
-                radius = pointerRadius,
-                center = Offset(pointerX, pointerY),
-                style = Stroke(width = 2.dp.toPx()),
+            val needleAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
+            val needleTip = Offset(
+                center.x + radius * cos(needleAngleRad).toFloat(),
+                center.y + radius * sin(needleAngleRad).toFloat(),
             )
+
+            drawLine(
+                color = needleColor,
+                start = center,
+                end = needleTip,
+                strokeWidth = 4.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawCircle(color = needleColor, radius = 8.dp.toPx(), center = center)
         }
 
         Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
