@@ -68,17 +68,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.RateLimitInfo
-import com.example.githubissuefinder.data.RateLimitState
-import com.example.githubissuefinder.data.RepoReadmeSnippetStore
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.components.VersionLabel
@@ -250,15 +246,14 @@ import kotlinx.coroutines.flow.collect
  * v0.51 ("Hide Issue", Parts C+D of the Cache-Preserving Refresh
  * sequence): uiState.repoGroups stays the RAW cached data — hiddenGroups
  * below is a display-only derivation (each group's issues filtered
- * against HiddenIssuesStore.hiddenIds, empty groups dropped entirely)
+ * against the hidden ids from TopReposViewModel.hiddenIds)
  * computed fresh on every recomposition, never written back anywhere.
  * The repo count chip and every match-count badge read from
- * hiddenGroups, not uiState.repoGroups directly, so hiding an issue
- * down to a repo's last match makes that whole card disappear, and
- * unhiding brings it straight back — falls out of Compose recomposition
- * automatically since HiddenIssuesStore.hiddenIds is itself
- * Compose-reactive (mutableStateOf), same mechanism RepoBookmarks
- * already relies on elsewhere in this flow.
+ * hiddenGroups, not uiState.repoGroups directly. A repo whose issues
+ * are ALL hidden stays in the list with its badge reading "All hidden"
+ * (a repo leaves this list only when the cache is cleared); hiding and
+ * unhiding update the badges straight away, since the hidden ids are a
+ * StateFlow collected by this screen, so a change recomposes it.
  *
  * Also added: a "Hidden Issues" drawer item (next to "Bookmarks", same
  * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
@@ -266,8 +261,8 @@ import kotlinx.coroutines.flow.collect
  * previously fired viewModel.clearCache() directly with no
  * confirmation at all; the dialog's text is explicit that bookmarks
  * and hidden issues are UNaffected, since clearCache() only ever
- * touches RepoIssueGroupCache, never RepoBookmarks or
- * HiddenIssuesStore.
+ * touches RepoIssueGroupCache, never the bookmarks or
+ * HiddenIssuesRepository.
  *
  * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,
  * below) after direct feedback that a long flat list was hard to scan:
@@ -379,8 +374,10 @@ fun TopReposScreen(
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val rateLimit by RateLimitState.info.collectAsStateWithLifecycle()
-    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, HiddenIssuesStore.hiddenIds)
+    val rateLimit by viewModel.rateLimit.collectAsStateWithLifecycle()
+    val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
+    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while the mode is null (see its own doc comment).
     val mode by viewModel.mode.collectAsStateWithLifecycle()
@@ -678,7 +675,7 @@ fun TopReposScreen(
                         RateLimitChip(
                             info = rateLimit,
                             onClick = {
-                                if (GitHubApiClient.hasToken && !uiState.tokenRejected) {
+                                if (hasToken && !uiState.tokenRejected) {
                                     showRateLimitDialog = true
                                 } else {
                                     showTokenProblemDialog = true
@@ -785,7 +782,7 @@ fun TopReposScreen(
 
     if (showTokenProblemDialog) {
         TokenProblemDialog(
-            tokenRejected = GitHubApiClient.hasToken,
+            tokenRejected = hasToken,
             onOpenSettings = onOpenSettings,
             onDismiss = { showTokenProblemDialog = false },
         )
@@ -840,6 +837,8 @@ private fun RepoListBody(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snippets by viewModel.snippets.collectAsStateWithLifecycle()
+    val rawGroupsByName = remember(uiState.repoGroups) { uiState.repoGroups.associateBy { it.repoFullName } }
     Box(modifier = modifier) {
         when {
             uiState.noTokenConfigured -> NoTokenMessage(onOpenSettings = onOpenSettings)
@@ -870,7 +869,18 @@ private fun RepoListBody(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(hiddenGroups, key = { it.repoFullName }) { group ->
-                    RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
+                    // The repo's details screen gets the RAW group, not the
+                    // hidden-filtered one shown here: it applies the hidden
+                    // ids itself, and needs every issue to do that — and to
+                    // show "all hidden" with a View Hidden button, and to
+                    // bring an issue back on Unhide, for a repo whose
+                    // issues are all hidden.
+                    RepoCard(
+                        group = group,
+                        snippet = snippets[group.repoFullName],
+                        onShown = { viewModel.onRepoCardShown(group.repoOwner, group.repoName, group.repoFullName) },
+                        onClick = { onRepoClick(rawGroupsByName[group.repoFullName] ?: group, uiState.selectedLanguage) },
+                    )
                 }
                 item(key = "loadMoreFooter") {
                     LoadMoreFooter(
@@ -1272,15 +1282,16 @@ private fun CenteredMessage(text: String) {
  *
  * README PREVIEW (added October 5, 2026, per direct instruction): a
  * short, plain-text snippet of the repo's README (HTML tags stripped —
- * see RepoReadmeSnippetStore.buildSnippet) renders beneath the title
+ * see buildReadmeSnippet in ReadmeSnippetRepository.kt) renders beneath the title
  * row, at normal body text size. Collapsed to 2 lines by default
  * (maxLines + TextOverflow.Ellipsis); a small chevron toggle beneath it
  * expands to show the rest of the already-fetched snippet (up to
- * RepoReadmeSnippetStore's SNIPPET_MAX_CHARS) — no additional network
+ * ReadmeSnippetRepository's SNIPPET_MAX_CHARS) — no additional network
  * call on expand, just a maxLines change against text already in hand.
  * The toggle is its own Surface(onClick), not part of the Card's own
  * onClick, so tapping it doesn't also navigate into the repo.
- * Fetched via RepoReadmeSnippetStore (see that file's own doc comment,
+ * Fetched by ReadmeSnippetRepository, asked to load by TopReposViewModel
+ * when the card first appears (see that file's own doc comment,
  * including the real per-card network-call cost this adds, and the
  * retry-on-transient-failure fix). Renders nothing (not even a
  * placeholder) when no snippet is available yet or the repo has no
@@ -1289,8 +1300,12 @@ private fun CenteredMessage(text: String) {
  * preview would be more clutter than it's worth.
  */
 @Composable
-private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
-    val snippet = RepoReadmeSnippetStore.snippetFor(group.repoFullName)
+private fun RepoCard(
+    group: RepoIssueGroup,
+    snippet: String?,
+    onShown: () -> Unit,
+    onClick: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -1298,7 +1313,7 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
         label = "repoCardSnippetChevron",
     )
     LaunchedEffect(group.repoFullName) {
-        RepoReadmeSnippetStore.loadIfNeeded(group.repoOwner, group.repoName, group.repoFullName)
+        onShown()
     }
 
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
@@ -1318,7 +1333,7 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Text(
-                        matchCountLabel(group.matchCount),
+                        if (group.issues.isEmpty()) "All hidden" else matchCountLabel(group.matchCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),

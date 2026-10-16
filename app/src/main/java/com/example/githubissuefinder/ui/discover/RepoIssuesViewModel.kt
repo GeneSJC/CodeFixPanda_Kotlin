@@ -3,12 +3,15 @@ package com.example.githubissuefinder.ui.discover
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.toIssue
+import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -124,13 +127,31 @@ private const val MAX_PER_PAGE = 100
  * doesn't redundantly reassign issues to the value they already held.
  * A plain ViewModel, not AndroidViewModel — Context is taken as a
  * refreshThisRepo() parameter (from LocalContext.current at the call
- * site) rather than pulled in via AndroidViewModel's Application,
- * matching how RepoBookmarks is already called directly from
- * RepoIssuesScreen with a per-call Context.
+ * site) rather than pulled in via AndroidViewModel's Application.
  */
 class RepoIssuesViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
+    private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
+    private val bookmarksRepository: BookmarksRepository = BookmarksRepository.instance,
 ) : ViewModel() {
+
+    /** Ids of bookmarked issues, to draw each card's star. */
+    val bookmarkedIds: StateFlow<Set<Long>> = bookmarksRepository.bookmarkedIds
+
+    /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
+    fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)
+
+    /** Ids the user hid, to filter out of the list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
+
+    fun hideIssue(issue: Issue) {
+        hiddenIssuesRepository.hide(issue)
+    }
+
+    /** Used by the "Undo" on the "Issue hidden" Snackbar. */
+    fun unhideIssue(issueId: Long) {
+        hiddenIssuesRepository.unhide(issueId)
+    }
 
     /**
      * The active Issue Mode, re-exposed from IssueModeRepository so
