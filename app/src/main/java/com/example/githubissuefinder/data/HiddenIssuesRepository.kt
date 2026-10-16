@@ -29,7 +29,7 @@ interface HiddenIssuesStorage {
 
 /**
  * A plain JSON file in the app's private storage — the pattern this
- * project uses for lists of real objects (see RepoBookmarks and
+ * project uses for lists of real objects (see BookmarksRepository and
  * RepoIssueGroupCache), as opposed to SharedPreferences, which it
  * reserves for single primitive values. The file name is unchanged from
  * the old HiddenIssuesStore, so issues a user already hid are still

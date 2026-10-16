@@ -264,7 +264,7 @@ import kotlinx.coroutines.flow.collect
  * previously fired viewModel.clearCache() directly with no
  * confirmation at all; the dialog's text is explicit that bookmarks
  * and hidden issues are UNaffected, since clearCache() only ever
- * touches RepoIssueGroupCache, never RepoBookmarks or
+ * touches RepoIssueGroupCache, never the bookmarks or
  * HiddenIssuesRepository.
  *
  * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,

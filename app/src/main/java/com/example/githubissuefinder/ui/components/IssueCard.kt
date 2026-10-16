@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 /**
  * The core issue card. `isBookmarked` is passed in rather than read from the
  * Issue model, since bookmark state lives separately (see
- * RepoBookmarks.kt) — this keeps Issue immutable and the bookmark state
+ * BookmarksRepository.kt) — this keeps Issue immutable and the bookmark state
  * as the single source of truth.
  *
  * v0.39 ("CM B"): the repo identity row is now two-tier — repoDisplayTitle
@@ -95,7 +95,7 @@ import kotlinx.coroutines.launch
  * shape (same Surface + RoundedCornerShape + enlarged glyph treatment)
  * — is OPTIONAL, controlled by onToggleBookmark being non-null.
  * RepoIssuesScreen and RepoBookmarksScreen provide it, backed by the
- * repo-first flow's RepoBookmarks store (see that file's own doc
+ * repo-first flow's BookmarksRepository (see that file's own doc
  * comment).
  *
  * Tapping it calls onToggleBookmark(), then shows a real Snackbar
@@ -118,7 +118,7 @@ import kotlinx.coroutines.launch
  * the CURRENT isBookmarked value this composable already has (not a
  * return value from onToggleBookmark, which stays a plain () -> Unit)
  * — safe because the toggle it triggers is synchronous in its
- * in-memory effect (see RepoBookmarks.toggle()'s own doc comment);
+ * in-memory effect (see BookmarksRepository.toggle()'s own doc comment);
  * the disk write happens after, off the UI thread, and never blocks
  * what the user sees or reads here.
  *

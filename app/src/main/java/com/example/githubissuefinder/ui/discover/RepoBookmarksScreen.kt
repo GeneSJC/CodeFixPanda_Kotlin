@@ -18,12 +18,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.githubissuefinder.data.RepoBookmarks
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
@@ -41,14 +43,12 @@ import com.example.githubissuefinder.ui.components.IssueCard
  * Intent.ACTION_VIEW pattern, not some third in-app behavior invented
  * just for this screen.
  *
- * The displayed list comes directly from RepoBookmarks.all() — no
- * separate loading, no local copy kept in sync by hand. Because
- * RepoBookmarks.all() is deliberately built to read the reactive
- * bookmarkedIds state as part of computing its result (see that
- * function's own doc comment), un-bookmarking a card FROM THIS SCREEN
- * makes it disappear from the list immediately — falls out naturally
- * from Compose recomposition, nothing special written here to make
- * that happen.
+ * The displayed list comes from BookmarksViewModel (which observes
+ * BookmarksRepository) — no separate loading, no local copy kept in
+ * sync by hand. Un-bookmarking a card FROM THIS SCREEN makes it
+ * disappear from the list immediately — falls out naturally from the
+ * ViewModel's list being a StateFlow this screen collects, nothing
+ * special written here to make that happen.
  *
  * Has its own SnackbarHost — IssueCard's bookmark toggle needs one to
  * show its "Bookmarked"/"Unbookmarked" message (see IssueCard's own
@@ -57,10 +57,14 @@ import com.example.githubissuefinder.ui.components.IssueCard
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepoBookmarksScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun RepoBookmarksScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: BookmarksViewModel = viewModel(),
+) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val bookmarkedIssues = RepoBookmarks.all()
+    val bookmarkedIssues by viewModel.bookmarks.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -102,7 +106,7 @@ fun RepoBookmarksScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                                 Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
                             )
                         },
-                        onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                        onToggleBookmark = { viewModel.toggleBookmark(issue) },
                         snackbarHostState = snackbarHostState,
                     )
                 }

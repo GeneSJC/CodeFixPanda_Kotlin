@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.githubissuefinder.data.RepoBookmarks
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
 import kotlinx.coroutines.launch
@@ -112,8 +111,8 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * screen's initial load (see RepoIssueGroup's own doc comment).
  *
  * v0.48: isBookmarked (hardcoded false before this CM — nothing wired
- * it to anything real) now reads RepoBookmarks.isBookmarked(issue.id)
- * directly, and onToggleBookmark/snackbarHostState are wired through
+ * it to anything real) now reads the bookmarked ids from
+ * RepoIssuesViewModel (which observes BookmarksRepository), and onToggleBookmark/snackbarHostState are wired through
  * to IssueCard's new bookmark toggle — see that file's own doc comment
  * for the full reasoning, including why this specific action uses a
  * real Snackbar rather than the Toast pattern Copy Link uses. This
@@ -218,6 +217,7 @@ fun RepoIssuesScreen(
     // each time would otherwise reset to the top.
     val issueListState = rememberLazyListState()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsStateWithLifecycle()
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, hiddenIds)
 
     // Defensive fallback only — DiscoverNavHost guarantees a mode is
@@ -346,14 +346,14 @@ fun RepoIssuesScreen(
                         items(visibleIssues, key = { it.id }) { issue ->
                             IssueCard(
                                 issue = issue,
-                                isBookmarked = RepoBookmarks.isBookmarked(issue.id),
+                                isBookmarked = issue.id in bookmarkedIds,
                                 showExternalLinkIndicator = true,
                                 onClick = {
                                     context.startActivity(
                                         Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
                                     )
                                 },
-                                onToggleBookmark = { RepoBookmarks.toggle(context, issue) },
+                                onToggleBookmark = { viewModel.toggleBookmark(issue) },
                                 onHide = {
                                     viewModel.hideIssue(issue)
                                     coroutineScope.launch {
