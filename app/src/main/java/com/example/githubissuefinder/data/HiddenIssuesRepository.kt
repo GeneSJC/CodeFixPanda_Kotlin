@@ -30,7 +30,7 @@ interface HiddenIssuesStorage {
 /**
  * A plain JSON file in the app's private storage — the pattern this
  * project uses for lists of real objects (see BookmarksRepository and
- * RepoIssueGroupCache), as opposed to SharedPreferences, which it
+ * RepoIssueGroupRepository), as opposed to SharedPreferences, which it
  * reserves for single primitive values. The file name is unchanged from
  * the old HiddenIssuesStore, so issues a user already hid are still
  * there after this refactor.
@@ -75,7 +75,7 @@ class JsonFileHiddenIssuesStorage(context: Context) : HiddenIssuesStorage {
 
 /**
  * The single owner of which issues the user has hidden. Hiding is a
- * display-time filter, never a deletion: RepoIssueGroupCache keeps the
+ * display-time filter, never a deletion: RepoIssueGroupRepository keeps the
  * raw data exactly as GitHub returned it, and this repository only
  * tracks WHICH issue ids should be filtered out of what is shown, so
  * Unhide is free and instant as long as the issue is still cached.

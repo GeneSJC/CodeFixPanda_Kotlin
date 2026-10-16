@@ -27,7 +27,7 @@ interface IssueModeStorage {
 
 /**
  * SharedPreferences, deliberately NOT a JSON file matching
- * RepoIssueGroupCache's pattern: that cache legitimately needs JSON
+ * RepoIssueGroupRepository's pattern: that cache legitimately needs JSON
  * because it stores a genuinely complex nested structure. This is a
  * single enum value, or absent. Hand-rolling serialization and
  * Dispatchers.IO file I/O for one value that's either

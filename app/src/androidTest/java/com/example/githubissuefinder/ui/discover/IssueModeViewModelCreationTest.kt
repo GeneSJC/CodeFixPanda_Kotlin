@@ -9,6 +9,7 @@ import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.settings.ApiTokenViewModel
 import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
@@ -48,6 +49,7 @@ class IssueModeViewModelCreationTest {
         ApiTokenRepository.init(application)
         HiddenIssuesRepository.init(application)
         BookmarksRepository.init(application)
+        RepoIssueGroupRepository.init(application)
         store = ViewModelStore()
     }
 
@@ -94,5 +96,10 @@ class IssueModeViewModelCreationTest {
     @Test
     fun bookmarksViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[BookmarksViewModel::class.java])
+    }
+
+    @Test
+    fun repoReadmeViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[RepoReadmeViewModel::class.java])
     }
 }

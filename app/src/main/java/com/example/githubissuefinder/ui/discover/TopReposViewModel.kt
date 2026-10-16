@@ -1,28 +1,26 @@
 package com.example.githubissuefinder.ui.discover
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
+import com.example.githubissuefinder.data.IssueSearchRepository
+import com.example.githubissuefinder.data.IssueSearchResult
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
-import com.example.githubissuefinder.data.RepoIssueGroupCache
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
+import com.example.githubissuefinder.data.TOP_REPOS_PER_PAGE
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.mergeReplacingByIssueId
-import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.shouldSwitchMode
-import com.example.githubissuefinder.data.toSearchRateLimitInfo
-import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.network.GitHubApiClient
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,9 +33,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-private const val PER_PAGE = 30
 
 /**
  * GitHub's Search API hard cap — it will not return results past this
@@ -145,12 +140,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * TopReposUiState, so each event is delivered exactly once rather than
  * re-shown on every new collector (e.g. after a configuration change).
  *
- * v0.45 (PERSISTENT CACHE): now an AndroidViewModel instead of a plain
- * ViewModel — the only reason is Context access for
- * RepoIssueGroupCache's file I/O (Compose's viewModel() constructs
- * AndroidViewModel subclasses automatically via the default factory
- * when hosted from an Activity, so no extra wiring is needed at the
- * call site in TopReposScreen). load() now checks the cache FIRST for
+ * v0.45 (PERSISTENT CACHE): load() now checks the cache FIRST for
  * the (language, mode) pair being requested: a hit populates uiState
  * instantly with zero network calls — including currentPage and
  * canLoadMore, so Load More resumes exactly where a previous session
@@ -158,12 +148,12 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * exact v0.42/v0.43 network path unchanged. Every SUCCESSFUL fetch
  * (both the initial load AND every Load More) saves its result back to
  * the cache — Load More progress persists too, not just the first
- * page, since RepoIssueGroupCache.CacheEntry stores the full
+ * page, since RepoIssueGroupCacheEntry stores the full
  * accumulated repoGroups plus currentPage/canLoadMore, not a single
  * page (see that class's own doc comment for why this had to wait
  * until pagination existed to be designed correctly). Getting fresh
  * data for an already-cached combination is never automatic — see
- * checkForNewRepos() and RepoIssueGroupCache's own doc comment for why.
+ * checkForNewRepos() and RepoIssueGroupRepository's own doc comment for why.
  *
  * The cache check itself runs inside its own viewModelScope.launch
  * inside load(); on a cache MISS it calls fetchPage(), which launches
@@ -186,13 +176,14 @@ private const val SEARCH_API_RESULT_CAP = 1000
  * (GitHubIssueFinder_CachePreservingRefresh_Plan_2026-09-25.pdf) for
  * the full reasoning and the discussion that surfaced this.
  */
-class TopReposViewModel @JvmOverloads constructor(
-    application: Application,
+class TopReposViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
     private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
     private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
-) : AndroidViewModel(application) {
+    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
+    private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
+) : ViewModel() {
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
@@ -328,7 +319,7 @@ class TopReposViewModel @JvmOverloads constructor(
      * CM exists to stop discarding would just be lost a different way.
      */
     fun checkForNewRepos() {
-        if (isCheckingForNewRepos || !GitHubApiClient.hasToken) return
+        if (isCheckingForNewRepos || !hasTokenNow()) return
         val activeMode = resolveActiveMode(modeRepository.mode.value)
         val state = uiState.value
         val language = state.selectedLanguage
@@ -336,71 +327,64 @@ class TopReposViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             isCheckingForNewRepos = true
             try {
-                val query = buildString {
-                    append("label:\"${activeMode.queryValue}\"")
-                    append(" state:open")
-                    language.queryValue?.let { append(" language:$it") }
-                }
-                val response = withContext(Dispatchers.IO) {
-                    GitHubApiClient.api.searchIssues(query = query, perPage = PER_PAGE, page = 1)
-                }
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    _snackbarEvents.trySend(
-                        "Couldn't check for new repos (HTTP ${response.code()})",
-                    )
-                    return@launch
-                }
-                RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                val fetchedIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
+                when (val result = searchRepository.searchTopRepos(activeMode, language, page = 1)) {
+                    is IssueSearchResult.Success -> {
+                        val fetchedIssues = result.page.issues
+                        val totalCount = result.page.totalCount
 
-                // Captured out of the update{} lambda (which may retry
-                // under contention, same pattern fetchPage() uses below)
-                // rather than snapshotting state.currentPage/canLoadMore
-                // before this suspending call — a concurrent Load More
-                // completing while this fetch was in flight would
-                // otherwise have its newer currentPage overwritten by a
-                // stale value when this writes back to the cache.
-                var mergedGroups: List<RepoIssueGroup> = emptyList()
-                var newRepoCount = 0
-                var newIssueCount = 0
-                var currentPageAtCommit = state.currentPage
-                var canLoadMoreAtCommit = state.canLoadMore
-                var previousUpdatedAtMs = state.lastUpdatedAtMs
-                val fetchedAtMs = System.currentTimeMillis()
-                _uiState.update { current ->
-                    val result = mergeReplacingByIssueId(current.repoGroups, fetchedIssues)
-                    mergedGroups = result.groups
-                    newRepoCount = result.newRepoCount
-                    newIssueCount = result.newIssueCount
-                    currentPageAtCommit = current.currentPage
-                    canLoadMoreAtCommit = current.canLoadMore
-                    previousUpdatedAtMs = current.lastUpdatedAtMs
-                    current.copy(
-                        repoGroups = mergedGroups,
-                        totalIssueCount = body.totalCount,
-                        lastUpdatedAtMs = fetchedAtMs,
-                    )
+                        // Captured out of the update{} lambda (which may retry
+                        // under contention, same pattern fetchPage() uses below)
+                        // rather than snapshotting state.currentPage/canLoadMore
+                        // before this suspending call — a concurrent Load More
+                        // completing while this fetch was in flight would
+                        // otherwise have its newer currentPage overwritten by a
+                        // stale value when this writes back to the cache.
+                        var mergedGroups: List<RepoIssueGroup> = emptyList()
+                        var newRepoCount = 0
+                        var newIssueCount = 0
+                        var currentPageAtCommit = state.currentPage
+                        var canLoadMoreAtCommit = state.canLoadMore
+                        var previousUpdatedAtMs = state.lastUpdatedAtMs
+                        val fetchedAtMs = System.currentTimeMillis()
+                        _uiState.update { current ->
+                            val merged = mergeReplacingByIssueId(current.repoGroups, fetchedIssues)
+                            mergedGroups = merged.groups
+                            newRepoCount = merged.newRepoCount
+                            newIssueCount = merged.newIssueCount
+                            currentPageAtCommit = current.currentPage
+                            canLoadMoreAtCommit = current.canLoadMore
+                            previousUpdatedAtMs = current.lastUpdatedAtMs
+                            current.copy(
+                                repoGroups = mergedGroups,
+                                totalIssueCount = totalCount,
+                                lastUpdatedAtMs = fetchedAtMs,
+                            )
+                        }
+                        cacheRepository.save(
+                            language = language,
+                            mode = activeMode,
+                            repoGroups = mergedGroups,
+                            totalIssueCount = totalCount,
+                            currentPage = currentPageAtCommit,
+                            canLoadMore = canLoadMoreAtCommit,
+                        )
+                        _snackbarEvents.trySend(
+                            if (newRepoCount == 0 && newIssueCount == 0) {
+                                "Nothing new since ${formatRelativeTime(previousUpdatedAtMs ?: fetchedAtMs)}"
+                            } else {
+                                "$newRepoCount new repo${if (newRepoCount == 1) "" else "s"}, " +
+                                    "$newIssueCount new issue${if (newIssueCount == 1) "" else "s"}"
+                            },
+                        )
+                    }
+                    is IssueSearchResult.HttpError ->
+                        _snackbarEvents.trySend("Couldn't check for new repos (HTTP ${result.code})")
+                    is IssueSearchResult.Failed ->
+                        _snackbarEvents.trySend("Couldn't check for new repos: ${result.message ?: "unknown error"}")
+                    IssueSearchResult.NoToken -> Unit
                 }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.save(
-                        context = getApplication(),
-                        language = language,
-                        mode = activeMode,
-                        repoGroups = mergedGroups,
-                        totalIssueCount = body.totalCount,
-                        currentPage = currentPageAtCommit,
-                        canLoadMore = canLoadMoreAtCommit,
-                    )
-                }
-                _snackbarEvents.trySend(
-                    if (newRepoCount == 0 && newIssueCount == 0) {
-                        "Nothing new since ${formatRelativeTime(previousUpdatedAtMs ?: fetchedAtMs)}"
-                    } else {
-                        "$newRepoCount new repo${if (newRepoCount == 1) "" else "s"}, " +
-                            "$newIssueCount new issue${if (newIssueCount == 1) "" else "s"}"
-                    },
-                )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _snackbarEvents.trySend("Couldn't check for new repos: ${e.message ?: "unknown error"}")
             } finally {
@@ -411,7 +395,7 @@ class TopReposViewModel @JvmOverloads constructor(
 
     /**
      * v0.49: clears the ENTIRE persistent cache — see
-     * RepoIssueGroupCache.clearAll()'s doc comment for why this isn't
+     * RepoIssueGroupRepository.clearAll()'s doc comment for why this isn't
      * scoped to just the active (language, mode) pair yet — THEN
      * reloads the current screen immediately, rather than leaving
      * already-visible data on screen that the cache backing it no
@@ -422,9 +406,7 @@ class TopReposViewModel @JvmOverloads constructor(
      */
     fun clearCache() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.clearAll(getApplication())
-            }
+            cacheRepository.clearAll()
             load(uiState.value.selectedLanguage)
         }
     }
@@ -443,7 +425,7 @@ class TopReposViewModel @JvmOverloads constructor(
      * the cache on return"): RepoIssuesScreen and this screen have no
      * direct handle to each other's ViewModel instances (each gets its
      * own via viewModel()), so RepoIssuesViewModel writes straight to
-     * RepoIssueGroupCache — the same persistence layer this ViewModel
+     * RepoIssueGroupRepository — the same persistence layer this ViewModel
      * already reads from and writes to — and this function is what
      * pulls that change back into THIS screen's in-memory state, rather
      * than the two ViewModels talking to each other directly.
@@ -454,13 +436,11 @@ class TopReposViewModel @JvmOverloads constructor(
      * they are rather than being blanked out.
      */
     fun syncFromCache() {
-        if (!GitHubApiClient.hasToken) return
+        if (!hasTokenNow()) return
         val activeMode = resolveActiveMode(modeRepository.mode.value)
         val language = uiState.value.selectedLanguage
         viewModelScope.launch {
-            val cached = withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.load(getApplication(), language, activeMode)
-            } ?: return@launch
+            val cached = cacheRepository.load(language, activeMode) ?: return@launch
             _uiState.update {
                 it.copy(
                     repoGroups = cached.repoGroups,
@@ -474,7 +454,7 @@ class TopReposViewModel @JvmOverloads constructor(
     }
 
     private fun load(language: LanguageFilter) {
-        if (!GitHubApiClient.hasToken) {
+        if (!hasTokenNow()) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
         }
@@ -502,9 +482,7 @@ class TopReposViewModel @JvmOverloads constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
-            val cached = withContext(Dispatchers.IO) {
-                RepoIssueGroupCache.load(getApplication(), language, activeMode)
-            }
+            val cached = cacheRepository.load(language, activeMode)
             if (cached != null) {
                 _uiState.update {
                     it.copy(
@@ -529,28 +507,18 @@ class TopReposViewModel @JvmOverloads constructor(
      * Fills in the rate-limit chip when a list loaded from the cache and
      * no search response has supplied the numbers yet, so the chip shows
      * real values with the first list instead of "—" until some later
-     * live search happens. Uses GitHub's /rate_limit endpoint, which is
-     * free (it doesn't count against any limit), so this costs no search.
-     * A failure here is ignored on purpose: the chip just stays "—",
-     * exactly as it did before, and the next live search fills it in.
+     * live search happens. The lookup itself (GitHub's free /rate_limit
+     * endpoint, and ignoring a failure) lives in IssueSearchRepository.
      */
     private fun refreshRateLimitIfUnknown() {
-        if (RateLimitState.info.value != null || !GitHubApiClient.hasToken) return
-        viewModelScope.launch {
-            try {
-                val response = withContext(Dispatchers.IO) { GitHubApiClient.api.getRateLimit() }
-                val body = response.body()
-                if (response.isSuccessful && body != null && RateLimitState.info.value == null) {
-                    RateLimitState.update(body.toSearchRateLimitInfo())
-                }
-            } catch (e: Exception) {
-                // See the doc comment: the chip simply stays blank.
-            }
-        }
+        viewModelScope.launch { searchRepository.loadRateLimitIfUnknown() }
     }
 
+    /** Whether a token is in use right now. */
+    private fun hasTokenNow(): Boolean = tokenRepository.effectiveToken.value.isNotBlank()
+
     private fun fetchPage(language: LanguageFilter, page: Int, isLoadMore: Boolean) {
-        if (!GitHubApiClient.hasToken) {
+        if (!hasTokenNow()) {
             _uiState.update { it.copy(noTokenConfigured = true, isLoading = false) }
             return
         }
@@ -567,103 +535,102 @@ class TopReposViewModel @JvmOverloads constructor(
                 _uiState.update { it.copy(isLoading = true, errorMessage = null, noTokenConfigured = false) }
             }
             try {
-                val query = buildString {
-                    append("label:\"${activeMode.queryValue}\"")
-                    append(" state:open")
-                    language.queryValue?.let { append(" language:$it") }
-                }
-                val response = withContext(Dispatchers.IO) {
-                    GitHubApiClient.api.searchIssues(query = query, perPage = PER_PAGE, page = page)
-                }
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    val rateLimitInfo = parseRateLimitHeaders(response.headers())
-                    val isRateLimited = response.code() == 403 && rateLimitInfo?.remaining == 0
-                    if (isLoadMore && isRateLimited) {
-                        // Deliberately leave canLoadMore/currentPage untouched —
-                        // see class doc comment. Only the footer's loading
-                        // state clears; the button itself is unaffected.
-                        _uiState.update { it.copy(isLoadingMore = false) }
-                        _snackbarEvents.trySend(
-                            "GitHub's search rate limit was reached — try again shortly",
+                when (val result = searchRepository.searchTopRepos(activeMode, language, page)) {
+                    is IssueSearchResult.Success -> {
+                        val newIssues = result.page.issues
+                        val totalCount = result.page.totalCount
+
+                        // Computed inside the update{} lambda (which may retry
+                        // under contention) and captured out to these vars so
+                        // the SAME values that were actually committed to
+                        // uiState are what get persisted to the cache below —
+                        // not a second, potentially different, independently
+                        // recomputed pair of values.
+                        var mergedGroups: List<RepoIssueGroup> = emptyList()
+                        var newCanLoadMore = false
+                        val fetchedAtMs = System.currentTimeMillis()
+                        _uiState.update { state ->
+                            mergedGroups = if (isLoadMore) {
+                                mergeIntoGroups(state.repoGroups, newIssues)
+                            } else {
+                                groupByRepo(newIssues)
+                            }
+                            newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
+                            state.copy(
+                                repoGroups = mergedGroups,
+                                isLoading = false,
+                                isLoadingMore = false,
+                                totalIssueCount = totalCount,
+                                currentPage = page,
+                                canLoadMore = newCanLoadMore,
+                                lastUpdatedAtMs = fetchedAtMs,
+                                tokenRejected = false,
+                            )
+                        }
+                        cacheRepository.save(
+                            language = language,
+                            mode = activeMode,
+                            repoGroups = mergedGroups,
+                            totalIssueCount = totalCount,
+                            currentPage = page,
+                            canLoadMore = newCanLoadMore,
                         )
-                        return@launch
                     }
-                    // 401 specifically means GitHub rejected the configured
-                    // credentials (expired, revoked, or simply wrong) — GitHub's
-                    // own distinction from a 403 rate-limit response, handled
-                    // separately above. Surfaced via tokenRejected rather than
-                    // just errorMessage's generic text so the rate-limit chip's
-                    // tap handler can tell "no token" and "a token that doesn't
-                    // work" apart. See TopReposScreen's TokenProblemDialog.
-                    val isTokenRejected = response.code() == 401
-                    val message = "GitHub returned an error (HTTP ${response.code()})"
-                    _uiState.update {
-                        if (isLoadMore) {
-                            it.copy(isLoadingMore = false, loadMoreError = message)
-                        } else {
-                            it.copy(isLoading = false, errorMessage = message, tokenRejected = isTokenRejected)
+                    is IssueSearchResult.HttpError -> {
+                        if (isLoadMore && result.rateLimited) {
+                            // Deliberately leave canLoadMore/currentPage untouched —
+                            // see class doc comment. Only the footer's loading
+                            // state clears; the button itself is unaffected.
+                            _uiState.update { it.copy(isLoadingMore = false) }
+                            _snackbarEvents.trySend(
+                                "GitHub's search rate limit was reached — try again shortly",
+                            )
+                            return@launch
+                        }
+                        // 401 specifically means GitHub rejected the configured
+                        // credentials (expired, revoked, or simply wrong) — GitHub's
+                        // own distinction from a 403 rate-limit response, handled
+                        // separately above. Surfaced via tokenRejected rather than
+                        // just errorMessage's generic text so the rate-limit chip's
+                        // tap handler can tell "no token" and "a token that doesn't
+                        // work" apart. See TopReposScreen's TokenProblemDialog.
+                        val isTokenRejected = result.code == 401
+                        val message = "GitHub returned an error (HTTP ${result.code})"
+                        _uiState.update {
+                            if (isLoadMore) {
+                                it.copy(isLoadingMore = false, loadMoreError = message)
+                            } else {
+                                it.copy(isLoading = false, errorMessage = message, tokenRejected = isTokenRejected)
+                            }
                         }
                     }
-                    return@launch
+                    IssueSearchResult.NoToken ->
+                        _uiState.update { it.copy(noTokenConfigured = true, isLoading = false, isLoadingMore = false) }
+                    is IssueSearchResult.Failed -> showLoadFailure(isLoadMore, result.message)
                 }
-                RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                val newIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
-
-                // Computed inside the update{} lambda (which may retry
-                // under contention) and captured out to these vars so
-                // the SAME values that were actually committed to
-                // uiState are what get persisted to the cache below —
-                // not a second, potentially different, independently
-                // recomputed pair of values.
-                var mergedGroups: List<RepoIssueGroup> = emptyList()
-                var newCanLoadMore = false
-                val fetchedAtMs = System.currentTimeMillis()
-                _uiState.update { state ->
-                    mergedGroups = if (isLoadMore) {
-                        mergeIntoGroups(state.repoGroups, newIssues)
-                    } else {
-                        groupByRepo(newIssues)
-                    }
-                    newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
-                    state.copy(
-                        repoGroups = mergedGroups,
-                        isLoading = false,
-                        isLoadingMore = false,
-                        totalIssueCount = body.totalCount,
-                        currentPage = page,
-                        canLoadMore = newCanLoadMore,
-                        lastUpdatedAtMs = fetchedAtMs,
-                        tokenRejected = false,
-                    )
-                }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.save(
-                        context = getApplication(),
-                        language = language,
-                        mode = activeMode,
-                        repoGroups = mergedGroups,
-                        totalIssueCount = body.totalCount,
-                        currentPage = page,
-                        canLoadMore = newCanLoadMore,
-                    )
-                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                val message = "Couldn't load issues: ${e.message ?: "unknown error"}"
-                _uiState.update {
-                    if (isLoadMore) {
-                        it.copy(isLoadingMore = false, loadMoreError = message)
-                    } else {
-                        it.copy(isLoading = false, errorMessage = message)
-                    }
-                }
+                showLoadFailure(isLoadMore, e.message)
+            }
+        }
+    }
+
+    /** A load or Load More that failed before GitHub answered, shown inline (the initial load) or in the footer (Load More). */
+    private fun showLoadFailure(isLoadMore: Boolean, detail: String?) {
+        val message = "Couldn't load issues: ${detail ?: "unknown error"}"
+        _uiState.update {
+            if (isLoadMore) {
+                it.copy(isLoadingMore = false, loadMoreError = message)
+            } else {
+                it.copy(isLoading = false, errorMessage = message)
             }
         }
     }
 
     /**
      * False once there's nothing left worth requesting: either this
-     * page came back short (fewer than PER_PAGE items — the true end
+     * page came back short (fewer than TOP_REPOS_PER_PAGE items — the true end
      * of this query's results, not just an empty page), or the NEXT
      * page would start past GitHub's 1,000-result Search API cap.
      * Checked against the page just fetched, not the total the API
@@ -672,8 +639,8 @@ class TopReposViewModel @JvmOverloads constructor(
      * for this decision on its own.
      */
     private fun canRequestNextPage(fetchedThisPage: Int, justFetchedPage: Int): Boolean {
-        if (fetchedThisPage < PER_PAGE) return false
-        val nextPageStartIndex = justFetchedPage * PER_PAGE
+        if (fetchedThisPage < TOP_REPOS_PER_PAGE) return false
+        val nextPageStartIndex = justFetchedPage * TOP_REPOS_PER_PAGE
         return nextPageStartIndex < SEARCH_API_RESULT_CAP
     }
 

@@ -1,12 +1,8 @@
 package com.example.githubissuefinder.data
 
-import com.example.githubissuefinder.network.GitHubApiClient
-import com.example.githubissuefinder.network.decodeGitHubContentsBase64
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 
 private const val SNIPPET_MAX_CHARS = 600
 
@@ -36,30 +32,28 @@ fun interface ReadmeSource {
 }
 
 /**
- * GitHub's Contents API (GET /repos/{owner}/{repo}/readme). This
- * still calls GitHubApiClient directly; putting a proper data layer
- * between the app and the network is the next group of the MVVM sweep.
+ * The real source: asks ReadmeRepository for the README and turns its
+ * outcome into what the snippet cache needs (see [toReadmeFetch]).
  */
-class GitHubReadmeSource : ReadmeSource {
-    override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch {
-        if (!GitHubApiClient.hasToken) return ReadmeFetch.Unavailable
-        return try {
-            val response = withContext(Dispatchers.IO) {
-                GitHubApiClient.api.getReadme(repoOwner, repoName)
-            }
-            val body = response.body()
-            val markdown = if (!response.isSuccessful || body == null) {
-                null
-            } else {
-                decodeGitHubContentsBase64(body.content, body.encoding)
-            }
-            ReadmeFetch.Resolved(markdown)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            ReadmeFetch.Transient
-        }
-    }
+class GitHubReadmeSource(
+    private val repository: ReadmeRepository = ReadmeRepository.instance,
+) : ReadmeSource {
+    override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch =
+        repository.fetch(repoOwner, repoName).toReadmeFetch()
+}
+
+/**
+ * How a README outcome counts for the preview cache. A real answer from
+ * GitHub — including "no README" (404), an error response, or a README
+ * that can't be decoded — is final: there is simply no preview, and it is
+ * not retried. A failed request is transient and worth retrying, and no
+ * token means there is nothing to ask with yet.
+ */
+fun ReadmeResult.toReadmeFetch(): ReadmeFetch = when (this) {
+    is ReadmeResult.Found -> ReadmeFetch.Resolved(markdown)
+    ReadmeResult.NotFound, is ReadmeResult.HttpError, ReadmeResult.Unreadable -> ReadmeFetch.Resolved(null)
+    ReadmeResult.NoToken -> ReadmeFetch.Unavailable
+    is ReadmeResult.Failed -> ReadmeFetch.Transient
 }
 
 /**

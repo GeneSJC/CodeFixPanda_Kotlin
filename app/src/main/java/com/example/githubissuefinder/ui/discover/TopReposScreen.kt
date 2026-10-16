@@ -213,7 +213,7 @@ import kotlinx.coroutines.flow.collect
  * under the language filter row, driven by uiState.lastUpdatedAtMs —
  * the only visible sign, most of the time, that this screen might be
  * showing cached data rather than something just fetched (see
- * TopReposViewModel and RepoIssueGroupCache doc comments). Two more
+ * TopReposViewModel and RepoIssueGroupRepository doc comments). Two more
  * hamburger-menu items sit above the mode-switch pair, grouped with
  * the animation items via their own divider: "Check for New Repos"
  * (renamed in v0.49 from "Refresh" — was a forced live fetch that
@@ -221,7 +221,7 @@ import kotlinx.coroutines.flow.collect
  * discarding whatever Load More had accumulated; now merges fresh
  * results in instead, see TopReposViewModel.checkForNewRepos()'s doc
  * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
- * just the active combination — see RepoIssueGroupCache.clearAll()'s
+ * just the active combination — see RepoIssueGroupRepository.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
  * oversight — and, as of v0.49, reloads this screen immediately
  * afterward rather than leaving stale data visible).
@@ -261,7 +261,7 @@ import kotlinx.coroutines.flow.collect
  * previously fired viewModel.clearCache() directly with no
  * confirmation at all; the dialog's text is explicit that bookmarks
  * and hidden issues are UNaffected, since clearCache() only ever
- * touches RepoIssueGroupCache, never the bookmarks or
+ * touches RepoIssueGroupRepository, never the bookmarks or
  * HiddenIssuesRepository.
  *
  * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,

@@ -77,11 +77,11 @@ data class TopReposUiState(
     val loadMoreError: String? = null,
     /**
      * v0.45: when the currently-shown repoGroups were actually fetched
-     * — from a live network call, OR from RepoIssueGroupCache on a
+     * — from a live network call, OR from RepoIssueGroupRepository on a
      * cache hit. Null only before the very first load resolves. Drives
      * the "Updated X ago" label on this screen, so cached data never
      * silently pretends to be fresher than it is — see
-     * RepoIssueGroupCache's doc comment for why a cache hit is never
+     * RepoIssueGroupRepository's doc comment for why a cache hit is never
      * automatically refreshed in the background.
      */
     val lastUpdatedAtMs: Long? = null,
