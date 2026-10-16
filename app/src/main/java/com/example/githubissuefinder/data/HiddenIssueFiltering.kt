@@ -8,7 +8,7 @@ import com.example.githubissuefinder.model.RepoIssueGroup
  * and RepoIssuesScreen apply against HiddenIssuesRepository.hiddenIds — a
  * standalone, top-level function (not private to either screen)
  * specifically so it's directly unit-testable with plain JUnit, same
- * reasoning as mergeReplacingByIssueId() in this same package: it
+ * reasoning as updateIssuesInRepoGroups() in this same package: it
  * touches nothing Android/Compose-specific, so it doesn't need to.
  *
  * Deliberately a display-time filter, never a mutation of the cache —

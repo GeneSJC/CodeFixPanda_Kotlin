@@ -164,7 +164,7 @@ class TopReposViewModelTest {
     // ---- Load More ----
 
     @Test
-    fun aFullPageEnablesLoadMoreAndLoadMoreMergesTheNextPage() {
+    fun aFullPageEnablesLoadMoreAndLoadMoreAddsTheNextPage() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, page ->
             if (page == 1) searchOk(fullPage("a", "one", 1), total = 200) else searchOk(listOf(issueDto(500, "b", "two")), total = 200)
@@ -318,7 +318,7 @@ class TopReposViewModelTest {
     // ---- Check for New Repos / write-back ----
 
     @Test
-    fun checkingForNewReposMergesWhatIsNewAndSaysSo() = runBlocking {
+    fun checkingForNewReposAddsWhatIsNewAndSaysSo() = runBlocking {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1), page = 1, more = true))
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1, "a", "one"), issueDto(2, "b", "two")), total = 9) }

@@ -13,11 +13,11 @@ import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.canRequestNextPage
 import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.data.addIssuesToRepoGroups
 import com.example.githubissuefinder.data.groupByRepo
-import com.example.githubissuefinder.data.mergeIntoGroups
-import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.shouldSwitchMode
+import com.example.githubissuefinder.data.updateIssuesInRepoGroups
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -102,14 +102,14 @@ import kotlinx.coroutines.launch
  * exactly one page and stopped — whatever groups formed from GitHub's
  * default 30 results were the whole list, with no way to see more.
  * loadMore() adds a second, explicit page fetch, and — this is the
- * part worth reading carefully — the result is MERGED into the
+ * part worth reading carefully — the result is ADDED to the
  * existing repoGroups, not appended as new cards. A repo's matching
  * issues are not guaranteed to land on a single page: if "Apps
  * Android Commons" has 5 matching issues and 3 landed on page 1, the
  * other 2 can easily land on page 2. Naively appending page 2's
  * grouped results would show "Apps Android Commons" as a SECOND,
  * separate card with match count 2, instead of updating the existing
- * card to match count 5. mergeIntoGroups() (data/RepoIssueGroupMerge.kt) is what prevents
+ * card to match count 5. addIssuesToRepoGroups() (data/RepoIssueGrouping.kt) is what prevents
  * that — every Load More re-groups its new issues against the
  * repoFullName keys already on screen before anything is added or
  * re-sorted.
@@ -157,14 +157,14 @@ import kotlinx.coroutines.launch
  *
  * v0.49 ("Cache-Preserving Refresh"): what used to be refresh() forced
  * a network fetch through load(), which — because fetchPage()'s
- * non-Load-More branch calls groupByRepo(), i.e. mergeIntoGroups()
+ * non-Load-More branch calls groupByRepo(), i.e. addIssuesToRepoGroups()
  * against an EMPTY starting list — replaced the entire accumulated
  * repoGroups with just page 1's issues. With 200 repos built from ten
  * Load More taps, one refresh discarded the results of nine of them: a
  * real data-loss bug, not a labelling problem, since it defeated the
  * entire point of the v0.45 cache. checkForNewRepos() replaces it: same
- * one-call page-1 fetch, but merged in via the new
- * mergeReplacingByIssueId() (see that function's own doc comment),
+ * one-call page-1 fetch, but applied via the new
+ * updateIssuesInRepoGroups() (see that function's own doc comment),
  * never replacing. See this CM's own plan doc
  * (GitHubIssueFinder_CachePreservingRefresh_Plan_2026-09-25.pdf) for
  * the full reasoning and the discussion that surfaced this.
@@ -266,8 +266,8 @@ class TopReposViewModel(
     fun retry() = load(uiState.value.selectedLanguage)
 
     /**
-     * Fetches the next page and merges it into what's already shown —
-     * see class doc comment for why "merge," not "append." A no-op if
+     * Fetches the next page and adds it to what's already shown —
+     * see class doc comment for why "add to the existing cards," not "append." A no-op if
      * a Load More is already in flight or canLoadMore is already
      * false, so this is safe to wire directly to a button's onClick
      * without the caller needing to check state first.
@@ -294,13 +294,13 @@ class TopReposViewModel(
      * 1's issues — silently discarding everything Load More had
      * accumulated, a real data-loss bug, not a labelling problem — see
      * this CM's own plan doc). Answers "what's new since I last
-     * looked?": fetches page 1 exactly as a fresh load would, but MERGES
-     * the result into repoGroups instead of replacing it — new repos
+     * looked?": fetches page 1 exactly as a fresh load would, but UPDATES
+     * repoGroups with the result instead of replacing them — new repos
      * are added, existing repos gain any new matches, and an
      * already-present issue's fields (comment count, labels, updated
      * time) get refreshed to the fetched copy via
-     * data.RepoIssueGroupMerge.kt's mergeReplacingByIssueId() — a
-     * dedicated replace-by-id variant of mergeIntoGroups(), kept
+     * data/RepoIssueGrouping.kt's updateIssuesInRepoGroups() — a
+     * dedicated replace-by-id variant of addIssuesToRepoGroups(), kept
      * as a standalone top-level function specifically so it's directly
      * unit-testable (see its own doc comment for why) — that function's
      * own skip-duplicate behavior stays exactly as it is for Load More,
@@ -333,7 +333,7 @@ class TopReposViewModel(
                         // completing while this fetch was in flight would
                         // otherwise have its newer currentPage overwritten by a
                         // stale value when this writes back to the cache.
-                        var mergedGroups: List<RepoIssueGroup> = emptyList()
+                        var repoGroups: List<RepoIssueGroup> = emptyList()
                         var newRepoCount = 0
                         var newIssueCount = 0
                         var currentPageAtCommit = state.currentPage
@@ -341,15 +341,15 @@ class TopReposViewModel(
                         var previousUpdatedAtMs = state.lastUpdatedAtMs
                         val fetchedAtMs = System.currentTimeMillis()
                         _uiState.update { current ->
-                            val merged = mergeReplacingByIssueId(current.repoGroups, fetchedIssues)
-                            mergedGroups = merged.groups
-                            newRepoCount = merged.newRepoCount
-                            newIssueCount = merged.newIssueCount
+                            val update = updateIssuesInRepoGroups(current.repoGroups, fetchedIssues)
+                            repoGroups = update.repoGroups
+                            newRepoCount = update.newRepoCount
+                            newIssueCount = update.newIssueCount
                             currentPageAtCommit = current.currentPage
                             canLoadMoreAtCommit = current.canLoadMore
                             previousUpdatedAtMs = current.lastUpdatedAtMs
                             current.copy(
-                                repoGroups = mergedGroups,
+                                repoGroups = repoGroups,
                                 totalIssueCount = totalCount,
                                 lastUpdatedAtMs = fetchedAtMs,
                             )
@@ -357,7 +357,7 @@ class TopReposViewModel(
                         cacheRepository.save(
                             language = language,
                             mode = activeMode,
-                            repoGroups = mergedGroups,
+                            repoGroups = repoGroups,
                             totalIssueCount = totalCount,
                             currentPage = currentPageAtCommit,
                             canLoadMore = canLoadMoreAtCommit,
@@ -465,7 +465,7 @@ class TopReposViewModel(
         // behind a spinner on every language switch, which isn't how
         // this screen has ever behaved. The old list gets replaced
         // outright once either the cache-hit path below or fetchPage's
-        // non-merge path succeeds.
+        // non-Load-More path succeeds.
         _uiState.update {
             it.copy(
                 currentPage = 0,
@@ -540,18 +540,18 @@ class TopReposViewModel(
                         // uiState are what get persisted to the cache below —
                         // not a second, potentially different, independently
                         // recomputed pair of values.
-                        var mergedGroups: List<RepoIssueGroup> = emptyList()
+                        var repoGroups: List<RepoIssueGroup> = emptyList()
                         var newCanLoadMore = false
                         val fetchedAtMs = System.currentTimeMillis()
                         _uiState.update { state ->
-                            mergedGroups = if (isLoadMore) {
-                                mergeIntoGroups(state.repoGroups, newIssues)
+                            repoGroups = if (isLoadMore) {
+                                addIssuesToRepoGroups(state.repoGroups, newIssues)
                             } else {
                                 groupByRepo(newIssues)
                             }
                             newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
                             state.copy(
-                                repoGroups = mergedGroups,
+                                repoGroups = repoGroups,
                                 isLoading = false,
                                 isLoadingMore = false,
                                 totalIssueCount = totalCount,
@@ -564,7 +564,7 @@ class TopReposViewModel(
                         cacheRepository.save(
                             language = language,
                             mode = activeMode,
-                            repoGroups = mergedGroups,
+                            repoGroups = repoGroups,
                             totalIssueCount = totalCount,
                             currentPage = page,
                             canLoadMore = newCanLoadMore,
