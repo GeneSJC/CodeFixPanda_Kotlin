@@ -80,6 +80,7 @@ import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.theme.colorScheme
+import com.example.githubissuefinder.ui.settings.ApiTokenHelpDialog
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.OrigamiSplashScreen
 import com.example.githubissuefinder.ui.splash.ShapeStackSplashScreen
@@ -361,6 +362,7 @@ fun TopReposScreen(
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
     onOpenBookmarks: () -> Unit,
     onOpenHidden: () -> Unit,
+    onOpenSettings: () -> Unit,
     onResetApp: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TopReposViewModel = viewModel(),
@@ -546,6 +548,13 @@ fun TopReposScreen(
                                             showClearCacheConfirm = true
                                         },
                                     )
+                                    DropdownMenuItem(
+                                        text = { Text("Settings") },
+                                        onClick = {
+                                            showMenu = false
+                                            onOpenSettings()
+                                        },
+                                    )
                                     // Clears the Issue Mode and returns to
                                     // IssueModeGateScreen — see
                                     // DiscoverNavHost's own doc comment
@@ -720,6 +729,7 @@ fun TopReposScreen(
                         currentMode = currentMode,
                         viewModel = viewModel,
                         onRepoClick = onRepoClick,
+                        onOpenSettings = onOpenSettings,
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
                 }
@@ -735,6 +745,7 @@ fun TopReposScreen(
                         currentMode = currentMode,
                         viewModel = viewModel,
                         onRepoClick = onRepoClick,
+                        onOpenSettings = onOpenSettings,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -772,6 +783,7 @@ fun TopReposScreen(
     if (showTokenProblemDialog) {
         TokenProblemDialog(
             tokenRejected = GitHubApiClient.hasToken,
+            onOpenSettings = onOpenSettings,
             onDismiss = { showTokenProblemDialog = false },
         )
     }
@@ -822,15 +834,12 @@ private fun RepoListBody(
     currentMode: IssueLabelFilter,
     viewModel: TopReposViewModel,
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         when {
-            uiState.noTokenConfigured -> CenteredMessage(
-                text = "This screen needs a live GitHub connection — add a token to " +
-                    "local.properties to see ranked repos here. No sample-data " +
-                    "fallback yet for this screen.",
-            )
+            uiState.noTokenConfigured -> NoTokenMessage(onOpenSettings = onOpenSettings)
             uiState.isLoading && uiState.repoGroups.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -1036,6 +1045,34 @@ private fun RateLimitRow(label: String, value: String) {
 }
 
 /**
+ * The list body's "no token" state: an explanation and a button straight
+ * to Settings, where a token can be entered and the instructions for
+ * getting one are a tap away. Once a token is saved, TopReposViewModel
+ * reloads on its own, so this disappears without any further action.
+ * There is still no sample-data fallback for this screen.
+ */
+@Composable
+private fun NoTokenMessage(onOpenSettings: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "This screen needs a live GitHub connection. Add a free GitHub token " +
+                    "in Settings to see ranked repos here.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Button(onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
+                Text("Add your token")
+            }
+        }
+    }
+}
+
+/**
  * Shown instead of RateLimitDialog when there's a token problem —
  * either GitHubApiClient.hasToken is false (nothing configured at all)
  * or a configured token is being rejected by GitHub (tokenRejected,
@@ -1050,28 +1087,42 @@ private fun RateLimitRow(label: String, value: String) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TokenProblemDialog(tokenRejected: Boolean, onDismiss: () -> Unit) {
+private fun TokenProblemDialog(
+    tokenRejected: Boolean,
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var showHelp by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Got it") }
+            TextButton(
+                onClick = {
+                    onDismiss()
+                    onOpenSettings()
+                },
+            ) { Text("Open Settings") }
+        },
+        dismissButton = {
+            TextButton(onClick = { showHelp = true }) { Text("How to get a token") }
         },
         title = { Text("GitHub API token needed") },
         text = {
             Text(
                 if (tokenRejected) {
-                    "We see a value set for GITHUB_API_TOKEN in local.properties, but " +
-                        "GitHub isn't accepting it (expired, revoked, or otherwise " +
-                        "invalid). Generate a new personal access token and update " +
-                        "local.properties, then rebuild."
+                    "GitHub isn't accepting the token this app is using (it may be " +
+                        "expired, revoked, or otherwise invalid). Enter a new personal " +
+                        "access token in Settings."
                 } else {
                     "This app needs a GitHub personal access token to make live requests " +
-                        "against the Search API. Add one as GITHUB_API_TOKEN in your " +
-                        "local.properties file (gitignored, never committed), then rebuild."
+                        "against the Search API. Enter one in Settings."
                 },
             )
         },
     )
+    if (showHelp) {
+        ApiTokenHelpDialog(onDismiss = { showHelp = false })
+    }
 }
 
 /**

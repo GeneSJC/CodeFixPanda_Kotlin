@@ -5,15 +5,16 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
+        <!-- The user-entered GitHub token stays on this device: excluded
+             from cloud backup and device transfer. Keep this file name in
+             sync with PREFS_NAME in data/ApiTokenRepository.kt. -->
+        <exclude domain="sharedpref" path="api_token_prefs.xml"/>
         <!-- TODO: Use <include> and <exclude> to control what is backed up.
         <include .../>
         <exclude .../>
         -->
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="api_token_prefs.xml"/>
     </device-transfer>
-    -->
 </data-extraction-rules>
