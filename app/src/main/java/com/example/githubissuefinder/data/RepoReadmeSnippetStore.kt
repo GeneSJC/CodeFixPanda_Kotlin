@@ -16,7 +16,7 @@ private const val SNIPPET_MAX_CHARS = 600
  * expand, just a maxLines change against text already fetched.
  *
  * Plain in-memory Kotlin singleton (mutableStateMapOf, same reactive-
- * without-a-ViewModel pattern RateLimitState/RepoBookmarks already use
+ * without-a-ViewModel pattern RateLimitState already uses
  * elsewhere in this app), NOT persisted to disk — unlike those two, a
  * README snippet is cheap to refetch and has no reason to survive a
  * process death, so there's no need for a second on-disk cache format.
