@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.network
 
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
+import com.example.githubissuefinder.network.dto.RateLimitResponseDto
 import com.example.githubissuefinder.network.dto.ReadmeDto
 import retrofit2.Response
 import retrofit2.http.GET
@@ -49,6 +50,15 @@ interface GitHubApiService {
         @Query("per_page") perPage: Int = 30,
         @Query("page") page: Int = 1,
     ): Response<IssueSearchResponseDto>
+
+    /**
+     * The current state of every rate-limit bucket. Free to call: it
+     * doesn't count against any limit. Used to fill in the Search API
+     * rate-limit chip when a list loads from the cache and no search
+     * response has supplied the numbers yet.
+     */
+    @GET("rate_limit")
+    suspend fun getRateLimit(): Response<RateLimitResponseDto>
 
     /**
      * GitHub's Contents API, not Search — see ReadmeDto's own doc

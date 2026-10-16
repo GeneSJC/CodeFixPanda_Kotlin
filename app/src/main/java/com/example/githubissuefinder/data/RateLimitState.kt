@@ -3,6 +3,7 @@ package com.example.githubissuefinder.data
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.githubissuefinder.network.dto.RateLimitResponseDto
 import okhttp3.Headers
 
 /**
@@ -57,8 +58,29 @@ fun parseRateLimitHeaders(headers: Headers): RateLimitInfo? {
     return RateLimitInfo(remaining, limit, used, resetsInLabel)
 }
 
-private fun formatResetsIn(resetEpochSeconds: Long): String {
-    val nowSeconds = System.currentTimeMillis() / 1000
+/**
+ * The Search API rate-limit state from a GET /rate_limit response, used
+ * to fill in the chip when a list was loaded from the cache and no
+ * search response has supplied the numbers yet. [nowEpochSeconds] is a
+ * parameter so the "resets in" label can be tested.
+ */
+fun RateLimitResponseDto.toSearchRateLimitInfo(
+    nowEpochSeconds: Long = System.currentTimeMillis() / 1000,
+): RateLimitInfo {
+    val bucket = resources.search
+    return RateLimitInfo(
+        remaining = bucket.remaining,
+        limit = bucket.limit,
+        used = bucket.used,
+        resetsInLabel = formatResetsIn(bucket.reset, nowEpochSeconds),
+    )
+}
+
+/** "45s" or "2m 5s" until [resetEpochSeconds]; "0s" if it has already passed. */
+internal fun formatResetsIn(
+    resetEpochSeconds: Long,
+    nowSeconds: Long = System.currentTimeMillis() / 1000,
+): String {
     val secondsUntil = (resetEpochSeconds - nowSeconds).coerceAtLeast(0)
     return if (secondsUntil < 60) {
         "${secondsUntil}s"

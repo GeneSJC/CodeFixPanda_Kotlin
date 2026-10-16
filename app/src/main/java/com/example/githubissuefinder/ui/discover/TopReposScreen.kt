@@ -883,6 +883,9 @@ private fun RepoListBody(
     }
 }
 
+/** How much bigger the rate-limit chip is than its original size (50% larger). */
+private const val RATE_LIMIT_CHIP_SCALE = 1.5f
+
 /**
  * Persistent, tappable rate-limit indicator for the repo-first flow —
  * ported over from the classic flow's own FeedTabsScreen (see git
@@ -897,26 +900,38 @@ private fun RepoListBody(
  * "🔑 remaining/limit" in a compact chip — there genuinely isn't room
  * for a legible dial in the TopAppBar itself. Tapping it opens a dialog
  * with the full speedometer-style dial below.
+ *
+ * Sized 50% larger than its original bodySmall/10dp/4dp version
+ * ([RATE_LIMIT_CHIP_SCALE]) so the numbers are easier to read at a
+ * glance; the text, its line height, the padding and the corner radius
+ * all scale together to keep the same proportions.
  */
 @Composable
 private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
+    val base = MaterialTheme.typography.bodySmall
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.padding(end = 8.dp),
+        modifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp),
     ) {
         Text(
-            // A cache-hit load never calls the network, so info can stay
-            // null for the whole session — "🔑 —" until a real search
-            // response arrives, rather than the chip appearing/
-            // disappearing depending on whether this exact combination
-            // happened to be cached. Still tappable either way: the
-            // dialog handles a null info with its own explanatory text.
+            // The numbers normally arrive with the first list: a live
+            // search supplies them, and a cache-hit load has
+            // TopReposViewModel look them up from GitHub's free
+            // /rate_limit endpoint. "🔑 —" now only shows briefly, or if
+            // that lookup fails. Still tappable either way: the dialog
+            // handles a null info with its own explanatory text.
             if (info != null) "🔑 ${info.remaining}/${info.limit}" else "🔑 —",
-            style = MaterialTheme.typography.bodySmall,
+            style = base.copy(
+                fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
+                lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
+            ),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.padding(
+                horizontal = (10 * RATE_LIMIT_CHIP_SCALE).dp,
+                vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
+            ),
         )
     }
 }

@@ -12,6 +12,7 @@ import com.example.githubissuefinder.data.mergeReplacingByIssueId
 import com.example.githubissuefinder.data.parseRateLimitHeaders
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.data.shouldSwitchMode
+import com.example.githubissuefinder.data.toSearchRateLimitInfo
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -214,6 +215,10 @@ class TopReposViewModel @JvmOverloads constructor(
         // request just uses the new token.
         viewModelScope.launch {
             tokenRepository.effectiveToken.drop(1).collect {
+                // The old token's rate-limit numbers don't describe the
+                // new one; drop them and look the new ones up.
+                RateLimitState.update(null)
+                refreshRateLimitIfUnknown()
                 if (uiState.value.needsTokenFix) {
                     _uiState.update { it.copy(tokenRejected = false, errorMessage = null) }
                     load(uiState.value.selectedLanguage)
@@ -480,8 +485,35 @@ class TopReposViewModel @JvmOverloads constructor(
                         isLoading = false,
                     )
                 }
+                // A cache hit never touches the network, so nothing has
+                // told RateLimitState anything yet this session.
+                refreshRateLimitIfUnknown()
             } else {
                 fetchPage(language = language, page = 1, isLoadMore = false)
+            }
+        }
+    }
+
+    /**
+     * Fills in the rate-limit chip when a list loaded from the cache and
+     * no search response has supplied the numbers yet, so the chip shows
+     * real values with the first list instead of "—" until some later
+     * live search happens. Uses GitHub's /rate_limit endpoint, which is
+     * free (it doesn't count against any limit), so this costs no search.
+     * A failure here is ignored on purpose: the chip just stays "—",
+     * exactly as it did before, and the next live search fills it in.
+     */
+    private fun refreshRateLimitIfUnknown() {
+        if (RateLimitState.info.value != null || !GitHubApiClient.hasToken) return
+        viewModelScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) { GitHubApiClient.api.getRateLimit() }
+                val body = response.body()
+                if (response.isSuccessful && body != null && RateLimitState.info.value == null) {
+                    RateLimitState.update(body.toSearchRateLimitInfo())
+                }
+            } catch (e: Exception) {
+                // See the doc comment: the chip simply stays blank.
             }
         }
     }
