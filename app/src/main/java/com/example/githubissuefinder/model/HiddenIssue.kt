@@ -5,7 +5,7 @@ package com.example.githubissuefinder.model
  * a minimal, standalone snapshot of a hidden issue — NOT the full Issue
  * model. Kept deliberately small (just enough to list and re-open the
  * issue later) so the Hidden list can still show and open an issue even
- * after its RepoIssueGroupCache entry is gone entirely (e.g. after
+ * after its RepoIssueGroupRepository entry is gone entirely (e.g. after
  * Clear Cache, which does NOT touch this store — see HiddenIssuesRepository).
  *
  * Keyed by GitHub's own issue id wherever it's stored — globally

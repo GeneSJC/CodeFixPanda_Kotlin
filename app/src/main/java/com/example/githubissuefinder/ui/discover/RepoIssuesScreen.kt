@@ -378,8 +378,8 @@ fun RepoIssuesScreen(
                             lastRefreshedAtMs = uiState.lastRefreshedAtMs,
                             refreshError = uiState.refreshError,
                             currentIssueCount = uiState.issues.size,
-                            onRefresh = { viewModel.refreshThisRepo(context, repoGroup, language) },
-                            onRetry = { viewModel.refreshThisRepo(context, repoGroup, language) },
+                            onRefresh = { viewModel.refreshThisRepo(repoGroup, language) },
+                            onRetry = { viewModel.refreshThisRepo(repoGroup, language) },
                         )
                     }
                 }

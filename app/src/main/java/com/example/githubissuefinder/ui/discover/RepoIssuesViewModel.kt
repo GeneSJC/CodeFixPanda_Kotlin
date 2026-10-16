@@ -1,35 +1,25 @@
 package com.example.githubissuefinder.ui.discover
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
-import com.example.githubissuefinder.data.RateLimitState
-import com.example.githubissuefinder.data.RepoIssueGroupCache
-import com.example.githubissuefinder.data.parseRateLimitHeaders
+import com.example.githubissuefinder.data.IssueSearchRepository
+import com.example.githubissuefinder.data.IssueSearchResult
+import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.resolveActiveMode
-import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.network.GitHubApiClient
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-/**
- * GitHub's Search API max page size — the largest single-call result
- * this screen will ever ask for. See refreshThisRepo()'s own doc
- * comment for what this does and doesn't guarantee.
- */
-private const val MAX_PER_PAGE = 100
 
 /**
  * The repo-scoped issue list — CM "B" of the Discover redesign
@@ -67,7 +57,7 @@ private const val MAX_PER_PAGE = 100
  * issues, so it can never itself report "these are now closed").
  * refreshThisRepo() closes both gaps with ONE explicit, user-initiated
  * fetch: `repo:owner/name label:"..." state:open`, scoped to just this
- * repo and the active mode, asking for up to MAX_PER_PAGE (100 —
+ * repo and the active mode, asking for up to REPO_ISSUES_MAX_PER_PAGE (100 —
  * GitHub's own per-call max) results in a single call. On success, this
  * REPLACES `issues` outright with the complete result (not a merge —
  * there's nothing to dedup against, this call already returns
@@ -82,7 +72,7 @@ private const val MAX_PER_PAGE = 100
  *
  * WRITE-BACK (new in v0.50): a successful refresh also updates the Top
  * Repos cache entry this repo's group came from
- * (RepoIssueGroupCache.replaceRepoGroup()), so the match count on the
+ * (RepoIssueGroupRepository.replaceRepoGroup()), so the match count on the
  * Top Repos card the user navigated from agrees on return — without
  * that, this screen's own state could show a repo as having 3 open
  * issues while Top Repos still showed 7 until the next full Top Repos
@@ -125,14 +115,16 @@ private const val MAX_PER_PAGE = 100
  * consistency with every other screen in this app — loadedForRepoFullName
  * exists purely so navigating away and back within the same process
  * doesn't redundantly reassign issues to the value they already held.
- * A plain ViewModel, not AndroidViewModel — Context is taken as a
- * refreshThisRepo() parameter (from LocalContext.current at the call
- * site) rather than pulled in via AndroidViewModel's Application.
+ * A plain ViewModel: nothing here needs a Context — the cache work
+ * lives in RepoIssueGroupRepository, which does its own file I/O.
  */
 class RepoIssuesViewModel(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
     private val bookmarksRepository: BookmarksRepository = BookmarksRepository.instance,
+    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
+    private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
+    private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
 ) : ViewModel() {
 
     /** Ids of bookmarked issues, to draw each card's star. */
@@ -180,10 +172,10 @@ class RepoIssuesViewModel(
      * v0.46's checkForMoreIssues(), NOT gated on hasRefreshed, since
      * this is meant to be re-tappable.
      */
-    fun refreshThisRepo(context: Context, repoGroup: RepoIssueGroup, language: LanguageFilter) {
+    fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) {
         val state = uiState.value
         if (state.isRefreshing) return
-        if (!GitHubApiClient.hasToken) return
+        if (tokenRepository.effectiveToken.value.isBlank()) return
 
         // Defensive fallback only — DiscoverNavHost guarantees a mode
         // is chosen before this screen is ever reachable. See
@@ -193,48 +185,48 @@ class RepoIssuesViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, refreshError = null) }
             try {
-                val query = "repo:${repoGroup.repoFullName} label:\"${activeMode.queryValue}\" state:open"
-                val response = withContext(Dispatchers.IO) {
-                    GitHubApiClient.api.searchIssues(query = query, perPage = MAX_PER_PAGE)
-                }
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    _uiState.update {
-                        it.copy(
-                            isRefreshing = false,
-                            refreshError = "GitHub returned an error (HTTP ${response.code()})",
+                when (val result = searchRepository.searchRepoIssues(repoGroup.repoFullName, activeMode, language)) {
+                    is IssueSearchResult.Success -> {
+                        val completeIssues = result.page.issues
+                        val refreshedAtMs = System.currentTimeMillis()
+                        _uiState.update {
+                            it.copy(
+                                issues = completeIssues,
+                                isRefreshing = false,
+                                hasRefreshed = true,
+                                lastRefreshedAtMs = refreshedAtMs,
+                            )
+                        }
+                        cacheRepository.replaceRepoGroup(
+                            language = language,
+                            mode = activeMode,
+                            repoFullName = repoGroup.repoFullName,
+                            updatedGroup = if (completeIssues.isEmpty()) null else repoGroup.copy(issues = completeIssues),
                         )
                     }
-                    return@launch
+                    is IssueSearchResult.HttpError -> _uiState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            refreshError = "GitHub returned an error (HTTP ${result.code})",
+                        )
+                    }
+                    IssueSearchResult.NoToken -> _uiState.update { it.copy(isRefreshing = false) }
+                    is IssueSearchResult.Failed -> showRefreshFailure(result.message)
                 }
-                RateLimitState.update(parseRateLimitHeaders(response.headers()))
-                val completeIssues = body.items.map { it.toIssue(languageFilter = language.queryValue) }
-                val refreshedAtMs = System.currentTimeMillis()
-                _uiState.update {
-                    it.copy(
-                        issues = completeIssues,
-                        isRefreshing = false,
-                        hasRefreshed = true,
-                        lastRefreshedAtMs = refreshedAtMs,
-                    )
-                }
-                withContext(Dispatchers.IO) {
-                    RepoIssueGroupCache.replaceRepoGroup(
-                        context = context,
-                        language = language,
-                        mode = activeMode,
-                        repoFullName = repoGroup.repoFullName,
-                        updatedGroup = if (completeIssues.isEmpty()) null else repoGroup.copy(issues = completeIssues),
-                    )
-                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isRefreshing = false,
-                        refreshError = "Couldn't refresh this repo: ${e.message ?: "unknown error"}",
-                    )
-                }
+                showRefreshFailure(e.message)
             }
+        }
+    }
+
+    private fun showRefreshFailure(detail: String?) {
+        _uiState.update {
+            it.copy(
+                isRefreshing = false,
+                refreshError = "Couldn't refresh this repo: ${detail ?: "unknown error"}",
+            )
         }
     }
 }

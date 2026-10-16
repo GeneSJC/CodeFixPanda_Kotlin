@@ -1,6 +1,5 @@
 package com.example.githubissuefinder.data
 
-import com.example.githubissuefinder.data.RepoIssueGroupCache.applyRepoGroupReplacement
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.RepoIssueGroup
 import org.junit.Assert.assertEquals
@@ -8,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers RepoIssueGroupCache.applyRepoGroupReplacement() — the pure
+ * Covers applyRepoGroupReplacement() (RepoIssueGroupRepository.kt) — the pure
  * list-transform behind replaceRepoGroup(), the v0.50 write-back
  * RepoIssuesViewModel.refreshThisRepo() uses so a repo refreshed from
  * its own screen updates the Top Repos cache entry it came from. Two

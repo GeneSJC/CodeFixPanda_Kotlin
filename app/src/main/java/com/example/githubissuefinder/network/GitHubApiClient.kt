@@ -55,7 +55,7 @@ object GitHubApiClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    // v0.45: was private — exposed so RepoIssueGroupCache can serialize
+    // v0.45: was private — exposed so RepoIssueGroupRepository can serialize
     // its own cache file with the exact same Moshi instance (same
     // adapters, same config) rather than building a second, separate
     // Moshi just for that, which would be redundant setup for no

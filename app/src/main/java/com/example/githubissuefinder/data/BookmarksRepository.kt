@@ -28,7 +28,7 @@ interface BookmarksStorage {
 /**
  * A plain JSON file in the app's private storage: a bookmark is a full
  * Issue (title, labels, repo identity, URL...), not a single primitive
- * value, so it needs real serialization the way RepoIssueGroupCache's
+ * value, so it needs real serialization the way RepoIssueGroupRepository's
  * cached search results do, rather than SharedPreferences. The file
  * name is unchanged from the old RepoBookmarks object, so bookmarks a
  * user already saved are still there after this refactor.
