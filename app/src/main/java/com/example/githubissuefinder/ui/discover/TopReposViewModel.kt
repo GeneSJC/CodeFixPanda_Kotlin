@@ -4,8 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
+import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
+import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.RepoIssueGroupCache
 import com.example.githubissuefinder.data.formatRelativeTime
 import com.example.githubissuefinder.data.mergeReplacingByIssueId
@@ -23,9 +26,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -184,7 +190,32 @@ class TopReposViewModel @JvmOverloads constructor(
     application: Application,
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
+    private val hiddenIssuesRepository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
+    private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
 ) : AndroidViewModel(application) {
+
+    /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
+    val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
+
+    /** The Search API rate-limit numbers for the chip, or null until they are known. */
+    val rateLimit: StateFlow<RateLimitInfo?> = RateLimitState.info
+
+    /** Whether a token is in use right now, for the rate-limit chip's tap (a token problem, or the real dialog). */
+    val hasToken: StateFlow<Boolean> = tokenRepository.effectiveToken
+        .map { it.isNotBlank() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, tokenRepository.effectiveToken.value.isNotBlank())
+
+    /**
+     * A repo card appeared on screen: load its README preview if it
+     * hasn't been loaded yet. The screen only reports the event; the
+     * network request and the retry rules live in ReadmeSnippetRepository.
+     */
+    fun onRepoCardShown(repoOwner: String, repoName: String, repoFullName: String) {
+        viewModelScope.launch { snippetRepository.loadIfNeeded(repoOwner, repoName, repoFullName) }
+    }
+
+    /** Ids the user hid, to filter out of the repo list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
 
     /**
      * The active Issue Mode, or null while none is chosen (which

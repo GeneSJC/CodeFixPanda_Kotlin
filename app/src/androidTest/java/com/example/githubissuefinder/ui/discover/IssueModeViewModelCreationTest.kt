@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.githubissuefinder.data.ApiTokenRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.settings.ApiTokenViewModel
@@ -44,6 +46,8 @@ class IssueModeViewModelCreationTest {
         IssueModeRepository.init(application)
         StartupSplashRepository.init(application)
         ApiTokenRepository.init(application)
+        HiddenIssuesRepository.init(application)
+        BookmarksRepository.init(application)
         store = ViewModelStore()
     }
 
@@ -80,5 +84,15 @@ class IssueModeViewModelCreationTest {
     @Test
     fun apiTokenViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[ApiTokenViewModel::class.java])
+    }
+
+    @Test
+    fun hiddenIssuesViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[HiddenIssuesViewModel::class.java])
+    }
+
+    @Test
+    fun bookmarksViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[BookmarksViewModel::class.java])
     }
 }

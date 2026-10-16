@@ -5,26 +5,24 @@ import com.example.githubissuefinder.model.RepoIssueGroup
 
 /**
  * v0.51 ("Hide Issue"): the pure display-time filter both TopReposScreen
- * and RepoIssuesScreen apply against HiddenIssuesStore.hiddenIds — a
+ * and RepoIssuesScreen apply against HiddenIssuesRepository.hiddenIds — a
  * standalone, top-level function (not private to either screen)
  * specifically so it's directly unit-testable with plain JUnit, same
  * reasoning as mergeReplacingByIssueId() in this same package: it
  * touches nothing Android/Compose-specific, so it doesn't need to.
  *
  * Deliberately a display-time filter, never a mutation of the cache —
- * see HiddenIssuesStore's own doc comment. A group left with zero
- * visible issues after filtering is dropped entirely, matching the
- * spec's "a repo with no visible issues is not shown" rule — the same
- * rule RepoIssueGroup's own matchCount (issues.size) already relies on
- * downstream (a repo card's badge and Top Repos' repo-count chip both
- * read matchCount, so a filtered-to-empty group disappearing here is
- * what makes both update correctly with no separate logic needed).
+ * see HiddenIssuesRepository's own doc comment.
+ *
+ * Every repo stays in the result, even one whose issues are ALL hidden
+ * (its group comes back with an empty issue list, which the card shows
+ * as "All hidden"). The original v0.51 rule dropped such a group, so a
+ * repo's card silently vanished from Top Repos; a repo now leaves the
+ * list only when the cache is cleared, never because of hiding.
  */
 fun filterHiddenIssues(groups: List<RepoIssueGroup>, hiddenIds: Set<Long>): List<RepoIssueGroup> {
     if (hiddenIds.isEmpty()) return groups
-    return groups
-        .map { group -> group.copy(issues = group.issues.filterNot { it.id in hiddenIds }) }
-        .filter { it.issues.isNotEmpty() }
+    return groups.map { group -> group.copy(issues = group.issues.filterNot { it.id in hiddenIds }) }
 }
 
 /**
