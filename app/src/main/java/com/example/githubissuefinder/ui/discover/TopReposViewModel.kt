@@ -333,6 +333,8 @@ class TopReposViewModel(
                         // completing while this fetch was in flight would
                         // otherwise have its newer currentPage overwritten by a
                         // stale value when this writes back to the cache.
+                        // This repoGroups is the NEW list this fetch produces; current.repoGroups below is
+                        // the list on screen before it. Same type, different data: don't conflate them.
                         var repoGroups: List<RepoIssueGroup> = emptyList()
                         var newRepoCount = 0
                         var newIssueCount = 0
@@ -540,6 +542,8 @@ class TopReposViewModel(
                         // uiState are what get persisted to the cache below —
                         // not a second, potentially different, independently
                         // recomputed pair of values.
+                        // This repoGroups is the NEW list this page produces; state.repoGroups below is
+                        // the list on screen before it. Same type, different data: don't conflate them.
                         var repoGroups: List<RepoIssueGroup> = emptyList()
                         var newCanLoadMore = false
                         val fetchedAtMs = System.currentTimeMillis()
