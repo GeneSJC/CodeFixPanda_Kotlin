@@ -95,4 +95,9 @@ class IssueModeViewModelCreationTest {
     fun bookmarksViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[BookmarksViewModel::class.java])
     }
+
+    @Test
+    fun repoReadmeViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[RepoReadmeViewModel::class.java])
+    }
 }
