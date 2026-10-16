@@ -15,12 +15,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.githubissuefinder.data.needsModeGate
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.settings.SettingsScreen
 
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
 private const val ROUTE_REPO_BOOKMARKS = "repoBookmarks"
 private const val ROUTE_HIDDEN_ISSUES = "hiddenIssues"
+private const val ROUTE_SETTINGS = "settings"
 
 /**
  * Navigation host for the "repoFirst" Discover flow — introduced in
@@ -163,6 +165,7 @@ fun DiscoverNavHost(
                 },
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
                 onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
+                onOpenSettings = { navController.navigate(ROUTE_SETTINGS) },
                 onResetApp = {
                     issueModeViewModel.clearMode()
                     navController.navigate(ROUTE_ISSUE_MODE_GATE) {
@@ -187,6 +190,9 @@ fun DiscoverNavHost(
         }
         composable(ROUTE_HIDDEN_ISSUES) {
             HiddenIssuesScreen(onBack = { navController.popBackStackDebounced() })
+        }
+        composable(ROUTE_SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStackDebounced() })
         }
     }
 }

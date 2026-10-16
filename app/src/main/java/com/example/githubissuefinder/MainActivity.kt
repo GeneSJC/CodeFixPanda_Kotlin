@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesStore
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RepoBookmarks
@@ -47,6 +48,9 @@ class MainActivity : ComponentActivity() {
         // DiscoverNavHost computes its startDestination on first
         // composition — see IssueModeRepository's own doc comment.
         IssueModeRepository.init(this)
+        // The GitHub token (user-entered, falling back to the build-time
+        // one) — must exist before anything touches GitHubApiClient.
+        ApiTokenRepository.init(this)
         // v0.48: same reasoning, for the repo-first flow's persisted
         // bookmarks — see RepoBookmarks.init()'s own doc comment.
         RepoBookmarks.init(this)

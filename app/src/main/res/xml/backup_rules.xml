@@ -6,6 +6,10 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- The user-entered GitHub token stays on this device: never copied
+         into backups. Keep this file name in sync with PREFS_NAME in
+         data/ApiTokenRepository.kt. -->
+    <exclude domain="sharedpref" path="api_token_prefs.xml"/>
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

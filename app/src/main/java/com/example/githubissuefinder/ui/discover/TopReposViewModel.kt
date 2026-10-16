@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.RepoIssueGroupCache
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -180,6 +182,7 @@ private const val SEARCH_API_RESULT_CAP = 1000
 class TopReposViewModel @JvmOverloads constructor(
     application: Application,
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
+    private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
 ) : AndroidViewModel(application) {
 
     /**
@@ -202,6 +205,21 @@ class TopReposViewModel @JvmOverloads constructor(
 
     init {
         load(uiState.value.selectedLanguage)
+
+        // When the token changes (saved in Settings) while the list is
+        // stuck on a token problem — none set, or one GitHub rejected —
+        // clear that problem and try again with the new token. drop(1)
+        // skips the value the flow already holds when collection starts.
+        // A token change while the list is working is ignored: the next
+        // request just uses the new token.
+        viewModelScope.launch {
+            tokenRepository.effectiveToken.drop(1).collect {
+                if (uiState.value.needsTokenFix) {
+                    _uiState.update { it.copy(tokenRejected = false, errorMessage = null) }
+                    load(uiState.value.selectedLanguage)
+                }
+            }
+        }
     }
 
     fun onLanguageSelected(language: LanguageFilter) {

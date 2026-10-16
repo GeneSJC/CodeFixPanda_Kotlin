@@ -85,4 +85,13 @@ data class TopReposUiState(
      * automatically refreshed in the background.
      */
     val lastUpdatedAtMs: Long? = null,
-)
+) {
+    /**
+     * True while the list can't load because of the token: none is set,
+     * or GitHub rejected the one in use. When the token changes in this
+     * state, TopReposViewModel reloads; when it is already working, a
+     * change doesn't disturb the list.
+     */
+    val needsTokenFix: Boolean
+        get() = noTokenConfigured || tokenRejected
+}
