@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.ApiTokenRepository
+import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.IssueSearchRepository
@@ -20,6 +20,7 @@ import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -183,7 +184,8 @@ class TopReposViewModel(
     private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
     private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
     private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
-) : ViewModel() {
+    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
+) : BaseViewModel(appConfigRepository) {
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
