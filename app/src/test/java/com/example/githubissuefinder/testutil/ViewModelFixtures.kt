@@ -18,12 +18,14 @@ import com.example.githubissuefinder.data.ReadmeSource
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.RepoIssueGroupStorage
+import com.example.githubissuefinder.data.TopReposService
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.network.dto.IssueDto
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 /**
@@ -94,7 +96,7 @@ class FakeReadmeSource(var result: ReadmeFetch = ReadmeFetch.Resolved(null)) : R
     override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch = result
 }
 
-/** Everything a Top Repos or repo-issues ViewModel is built from, wired over fakes, with the pieces a test needs to poke at. */
+/** Everything a Top Repos or repo-issues ViewModel (or the Top Repos service) is built from, wired over fakes, with the pieces a test needs to poke at. */
 class ViewModelFixtures(
     mode: IssueLabelFilter? = IssueLabelFilter.GOOD_FIRST_ISSUE,
     buildToken: String = "build-token",
@@ -111,6 +113,17 @@ class ViewModelFixtures(
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api, { tokenRepository.effectiveToken.value.isNotBlank() })
+
+    /** A Top Repos service over the fakes above, running its work immediately on the calling thread. */
+    val topReposService = TopReposService(
+        modeRepository, tokenRepository, cacheRepository, searchRepository,
+        CoroutineScope(Dispatchers.Unconfined),
+    )
+
+    /** Makes TopReposViewModel use [topReposService]; pair with TopReposService.replaceInstanceForTests(null) in teardown. */
+    fun installTopReposService() {
+        TopReposService.replaceInstanceForTests(topReposService)
+    }
 }
 
 /** A search-API issue as GitHub would send it, in repo [owner]/[repo]. */
