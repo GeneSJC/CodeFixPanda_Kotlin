@@ -66,3 +66,50 @@ fun mergeReplacingByIssueId(existing: List<RepoIssueGroup>, newIssues: List<Issu
         newIssueCount = newIssueCount,
     )
 }
+
+/**
+ * Groups already-fetched issues by parent repo and sorts the
+ * resulting groups by match count, descending — the v0.42 ranking
+ * signal (see TopReposViewModel's class doc comment for why this replaces the old
+ * composite score). No artificial cap on the number of groups
+ * shown — whatever groups form from the page(s) fetched so far are
+ * all shown, which bounds card count naturally without a separate
+ * constant to keep in sync.
+ */
+fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
+    mergeIntoGroups(emptyList(), issues)
+
+/**
+ * v0.43: the actual cross-page merge — see TopReposViewModel's class doc comment for
+ * the motivating scenario (one repo's matches spread across two
+ * pages). Re-keys existing groups by repoFullName in a
+ * LinkedHashMap (preserving their current order, so ties in the
+ * final sort stay deterministic rather than depending on an
+ * unordered HashMap's iteration), folds each new issue into its
+ * repo's existing group if one exists (skipping it if that exact
+ * issue id is somehow already present — defensive, in case
+ * GitHub's result set shifts slightly between two page requests),
+ * or starts a new group if this is the first issue seen for that
+ * repo, then re-sorts everything by the now-current match count.
+ * groupByRepo() above is just this function called with an empty
+ * starting list — the very first page is "merged" into nothing.
+ */
+fun mergeIntoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
+    val byRepo = LinkedHashMap<String, RepoIssueGroup>()
+    existing.forEach { byRepo[it.repoFullName] = it }
+    newIssues.forEach { issue ->
+        val current = byRepo[issue.repoFullName]
+        if (current == null) {
+            byRepo[issue.repoFullName] = RepoIssueGroup(
+                repoOwner = issue.repoOwner,
+                repoName = issue.repoName,
+                repoFullName = issue.repoFullName,
+                repoDisplayTitle = issue.repoDisplayTitle,
+                issues = listOf(issue),
+            )
+        } else if (current.issues.none { it.id == issue.id }) {
+            byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
+        }
+    }
+    return byRepo.values.sortedByDescending { it.matchCount }
+}
