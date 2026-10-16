@@ -54,12 +54,15 @@ class HiddenIssueFilteringTest {
     }
 
     @Test
-    fun `hiding a repo's only issue drops the whole group`() {
+    fun `hiding a repo's only issue keeps the repo with no visible issues`() {
         val untouched = group(issue(2, "torvalds", "linux"))
         val groups = listOf(group(issue(1)), untouched)
         val result = filterHiddenIssues(groups, setOf(1L))
 
-        assertEquals(listOf(untouched), result)
+        assertEquals(2, result.size)
+        assertTrue(result[0].issues.isEmpty())
+        assertEquals(groups[0].repoFullName, result[0].repoFullName)
+        assertEquals(untouched, result[1])
     }
 
     @Test

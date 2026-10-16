@@ -249,15 +249,14 @@ import kotlinx.coroutines.flow.collect
  * v0.51 ("Hide Issue", Parts C+D of the Cache-Preserving Refresh
  * sequence): uiState.repoGroups stays the RAW cached data — hiddenGroups
  * below is a display-only derivation (each group's issues filtered
- * against the hidden ids from TopReposViewModel.hiddenIds, empty groups
- * dropped entirely)
+ * against the hidden ids from TopReposViewModel.hiddenIds)
  * computed fresh on every recomposition, never written back anywhere.
  * The repo count chip and every match-count badge read from
- * hiddenGroups, not uiState.repoGroups directly, so hiding an issue
- * down to a repo's last match makes that whole card disappear, and
- * unhiding brings it straight back — falls out of Compose recomposition
- * automatically since the hidden ids are a StateFlow collected by this
- * screen, so a change recomposes it.
+ * hiddenGroups, not uiState.repoGroups directly. A repo whose issues
+ * are ALL hidden stays in the list with its badge reading "All hidden"
+ * (a repo leaves this list only when the cache is cleared); hiding and
+ * unhiding update the badges straight away, since the hidden ids are a
+ * StateFlow collected by this screen, so a change recomposes it.
  *
  * Also added: a "Hidden Issues" drawer item (next to "Bookmarks", same
  * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
@@ -840,6 +839,7 @@ private fun RepoListBody(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val rawGroupsByName = remember(uiState.repoGroups) { uiState.repoGroups.associateBy { it.repoFullName } }
     Box(modifier = modifier) {
         when {
             uiState.noTokenConfigured -> NoTokenMessage(onOpenSettings = onOpenSettings)
@@ -870,7 +870,16 @@ private fun RepoListBody(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(hiddenGroups, key = { it.repoFullName }) { group ->
-                    RepoCard(group = group, onClick = { onRepoClick(group, uiState.selectedLanguage) })
+                    // The repo's details screen gets the RAW group, not the
+                    // hidden-filtered one shown here: it applies the hidden
+                    // ids itself, and needs every issue to do that — and to
+                    // show "all hidden" with a View Hidden button, and to
+                    // bring an issue back on Unhide, for a repo whose
+                    // issues are all hidden.
+                    RepoCard(
+                        group = group,
+                        onClick = { onRepoClick(rawGroupsByName[group.repoFullName] ?: group, uiState.selectedLanguage) },
+                    )
                 }
                 item(key = "loadMoreFooter") {
                     LoadMoreFooter(
@@ -1318,7 +1327,7 @@ private fun RepoCard(group: RepoIssueGroup, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Text(
-                        matchCountLabel(group.matchCount),
+                        if (group.issues.isEmpty()) "All hidden" else matchCountLabel(group.matchCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
