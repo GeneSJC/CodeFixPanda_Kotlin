@@ -6,30 +6,19 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
@@ -53,17 +42,9 @@ private val VERTICAL_RISE_OFFSET = 140.dp
 private const val GIT_OVERSHOOT_PX = 28f
 private const val GIT_OVERSHOOT_TILT_DEGREES = -4.5f
 
-// The "ghost" each of "Issue"/"Finder" sits as, oversized and barely
-// visible, from the very first frame — long before that word's own rise
-// stage starts — then fades out exactly as the real, correctly-sized
-// word rises into its place. Matches the reference, where every
-// incoming word is visible this way well ahead of its own stage (e.g.
-// a huge, faint "Hub" is already sitting in frame during "Git"'s own
-// entrance, at 27% — nowhere near Hub's own 28% stage start).
-private const val GHOST_SCALE = 1.6f
-private const val GHOST_ALPHA = 0.08f
-
-private val BURST_SIZE = 120.dp
+// Scaled with the text (see SPLASH_TEXT_SCALE) so the burst keeps its
+// proportions relative to the bigger wordmark.
+private val BURST_SIZE = (120 * SPLASH_TEXT_SCALE).dp
 private const val BURST_START_SCALE = 0.4f
 private const val BURST_MAX_SCALE = 2.8f
 private const val BURST_START_ALPHA = 0.85f
@@ -95,13 +76,12 @@ private const val BURST_HOLD_FRACTION = 0.45
  * TopReposScreen.kt's replay menu for where 0.5x is offered alongside
  * the standard 1x.
  *
- * "Issue" and "Finder" each render as TWO overlapping Text instances
- * (see the ghost-then-shrink layer below): a static, oversized, barely-
- * visible "ghost" sitting at the word's final resting spot from the
- * very first frame, and the real, correctly-sized word that rises from
- * below and fades in during that word's own stage — the ghost fades
- * out over exactly that same window, so it reads as one word settling
- * into place rather than two independent layers.
+ * An earlier version also showed oversized, barely-visible "ghost"
+ * copies of "Issue" and "Finder" from the first frame, fading out as the
+ * real words arrived; removed because the faint imprint of upcoming
+ * text didn't read well. The text itself is drawn by TitleWordmark,
+ * shared with the short fade-in splash (TitleFlashSplashScreen) and
+ * scaled up 70% (SPLASH_TEXT_SCALE) so it fills more of the screen.
  *
  * Each word gets its own Animatable(s) launched in a separate coroutine
  * with a `delay()` to its stage's start time, rather than one shared
@@ -138,10 +118,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val hubOffsetX = remember { Animatable(0f) }
     val issueOffsetY = remember { Animatable(0f) }
     val issueAlpha = remember { Animatable(0f) }
-    val issueGhostAlpha = remember { Animatable(GHOST_ALPHA) }
     val finderOffsetY = remember { Animatable(0f) }
     val finderAlpha = remember { Animatable(0f) }
-    val finderGhostAlpha = remember { Animatable(GHOST_ALPHA) }
     val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
@@ -232,29 +210,22 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         }
 
         // "Issue": a straight rise from below into place under "Git",
-        // while its oversized ghost (already sitting there, faintly,
-        // since the first frame) fades out over the same window.
+        // fading in as it goes.
         launch {
             delay(issueStartMs.toLong())
             issueOffsetY.snapTo(riseOffsetPx)
             launch {
                 issueOffsetY.animateTo(0f, tween(issueDurationMs, easing = FastOutSlowInEasing))
             }
-            launch {
-                issueGhostAlpha.animateTo(0f, tween(issueDurationMs))
-            }
             issueAlpha.animateTo(1f, tween(issueDurationMs))
         }
 
-        // "Finder": the same straight rise (and ghost fade-out), under "Hub".
+        // "Finder": the same straight rise and fade-in, under "Hub".
         launch {
             delay(finderStartMs.toLong())
             finderOffsetY.snapTo(riseOffsetPx)
             launch {
                 finderOffsetY.animateTo(0f, tween(finderDurationMs, easing = FastOutSlowInEasing))
-            }
-            launch {
-                finderGhostAlpha.animateTo(0f, tween(finderDurationMs))
             }
             finderAlpha.animateTo(1f, tween(finderDurationMs))
         }
@@ -297,92 +268,21 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
                 ),
         )
 
-        // Shared by both "Git" and "Hub": a soft colored glow beneath the
-        // wordmark, matching the reference's own drop-shadowed look —
-        // plain Bold alone read flatter on-device than the reference's
-        // heavier weight + shadow combination.
-        val wordmarkStyle = MaterialTheme.typography.displayMedium.copy(
-            shadow = Shadow(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                offset = Offset(0f, 8f),
-                blurRadius = 28f,
-            ),
+        TitleWordmark(
+            gitModifier = Modifier.graphicsLayer {
+                translationX = gitOffsetX.value
+                rotationZ = gitRotation.value
+            },
+            hubModifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
+            issueModifier = Modifier.graphicsLayer {
+                translationY = issueOffsetY.value
+                alpha = issueAlpha.value
+            },
+            finderModifier = Modifier.graphicsLayer {
+                translationY = finderOffsetY.value
+                alpha = finderAlpha.value
+            },
         )
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Row {
-                Text(
-                    "Git",
-                    style = wordmarkStyle,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.graphicsLayer {
-                        translationX = gitOffsetX.value
-                        rotationZ = gitRotation.value
-                    },
-                )
-                Text(
-                    "Hub",
-                    style = wordmarkStyle,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        "ISSUE",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 16.sp,
-                        letterSpacing = 2.sp,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.graphicsLayer {
-                            scaleX = GHOST_SCALE
-                            scaleY = GHOST_SCALE
-                            alpha = issueGhostAlpha.value
-                        },
-                    )
-                    Text(
-                        "ISSUE",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 16.sp,
-                        letterSpacing = 2.sp,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.graphicsLayer {
-                            translationY = issueOffsetY.value
-                            alpha = issueAlpha.value
-                        },
-                    )
-                }
-                Spacer(modifier = Modifier.width(6.dp))
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        "Finder",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.graphicsLayer {
-                            scaleX = GHOST_SCALE
-                            scaleY = GHOST_SCALE
-                            alpha = finderGhostAlpha.value
-                        },
-                    )
-                    Text(
-                        "Finder",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.graphicsLayer {
-                            translationY = finderOffsetY.value
-                            alpha = finderAlpha.value
-                        },
-                    )
-                }
-            }
-        }
     }
     }
 }
