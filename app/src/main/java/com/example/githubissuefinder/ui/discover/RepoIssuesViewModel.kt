@@ -81,7 +81,7 @@ import kotlinx.coroutines.launch
  * null)) — a repo can't legitimately appear on Top Repos with zero
  * matching issues (see RepoIssueGroup's own doc comment), so a refresh
  * finding none left is exactly the moment for it to leave that list.
- * TopReposViewModel.syncFromCache() is what actually pulls this updated
+ * TopReposService.syncFromCache() is what actually pulls this updated
  * cache entry back into Top Repos' own in-memory state when the user
  * navigates back — see that function's doc comment for why a re-read
  * on return, rather than a shared ViewModel reference, was the chosen

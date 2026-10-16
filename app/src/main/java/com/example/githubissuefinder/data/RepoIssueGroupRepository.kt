@@ -108,7 +108,7 @@ class JsonFileRepoIssueGroupStorage(context: Context) : RepoIssueGroupStorage {
  * background re-fetch to "freshen" it — doing that would quietly spend
  * the exact calls this cache exists to avoid, on every visit. Getting
  * live data again is always an explicit, visible choice (see
- * TopReposViewModel.checkForNewRepos()).
+ * TopReposService.checkForNewRepos()).
  *
  * Built after pagination, on purpose: an earlier draft was discarded
  * once Load More landed (this project's "stale means rebuild, not

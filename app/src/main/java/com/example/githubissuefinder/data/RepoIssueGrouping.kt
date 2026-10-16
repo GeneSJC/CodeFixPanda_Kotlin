@@ -11,8 +11,8 @@ data class RepoGroupUpdate(
 )
 
 /**
- * v0.49 ("Cache-Preserving Refresh"): TopReposViewModel's
- * addIssuesToRepoGroups()'s counterpart for checkForNewRepos() — see that
+ * v0.49 ("Cache-Preserving Refresh"): addIssuesToRepoGroups()'s
+ * counterpart for TopReposService.checkForNewRepos() — see that
  * function's own doc comment for why a separate function rather than a
  * flag on addIssuesToRepoGroups() itself. The key difference: where
  * addIssuesToRepoGroups() SKIPS an issue whose id is already present (correct
@@ -70,7 +70,7 @@ fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Iss
 /**
  * Groups already-fetched issues by parent repo and sorts the
  * resulting groups by match count, descending — the v0.42 ranking
- * signal (see TopReposViewModel's class doc comment for why this replaces the old
+ * signal (see TopReposService's class comment for why this replaces the old
  * composite score). No artificial cap on the number of groups
  * shown — whatever groups form from the page(s) fetched so far are
  * all shown, which bounds card count naturally without a separate
@@ -80,7 +80,7 @@ fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
     addIssuesToRepoGroups(emptyList(), issues)
 
 /**
- * v0.43: the actual cross-page step for Load More — see TopReposViewModel's class doc comment for
+ * v0.43: the actual cross-page step for Load More — see TopReposService's class comment for
  * the motivating scenario (one repo's matches spread across two
  * pages). Re-keys existing groups by repoFullName in a
  * LinkedHashMap (preserving their current order, so ties in the
