@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.data.AppConfig
+import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.RateLimitState
 import com.example.githubissuefinder.data.ReadmeFetch
@@ -381,6 +383,22 @@ class TopReposViewModelTest {
         vm.onRepoCardShown("octo", "repo", "octo/repo")
 
         assertEquals("Hello World", vm.snippets.value["octo/repo"])
+    }
+
+    @Test
+    fun configValuesComeFromTheAppConfigRepository() {
+        val f = ViewModelFixtures()
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        val config = AppConfig(buildLabel = "9.9", splashAnimation = "shapeStack", showDetailedDrawerMenu = true)
+        val vm = TopReposViewModel(
+            f.modeRepository, f.tokenRepository, f.hiddenIssuesRepository,
+            f.snippetRepository, f.cacheRepository, f.searchRepository,
+            AppConfigRepository(config),
+        )
+
+        assertEquals("9.9", vm.buildLabel)
+        assertEquals("shapeStack", vm.splashAnimation)
+        assertTrue(vm.showDetailedDrawerMenu)
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.example.githubissuefinder.ui.discover
 
-import com.example.githubissuefinder.BuildConfig
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
@@ -128,7 +127,7 @@ import kotlinx.coroutines.flow.collect
  * were added) opens with an OVERLAY-based animation-replay toolkit —
  * replayAnimation is local state inside THIS function, so viewModel()
  * above is only ever called once per real session — but what it shows
- * now depends on BuildConfig.SHOW_DETAILED_DRAWER_MENU (a plain
+ * now depends on the drawer flag (viewModel.showDetailedDrawerMenu, from AppConfig; a plain
  * boolean val in app/build.gradle.kts, defaulting to false): true gets
  * everything that existed before this CM, plus one entry per
  * individual splash: "Play Origami Animation" / "Play Shape Stack
@@ -509,7 +508,7 @@ fun TopReposScreen(
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
                                     )
-                                    VersionLabel()
+                                    VersionLabel(label = viewModel.buildLabel)
                                 }
                                 HorizontalDivider()
                                 // Three groups — Repo Management, Find Issues,
@@ -602,7 +601,7 @@ fun TopReposScreen(
                                     // this section used to show here (gated behind
                                     // the same flag) moved to the always-visible
                                     // header above, see VersionLabel.
-                                    if (BuildConfig.SHOW_DETAILED_DRAWER_MENU) {
+                                    if (viewModel.showDetailedDrawerMenu) {
                                         DropdownMenuItem(
                                             text = { Text("Play Origami Animation") },
                                             onClick = {
@@ -759,7 +758,7 @@ fun TopReposScreen(
                 "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
                 "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished)
                 "titleRevealHalfSpeed" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
-                "appStart" -> AppStartSplashScreen(onFinished = onFinished)
+                "appStart" -> AppStartSplashScreen(onFinished = onFinished, animation = viewModel.splashAnimation)
                 else -> SplashScreen(onFinished = onFinished)
             }
         }

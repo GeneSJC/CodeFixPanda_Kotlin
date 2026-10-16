@@ -1,12 +1,12 @@
 package com.example.githubissuefinder.ui.splash
 
 import androidx.compose.runtime.Composable
-import com.example.githubissuefinder.BuildConfig
 
 /**
  * The single source of truth for "which splash actually plays at real
- * app launch, with exactly what parameters" — driven by
- * BuildConfig.SPLASH_ANIMATION: "coin", "origami" (the diamond-fold
+ * app launch, with exactly what parameters" — driven by the
+ * [animation] argument (AppConfig's splashAnimation, from
+ * BuildConfig.SPLASH_ANIMATION, supplied by the caller's ViewModel): "coin", "origami" (the diamond-fold
  * sequence), "shapeStack" (the stop-motion layered shapes animation),
  * or "titleReveal" (the kinetic word-by-word title reveal, played at
  * 0.5x speed — confirmed on-device as giving it enough room to
@@ -32,12 +32,12 @@ import com.example.githubissuefinder.BuildConfig
  * shows the full animation.
  */
 @Composable
-fun AppStartSplashScreen(onFinished: () -> Unit, playFullAnimation: Boolean = true) {
+fun AppStartSplashScreen(onFinished: () -> Unit, animation: String, playFullAnimation: Boolean = true) {
     if (!playFullAnimation) {
         TitleFlashSplashScreen(onFinished = onFinished)
         return
     }
-    when (BuildConfig.SPLASH_ANIMATION) {
+    when (animation) {
         "origami" -> OrigamiSplashScreen(onFinished = onFinished)
         "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)
         "titleReveal" -> TitleRevealSplashScreen(onFinished = onFinished, speedMultiplier = 0.5f)
