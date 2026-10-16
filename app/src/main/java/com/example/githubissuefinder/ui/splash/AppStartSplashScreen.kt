@@ -22,9 +22,21 @@ import com.example.githubissuefinder.BuildConfig
  * guarantees that replay can never drift from what a real user actually
  * saw at launch — e.g. it stays in sync with "titleReveal"'s
  * speedMultiplier without that value needing to be duplicated anywhere.
+ *
+ * [playFullAnimation] false swaps the configured animation for
+ * TitleFlashSplashScreen, a short fade-in of the app name: a real launch
+ * passes false once the device has already seen the full animation
+ * finish (see StartupSplashViewModel), because the full animation is
+ * fun once and a bit much on repeat. The default, true, is what the
+ * in-app "Play App Start Animation" replay uses, so a replay always
+ * shows the full animation.
  */
 @Composable
-fun AppStartSplashScreen(onFinished: () -> Unit) {
+fun AppStartSplashScreen(onFinished: () -> Unit, playFullAnimation: Boolean = true) {
+    if (!playFullAnimation) {
+        TitleFlashSplashScreen(onFinished = onFinished)
+        return
+    }
     when (BuildConfig.SPLASH_ANIMATION) {
         "origami" -> OrigamiSplashScreen(onFinished = onFinished)
         "shapeStack" -> ShapeStackSplashScreen(onFinished = onFinished)

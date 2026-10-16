@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.githubissuefinder.data.IssueModeRepository
+import com.example.githubissuefinder.data.StartupSplashRepository
+import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -38,6 +40,7 @@ class IssueModeViewModelCreationTest {
         application = InstrumentationRegistry.getInstrumentation()
             .targetContext.applicationContext as Application
         IssueModeRepository.init(application)
+        StartupSplashRepository.init(application)
         store = ViewModelStore()
     }
 
@@ -64,5 +67,10 @@ class IssueModeViewModelCreationTest {
     @Test
     fun topReposViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[TopReposViewModel::class.java])
+    }
+
+    @Test
+    fun startupSplashViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[StartupSplashViewModel::class.java])
     }
 }
