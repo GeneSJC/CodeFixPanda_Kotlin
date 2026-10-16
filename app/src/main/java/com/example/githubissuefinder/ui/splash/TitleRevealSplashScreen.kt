@@ -12,11 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -113,19 +117,41 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     // marking, at any speed.
     val hubImpactOffsetMs = (hubDurationMs * 0.55).toInt()
 
-    val gitOffsetX = remember { Animatable(0f) }
+    // Every animated value STARTS where its animation begins — "Git" off
+    // to the left, "Hub" off to the right, the rising words below — not
+    // at its final resting position. They used to start at the resting
+    // position (0) and only be moved off-screen by a snapTo() inside the
+    // LaunchedEffect below, which runs after the first frame has already
+    // been drawn; on a slow cold start (a fresh install) that first frame
+    // could sit on screen for a noticeable time, showing the finished
+    // title, before it jumped to blank and the animation began.
+    val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
+    val riseOffsetPx = with(density) { VERTICAL_RISE_OFFSET.toPx() }
+    val gitOffsetX = remember { Animatable(-offscreenPx) }
     val gitRotation = remember { Animatable(0f) }
-    val hubOffsetX = remember { Animatable(0f) }
-    val issueOffsetY = remember { Animatable(0f) }
+    val hubOffsetX = remember { Animatable(offscreenPx) }
+    val issueOffsetY = remember { Animatable(riseOffsetPx) }
     val issueAlpha = remember { Animatable(0f) }
-    val finderOffsetY = remember { Animatable(0f) }
+    val finderOffsetY = remember { Animatable(riseOffsetPx) }
     val finderAlpha = remember { Animatable(0f) }
     val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
+    // The whole wordmark stays invisible until the timeline is about to
+    // start, as a second guard: even if some value were ever wrong for a
+    // frame, nothing is drawn until `started` flips.
+    var started by remember { mutableStateOf(false) }
+
     LaunchedEffect(speedMultiplier) {
-        val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
-        val riseOffsetPx = with(density) { VERTICAL_RISE_OFFSET.toPx() }
+        // Let the first couple of frames go by (drawing the blank screen)
+        // BEFORE starting any timer or animation. On a cold start the
+        // first frame can be very slow (class loading, first-time Compose
+        // set-up); starting the timeline inside that hitch would make the
+        // opening of the animation stutter. After these two frames the
+        // screen is up and the timeline starts smoothly.
+        withFrameNanos { }
+        withFrameNanos { }
+        started = true
 
         // "Git": screech in from off-left, overshoot forward past its
         // resting spot, then ease back — the lurch-forward-then-back
@@ -269,6 +295,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         )
 
         TitleWordmark(
+            modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
             gitModifier = Modifier.graphicsLayer {
                 translationX = gitOffsetX.value
                 rotationZ = gitRotation.value
