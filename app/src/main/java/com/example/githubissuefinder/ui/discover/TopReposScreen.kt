@@ -58,9 +58,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -883,6 +886,9 @@ private fun RepoListBody(
     }
 }
 
+/** How much bigger the rate-limit chip is than its original size (50% larger). */
+private const val RATE_LIMIT_CHIP_SCALE = 1.5f
+
 /**
  * Persistent, tappable rate-limit indicator for the repo-first flow —
  * ported over from the classic flow's own FeedTabsScreen (see git
@@ -897,29 +903,55 @@ private fun RepoListBody(
  * "🔑 remaining/limit" in a compact chip — there genuinely isn't room
  * for a legible dial in the TopAppBar itself. Tapping it opens a dialog
  * with the full speedometer-style dial below.
+ *
+ * Sized 50% larger than its original bodySmall/10dp/4dp version
+ * ([RATE_LIMIT_CHIP_SCALE]) so the numbers are easier to read at a
+ * glance; the text, its line height, the padding and the corner radius
+ * all scale together to keep the same proportions.
  */
 @Composable
 private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
+    val base = MaterialTheme.typography.bodySmall
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.padding(end = 8.dp),
+        modifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp),
     ) {
         Text(
-            // A cache-hit load never calls the network, so info can stay
-            // null for the whole session — "🔑 —" until a real search
-            // response arrives, rather than the chip appearing/
-            // disappearing depending on whether this exact combination
-            // happened to be cached. Still tappable either way: the
-            // dialog handles a null info with its own explanatory text.
+            // The numbers normally arrive with the first list: a live
+            // search supplies them, and a cache-hit load has
+            // TopReposViewModel look them up from GitHub's free
+            // /rate_limit endpoint. "🔑 —" now only shows briefly, or if
+            // that lookup fails. Still tappable either way: the dialog
+            // handles a null info with its own explanatory text.
             if (info != null) "🔑 ${info.remaining}/${info.limit}" else "🔑 —",
-            style = MaterialTheme.typography.bodySmall,
+            style = base.copy(
+                fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
+                lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
+            ),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.padding(
+                horizontal = (10 * RATE_LIMIT_CHIP_SCALE).dp,
+                vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
+            ),
         )
     }
 }
+
+/**
+ * How much bigger the text below the big "remaining" number is in the
+ * rate-limit dialog (50% larger): the "Remaining" caption, the 0/limit
+ * scale labels, the four detail rows and the explanatory note. The big
+ * number itself is unchanged.
+ */
+private const val RATE_LIMIT_DIALOG_TEXT_SCALE = 1.5f
+
+/** This style with its font size and line height scaled by [RATE_LIMIT_DIALOG_TEXT_SCALE]. */
+private fun TextStyle.rateLimitDialogScaled(): TextStyle = copy(
+    fontSize = fontSize * RATE_LIMIT_DIALOG_TEXT_SCALE,
+    lineHeight = lineHeight * RATE_LIMIT_DIALOG_TEXT_SCALE,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -929,12 +961,14 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = onDismiss) { Text("Close") }
         },
-        title = { Text("Search API rate limit") },
+        title = { Text("Search API Rate Limit") },
         text = {
             if (info == null) {
                 Text("No rate limit data available yet.")
             } else {
-                Column {
+                // Scrollable because the larger text can make the dialog
+                // taller than the screen, e.g. in landscape.
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     RateLimitDial(info = info)
                     RateLimitRow("Remaining", "${info.remaining}")
                     RateLimitRow("Limit", "${info.limit}")
@@ -943,7 +977,7 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                     Text(
                         "This reflects GitHub's Search API limit specifically, which is " +
                             "separate from and stricter than the general REST API limit.",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp),
                     )
@@ -956,9 +990,11 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 /**
  * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
  * evenly stepped through orange and yellow — a classic speedometer
- * red-line convention, independent of the current value. A separate
- * pointer dot marks where the current remaining/limit ratio actually
- * falls along that fixed track. Text ("29 Remaining") is rendered as
+ * red-line convention, independent of the current value. A needle,
+ * swinging from a hub at the arc's center, points at where the current
+ * remaining/limit ratio actually falls along that fixed track. A needle
+ * rather than a round knob on the track on purpose: a knob looks like a
+ * slider thumb that can be dragged, and this gauge is display-only. Text ("29 Remaining") is rendered as
  * ordinary Compose Text below the Canvas, rather than drawn inside the
  * arc via Canvas.drawText — simpler and safer to lay out correctly than
  * measuring/centering native text inside a curved region.
@@ -967,13 +1003,18 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
     val ratio = (info.remaining.toFloat() / info.limit.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val dialogBackground = MaterialTheme.colorScheme.surface
+    val needleColor = MaterialTheme.colorScheme.onSurface
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .semantics { contentDescription = "Rate limit gauge: ${info.remaining} of ${info.limit} remaining" },
+        ) {
             val strokeWidthPx = 20.dp.toPx()
             val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
             val center = Offset(size.width / 2f, size.height - strokeWidthPx / 2f)
@@ -1006,29 +1047,39 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
 
             // Pointer position: ratio=0 (empty) -> 180° (left/red).
             // ratio=1 (full) -> 360°/0° (right/green).
-            val pointerAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
-            val pointerX = center.x + radius * cos(pointerAngleRad).toFloat()
-            val pointerY = center.y + radius * sin(pointerAngleRad).toFloat()
-            val pointerRadius = strokeWidthPx / 2f + 4.dp.toPx()
-
-            drawCircle(color = dialogBackground, radius = pointerRadius, center = Offset(pointerX, pointerY))
-            drawCircle(
-                color = Color.Black.copy(alpha = 0.3f),
-                radius = pointerRadius,
-                center = Offset(pointerX, pointerY),
-                style = Stroke(width = 2.dp.toPx()),
+            val needleAngleRad = Math.toRadians((180f + 180f * ratio).toDouble())
+            val needleTip = Offset(
+                center.x + radius * cos(needleAngleRad).toFloat(),
+                center.y + radius * sin(needleAngleRad).toFloat(),
             )
+
+            drawLine(
+                color = needleColor,
+                start = center,
+                end = needleTip,
+                strokeWidth = 4.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawCircle(color = needleColor, radius = 8.dp.toPx(), center = center)
         }
 
         Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
-        Text("Remaining", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariant)
+        Text(
+            "Remaining",
+            style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
+            color = onSurfaceVariant,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("0", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
-            Text("${info.limit}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariant)
+            Text("0", style = MaterialTheme.typography.labelSmall.rateLimitDialogScaled(), color = onSurfaceVariant)
+            Text(
+                "${info.limit}",
+                style = MaterialTheme.typography.labelSmall.rateLimitDialogScaled(),
+                color = onSurfaceVariant,
+            )
         }
     }
 }
@@ -1039,8 +1090,12 @@ private fun RateLimitRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(label, style = MaterialTheme.typography.bodyMedium.rateLimitDialogScaled())
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium.rateLimitDialogScaled(),
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 
