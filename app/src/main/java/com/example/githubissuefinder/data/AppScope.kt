@@ -17,11 +17,9 @@ import kotlinx.coroutines.SupervisorJob
  * work is not done here: file and network work runs on the repositories'
  * own IO dispatchers.
  *
- * This is a plain object, not a scope created in an Application class,
- * because this app has no Application subclass and initializes its
- * repositories the same way (see MainActivity.onCreate). Tests do not
- * use it: a state holder takes its scope as an argument, and tests pass
- * their own.
+ * This is a plain object, not a scope created in the Application class,
+ * because nothing about it needs configuring. Tests do not use it: a
+ * state holder takes its scope as an argument, and tests pass their own.
  */
 object AppScope {
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
