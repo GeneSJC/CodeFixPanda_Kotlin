@@ -29,14 +29,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
@@ -56,6 +60,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
+    val buttonWidth = rememberModeButtonWidth()
     GitHubIssueFinderTheme(issueMode = null) {
         Scaffold(
             topBar = {
@@ -86,7 +91,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         IssueLabelFilter.entries.forEach { mode ->
-                            ModeCard(mode = mode, onSelect = { onModeSelected(mode) })
+                            ModeCard(mode = mode, buttonWidth = buttonWidth, onSelect = { onModeSelected(mode) })
                         }
                     }
                 }
@@ -96,7 +101,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
 }
 
 @Composable
-private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
+private fun ModeCard(mode: IssueLabelFilter, buttonWidth: Dp, onSelect: () -> Unit) {
     val accent = mode.colorScheme().primary
     var expanded by rememberSaveable { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
@@ -133,7 +138,8 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                     color = accent,
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier.width(buttonWidth).padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -177,3 +183,20 @@ private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
     it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
 }
+
+/**
+ * One width for every mode button: the widest mode name plus the usual side padding, so the colored
+ * buttons are the same size with each name centered in its own.
+ */
+@Composable
+private fun rememberModeButtonWidth(): Dp {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = modeButtonTextStyle()
+    return remember(style, density) {
+        val widestTextPx = IssueLabelFilter.entries.maxOf { textMeasurer.measure(it.displayName, style).size.width }
+        with(density) { widestTextPx.toDp() } + 2 * MODE_BUTTON_SIDE_PADDING
+    }
+}
+
+private val MODE_BUTTON_SIDE_PADDING = 14.dp
