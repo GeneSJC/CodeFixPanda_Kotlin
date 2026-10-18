@@ -72,7 +72,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Looking to make a contribution?",
+                        "Looking to make a contribution on GitHub?",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
