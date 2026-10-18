@@ -1,0 +1,15 @@
+# Design notes
+
+Decisions that are worth remembering but too long for a code comment. Code points here by section title.
+
+## Top Repos screen
+
+- **What it shows.** Repos as they fall out of grouping matching issues by parent repo, sorted by match count. Stars, forks, open-issue counts and "updated X ago" are not in an issue-search response, so cards show only the title, the match count and a README preview. That is a deliberate reduction, not a bug.
+- **Mode is one whole-app choice.** It is made once at the gate screen. A mode dropdown in the title was tried and removed: it undercut the "you have to choose" framing and was not discoverable. The two "Find Good First Issues" / "Find Help Wanted Issues" menu items switch the mode in place, but sit at the bottom of a menu the user has to open deliberately. They are hardcoded; reusing the gate screen would scale better to a third mode but was not worth the navigation complexity for two. A third mode means editing those two items.
+- **Hidden issues.** `uiState.repoGroups` stays the raw cached data; the hidden-filtered groups are derived on every recomposition and never written back. A repo whose issues are all hidden stays in the list with an "All hidden" badge, and leaves only when the cache is cleared. The repo screen gets the raw group so it can show hidden issues and bring them back.
+- **Cache actions.** "Check for New Repos" merges fresh results into the list and does not replace it. "Clear Cache" wipes the whole cache (a known limitation, not an oversight), asks for confirmation, says that bookmarks and hidden issues are kept, and reloads the screen afterwards.
+- **Load More is manual.** Auto-loading on scroll would spend Search API calls the user did not ask for, so the footer is an explicit tap.
+- **Rate-limit chip always renders.** A cache hit never calls the network, so without a placeholder the chip could stay absent for a whole session and then pop in next to the mode's info icon. Numbers normally arrive with the first list (a live search, or a `/rate_limit` lookup after a cache hit). The icon is a fixed drawing; it replaced a key emoji that was too small to read on a phone.
+- **Landscape split view.** A landscape phone is short on height, not width. The mode, repo count and language picker move into a narrow independently-scrolling left rail so the card list gets the full height. The language chips wrap in the rail because a horizontally scrolling row nested inside a vertically scrolling column would compete for gestures.
+- **Menu groups.** Repo Management, Find Issues, then Sandbox (the dev-only animation replays, deliberately last). The build label is always visible in the menu header so the running build can be matched to the version line in a chat message.
+- **README preview on cards.** A plain-text snippet, 2 lines when collapsed, expandable with no extra network call. It renders nothing while loading or when the repo has no README, because a spinner or a "no README" note would be clutter.
