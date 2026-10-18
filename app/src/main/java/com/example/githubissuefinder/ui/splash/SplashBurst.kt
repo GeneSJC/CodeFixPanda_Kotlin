@@ -1,7 +1,9 @@
 package com.example.githubissuefinder.ui.splash
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -36,9 +38,10 @@ internal class BurstAnimation {
     /**
      * Grows the pulse and fades it out over [durationMs]. Alpha holds near its start for the first
      * part: fading and scaling from the start left the circle nearly transparent by the time it was
-     * big enough to see.
+     * big enough to see. [fadeOut] shapes the fade: an ease-in keeps the pulse visible until close to
+     * the end, so a caller that continues the moment this returns does not wait on an invisible tail.
      */
-    suspend fun play(durationMs: Int) {
+    suspend fun play(durationMs: Int, fadeOut: Easing = LinearEasing) {
         coroutineScope {
             launch {
                 scale.animateTo(BURST_MAX_SCALE, tween(durationMs, easing = FastOutSlowInEasing))
@@ -48,7 +51,7 @@ internal class BurstAnimation {
                 animationSpec = keyframes {
                     durationMillis = durationMs
                     BURST_START_ALPHA at 0
-                    BURST_START_ALPHA at (durationMs * BURST_HOLD_FRACTION).toInt()
+                    BURST_START_ALPHA at (durationMs * BURST_HOLD_FRACTION).toInt() using fadeOut
                     0f at durationMs
                 },
             )

@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.ui.splash
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,12 +19,13 @@ import kotlinx.coroutines.delay
 
 private const val FLASH_FADE_IN_MS = 300
 private const val FLASH_HOLD_MS = 1200L
-private const val FLASH_BURST_MS = 1000
+private const val FLASH_BURST_MS = 1500
 
 /**
  * The short splash for every launch after the first: the app name, already in its final position
  * (TitleWordmark), fades in and holds on its own for about a second and a half, then the same
- * "sonic boom" burst as the full animation plays behind it for a second before the app appears.
+ * "sonic boom" burst as the full animation plays behind it, slowed down by half, and the app
+ * appears as soon as it finishes.
  * Pinned to the Good First Issue (purple) palette like TitleRevealSplashScreen, because the splash
  * is the project's fixed brand identity and should not repaint green under Help Wanted.
  */
@@ -35,7 +37,7 @@ fun TitleFlashSplashScreen(onFinished: () -> Unit) {
     LaunchedEffect(Unit) {
         fade.animateTo(1f, tween(FLASH_FADE_IN_MS))
         delay(FLASH_HOLD_MS)
-        burst.play(FLASH_BURST_MS)
+        burst.play(FLASH_BURST_MS, fadeOut = FastOutLinearInEasing)
         onFinished()
     }
 
