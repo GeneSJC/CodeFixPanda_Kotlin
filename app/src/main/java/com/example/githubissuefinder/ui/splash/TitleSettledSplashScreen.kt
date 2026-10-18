@@ -30,7 +30,10 @@ private const val HOLD_BASE_MS = 900
 private const val BURST_BASE_DURATION_MS = 500
 
 // How long the settled title shows on its own before the burst begins.
-private const val TITLE_ONLY_MS = 1500L
+private const val TITLE_ONLY_MS = 1350L
+
+// Shaved off the end of the copied hold, which otherwise leaves a perceptible pause after the burst.
+private const val END_TRIM_MS = 150L
 
 // Scaled with the text (see SPLASH_TEXT_SCALE) so the burst keeps its
 // proportions relative to the bigger wordmark.
@@ -82,7 +85,7 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
             )
         }
 
-        delay(holdMs.toLong())
+        delay(holdMs - END_TRIM_MS)
         onFinished()
     }
 
