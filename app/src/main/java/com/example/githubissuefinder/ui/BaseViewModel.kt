@@ -6,29 +6,13 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 /**
- * Shared parent for screen ViewModels: the app-level values every screen
- * may need, exposed as plain getters so a view only ever talks to its own
- * ViewModel.
- *
- * Today that is the app's build-time configuration (a view calls
- * viewModel.showDetailedDrawerMenu and knows nothing about BuildConfig or
- * where the value comes from). It is an immutable value object that Koin
- * supplies, and a test registers any [AppConfig] it likes.
- *
- * Being a KoinComponent is what lets every ViewModel declare what it
- * needs as a plain member, `private val x: X by inject()`, instead of a
- * constructor argument: a subclass just says ": BaseViewModel()", so the
- * default ViewModel factory can still create it.
- *
- * Why a base class and not a line in each ViewModel: the getters are
- * written once here, and a new constant is one getter in this file,
- * readable from every screen that extends it.
- *
- * What does NOT belong here: anything that reaches the data layer. A
- * ViewModel that needs a repository or a state holder declares it as its
- * own member and uses it itself. The base is for values, not for data
- * access or logic (and Kotlin allows one parent class, so a base that
- * collects odd helpers stops being a standard).
+ * The common parent of every screen ViewModel. It holds app-level values only (today the build
+ * configuration, an immutable AppConfig that Koin supplies) as plain getters, so a view only ever
+ * talks to its own ViewModel. Being a KoinComponent lets every ViewModel declare its dependencies as
+ * plain members (`private val x: X by inject()`) and keep a no-argument constructor.
+ * Nothing that reaches the data layer belongs here: a ViewModel that needs a repository or state
+ * holder declares it itself. Kotlin allows one parent class, so a base that collects odd helpers
+ * stops being a standard.
  */
 abstract class BaseViewModel : ViewModel(), KoinComponent {
 
