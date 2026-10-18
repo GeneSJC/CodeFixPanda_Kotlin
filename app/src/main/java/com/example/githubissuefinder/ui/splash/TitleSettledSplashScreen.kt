@@ -29,6 +29,9 @@ import kotlinx.coroutines.launch
 private const val HOLD_BASE_MS = 900
 private const val BURST_BASE_DURATION_MS = 500
 
+// How long the settled title shows on its own before the burst begins.
+private const val TITLE_ONLY_MS = 1500L
+
 // Scaled with the text (see SPLASH_TEXT_SCALE) so the burst keeps its
 // proportions relative to the bigger wordmark.
 private val BURST_SIZE = (120 * SPLASH_TEXT_SCALE).dp
@@ -38,12 +41,13 @@ private const val BURST_START_ALPHA = 0.85f
 private const val BURST_HOLD_FRACTION = 0.45
 
 /**
- * The short splash for every launch after the first: the title screen at the moment the full
- * animation has settled, with the same "sonic boom" burst and hold that animation ends with, at the
- * 0.5x speed it uses at launch. This is an independent copy of that ending, not shared code, so the
- * first-launch animation is never at risk from changes here. Like the original it lets two frames
- * go by before starting, since the first frame of a cold start can be slow. Pinned to the Good
- * First Issue (purple) palette, because the splash is the project's fixed brand identity.
+ * The short splash for every launch after the first: the title screen as the full animation leaves
+ * it once settled, shown on its own for [TITLE_ONLY_MS], then the same "sonic boom" burst and hold
+ * that animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
+ * that ending, not shared code, so the first-launch animation is never at risk from changes here.
+ * Like the original it lets two frames go by before starting, since the first frame of a cold start
+ * can be slow. Pinned to the Good First Issue (purple) palette, because the splash is the
+ * project's fixed brand identity.
  */
 @Composable
 fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.5f) {
@@ -57,6 +61,8 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
         // land in the middle of the burst.
         withFrameNanos { }
         withFrameNanos { }
+
+        delay(TITLE_ONLY_MS)
 
         // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and
         // scaling from the start left the circle nearly transparent by the time it was big enough

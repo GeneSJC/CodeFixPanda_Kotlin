@@ -47,7 +47,7 @@ internal fun TopReposMenu(
         // the version line in chat.
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(
-                "GitHubIssueFinder",
+                "GitHub Issue Finder",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
             )

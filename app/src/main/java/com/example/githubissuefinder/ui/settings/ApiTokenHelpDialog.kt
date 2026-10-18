@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
 /** Opens GitHub's "new classic token" form with the description already filled in. */
-private const val NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=GitHubIssueFinder"
+private const val NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=GitHub%20Issue%20Finder"
 
 /**
  * A step-by-step walkthrough for someone who has never made a GitHub personal access token,
@@ -34,7 +34,7 @@ fun ApiTokenHelpDialog(onDismiss: () -> Unit) {
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
-                    "GitHubIssueFinder needs a free GitHub personal access token to search " +
+                    "GitHub Issue Finder needs a free GitHub personal access token to search " +
                         "for issues. It only reads public information, so your token needs " +
                         "no permissions at all.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -48,7 +48,7 @@ fun ApiTokenHelpDialog(onDismiss: () -> Unit) {
                 )
                 Step(
                     "3.",
-                    "Name it \"GitHubIssueFinder\" and pick an expiration. Leave every " +
+                    "Name it \"GitHub Issue Finder\" and pick an expiration. Leave every " +
                         "permission (scope) unchecked.",
                 )
                 Step(
