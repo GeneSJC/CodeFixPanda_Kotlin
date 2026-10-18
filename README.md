@@ -45,9 +45,7 @@ View (Compose screen)
   `TopReposEvent.RateLimited`); the ViewModels' `*UiMapping` files turn those facts into text.
   The state holders are tested without any UI.
 - **Dependencies are plain members.** Each singleton exposes `.instance`, a ViewModel reads it
-  as a member, and tests use `replaceInstanceForTests`. There is no DI framework: there is one
-  implementation of each class, so a framework would add a layer without a choice to make.
-  The trigger for adopting one is a second implementation of a data source.
+  as a member, and tests use `replaceInstanceForTests`.
 - **Every top-level ViewModel extends `BaseViewModel`**, which carries the app-level data any
   screen may need (build configuration, hidden and bookmarked issues). A guard test fails if a
   ViewModel does not.
