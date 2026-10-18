@@ -3,7 +3,6 @@ package com.example.githubissuefinder.testutil
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.ApiTokenStorage
 import com.example.githubissuefinder.data.AppConfig
-import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.data.HiddenIssuesRepository
@@ -113,9 +112,9 @@ class ViewModelFixtures(
     val modeRepository = IssueModeRepository(modeStorage)
     val tokenStorage = FakeApiTokenStorage()
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
-    val appConfigRepository = testAppConfigRepository()
-    val hiddenIssuesRepository = testHiddenIssuesRepository()
-    val bookmarksRepository = testBookmarksRepository()
+    val appConfig = testAppConfig()
+    val hiddenIssuesRepository = HiddenIssuesRepository(FakeHiddenIssuesStorage())
+    val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api, { tokenRepository.effectiveToken.value.isNotBlank() })
@@ -133,23 +132,18 @@ class ViewModelFixtures(
     )
 
     /** A Top Repos ViewModel over the state holder and repositories above. */
-    fun topReposViewModel(config: AppConfigRepository = appConfigRepository) = TopReposViewModel(
-        topReposStateHolder, snippetRepository, config, hiddenIssuesRepository, bookmarksRepository,
+    fun topReposViewModel(config: AppConfig = appConfig) = TopReposViewModel(
+        topReposStateHolder, snippetRepository, hiddenIssuesRepository, config,
     )
 
     /** A repo-issues ViewModel over the state holder and repositories above. */
     fun repoIssuesViewModel() = RepoIssuesViewModel(
-        repoIssuesStateHolder, hiddenIssuesRepository, appConfigRepository, bookmarksRepository,
+        repoIssuesStateHolder, hiddenIssuesRepository, bookmarksRepository, appConfig,
     )
 }
 
 /** A config for tests that do not care about its values. */
 fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = "coin", showDetailedDrawerMenu = false)
-
-/** The three repositories BaseViewModel takes, over fakes, for tests that only care about a ViewModel's own behavior. */
-fun testAppConfigRepository() = AppConfigRepository(testAppConfig())
-fun testHiddenIssuesRepository() = HiddenIssuesRepository(FakeHiddenIssuesStorage())
-fun testBookmarksRepository() = BookmarksRepository(FakeBookmarksStorage())
 
 /** A search-API issue as GitHub would send it, in repo [owner]/[repo]. */
 fun issueDto(id: Long, owner: String = "octo", repo: String = "repo") = IssueDto(

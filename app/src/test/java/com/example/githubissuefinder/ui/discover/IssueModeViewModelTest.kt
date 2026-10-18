@@ -3,9 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.IssueModeStorage
 import com.example.githubissuefinder.model.IssueLabelFilter
-import com.example.githubissuefinder.testutil.testAppConfigRepository
-import com.example.githubissuefinder.testutil.testBookmarksRepository
-import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -13,7 +11,7 @@ import org.junit.Test
 class IssueModeViewModelTest {
 
     private fun createViewModel(repository: IssueModeRepository) =
-        IssueModeViewModel(repository, testAppConfigRepository(), testHiddenIssuesRepository(), testBookmarksRepository())
+        IssueModeViewModel(repository, testAppConfig())
 
     private class FakeStorage : IssueModeStorage {
         var stored: String? = null

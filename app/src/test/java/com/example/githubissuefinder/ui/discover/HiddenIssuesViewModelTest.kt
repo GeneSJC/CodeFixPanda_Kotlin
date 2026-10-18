@@ -4,8 +4,7 @@ import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.HiddenIssuesStorage
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
-import com.example.githubissuefinder.testutil.testAppConfigRepository
-import com.example.githubissuefinder.testutil.testBookmarksRepository
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,7 +12,7 @@ import org.junit.Test
 class HiddenIssuesViewModelTest {
 
     private fun createViewModel(repository: HiddenIssuesRepository) =
-        HiddenIssuesViewModel(repository, testAppConfigRepository(), testBookmarksRepository())
+        HiddenIssuesViewModel(repository, testAppConfig())
 
     private class FakeStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
         override fun load(): List<HiddenIssue> = stored

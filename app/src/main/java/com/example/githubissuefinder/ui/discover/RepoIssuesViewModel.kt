@@ -1,7 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
-import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RepoIssuesStateHolder
@@ -30,18 +30,17 @@ import kotlinx.coroutines.flow.stateIn
  * Constructing this class starts a fresh visit to the screen
  * (RepoIssuesStateHolder.open()), as constructing it has always meant.
  *
- * The state holder and the hidden-issue repository are constructor
- * arguments, supplied by the Koin module; tests pass their own. The
- * hidden-issue repository is used here for hiding and unhiding, and is
- * also the one BaseViewModel reads the hidden ids from. The hidden ids,
- * the bookmarked ids and the bookmark toggle come from BaseViewModel.
+ * The state holder and the two repositories are constructor arguments,
+ * supplied by the Koin module; tests pass their own. The hidden-issue
+ * repository serves hiding and unhiding and the hidden ids the list is
+ * filtered by; the bookmark repository serves the star on each card.
  */
 class RepoIssuesViewModel(
     private val stateHolder: RepoIssuesStateHolder,
     private val hiddenIssuesRepository: HiddenIssuesRepository,
-    appConfigRepository: AppConfigRepository,
-    bookmarksRepository: BookmarksRepository,
-) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
+    private val bookmarksRepository: BookmarksRepository,
+    appConfig: AppConfig,
+) : BaseViewModel(appConfig) {
 
     init {
         stateHolder.open()
@@ -58,6 +57,15 @@ class RepoIssuesViewModel(
 
     /** The one explicit, user-initiated fetch for this repo; see RepoIssuesStateHolder.refreshThisRepo(). */
     fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) = stateHolder.refreshThisRepo(repoGroup, language)
+
+    /** Ids the user hid, to filter hidden issues out of the list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
+
+    /** Ids of bookmarked issues, to draw each issue card's star. */
+    val bookmarkedIds: StateFlow<Set<Long>> = bookmarksRepository.bookmarkedIds
+
+    /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
+    fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)
 
     fun hideIssue(issue: Issue) {
         hiddenIssuesRepository.hide(issue)

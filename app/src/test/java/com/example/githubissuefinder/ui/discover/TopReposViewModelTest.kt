@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
 import com.example.githubissuefinder.data.AppConfig
-import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeFetch
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
@@ -42,7 +41,7 @@ class TopReposViewModelTest {
     private val kotlin = LanguageFilter.KOTLIN
 
     /** A ViewModel whose state holder is the one built over [f]'s fakes. */
-    private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = f.appConfigRepository): TopReposViewModel =
+    private fun viewModel(f: ViewModelFixtures, config: AppConfig = f.appConfig): TopReposViewModel =
         f.topReposViewModel(config)
 
     private fun fullPage() = (1L..TOP_REPOS_PER_PAGE).map { issueDto(it, "a", "one") }
@@ -199,11 +198,11 @@ class TopReposViewModelTest {
     }
 
     @Test
-    fun configValuesComeFromTheAppConfigRepository() {
+    fun configValuesComeFromTheAppConfig() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
         val config = AppConfig(buildLabel = "9.9", splashAnimation = "shapeStack", showDetailedDrawerMenu = true)
-        val vm = viewModel(f, AppConfigRepository(config))
+        val vm = viewModel(f, config)
 
         assertEquals("9.9", vm.buildLabel)
         assertEquals("shapeStack", vm.splashAnimation)

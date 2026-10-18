@@ -1,8 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
-import com.example.githubissuefinder.data.AppConfigRepository
-import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
@@ -33,18 +32,18 @@ import kotlinx.coroutines.launch
  * (TopReposStateHolder.open()), which is what constructing it has always
  * meant: load the list for the default language, cache first.
  *
- * The state holder is a constructor argument, supplied by the Koin module;
- * tests pass their own. The snippet repository serves the repo cards
- * (README previews) and is not part of the list's data state. The hidden
- * ids come from BaseViewModel.
+ * The state holder and the two repositories are constructor arguments,
+ * supplied by the Koin module; tests pass their own. The snippet
+ * repository serves the repo cards (README previews) and the hidden-issue
+ * repository the hidden ids the list is filtered by; neither is part of
+ * the list's data state.
  */
 class TopReposViewModel(
     private val stateHolder: TopReposStateHolder,
     private val snippetRepository: ReadmeSnippetRepository,
-    appConfigRepository: AppConfigRepository,
     hiddenIssuesRepository: HiddenIssuesRepository,
-    bookmarksRepository: BookmarksRepository,
-) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
+    appConfig: AppConfig,
+) : BaseViewModel(appConfig) {
 
     init {
         stateHolder.open()
@@ -56,6 +55,9 @@ class TopReposViewModel(
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
     val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage() }
+
+    /** Ids the user hid, to filter hidden issues out of the list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets

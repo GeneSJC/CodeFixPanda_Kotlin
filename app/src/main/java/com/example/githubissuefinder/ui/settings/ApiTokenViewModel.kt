@@ -1,9 +1,7 @@
 package com.example.githubissuefinder.ui.settings
 
 import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.AppConfigRepository
-import com.example.githubissuefinder.data.BookmarksRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
+import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.TokenSource
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -24,10 +22,8 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class ApiTokenViewModel(
     private val repository: ApiTokenRepository,
-    appConfigRepository: AppConfigRepository,
-    hiddenIssuesRepository: HiddenIssuesRepository,
-    bookmarksRepository: BookmarksRepository,
-) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
+    appConfig: AppConfig,
+) : BaseViewModel(appConfig) {
 
     /** The token the user saved, or empty if none. */
     val userToken: StateFlow<String> = repository.userToken

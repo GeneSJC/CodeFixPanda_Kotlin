@@ -1,8 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
-import com.example.githubissuefinder.data.AppConfigRepository
-import com.example.githubissuefinder.data.BookmarksRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
+import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.BaseViewModel
@@ -34,10 +32,8 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class IssueModeViewModel(
     private val repository: IssueModeRepository,
-    appConfigRepository: AppConfigRepository,
-    hiddenIssuesRepository: HiddenIssuesRepository,
-    bookmarksRepository: BookmarksRepository,
-) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
+    appConfig: AppConfig,
+) : BaseViewModel(appConfig) {
 
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode

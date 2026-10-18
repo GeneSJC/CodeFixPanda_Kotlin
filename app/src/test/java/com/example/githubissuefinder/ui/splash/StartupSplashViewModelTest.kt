@@ -2,9 +2,7 @@ package com.example.githubissuefinder.ui.splash
 
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.data.StartupSplashStorage
-import com.example.githubissuefinder.testutil.testAppConfigRepository
-import com.example.githubissuefinder.testutil.testBookmarksRepository
-import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -12,7 +10,7 @@ import org.junit.Test
 class StartupSplashViewModelTest {
 
     private fun createViewModel(repository: StartupSplashRepository) =
-        StartupSplashViewModel(repository, testAppConfigRepository(), testHiddenIssuesRepository(), testBookmarksRepository())
+        StartupSplashViewModel(repository, testAppConfig())
 
     private class FakeStorage(var seen: Boolean = false) : StartupSplashStorage {
         override fun hasSeenFullAnimation(): Boolean = seen

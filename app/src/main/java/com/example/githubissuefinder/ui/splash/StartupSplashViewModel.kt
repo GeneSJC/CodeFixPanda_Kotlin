@@ -1,8 +1,6 @@
 package com.example.githubissuefinder.ui.splash
 
-import com.example.githubissuefinder.data.AppConfigRepository
-import com.example.githubissuefinder.data.BookmarksRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
+import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.BaseViewModel
 
@@ -25,10 +23,8 @@ import com.example.githubissuefinder.ui.BaseViewModel
  */
 class StartupSplashViewModel(
     private val repository: StartupSplashRepository,
-    appConfigRepository: AppConfigRepository,
-    hiddenIssuesRepository: HiddenIssuesRepository,
-    bookmarksRepository: BookmarksRepository,
-) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
+    appConfig: AppConfig,
+) : BaseViewModel(appConfig) {
 
     val playFullAnimation: Boolean = !repository.hasSeenFullAnimation
 

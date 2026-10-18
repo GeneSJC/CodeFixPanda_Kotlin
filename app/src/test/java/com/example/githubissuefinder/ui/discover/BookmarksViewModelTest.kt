@@ -3,8 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.model.Issue
-import com.example.githubissuefinder.testutil.testAppConfigRepository
-import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -22,7 +21,7 @@ class BookmarksViewModelTest {
     /** A ViewModel over a repository on [storage]. */
     private fun viewModelOver(storage: FakeStorage): Pair<BookmarksViewModel, BookmarksRepository> {
         val repository = BookmarksRepository(storage)
-        return BookmarksViewModel(repository, testAppConfigRepository(), testHiddenIssuesRepository()) to repository
+        return BookmarksViewModel(repository, testAppConfig()) to repository
     }
 
     private fun issue(id: Long) = Issue(
@@ -70,14 +69,5 @@ class BookmarksViewModelTest {
         repository.toggle(issue(4))
 
         assertEquals(listOf(4L), viewModel.bookmarks.value.map { it.id })
-    }
-
-    @Test
-    fun theBookmarkedIdsFollowTheRepository() {
-        val (viewModel, _) = viewModelOver(FakeStorage())
-
-        viewModel.toggleBookmark(issue(2))
-
-        assertEquals(setOf(2L), viewModel.bookmarkedIds.value)
     }
 }

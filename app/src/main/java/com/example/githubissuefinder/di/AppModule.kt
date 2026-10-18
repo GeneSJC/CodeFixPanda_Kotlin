@@ -3,7 +3,6 @@ package com.example.githubissuefinder.di
 import com.example.githubissuefinder.BuildConfig
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.AppConfig
-import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.GitHubIssueSearchApi
 import com.example.githubissuefinder.data.GitHubReadmeApi
@@ -59,8 +58,10 @@ val appModule = module {
     single { GitHubApiClient(tokenRepository = get(), moshi = get()) }
     single { get<GitHubApiClient>().api }
 
+    // Build-time constants: the one place BuildConfig is read.
+    single { AppConfig(BuildConfig.BUILD_LABEL, BuildConfig.SPLASH_ANIMATION, BuildConfig.SHOW_DETAILED_DRAWER_MENU) }
+
     // Repositories over local storage.
-    single { AppConfigRepository(AppConfig(BuildConfig.BUILD_LABEL, BuildConfig.SPLASH_ANIMATION, BuildConfig.SHOW_DETAILED_DRAWER_MENU)) }
     single { ApiTokenRepository(SharedPreferencesApiTokenStorage(androidContext()), BuildConfig.GITHUB_API_TOKEN) }
     single { IssueModeRepository(SharedPreferencesIssueModeStorage(androidContext())) }
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
