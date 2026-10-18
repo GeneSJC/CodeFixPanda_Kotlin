@@ -26,17 +26,10 @@ interface BookmarksStorage {
 }
 
 /**
- * A plain JSON file in the app's private storage: a bookmark is a full
- * Issue (title, labels, repo identity, URL...), not a single primitive
- * value, so it needs real serialization the way RepoIssueGroupRepository's
- * cached search results do, rather than SharedPreferences. The file
- * name is unchanged from the old RepoBookmarks object, so bookmarks a
- * user already saved are still there after this refactor.
- *
- * Writes happen on a single background thread, in order, so two quick
- * toggles can't land on disk out of order. A failed write is swallowed
- * on purpose: it never rolls back the toggle the user already saw
- * happen, matching every other store in this app.
+ * A JSON file in private storage: a bookmark is a full Issue, not a primitive, so it needs real
+ * serialization. The file name is unchanged, so earlier bookmarks survive. Writes run in order on
+ * one background thread; a failed write is swallowed on purpose and never rolls back a toggle
+ * the user already saw.
  */
 class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorage {
 
@@ -69,27 +62,11 @@ class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorag
 }
 
 /**
- * The single owner of which issues the user has bookmarked: the
- * persisted set of full Issue objects the user explicitly chose to save
- * (as opposed to a cached search result).
- *
- * Replaces the old RepoBookmarks object, which held Compose state and
- * was called directly, with a Context, from two screens. Persistence is
- * now a data-layer concern: ViewModels ask this class to toggle a
- * bookmark and observe the result, and no screen knows how or when
- * anything is written.
- *
- * Why two StateFlows, updated together in one place ([publish]): the
- * issue list screens only need [bookmarkedIds] to decide whether to
- * show a filled or empty star, while the Bookmarks screen needs the
- * full [bookmarks] list. Keeping both as read-only views of one source
- * means they can never disagree with each other or with what is saved.
- * The private mutable / public read-only pairs are the standard
- * encapsulation — only this class can change them.
- *
- * [toggle] updates the in-memory state immediately (so the star and
- * any Snackbar reflect the change with no delay) and persists
- * afterward on a background thread.
+ * The single owner of the issues the user has bookmarked (full Issue objects, not cached search
+ * results). [bookmarkedIds] draws each card's star and [bookmarks] feeds the Bookmarks screen;
+ * both are read-only views of one source, updated together in [publish]. [toggle] updates memory
+ * immediately, so the star and Snackbar reflect it at once, and persists afterward on a
+ * background thread.
  */
 class BookmarksRepository(private val storage: BookmarksStorage) {
 

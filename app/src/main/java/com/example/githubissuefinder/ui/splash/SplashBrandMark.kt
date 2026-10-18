@@ -15,15 +15,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Shared "GH" brand mark used by every splash animation variant (coin
- * flip and origami unfold so far, selectable via
- * BuildConfig.SPLASH_ANIMATION) — so switching which animation plays
- * never changes what the resting mark itself looks like, only how it
- * arrives on screen.
- *
- * Deliberately not GitHub's actual logo — see SplashScreen.kt's original
- * doc comment for the full reasoning (independent, unaffiliated
- * portfolio project).
+ * The shared "GH" brand mark used by every splash variant, so changing which animation plays never
+ * changes the resting mark. Deliberately not GitHub's logo: this is an independent, unaffiliated
+ * project.
  */
 @Composable
 fun SplashBrandMark(modifier: Modifier = Modifier, size: Dp = 96.dp) {

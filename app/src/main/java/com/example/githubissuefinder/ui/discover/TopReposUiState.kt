@@ -4,7 +4,6 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 
 data class TopReposUiState(
-    /** v0.42: repos: List<Repo> replaced by repoGroups: List<RepoIssueGroup> — see TopReposStateHolder's class comment. */
     val repoGroups: List<RepoIssueGroup> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -16,14 +15,9 @@ data class TopReposUiState(
      */
     val noTokenConfigured: Boolean = false,
     /**
-     * True when a token IS configured (noTokenConfigured false) but
-     * GitHub's own API rejected it — an HTTP 401, which GitHub returns
-     * for bad/expired/revoked credentials specifically, distinct from
-     * a 403 rate-limit response. Deliberately its own field rather than
-     * folded into errorMessage: the rate-limit chip's tap handler needs
-     * to tell "no token at all" and "a token that doesn't work" apart
-     * to show the right explanation (see TopReposScreen's
-     * TokenProblemDialog).
+     * True when a token is configured but GitHub rejected it (HTTP 401, distinct from a 403 rate limit).
+     * Its own field, not folded into errorMessage, so the rate-limit chip's tap can tell "no token" from
+     * "a token that does not work".
      */
     val tokenRejected: Boolean = false,
     /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
@@ -76,13 +70,8 @@ data class TopReposUiState(
      */
     val loadMoreError: String? = null,
     /**
-     * v0.45: when the currently-shown repoGroups were actually fetched
-     * — from a live network call, OR from RepoIssueGroupRepository on a
-     * cache hit. Null only before the very first load resolves. Drives
-     * the "Updated X ago" label on this screen, so cached data never
-     * silently pretends to be fresher than it is — see
-     * RepoIssueGroupRepository's doc comment for why a cache hit is never
-     * automatically refreshed in the background.
+     * When the shown repoGroups were fetched, live or from the cache. Null before the first load
+     * resolves. Drives "Updated X ago", so cached data never pretends to be fresher than it is.
      */
     val lastUpdatedAtMs: Long? = null,
 ) {

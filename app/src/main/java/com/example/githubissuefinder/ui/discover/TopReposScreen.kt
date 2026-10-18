@@ -93,266 +93,18 @@ import kotlin.math.sin
 import kotlinx.coroutines.flow.collect
 
 /**
- * CM 1 of the "Discover" repo-first flow (option C from the architecture
- * discussion).
+ * The Top Repos screen: the repos with the most open issues for the active Issue Mode
+ * (good first issue or help wanted), filtered by language, with a manual Load More.
  *
- * v0.42 ("the data-layer swap"): this screen no longer shows a ranked
- * list of REPOS — it shows repos as they fall out of grouping actual
- * matching ISSUES by their parent repo. See TopReposStateHolder and
- * RepoIssueGroup's doc comments for the full reasoning. Concretely,
- * this means:
- *  - Each card shows a match count (RepoIssueGroup.matchCount),
- *    replacing the old composite score badge — sorted descending, the
- *    new ranking signal.
- *  - Stars, forks, open-issue count, "updated X ago," and the
- *    stars/day velocity label are ALL GONE — none of that data exists
- *    in an issue-search response. RepoCard is now a much simpler card
- *    than it used to be; this is a real, deliberate reduction in
- *    richness, not a bug (see RepoIssueGroup's doc comment).
- *  - The "ⓘ" ranking dialog's text is rewritten to describe
- *    match-count ranking, replacing the old 4-factor composite-score
- *    explanation, which is no longer true of anything this screen
- *    does.
- *  - No more "Checking open issues…" loading state per card — the
- *    match count is already final and correct the instant the list
- *    appears, since it's built directly from the issues already in
- *    hand, not a separate async per-repo lookup running after the
- *    fact.
- *  - No more cooldown, no more blocked-switch Snackbar: switching
- *    language or mode is a single Search API call now, not ~21 — see
- *    TopReposStateHolder's class comment. SnackbarHost/SnackbarHostState
- *    are removed from this screen entirely since nothing shows one
- *    anymore.
+ * Portrait stacks the language row above the list. Landscape puts the mode, repo count
+ * and language picker in a narrow left rail so the card list gets the full height.
+ * Hidden issues are filtered at display time; the raw data stays in uiState, and the
+ * repo screen receives the raw group. The hamburger menu holds navigation, the two
+ * mode switches and, in dev builds, the animation replays.
  *
- * The hamburger menu (☰, v0.31, expanded over time as more animations
- * were added) opens with an OVERLAY-based animation-replay toolkit —
- * replayAnimation is local state inside THIS function, so viewModel()
- * above is only ever called once per real session — but what it shows
- * now depends on the drawer flag (viewModel.showDetailedDrawerMenu, from AppConfig; a plain
- * boolean val in app/build.gradle.kts, defaulting to false): true gets
- * everything that existed before this CM, plus one entry per
- * individual splash: "Play Origami Animation" / "Play Shape Stack
- * Animation" / "Play Coin Animation" / "Play Title Reveal Animation" /
- * "Play Title Reveal Animation (0.5x Speed)" — the two Title Reveal
- * entries are the SAME composable called with a different
- * speedMultiplier, not two separate screens, see
- * TitleRevealSplashScreen.kt's doc comment). false (the default) drops
- * the version stamp and all five individual entries in favor of one:
- * "Play App Start Animation", which replays AppStartSplashScreen.kt —
- * the same dispatch MainActivity itself uses at real cold start, so it
- * can never show something an actual user wouldn't have actually seen.
- *
- * As of v0.38, tapping a repo opens a real repo-scoped issue list
- * (RepoIssuesScreen), via DiscoverNavHost. As of v0.42, that navigation
- * passes a RepoIssueGroup instead of a Repo — see DiscoverNavHost.
- *
- * v0.41 ("Issue Mode" shell), THEN REMOVED IN THIS SAME CM: the
- * static "Top Repos" title was briefly a mode dropdown, letting you
- * switch modes without leaving this screen. Decided against, once
- * seen running: Mode is a single, deliberate, whole-app choice made
- * once at the gate screen (IssueModeGateScreen), and no screen at any
- * depth should offer a second way to change it — a quiet dropdown
- * living inside a title bar undercuts that "you have to set it"
- * framing, and in practice it wasn't even discoverable (missed
- * entirely on first use, confirmed on a running device). The title is
- * now a plain, non-interactive Text(currentMode.displayName) — same
- * removal, same reasoning, applied to RepoIssuesScreen's own
- * in-screen label picker too (see that file).
- *
- * v0.43 (pagination): the list now ends in a footer row (a plain
- * `item { }`, not part of the `items()` block) reflecting
- * uiState.canLoadMore / isLoadingMore / loadMoreError — a "Load More"
- * button, a small inline spinner while that fetch is in flight, an
- * inline retry row if it failed (the existing list stays exactly as
- * it was either way — only the footer changes), or a plain "that's
- * everything" line once GitHub genuinely has nothing further for this
- * query. See TopReposStateHolder's class comment for the cross-page
- * grouping/dedup this relies on — a repo whose matches span two pages
- * updates the SAME card here, it doesn't appear a second time.
- *
- * ALSO IN v0.43: two explicitly-worded items now sit at the bottom of
- * the hamburger menu — "Find Good First Issues" and "Find Help Wanted
- * Issues" — calling viewModel.onModeSelected(mode) directly, switching
- * the active Issue Mode in place without leaving this screen. This is
- * NOT a resurrection of the old v0.41 title-bar dropdown, despite
- * switching Mode from within Top Repos either way: that dropdown sat
- * directly in the title, visible and tappable without any deliberate
- * action, which is exactly what made it feel accidental rather than a
- * real choice, and why it was removed. Living at the bottom of a menu
- * the user has to deliberately open keeps the "this is a real,
- * considered choice" framing intact.
- *
- * A gate-screen-based design (a menu item navigating back to
- * IssueModeGateScreen, popping this screen off the back stack first so
- * the stack didn't accumulate stale entries) was fully worked out
- * first, then deliberately set aside in favor of this simpler,
- * direct-switch version — reusing the gate would be the more scalable
- * choice if a third mode is ever added (IssueModeGateScreen already
- * loops IssueLabelFilter.entries, so a third mode shows up there for
- * free), but wasn't worth the added navigation complexity for exactly
- * two modes. Worth remembering if a third mode does show up: THIS
- * file's two menu items are hardcoded, not generated from
- * IssueLabelFilter.entries, and would need direct edits — they won't
- * grow to cover a third mode on their own the way the gate screen
- * would.
- *
- * v0.44: two small additions. First, a "Repos" caption now sits under
- * the mode name in the title — added after a real mix-up (confirmed on
- * a running device) between this screen's Load More and
- * RepoIssuesScreen's own, unrelated, unpaginated list further in;
- * cheap, direct fix for that specific confusion rather than a deeper
- * redesign. Second, SnackbarHost is back (removed in v0.42 when the
- * old cooldown Snackbar became unnecessary) — for a new, unrelated
- * reason this time: TopReposViewModel.snackbarEvents delivers a
- * one-shot message when a Load More hits GitHub's Search API rate
- * limit specifically (see that class's doc comment for why this is
- * scoped to Load More only, and why it's a Channel-backed one-shot
- * event rather than a UiState field).
- *
- * v0.45 (persistent cache): a small "Updated X ago" line now sits
- * under the language filter row, driven by uiState.lastUpdatedAtMs —
- * the only visible sign, most of the time, that this screen might be
- * showing cached data rather than something just fetched (see
- * TopReposStateHolder and RepoIssueGroupRepository doc comments). Two more
- * hamburger-menu items sit above the mode-switch pair, grouped with
- * the animation items via their own divider: "Check for New Repos"
- * (renamed in v0.49 from "Refresh" — was a forced live fetch that
- * REPLACED the whole list with just its own results, silently
- * discarding whatever Load More had accumulated; now updates the list with fresh
- * results instead, see TopReposStateHolder.checkForNewRepos()'s doc
- * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
- * just the active combination — see RepoIssueGroupRepository.clearAll()'s
- * doc comment for why that's a known, named limitation rather than an
- * oversight — and, as of v0.49, reloads this screen immediately
- * afterward rather than leaving stale data visible).
- *
- * v0.46: a repo-count chip shows how many repo cards are currently
- * loaded, styled directly after the classic flow's own RateLimitChip,
- * the same reference point this was asked for by name. Just reads
- * uiState.repoGroups.size directly; no separate tracking needed,
- * updates for free on every Load More and every mode/language switch.
- * Originally lived in the top bar's actions slot; moved down to the
- * "Updated X ago" row (right-aligned, opposite that text) once the
- * ported RateLimitChip itself took over that actions slot — see the
- * newer paragraph below for the full reasoning.
- *
- * v0.48: added "Bookmarks" as the very first menu item, right after
- * the version header — a real navigation destination (see
- * DiscoverNavHost's new ROUTE_REPO_BOOKMARKS and RepoBookmarksScreen),
- * placed ahead of the animation/settings-style items below it since
- * it's the one item in this menu someone might actually want to reach
- * repeatedly, not a one-off action.
- *
- * v0.51 ("Hide Issue", Parts C+D of the Cache-Preserving Refresh
- * sequence): uiState.repoGroups stays the RAW cached data — hiddenGroups
- * below is a display-only derivation (each group's issues filtered
- * against the hidden ids from TopReposViewModel.hiddenIds)
- * computed fresh on every recomposition, never written back anywhere.
- * The repo count chip and every match-count badge read from
- * hiddenGroups, not uiState.repoGroups directly. A repo whose issues
- * are ALL hidden stays in the list with its badge reading "All hidden"
- * (a repo leaves this list only when the cache is cleared); hiding and
- * unhiding update the badges straight away, since the hidden ids are a
- * StateFlow collected by this screen, so a change recomposes it.
- *
- * Also added: a "Hidden Issues" drawer item (next to "Bookmarks", same
- * always-shown placement regardless of SHOW_DETAILED_DRAWER_MENU), and
- * a confirmation dialog in front of "Clear Cache" (Part D) — this menu
- * previously fired viewModel.clearCache() directly with no
- * confirmation at all; the dialog's text is explicit that bookmarks
- * and hidden issues are UNaffected, since clearCache() only ever
- * touches RepoIssueGroupRepository, never the bookmarks or
- * HiddenIssuesRepository.
- *
- * Reorganized into three pastel-tinted, headed groups (DrawerMenuSection,
- * below) after direct feedback that a long flat list was hard to scan:
- * "Repo Management" (Bookmarks, Hidden Issues, Check for New Repos,
- * Clear Cache — everything that acts on this screen's own data),
- * "Find Issues" (the two mode-switch items), and "Sandbox" (the CM
- * version stamp and animation-replay tooling, deliberately LAST since
- * it's dev-only and the least likely thing an end user needs). Also
- * renamed "Hidden" to "Hidden Issues" for the same reason. Each splash
- * screen (SplashScreen, OrigamiSplashScreen, ShapeStackSplashScreen,
- * TitleRevealSplashScreen) is now pinned to the Good First Issue
- * (purple) palette regardless of the app's active Issue Mode, so
- * replaying one from the Sandbox group — or a real cold start with Help
- * Wanted already chosen — no longer repaints it green; see
- * TitleRevealSplashScreen's own doc comment for the full reasoning.
- *
- * Ported the classic flow's rate-limit chip/dialog/dial (RateLimitChip
- * below) into this screen's TopAppBar actions — see RateLimitChip's own
- * doc comment for why it ALWAYS renders (a placeholder "—" when
- * IssueSearchRepository.rateLimit is still null) rather than conditionally
- * appearing only once a live search completes: a cache hit never calls
- * the network at all, so on a typical revisit the chip could otherwise
- * stay absent for the entire session, and its sudden appearance
- * mid-session was colliding with the "good first issue" info icon
- * right next to it in the title. Taking over the actions slot pushed
- * the repo-count chip that used to live there down to its own row,
- * right-aligned opposite "Updated X ago" — a natural fit, since both
- * are specific to the active language filter rather than being
- * Mode-level chrome like the title bar itself.
- *
- * The title's mode label (currentMode.displayName, plus its "ⓘ" for
- * Good First Issue) now renders inside a colored pill — same
- * background-pill convention RepoIssuesScreen's own active-mode badge
- * uses (Modifier.background(mode.colorScheme().primary,
- * RoundedCornerShape(8.dp)), white labelLarge text), rather than plain
- * TopAppBar title text. Also: RepoCard's repoFullName subtitle is gone
- * (see that composable's own doc comment).
- *
- * The static "Repos" caption (v0.44, below) and the "Updated X ago" +
- * repo-count row (v0.45/v0.46, originally its own Row right under
- * LanguageFilterRow) are CONSOLIDATED into one: that whole second row
- * is gone from the content area, and its two pieces (the repo-count
- * chip, "Updated X ago") now render together on the line directly
- * under the mode pill, where "Repos" used to be alone — clearing a
- * full row of vertical space from the content layout, per direct
- * instruction.
- *
- * Landscape Compact Header: the first concrete step of a direct
- * request to improve landscape layout, after seeing this screen
- * running rotated — a landscape phone screen is short on height, not
- * width, and the title's own two text rows (mode pill; repo-count
- * chip + "Updated X ago") were eating a disproportionate share of
- * that scarce vertical space. isLandscape reads
- * LocalConfiguration.current.orientation directly (no ViewModel
- * involvement — purely a rendering choice, nothing about the
- * underlying data changes) and combines those two rows into one when
- * true.
- *
- * Landscape Split View: the larger step discussed alongside the
- * compact header above, now built. In landscape, the whole screen
- * splits into two columns instead of stacking everything in one: a
- * narrow (180dp), independently vertically-scrolling LEFT column
- * holding everything that otherwise sits ABOVE the card list — the
- * mode pill, repo-count/updated (modePill/repoCountAndUpdated, both
- * hoisted to this function's own scope so the TopAppBar's title slot
- * AND this left column can both render them, without duplicating
- * either), and LanguageFilterRow — and a RIGHT column (RepoListBody,
- * extracted below so it isn't duplicated between this layout and
- * portrait's) that's nothing but the card list, filling the screen's
- * full height. This is what actually delivers the original ask: the
- * card list gets every pixel of vertical space landscape has to give
- * it, rather than losing a large chunk of it to stacked header
- * content above.
- *
- * LanguageFilterRow is passed `wrap = true` here specifically — this
- * column is narrow, so the row's chips need multiple lines rather than
- * the portrait default of one scrolling line. A second horizontally-
- * scrolling row nested inside an already vertically-scrolling column
- * was deliberately ruled out (two competing scroll gestures in the
- * same small area), and wrapping also means every language option
- * stays visible at once rather than some being scrolled off-screen
- * with no visual hint they're there. See LanguageFilterRow's own doc
- * comment for the `wrap` parameter itself.
- *
- * Portrait is entirely unchanged: the TopAppBar's title renders the
- * mode pill + repo-count row as it always has, LanguageFilterRow stays
- * its original single scrolling line, and RepoListBody sits in a plain
- * Column beneath it — the exact same composable, just placed
- * differently, which is the whole reason RepoListBody exists as its
- * own function rather than being written out twice.
+ * Deliberately not a mode dropdown in the title: the mode is one whole-app choice made
+ * at the gate screen. The two "Find ..." menu items are hardcoded, so a third mode
+ * means editing them. More in docs/design-notes.md, "Top Repos screen".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -384,10 +136,7 @@ fun TopReposScreen(
     val currentMode = resolveActiveMode(mode)
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Hoisted to function scope (not local to the TopAppBar's title
-    // slot) so the landscape split-view body below can render this
-    // same content too — see "Landscape Split View" further down in
-    // this doc comment.
+    // Hoisted so the portrait title bar and the landscape rail can both render it.
     val modePill: @Composable () -> Unit = {
         Box(
             modifier = Modifier
@@ -400,13 +149,7 @@ fun TopReposScreen(
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.White,
                 )
-                // "good first issue" reads less clearly on its own than
-                // "help wanted" does, per direct feedback after seeing
-                // this screen running — an info icon here explains what
-                // it means. "help wanted" doesn't get one: it wasn't
-                // reported as confusing, and the shared LabelInfoDialog
-                // explaining both terms is still reachable from
-                // RepoIssuesScreen for anyone who wants it there too.
+                // Only "good first issue" gets an info icon; it reads less clearly than "help wanted".
                 if (currentMode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
                     Text(
                         "ⓘ",
@@ -447,15 +190,8 @@ fun TopReposScreen(
         }
     }
 
-    // v0.50: re-reads the cache on every fresh composition of this
-    // screen — including, deliberately, when returning from
-    // RepoIssuesScreen (which is exactly when it matters: a "Refresh
-    // this repo" there writes straight to the cache, not to this
-    // screen's own ViewModel, since the two have no direct handle to
-    // each other — see TopReposStateHolder.syncFromCache()'s own doc
-    // comment). Also fires on this screen's very first appearance,
-    // which is a harmless, cheap (local file, no network) re-read of
-    // what init{}'s own load() just populated.
+    // Re-read the cache on every fresh composition, including on return from the repo screen,
+    // whose "Refresh this repo" writes straight to the cache.
     LaunchedEffect(Unit) {
         viewModel.syncFromCache()
     }
@@ -466,13 +202,7 @@ fun TopReposScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        // In landscape, this content moved into the split
-                        // view's left column below (see "Landscape Split
-                        // View" in this file's top doc comment) — the
-                        // TopAppBar title renders nothing there, rather
-                        // than showing it twice. Portrait is unchanged:
-                        // the mode pill, then the repo-count chip +
-                        // "Updated X ago" on the row beneath it.
+                        // In landscape this content lives in the left rail instead.
                         if (!isLandscape) {
                             Column {
                                 modePill()
@@ -494,15 +224,8 @@ fun TopReposScreen(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
                             ) {
-                                // Always-visible header (Project Conventions
-                                // doc, section 6): app name + VersionLabel
-                                // ("Build A.B"), so the build actually running
-                                // on a device can be checked against the
-                                // version line a chat message ends with — NOT
-                                // gated behind SHOW_DETAILED_DRAWER_MENU the
-                                // way the old CM version stamp was, since this
-                                // needs to be checkable regardless of that
-                                // dev-only setting.
+                                // Always-visible app name and build label, so the running build can be checked against
+                                // the version line in chat.
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                                     Text(
                                         "GitHubIssueFinder",
@@ -512,13 +235,7 @@ fun TopReposScreen(
                                     VersionLabel(label = viewModel.buildLabel)
                                 }
                                 HorizontalDivider()
-                                // Three groups — Repo Management, Find Issues,
-                                // Sandbox — each its own pastel-tinted section
-                                // with its own header, separated by dividers.
-                                // "Sandbox" (dev-only tooling) is deliberately
-                                // last: it's the group an end user is least
-                                // likely to need, not the first thing this
-                                // menu shows.
+                                // Three groups, each with its own header; the dev-only Sandbox group is last.
                                 DrawerMenuSection(header = "Repo Management", background = DrawerSectionRepoManagement) {
                                     DropdownMenuItem(
                                         text = { Text("Bookmarks") },
@@ -555,16 +272,7 @@ fun TopReposScreen(
                                             onOpenSettings()
                                         },
                                     )
-                                    // Clears the Issue Mode and returns to
-                                    // IssueModeGateScreen — see
-                                    // DiscoverNavHost's own doc comment
-                                    // ("Reset App") for why that gate screen
-                                    // was otherwise unreachable again once a
-                                    // mode was chosen. Deliberately no
-                                    // confirmation dialog, unlike Clear
-                                    // Cache: nothing here is destructive —
-                                    // bookmarks, hidden issues, and the repo
-                                    // cache are all untouched.
+                                    // No confirmation: nothing is destroyed. Clears the mode and returns to the gate screen.
                                     DropdownMenuItem(
                                         text = { Text("Reset App") },
                                         onClick = {
@@ -592,16 +300,7 @@ fun TopReposScreen(
                                 }
                                 HorizontalDivider()
                                 DrawerMenuSection(header = "Sandbox", background = DrawerSectionSandbox) {
-                                    // true keeps every individual animation-replay
-                                    // entry, useful for exactly the kind of
-                                    // iteration this project does. false (the
-                                    // default) strips that down to a single "Play
-                                    // App Start Animation" entry, what an actual
-                                    // end user would see — see app/build.gradle.kts's
-                                    // showDetailedDrawerMenu val. The version stamp
-                                    // this section used to show here (gated behind
-                                    // the same flag) moved to the always-visible
-                                    // header above, see VersionLabel.
+                                    // Detailed menu: one entry per animation (a dev aid). Otherwise a single "Play App Start Animation".
                                     if (viewModel.showDetailedDrawerMenu) {
                                         DropdownMenuItem(
                                             text = { Text("Play Origami Animation") },
@@ -652,26 +351,8 @@ fun TopReposScreen(
                         }
                     },
                     actions = {
-                        // Always shown, even with no data yet (a placeholder
-                        // "—") rather than appearing/disappearing mid-
-                        // session — a chip popping in once the first live
-                        // search completes was visually colliding with the
-                        // "good first issue" info icon in the title next to
-                        // it, since the title bar had no stable reserved
-                        // space for it. Tapping it opens RateLimitDialog
-                        // normally, EXCEPT when there's a token problem —
-                        // none configured at all (the hasToken flow is
-                        // false) or one configured but rejected by GitHub
-                        // (uiState.tokenRejected, a 401 response) — in
-                        // either case "No rate limit data available yet."
-                        // would be misleading (it reads like "wait a
-                        // moment," not "this needs attention"), so
-                        // TokenProblemDialog explains the actual situation
-                        // instead. Reaching that dialog with hasToken true
-                        // can only mean tokenRejected is what triggered it,
-                        // so hasToken itself is enough to pick the right
-                        // message — no need to also thread tokenRejected
-                        // through as a separate parameter.
+                        // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
+                        // problem the tap explains it instead of opening the rate-limit dialog.
                         RateLimitChip(
                             info = rateLimit,
                             onClick = {
@@ -695,12 +376,8 @@ fun TopReposScreen(
             },
         ) { padding ->
             if (isLandscape) {
-                // Landscape split view: a narrow, independently-scrolling
-                // left column holding everything that used to sit ABOVE
-                // the card list (mode pill, repo-count/updated, language
-                // picker) — freeing the right column to be nothing but
-                // the card list, at the screen's full height. See
-                // "Landscape Split View" in this file's top doc comment.
+                // Landscape: a left rail (mode, count, language picker) beside the card list, so the list
+                // gets the full height.
                 Row(modifier = Modifier.padding(padding).fillMaxSize()) {
                     Column(
                         modifier = Modifier
@@ -816,16 +493,8 @@ fun TopReposScreen(
 }
 
 /**
- * The repo list's main body — one of four states (no token, loading,
- * error, empty, or the actual list + Load More footer), exactly one
- * shown at a time. Extracted out of TopReposScreen itself once the
- * landscape split view needed to render this SAME body in a
- * differently-shaped parent (a weighted column beside the left rail,
- * rather than stacked under LanguageFilterRow in a plain Column) —
- * rather than duplicate this whole `when` block for both layouts,
- * both call sites pass their own `modifier` (fillMaxSize either way,
- * but constrained differently by their respective parents) and get
- * identical content.
+ * The list body: exactly one of no token, loading, error, empty, or the list with its
+ * Load More footer. Shared by the portrait and landscape layouts.
  */
 @Composable
 private fun RepoListBody(
@@ -869,12 +538,8 @@ private fun RepoListBody(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(hiddenGroups, key = { it.repoFullName }) { group ->
-                    // The repo's details screen gets the RAW group, not the
-                    // hidden-filtered one shown here: it applies the hidden
-                    // ids itself, and needs every issue to do that — and to
-                    // show "all hidden" with a View Hidden button, and to
-                    // bring an issue back on Unhide, for a repo whose
-                    // issues are all hidden.
+                    // The repo screen gets the raw group: it applies the hidden ids itself and needs every
+                    // issue to show "all hidden" and to bring one back on Unhide.
                     RepoCard(
                         group = group,
                         snippet = snippets[group.repoFullName],
@@ -900,28 +565,8 @@ private fun RepoListBody(
 private const val RATE_LIMIT_CHIP_SCALE = 1.5f
 
 /**
- * Persistent, tappable rate-limit indicator for the repo-first flow —
- * ported over from the classic flow's own FeedTabsScreen (see git
- * history), which had this same chip/dialog/dial but was removed along
- * with the rest of classic mode. repoFirst's data layer (IssueSearchRepository.rateLimit,
- * fed by every successful TopReposViewModel/RepoIssuesViewModel search
- * response) already tracked this the whole time — this flow just never
- * displayed it anywhere, a known gap named in this project's own
- * RepoFirst_FeatureSet report. Added to TopReposScreen only for now;
- * RepoIssuesScreen is a reasonable follow-up.
- *
- * A small meter icon and "remaining/limit" in a compact chip — there
- * genuinely isn't room for a legible dial in the TopAppBar itself.
- * Tapping it opens a dialog with the full speedometer-style dial below.
- *
- * The icon is [RateLimitMeterIcon], a fixed drawing that does not react
- * to the numbers. (It replaced a key emoji, 🔑, which was too small to
- * make out on a phone.)
- *
- * Sized 50% larger than its original bodySmall/10dp/4dp version
- * ([RATE_LIMIT_CHIP_SCALE]) so the numbers are easier to read at a
- * glance; the text, its line height, the padding and the corner radius
- * all scale together to keep the same proportions.
+ * Tappable rate-limit indicator: a meter icon and remaining/limit. Always rendered (a
+ * placeholder when there are no numbers yet) so it does not pop in. Opens the dial dialog.
  */
 @Composable
 private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
@@ -942,12 +587,8 @@ private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
             RateLimitMeterIcon()
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                // The numbers normally arrive with the first list: a live
-                // search supplies them, and a cache-hit load has
-                // TopReposViewModel look them up from GitHub's free
-                // /rate_limit endpoint. "—" now only shows briefly, or if
-                // that lookup fails. Still tappable either way: the dialog
-                // handles a null info with its own explanatory text.
+                // Normally supplied with the first list (a live search, or a /rate_limit lookup after a
+                // cache hit); the placeholder shows only briefly or if that lookup fails.
                 if (info != null) "${info.remaining}/${info.limit}" else "—",
                 style = base.copy(
                     fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
@@ -960,16 +601,9 @@ private fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
 }
 
 /**
- * A fixed, small speedometer glyph for the rate-limit chip: a half-circle
- * in three bold segments (red, amber, green, left to right, the same
- * convention as the dial in the dialog) with a needle and a hub. It is
- * deliberately static: it says "this is a meter" and nothing about the
- * current value, which the numbers beside it give. (A version that
- * changes with the remaining quota is on the backlog.)
- *
- * Drawn with Canvas, like the dial, because this project uses no icon
- * library, and thick segments with gaps stay legible at this size where a
- * thin emoji does not.
+ * A small static speedometer glyph: red, amber and green segments, a needle and a hub.
+ * It says "meter" and nothing about the value, which the numbers beside it give. Drawn with
+ * Canvas because thick segments stay legible at this size where an emoji does not.
  */
 @Composable
 private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
@@ -1017,12 +651,7 @@ private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * How much bigger the text below the big "remaining" number is in the
- * rate-limit dialog (50% larger): the "Remaining" caption, the 0/limit
- * scale labels, the four detail rows and the explanatory note. The big
- * number itself is unchanged.
- */
+/** Text below the big number in the rate-limit dialog is 50% larger. */
 private const val RATE_LIMIT_DIALOG_TEXT_SCALE = 1.5f
 
 /** This style with its font size and line height scaled by [RATE_LIMIT_DIALOG_TEXT_SCALE]. */
@@ -1066,16 +695,9 @@ private fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
 }
 
 /**
- * Hand-drawn semicircular dial: a FIXED red(left)-to-green(right) track,
- * evenly stepped through orange and yellow — a classic speedometer
- * red-line convention, independent of the current value. A needle,
- * swinging from a hub at the arc's center, points at where the current
- * remaining/limit ratio actually falls along that fixed track. A needle
- * rather than a round knob on the track on purpose: a knob looks like a
- * slider thumb that can be dragged, and this gauge is display-only. Text ("29 Remaining") is rendered as
- * ordinary Compose Text below the Canvas, rather than drawn inside the
- * arc via Canvas.drawText — simpler and safer to lay out correctly than
- * measuring/centering native text inside a curved region.
+ * Hand-drawn semicircular dial: a fixed red-to-green track with a needle at the current
+ * remaining/limit ratio. A needle, not a knob, because the gauge is display-only. The text
+ * sits below the Canvas as ordinary Text, which lays out more simply than text in the arc.
  */
 @Composable
 private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
@@ -1099,11 +721,8 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
             val arcTopLeft = Offset(center.x - radius, center.y - radius)
             val arcSize = Size(radius * 2f, radius * 2f)
 
-            // Fixed track: red at 180° (left/"0" end) through orange and
-            // yellow, to green at 360°/0° (right/"max" end) — the visible
-            // half of a full sweepGradient. The 0.0-0.5 stops (the
-            // invisible bottom-right-to-left half) are never drawn by the
-            // drawArc call below, so their exact color doesn't matter.
+            // Fixed track: red at 180° (left, "0") through orange and yellow to green at 0° (right,
+            // "max"). Only the visible half is drawn.
             val trackBrush = Brush.sweepGradient(
                 0.0f to Color(0xFF43A047),
                 0.5f to Color(0xFFE53935),
@@ -1178,11 +797,8 @@ private fun RateLimitRow(label: String, value: String) {
 }
 
 /**
- * The list body's "no token" state: an explanation and a button straight
- * to Settings, where a token can be entered and the instructions for
- * getting one are a tap away. Once a token is saved, TopReposViewModel
- * reloads on its own, so this disappears without any further action.
- * There is still no sample-data fallback for this screen.
+ * The "no token" state: an explanation and a button to Settings. Saving a token reloads
+ * the list on its own.
  */
 @Composable
 private fun NoTokenMessage(onOpenSettings: () -> Unit) {
@@ -1206,17 +822,9 @@ private fun NoTokenMessage(onOpenSettings: () -> Unit) {
 }
 
 /**
- * Shown instead of RateLimitDialog when there's a token problem —
- * either hasToken is false (nothing configured at all)
- * or a configured token is being rejected by GitHub (tokenRejected,
- * true only once a live search has actually come back with an HTTP 401
- * — GitHub's own signal for bad/expired/revoked credentials, distinct
- * from a 403 rate-limit response). Either way, tapping the rate-limit
- * chip is a setup problem, not a "check back in a moment" one, so this
- * gets its own dialog with the actual situation rather than reusing
- * RateLimitDialog's generic "No rate limit data available yet." text,
- * which would leave someone in either case wondering what to even do
- * about it.
+ * Shown instead of RateLimitDialog on a token problem: none configured, or one GitHub
+ * rejected (HTTP 401). Tapping the chip then is a setup problem, not "check back later",
+ * so this explains the situation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1258,12 +866,7 @@ private fun TokenProblemDialog(
     }
 }
 
-/**
- * One visually-grouped section of the hamburger menu's DropdownMenu — a
- * pastel-tinted background, a small bold header, then its items. Each
- * group is what "before there is a divider to the next group" means:
- * callers place a HorizontalDivider() between sections, not within one.
- */
+/** A pastel-tinted, headed group of menu items. Callers put a divider between sections. */
 @Composable
 private fun DrawerMenuSection(
     header: String,
@@ -1338,34 +941,11 @@ private fun CenteredMessage(text: String) {
 }
 
 /**
- * v0.42: rewritten from the ground up for RepoIssueGroup instead of
- * Repo. Deliberately simple compared to the old card — title and a
- * match-count badge is genuinely all there is to show now (see this
- * file's top doc comment for what's gone and why).
- *
- * The repoFullName (owner/repo path) subtitle that used to sit under
- * the title is gone, same reasoning as IssueCard's own identity-row
- * removal: a screen already scoped to listing repos doesn't need each
- * card repeating a raw path alongside its own humanized title.
- *
- * README PREVIEW (added October 5, 2026, per direct instruction): a
- * short, plain-text snippet of the repo's README (HTML tags stripped —
- * see buildReadmeSnippet in ReadmeSnippetRepository.kt) renders beneath the title
- * row, at normal body text size. Collapsed to 2 lines by default
- * (maxLines + TextOverflow.Ellipsis); a small chevron toggle beneath it
- * expands to show the rest of the already-fetched snippet (up to
- * ReadmeSnippetRepository's SNIPPET_MAX_CHARS) — no additional network
- * call on expand, just a maxLines change against text already in hand.
- * The toggle is its own Surface(onClick), not part of the Card's own
- * onClick, so tapping it doesn't also navigate into the repo.
- * Fetched by ReadmeSnippetRepository, asked to load by TopReposViewModel
- * when the card first appears (see that file's own doc comment,
- * including the real per-card network-call cost this adds, and the
- * retry-on-transient-failure fix). Renders nothing (not even a
- * placeholder) when no snippet is available yet or the repo has no
- * README — this card's layout was deliberately kept simple, and a
- * loading spinner or "no README" message for a purely decorative
- * preview would be more clutter than it's worth.
+ * A repo card: title, match-count badge and a README preview (2 lines, expandable with a
+ * chevron). The chevron is its own Surface(onClick) so tapping it does not open the repo.
+ * The preview renders nothing while loading or when there is no README, since a spinner or a
+ * "no README" note would be clutter. Fetched by ReadmeSnippetRepository, requested by the
+ * ViewModel when the card first appears.
  */
 @Composable
 private fun RepoCard(
@@ -1410,10 +990,7 @@ private fun RepoCard(
             }
             if (!snippet.isNullOrBlank()) {
                 if (expanded) {
-                    // Expanded: the card is already taller to fit the full
-                    // snippet, so the chevron gets its own row underneath,
-                    // same as before — no vertical space being reclaimed
-                    // here the way there is in the 2-line collapsed state.
+                    // Expanded: the chevron gets its own row under the full snippet.
                     Column(modifier = Modifier.padding(top = 6.dp)) {
                         Text(
                             snippet,
@@ -1427,19 +1004,8 @@ private fun RepoCard(
                         )
                     }
                 } else {
-                    // Collapsed: the chevron sits INLINE at the end of the
-                    // text block instead of on its own row beneath it, per
-                    // direct instruction — trims the card back down to
-                    // exactly 2 lines of vertical space instead of 2 lines
-                    // plus a separate chevron row. Bottom-aligning a
-                    // weighted Text next to a fixed-size trailing Surface
-                    // is an approximation, not a true "icon inline with
-                    // only the last wrapped line" layout (which Compose's
-                    // Text doesn't support without custom text-layout
-                    // math) — both lines narrow slightly to make room for
-                    // the chevron, not just the second one, but the
-                    // chevron itself stays as small as its own content,
-                    // not a full extra column's width.
+                    // Collapsed: the chevron sits inline at the end of the 2-line text to save a row. Compose
+                    // Text cannot place it after only the last wrapped line, so both lines narrow slightly.
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                         verticalAlignment = Alignment.Bottom,
@@ -1467,10 +1033,8 @@ private fun RepoCard(
 private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
 
 /**
- * The small expand/collapse chevron badge for a RepoCard's README
- * preview — pulled out once it needed to render from two different
- * call sites (inline at the end of the 2-line collapsed text, on its
- * own row when expanded) with identical styling either way.
+ * The expand/collapse chevron for a card's README preview; used inline when collapsed and
+ * on its own row when expanded.
  */
 @Composable
 private fun ReadmeSnippetChevron(rotation: Float, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -1491,25 +1055,12 @@ private fun ReadmeSnippetChevron(rotation: Float, onClick: () -> Unit, modifier:
     }
 }
 
-/**
- * v0.46: the small top-bar chip showing how many repo cards are
- * currently loaded — styled directly after Feed's existing
- * RateLimitChip (same Surface/RoundedCornerShape/secondaryContainer/
- * bodySmall shape), placed in the same actions slot. Counts
- * uiState.repoGroups.size directly — already exactly "how many repos
- * are loaded," no separate tracking needed. Updates for free on every
- * Load More and every mode/language switch, since it just reads
- * whatever's already in uiState.
- */
 private fun repoCountLabel(count: Int): String = if (count == 1) "1 repo" else "$count repos"
 
 /**
- * v0.43: the pagination footer — one of four states, exactly one shown
- * at a time. Deliberately a manual "Load More" tap rather than
- * auto-loading on scroll: an explicit action keeps the "one Search API
- * call per fetch" cost visible and intentional, the same instinct
- * behind this whole redesign not spending calls the user didn't ask
- * for.
+ * The pagination footer: Load More, a spinner while loading, a retry row on failure, or an
+ * end-of-results line. Load More is a manual tap, not auto-load on scroll, so each Search API
+ * call is an explicit action.
  */
 @Composable
 private fun LoadMoreFooter(

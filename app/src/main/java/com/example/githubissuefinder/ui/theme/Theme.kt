@@ -47,19 +47,9 @@ private const val MODE_TRANSITION_MS = 350
 
 @Composable
 fun GitHubIssueFinderTheme(
-    // Deliberately NOT isSystemInDarkTheme() — that was the real bug behind
-    // a device-in-system-dark-mode user seeing a dark IssueModeGateScreen
-    // (the only screen reachable with issueMode == null, so the only one
-    // this param's value actually affects) followed immediately by an
-    // always-light TopReposScreen (once a mode is picked, the `issueMode
-    // != null -> issueMode.colorScheme()` branch below wins regardless of
-    // darkTheme — Mode's own pastel schemes are light-only, per
-    // ModeColorSchemes.kt). That made the app look like it randomly
-    // flipped from dark to light between two consecutive screens, when
-    // really only the gate screen was ever following the system setting.
-    // Hardcoded false so the whole app defaults to light, consistently,
-    // until a real in-app dark-mode preference exists to wire this to
-    // instead.
+    // Deliberately not isSystemInDarkTheme(): the mode color schemes are light-only, so following the
+    // system made the app flip from a dark gate screen to a light Top Repos. Hardcoded false until
+    // there is an in-app dark-mode preference.
     darkTheme: Boolean = false,
     // Dynamic color (Android 12+) derives its palette from the device's
     // wallpaper, which would silently override our brand colors below —
@@ -97,20 +87,10 @@ fun GitHubIssueFinderTheme(
 }
 
 /**
- * Crossfades every role in a ColorScheme toward its new target value
- * over MODE_TRANSITION_MS whenever the scheme itself changes (i.e. on
- * a Mode switch), instead of the hard, instant swap OrigamiSplashScreen
- * uses for its per-fold colors. Deliberately different choices for
- * deliberately different situations: the splash's color changes land
- * in lockstep with a shape already changing discretely at that exact
- * moment, so an instant cut reads as "this is a new fold." A Mode
- * switch has no such accompanying discrete event — the repo list
- * underneath is just reloading — so a soft crossfade reads as "the
- * whole screen is settling into its new mode" rather than a jarring
- * flash. Only the handful of roles this app's screens actually read
- * (RepoCard, TopAppBar, etc. via MaterialTheme.colorScheme.*) are
- * animated — every ColorScheme role still gets a value either way,
- * this just controls how smoothly each one arrives.
+ * Crossfades every role in a ColorScheme toward its new target over MODE_TRANSITION_MS when the
+ * scheme changes (a mode switch). A soft crossfade suits a mode switch, where the list underneath is
+ * just reloading; the splash uses an instant cut because its color changes land with a discrete
+ * shape change. Only the roles the screens read are animated.
  */
 @Composable
 private fun ColorScheme.animateAllColors(): ColorScheme {

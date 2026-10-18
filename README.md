@@ -62,3 +62,7 @@ View (Compose screen)
 ## Building and testing
 
 See `_meta/docs/README_01.md` for running the tests and the CI setup.
+
+## Design notes
+
+Decisions that are too long for a code comment are in [`docs/design-notes.md`](docs/design-notes.md).

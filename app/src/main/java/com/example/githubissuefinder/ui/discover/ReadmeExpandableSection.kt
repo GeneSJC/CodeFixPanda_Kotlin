@@ -41,62 +41,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.noties.markwon.Markwon
 
 /**
- * The README, as an inline expand/collapse widget — replaces the
- * earlier v0.1 of this feature, a separate full-screen destination
- * (RepoReadmeScreen, ROUTE_REPO_README) reached via a toolbar icon.
- * That screen was always meant as a placeholder shape ("option 2, no
- * WebView") while this inline version — the originally-discussed
- * "expansion widget at the top of the view" — was deliberately
- * deferred until after the IssueCard density pass landed. With this
- * widget built, the separate screen is genuinely redundant (two access
- * points for the same content) rather than a reasonable fallback, so
- * it and its nav route were removed rather than left as dead weight
- * alongside this one.
- *
- * Still uses RepoReadmeViewModel exactly as before — that ViewModel's
- * own doc comment (loadIfNeeded's dedup guard, base64 decoding, no
- * rate-limit tracking since this hits GitHub's general REST quota, not
- * Search) is unchanged and still accurate. Only WHERE and WHEN it gets
- * called changed: loadIfNeeded now fires the first time the widget is
- * expanded, not on screen entry — no reason to spend that API call
- * before the user has asked to see the README at all.
- *
- * The 2-second expand/collapse duration (both directions) and the
- * chevron's matching 180° rotation were a specific, direct request —
- * deliberately slower than a typical Material expand/collapse (usually
- * 200-300ms), treated here as a genuine "hero" moment rather than a
- * snappy disclosure animation.
- *
- * Rendering is Markwon + a wrapped TextView (AndroidView interop),
- * same approach the removed full-screen version used — still no
- * first-party Compose API for Markwon itself.
- *
- * FULL-HEIGHT EXPAND (added October 5, 2026, per direct instruction):
- * originally capped at a fixed max height (400dp) with its own
- * internal scroll, so an uncapped README couldn't push the issue list
- * an arbitrary distance down the page below it. That cap is gone —
- * ReadmeBody/ReadmeMarkdownContent now fillMaxHeight() instead, and
- * the issue list is no longer rendered behind/below the README at all
- * while expanded (see RepoIssuesScreen's own doc comment for the
- * weight(1f)-swap that makes that true). The 400dp cap was solving a
- * problem — the README and the issue list visually blending together,
- * since the list was still right there below whatever the README
- * didn't fill — that no longer exists once the list simply isn't
- * drawn underneath it; capping the height was no longer buying
- * anything once that fix landed, just leaving dead space below a
- * short README instead.
+ * The README as an inline expand/collapse widget; it replaced a separate full-screen destination,
+ * which became redundant. It uses RepoReadmeViewModel, which loads the first time the widget is
+ * expanded and not on screen entry, so no API call is spent before the user asks. Rendered by
+ * Markwon in a wrapped TextView (AndroidView), since Markwon has no first-party Compose API. The
+ * 2-second expand/collapse and the matching chevron rotation are a deliberate slow "hero" moment,
+ * not the usual 200 to 300 ms. The body fills the available height instead of being capped, because
+ * it is drawn as an overlay (see the repo issues screen in docs/design-notes.md).
  */
 private const val EXPAND_COLLAPSE_DURATION_MS = 2000
 
 /**
- * Split into a toggle (this file's ReadmeToggleButton) and a body
- * (ReadmeExpandableBody) deliberately, rather than one self-contained
- * composable, because the two live in DIFFERENT parents in
- * RepoIssuesScreen: the toggle sits inline in the top filter row, next
- * to the Issue Mode and Kotlin pills, while the body renders full-width
- * BELOW that entire row once expanded — "expands down and outward,"
- * not just downward from the toggle itself. `expanded` state is
- * hoisted to RepoIssuesScreen so both halves share it.
+ * Split into a toggle and a body because they live in different parents in RepoIssuesScreen: the
+ * toggle sits inline in the filter row, and the body renders full-width below that row. `expanded`
+ * is hoisted to the screen so both halves share it.
  */
 @Composable
 fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {

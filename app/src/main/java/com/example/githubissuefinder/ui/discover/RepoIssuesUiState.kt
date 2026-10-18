@@ -3,31 +3,9 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.model.Issue
 
 /**
- * v0.42, REVISED after removing this screen's in-screen label picker:
- * there's no longer any way to view a label other than the app's
- * active Issue Mode, so there's nothing left to track besides the
- * issues themselves. selectedLabel and otherLabelKnownEmpty (which
- * existed to support switching to the OTHER label) are both gone —
- * neither could ever differ from a single fixed value once that
- * affordance doesn't exist. isLoading and errorMessage (in their
- * original, whole-screen-scoped form) are gone too: populating this
- * screen from RepoIssueGroup.issues is a pure, synchronous assignment
- * with no network call — see RepoIssuesStateHolder's class comment for
- * the full reasoning.
- *
- * v0.46 ("Check for More Issues") reintroduces network-call-adjacent
- * state, but scoped narrowly to the optional, explicit completeness
- * check below — NOT a return to a whole-screen isLoading/errorMessage
- * pair. The issues already shown are never gated behind any of these
- * fields; they only ever affect the footer.
- *
- * v0.50 ("Refresh this repo" write-back): renamed from the v0.46
- * "Check for More Issues" names to match — isCheckingForMore ->
- * isRefreshing, allIssuesLoaded -> hasRefreshed, checkForMoreError ->
- * refreshError. The rename isn't cosmetic: hasRefreshed no longer means
- * "hide the button forever," it means "a result line has something to
- * report" — the button stays reusable, see RepoIssuesStateHolder's
- * refreshThisRepo() doc comment.
+ * The repo screen's state. There is nothing to track beyond the issues themselves (the mode is
+ * fixed, and the issues come from the repo's group with no network call), plus a few footer-only
+ * fields for the explicit "Refresh this repo". They never gate the issues already shown.
  */
 data class RepoIssuesUiState(
     val issues: List<Issue> = emptyList(),
@@ -40,15 +18,9 @@ data class RepoIssuesUiState(
      */
     val isRefreshing: Boolean = false,
     /**
-     * True once at least one refresh has completed successfully this
-     * session — at that point `issues` holds EVERY open issue GitHub
-     * has for this repo and the active mode as of that refresh (up to
-     * the single call's own page-size limit; see
-     * RepoIssuesStateHolder's class comment), not just whatever happened to
-     * be swept up building the Top Repos card. Drives the footer's
-     * result line ("All 7 open issues · checked 2m ago"); does NOT hide
-     * the "Refresh this repo" button, which stays available for
-     * repeated use.
+     * True once a refresh has completed successfully this visit; then `issues` holds every open issue
+     * GitHub has for the repo and mode (up to one call's page size). Drives the footer's result line;
+     * the "Refresh this repo" button stays available.
      */
     val hasRefreshed: Boolean = false,
     /** When the last successful refresh completed — drives the result line's "checked X ago". Null until hasRefreshed is first true. */

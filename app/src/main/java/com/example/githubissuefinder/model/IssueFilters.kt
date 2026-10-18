@@ -1,20 +1,10 @@
 package com.example.githubissuefinder.model
 
 /**
- * Maps directly onto GitHub's label:"..." search qualifier.
- *
- * glyph/description added alongside IssueModeGateScreen's expanding
- * mode cards (per direct instruction, after a "good first issue" wasn't
- * self-explanatory to a user who isn't deep in GitHub/OSS convention) —
- * description is the exact wording LabelInfoDialog already showed for
- * each label, moved here as the one source of truth so that dialog and
- * the gate screen's cards can't drift apart saying two different things
- * about the same label. glyph is a single plain-text symbol (this
- * codebase's existing convention for every icon-like affordance — see
- * e.g. RepoIssuesScreen's "←"/"↗" — not an icon-library drawable),
- * rendered in the same white-on-accent-color text used for displayName
- * itself so it stays genuinely monochromatic per that request, rather
- * than a colorful emoji.
+ * Maps onto GitHub's label:"..." search qualifier. [description] is the one source of truth for what
+ * each label means, shared by LabelInfoDialog and the gate screen's cards so they cannot disagree.
+ * [glyph] is a single plain-text symbol (the codebase's convention for icon-like affordances),
+ * rendered in the same white-on-accent text as displayName.
  */
 enum class IssueLabelFilter(
     val displayName: String,
