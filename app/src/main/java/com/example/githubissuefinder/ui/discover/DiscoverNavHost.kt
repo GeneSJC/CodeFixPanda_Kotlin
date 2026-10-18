@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +15,7 @@ import com.example.githubissuefinder.data.needsModeGate
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.settings.SettingsScreen
+import org.koin.compose.viewmodel.koinViewModel
 
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
@@ -127,7 +127,7 @@ private fun NavController.popBackStackDebounced() {
 @Composable
 fun DiscoverNavHost(
     modifier: Modifier = Modifier,
-    issueModeViewModel: IssueModeViewModel = viewModel(),
+    issueModeViewModel: IssueModeViewModel = koinViewModel(),
 ) {
     val navController = rememberNavController()
     var selectedRepoGroup by remember { mutableStateOf<RepoIssueGroup?>(null) }

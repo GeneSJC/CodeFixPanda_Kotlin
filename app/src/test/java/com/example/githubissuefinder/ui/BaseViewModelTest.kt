@@ -2,9 +2,12 @@ package com.example.githubissuefinder.ui
 
 import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.testutil.ViewModelFixtures
 import com.example.githubissuefinder.testutil.repoGroupOf
-import org.junit.After
+import com.example.githubissuefinder.testutil.testBookmarksRepository
+import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -13,9 +16,17 @@ import org.junit.Test
 /** BaseViewModel over a fake config: each getter forwards the matching AppConfig value. */
 class BaseViewModelTest {
 
-    private class TestViewModel(repository: AppConfigRepository) : BaseViewModel(repository)
+    private class TestViewModel(
+        appConfigRepository: AppConfigRepository,
+        hiddenIssuesRepository: HiddenIssuesRepository,
+        bookmarksRepository: BookmarksRepository,
+    ) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository)
 
-    private fun viewModel(config: AppConfig) = TestViewModel(AppConfigRepository(config))
+    private fun viewModel(config: AppConfig) =
+        TestViewModel(AppConfigRepository(config), testHiddenIssuesRepository(), testBookmarksRepository())
+
+    private fun viewModelOver(f: ViewModelFixtures) =
+        TestViewModel(f.appConfigRepository, f.hiddenIssuesRepository, f.bookmarksRepository)
 
     @Test
     fun gettersForwardTheConfigValues() {
@@ -33,16 +44,10 @@ class BaseViewModelTest {
         assertFalse(vm.showDetailedDrawerMenu)
     }
 
-    @After
-    fun tearDown() {
-        ViewModelFixtures.uninstall()
-    }
-
     @Test
     fun hiddenIdsComeFromTheHiddenIssuesRepository() {
         val f = ViewModelFixtures()
-        f.installRepositories()
-        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
+        val vm = viewModelOver(f)
         assertTrue(vm.hiddenIds.value.isEmpty())
 
         f.hiddenIssuesRepository.hide(repoGroupOf("octo", "repo", 1).issues.single())
@@ -53,8 +58,7 @@ class BaseViewModelTest {
     @Test
     fun bookmarkedIdsFollowToggleBookmark() {
         val f = ViewModelFixtures()
-        f.installRepositories()
-        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
+        val vm = viewModelOver(f)
         val issue = repoGroupOf("octo", "repo", 3).issues.single()
 
         assertTrue(vm.toggleBookmark(issue))

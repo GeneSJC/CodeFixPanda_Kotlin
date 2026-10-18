@@ -67,7 +67,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
@@ -91,6 +90,7 @@ import com.example.githubissuefinder.ui.theme.DrawerSectionSandbox
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.flow.collect
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -126,7 +126,7 @@ import kotlinx.coroutines.flow.collect
  *
  * The hamburger menu (☰, v0.31, expanded over time as more animations
  * were added) opens with an OVERLAY-based animation-replay toolkit —
- * replayAnimation is local state inside THIS function, so viewModel()
+ * replayAnimation is local state inside THIS function, so koinViewModel()
  * above is only ever called once per real session — but what it shows
  * now depends on the drawer flag (viewModel.showDetailedDrawerMenu, from AppConfig; a plain
  * boolean val in app/build.gradle.kts, defaulting to false): true gets
@@ -363,7 +363,7 @@ fun TopReposScreen(
     onOpenSettings: () -> Unit,
     onResetApp: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: TopReposViewModel = viewModel(),
+    viewModel: TopReposViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }
@@ -660,7 +660,7 @@ fun TopReposScreen(
                         // it, since the title bar had no stable reserved
                         // space for it. Tapping it opens RateLimitDialog
                         // normally, EXCEPT when there's a token problem —
-                        // none configured at all (GitHubApiClient.hasToken
+                        // none configured at all (the hasToken flow is
                         // false) or one configured but rejected by GitHub
                         // (uiState.tokenRejected, a 401 response) — in
                         // either case "No rate limit data available yet."
@@ -1207,7 +1207,7 @@ private fun NoTokenMessage(onOpenSettings: () -> Unit) {
 
 /**
  * Shown instead of RateLimitDialog when there's a token problem —
- * either GitHubApiClient.hasToken is false (nothing configured at all)
+ * either hasToken is false (nothing configured at all)
  * or a configured token is being rejected by GitHub (tokenRejected,
  * true only once a live search has actually come back with an HTTP 401
  * — GitHub's own signal for bad/expired/revoked credentials, distinct

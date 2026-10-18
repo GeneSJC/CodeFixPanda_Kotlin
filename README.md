@@ -44,8 +44,13 @@ View (Compose screen)
 - **Facts versus wording.** State holders report what happened (`SearchFailure.Http(401)`,
   `TopReposEvent.RateLimited`); the ViewModels' `*UiMapping` files turn those facts into text.
   The state holders are tested without any UI.
-- **Dependencies are plain members.** Each singleton exposes `.instance`, a ViewModel reads it
-  as a member, and tests use `replaceInstanceForTests`.
+- **Koin supplies the dependencies.** `di/AppModule.kt` is the one place that says how the
+  app's objects are built, bottom layer first: repositories (with their data sources inside),
+  state holders, then ViewModels. A class lists what it needs as constructor arguments and
+  Koin resolves them by type, so a test builds the class directly over fakes. Repositories and
+  state holders are singletons; a ViewModel is created per screen by `koinViewModel()` and
+  lives in the ViewModel store of its owner. Concrete classes are registered, with no
+  interface per class: an interface appears where there is a second implementation to choose.
 - **Every top-level ViewModel extends `BaseViewModel`**, which carries the app-level data any
   screen may need (build configuration, hidden and bookmarked issues). A guard test fails if a
   ViewModel does not.

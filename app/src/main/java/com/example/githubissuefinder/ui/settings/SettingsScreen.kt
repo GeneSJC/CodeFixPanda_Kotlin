@@ -30,8 +30,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.TokenSource
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Where a user supplies their own GitHub personal access token — needed
@@ -54,7 +54,7 @@ import com.example.githubissuefinder.data.TokenSource
 fun SettingsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ApiTokenViewModel = viewModel(),
+    viewModel: ApiTokenViewModel = koinViewModel(),
 ) {
     val savedToken by viewModel.userToken.collectAsStateWithLifecycle()
     val source by viewModel.tokenSource.collectAsStateWithLifecycle()

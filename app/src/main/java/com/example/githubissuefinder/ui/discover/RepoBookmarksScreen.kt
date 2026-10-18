@@ -25,8 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.ui.components.IssueCard
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * v0.48: the repo-first flow's own Bookmarks screen — reached from
@@ -60,7 +60,7 @@ import com.example.githubissuefinder.ui.components.IssueCard
 fun RepoBookmarksScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: BookmarksViewModel = viewModel(),
+    viewModel: BookmarksViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }

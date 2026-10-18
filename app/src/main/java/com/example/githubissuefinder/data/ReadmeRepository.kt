@@ -1,6 +1,6 @@
 package com.example.githubissuefinder.data
 
-import com.example.githubissuefinder.network.GitHubApiClient
+import com.example.githubissuefinder.network.GitHubApiService
 import com.example.githubissuefinder.network.decodeGitHubContentsBase64
 import com.example.githubissuefinder.network.dto.ReadmeDto
 import kotlinx.coroutines.CancellationException
@@ -52,10 +52,10 @@ fun interface ReadmeApi {
  * text: the README screen and the repo-card previews both go through
  * ReadmeRepository, which uses this.
  */
-class GitHubReadmeApi : ReadmeApi {
+class GitHubReadmeApi(private val service: GitHubApiService) : ReadmeApi {
     override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
         withContext(Dispatchers.IO) {
-            val response = GitHubApiClient.api.getReadme(repoOwner, repoName)
+            val response = service.getReadme(repoOwner, repoName)
             ReadmeApiResponse(response.code(), response.isSuccessful, response.body())
         }
 }
@@ -78,7 +78,7 @@ class GitHubReadmeApi : ReadmeApi {
  */
 class ReadmeRepository(
     private val api: ReadmeApi,
-    private val hasToken: () -> Boolean = { ApiTokenRepository.instance.effectiveToken.value.isNotBlank() },
+    private val hasToken: () -> Boolean,
     private val decode: (content: String?, encoding: String?) -> String? = ::decodeGitHubContentsBase64,
 ) {
 
@@ -96,10 +96,5 @@ class ReadmeRepository(
         } catch (e: Exception) {
             ReadmeResult.Failed(e.message)
         }
-    }
-
-    companion object {
-        /** The app-wide instance. Needs no Context, so no init call is required. */
-        val instance: ReadmeRepository by lazy { ReadmeRepository(GitHubReadmeApi()) }
     }
 }

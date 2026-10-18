@@ -3,6 +3,9 @@ package com.example.githubissuefinder.ui.settings
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.ApiTokenStorage
 import com.example.githubissuefinder.data.TokenSource
+import com.example.githubissuefinder.testutil.testAppConfigRepository
+import com.example.githubissuefinder.testutil.testBookmarksRepository
+import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -17,7 +20,12 @@ class ApiTokenViewModelTest {
     }
 
     private fun viewModel(storage: FakeStorage = FakeStorage(), buildToken: String = "") =
-        ApiTokenViewModel(ApiTokenRepository(storage, buildToken))
+        ApiTokenViewModel(
+            ApiTokenRepository(storage, buildToken),
+            testAppConfigRepository(),
+            testHiddenIssuesRepository(),
+            testBookmarksRepository(),
+        )
 
     @Test
     fun startsEmptyWithNoSourceWhenNothingIsConfigured() {

@@ -1,6 +1,9 @@
 package com.example.githubissuefinder.ui.settings
 
 import com.example.githubissuefinder.data.ApiTokenRepository
+import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.TokenSource
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -16,14 +19,15 @@ import kotlinx.coroutines.flow.StateFlow
  * is tapped), so it stays in the composable — a ViewModel is for state
  * that is persisted, shared, or the result of a decision.
  *
- * The repository is a constructor argument defaulting to the app-wide
- * instance so a test can pass one over a fake storage; a ViewModel
- * whose constructor arguments all have defaults still has the
- * no-argument constructor the default factory needs.
+ * The repository is a constructor argument, supplied by the Koin module,
+ * so a test can pass one over a fake storage.
  */
 class ApiTokenViewModel(
-    private val repository: ApiTokenRepository = ApiTokenRepository.instance,
-) : BaseViewModel() {
+    private val repository: ApiTokenRepository,
+    appConfigRepository: AppConfigRepository,
+    hiddenIssuesRepository: HiddenIssuesRepository,
+    bookmarksRepository: BookmarksRepository,
+) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
 
     /** The token the user saved, or empty if none. */
     val userToken: StateFlow<String> = repository.userToken

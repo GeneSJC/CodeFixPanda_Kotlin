@@ -139,14 +139,14 @@ sealed interface TopReposEvent {
  * cancels any work still running from that visit. The work runs in the
  * shared [AppScope], not in a ViewModel's.
  *
- * Tests build their own instance with fakes and install it with
- * [replaceInstanceForTests].
+ * The Koin module builds the one app-wide instance; tests build their
+ * own over fakes.
  */
 class TopReposStateHolder(
-    private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
-    private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
-    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
-    private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
+    private val modeRepository: IssueModeRepository,
+    private val tokenRepository: ApiTokenRepository,
+    private val cacheRepository: RepoIssueGroupRepository,
+    private val searchRepository: IssueSearchRepository,
     private val scope: CoroutineScope = AppScope.scope,
 ) {
 
@@ -566,25 +566,5 @@ class TopReposStateHolder(
 
     private fun launchInVisit(block: suspend () -> Unit) {
         scope.launch(visitJob) { block() }
-    }
-
-    companion object {
-        @Volatile
-        private var installed: TopReposStateHolder? = null
-
-        /** The app-wide state holder, built from the real repositories on first use. */
-        val instance: TopReposStateHolder
-            get() = installed ?: synchronized(this) {
-                installed ?: TopReposStateHolder().also { installed = it }
-            }
-
-        /**
-         * For tests only: installs [stateHolder] as the instance (or, with
-         * null, drops it so the next access builds a fresh real one).
-         * Tests call this in setup, and with null in teardown.
-         */
-        fun replaceInstanceForTests(stateHolder: TopReposStateHolder?) {
-            installed = stateHolder
-        }
     }
 }

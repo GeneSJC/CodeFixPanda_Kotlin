@@ -2,6 +2,8 @@ package com.example.githubissuefinder.testutil
 
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.ApiTokenStorage
+import com.example.githubissuefinder.data.AppConfig
+import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.data.HiddenIssuesRepository
@@ -26,6 +28,8 @@ import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.network.dto.IssueDto
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
+import com.example.githubissuefinder.ui.discover.RepoIssuesViewModel
+import com.example.githubissuefinder.ui.discover.TopReposViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
@@ -97,7 +101,7 @@ class FakeReadmeSource(var result: ReadmeFetch = ReadmeFetch.Resolved(null)) : R
     override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch = result
 }
 
-/** Everything a Top Repos or repo-issues ViewModel (or the Top Repos state holder) is built from, wired over fakes, with the pieces a test needs to poke at. */
+/** Everything a Top Repos or repo-issues ViewModel (or a state holder) is built from, wired over fakes, with the pieces a test needs to poke at. */
 class ViewModelFixtures(
     mode: IssueLabelFilter? = IssueLabelFilter.GOOD_FIRST_ISSUE,
     buildToken: String = "build-token",
@@ -109,8 +113,9 @@ class ViewModelFixtures(
     val modeRepository = IssueModeRepository(modeStorage)
     val tokenStorage = FakeApiTokenStorage()
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
-    val hiddenIssuesRepository = HiddenIssuesRepository(FakeHiddenIssuesStorage())
-    val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
+    val appConfigRepository = testAppConfigRepository()
+    val hiddenIssuesRepository = testHiddenIssuesRepository()
+    val bookmarksRepository = testBookmarksRepository()
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api, { tokenRepository.effectiveToken.value.isNotBlank() })
@@ -127,32 +132,24 @@ class ViewModelFixtures(
         CoroutineScope(Dispatchers.Unconfined),
     )
 
-    /** Makes RepoIssuesViewModel use [repoIssuesStateHolder]; pair with [uninstall] in teardown. */
-    fun installRepoIssuesStateHolder() {
-        RepoIssuesStateHolder.replaceInstanceForTests(repoIssuesStateHolder)
-    }
+    /** A Top Repos ViewModel over the state holder and repositories above. */
+    fun topReposViewModel(config: AppConfigRepository = appConfigRepository) = TopReposViewModel(
+        topReposStateHolder, snippetRepository, config, hiddenIssuesRepository, bookmarksRepository,
+    )
 
-    /** Makes TopReposViewModel use [topReposStateHolder]; pair with [uninstall] in teardown. */
-    fun installTopReposStateHolder() {
-        TopReposStateHolder.replaceInstanceForTests(topReposStateHolder)
-    }
-
-    /** Makes the hidden-issue and bookmark repositories that BaseViewModel reads the fakes above; pair with [uninstall] in teardown. */
-    fun installRepositories() {
-        HiddenIssuesRepository.replaceInstanceForTests(hiddenIssuesRepository)
-        BookmarksRepository.replaceInstanceForTests(bookmarksRepository)
-    }
-
-    companion object {
-        /** Removes everything the install functions put in place. Call it in teardown. */
-        fun uninstall() {
-            TopReposStateHolder.replaceInstanceForTests(null)
-            RepoIssuesStateHolder.replaceInstanceForTests(null)
-            HiddenIssuesRepository.replaceInstanceForTests(null)
-            BookmarksRepository.replaceInstanceForTests(null)
-        }
-    }
+    /** A repo-issues ViewModel over the state holder and repositories above. */
+    fun repoIssuesViewModel() = RepoIssuesViewModel(
+        repoIssuesStateHolder, hiddenIssuesRepository, appConfigRepository, bookmarksRepository,
+    )
 }
+
+/** A config for tests that do not care about its values. */
+fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = "coin", showDetailedDrawerMenu = false)
+
+/** The three repositories BaseViewModel takes, over fakes, for tests that only care about a ViewModel's own behavior. */
+fun testAppConfigRepository() = AppConfigRepository(testAppConfig())
+fun testHiddenIssuesRepository() = HiddenIssuesRepository(FakeHiddenIssuesStorage())
+fun testBookmarksRepository() = BookmarksRepository(FakeBookmarksStorage())
 
 /** A search-API issue as GitHub would send it, in repo [owner]/[repo]. */
 fun issueDto(id: Long, owner: String = "octo", repo: String = "repo") = IssueDto(

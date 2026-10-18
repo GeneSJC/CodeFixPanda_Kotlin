@@ -1,6 +1,8 @@
 package com.example.githubissuefinder.ui.splash
 
 import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.BaseViewModel
 
@@ -16,16 +18,17 @@ import com.example.githubissuefinder.ui.BaseViewModel
  * after it). Deciding once and holding the answer for this ViewModel's
  * lifetime keeps one launch's splash consistent.
  *
- * Scoped to the Activity (obtained with viewModel() from MainActivity's
- * root composition). The repository is a constructor argument defaulting
- * to the app-wide instance so tests can pass one over a fake storage; a
- * ViewModel whose constructor arguments all have defaults still has the
- * no-argument constructor the default factory needs.
+ * Scoped to the Activity (obtained with koinViewModel() from MainActivity's
+ * root composition). The repository is a constructor argument, supplied by
+ * the Koin module, so tests can pass one over a fake storage. The
+ * remaining arguments are BaseViewModel's.
  */
 class StartupSplashViewModel(
-    private val repository: StartupSplashRepository = StartupSplashRepository.instance,
-    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
-) : BaseViewModel(appConfigRepository) {
+    private val repository: StartupSplashRepository,
+    appConfigRepository: AppConfigRepository,
+    hiddenIssuesRepository: HiddenIssuesRepository,
+    bookmarksRepository: BookmarksRepository,
+) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
 
     val playFullAnimation: Boolean = !repository.hasSeenFullAnimation
 

@@ -138,14 +138,14 @@ data class RepoIssuesState(
  * repeated loadIfNeeded() calls do not reassign issues the state holder
  * already holds. Nothing here needs a Context: the cache work lives in
  * RepoIssueGroupRepository, which does its own file I/O. The work runs in
- * the shared [AppScope]. Tests build an instance over fakes and install
- * it with [replaceInstanceForTests].
+ * the shared [AppScope]. The Koin module builds the one app-wide
+ * instance; tests build their own over fakes.
  */
 class RepoIssuesStateHolder(
-    private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
-    private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
-    private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
-    private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
+    private val modeRepository: IssueModeRepository,
+    private val cacheRepository: RepoIssueGroupRepository,
+    private val searchRepository: IssueSearchRepository,
+    private val tokenRepository: ApiTokenRepository,
     private val scope: CoroutineScope = AppScope.scope,
 ) {
 
@@ -228,25 +228,5 @@ class RepoIssuesStateHolder(
 
     private fun showRefreshFailure(detail: String?) {
         _state.update { it.copy(isRefreshing = false, refreshFailure = SearchFailure.Failed(detail)) }
-    }
-
-    companion object {
-        @Volatile
-        private var installed: RepoIssuesStateHolder? = null
-
-        /** The app-wide state holder, built from the real repositories on first use. */
-        val instance: RepoIssuesStateHolder
-            get() = installed ?: synchronized(this) {
-                installed ?: RepoIssuesStateHolder().also { installed = it }
-            }
-
-        /**
-         * For tests only: installs [stateHolder] as the instance (or, with
-         * null, drops it so the next access builds a fresh real one).
-         * Tests call this in setup, and with null in teardown.
-         */
-        fun replaceInstanceForTests(stateHolder: RepoIssuesStateHolder?) {
-            installed = stateHolder
-        }
     }
 }

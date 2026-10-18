@@ -37,8 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.noties.markwon.Markwon
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The README, as an inline expand/collapse widget — replaces the
@@ -137,7 +137,7 @@ fun ReadmeExpandableBody(
     repoName: String,
     repoFullName: String,
     modifier: Modifier = Modifier,
-    viewModel: RepoReadmeViewModel = viewModel(),
+    viewModel: RepoReadmeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

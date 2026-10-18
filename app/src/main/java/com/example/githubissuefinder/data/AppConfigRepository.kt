@@ -1,6 +1,5 @@
 package com.example.githubissuefinder.data
 
-import com.example.githubissuefinder.BuildConfig
 
 /**
  * The build-time constants the UI depends on, bundled into one plain
@@ -22,27 +21,11 @@ data class AppConfig(
 )
 
 /**
- * The only code that reads BuildConfig for UI purposes. The values are
- * fixed for the life of the process, so the config is built once, when
- * the singleton is first used, and never re-read.
- *
- * No Context and no init(context) are needed (BuildConfig is a
- * compile-time class), unlike the repositories that wrap storage. A test
- * builds its own repository around any [AppConfig], for example one with
- * the drawer flag switched on, with no rebuild.
+ * Holds the build-time configuration for UI purposes. The values are
+ * fixed for the life of the process; the Koin module reads BuildConfig
+ * once to build the config, so that line is the only place that does.
+ * A test builds its own repository around any [AppConfig], for example
+ * one with the drawer flag switched on, with no rebuild.
  */
 class AppConfigRepository(val config: AppConfig) {
-
-    companion object {
-        /** The app-wide instance, built from the real BuildConfig on first use. */
-        val instance: AppConfigRepository by lazy {
-            AppConfigRepository(
-                AppConfig(
-                    buildLabel = BuildConfig.BUILD_LABEL,
-                    splashAnimation = BuildConfig.SPLASH_ANIMATION,
-                    showDetailedDrawerMenu = BuildConfig.SHOW_DETAILED_DRAWER_MENU,
-                ),
-            )
-        }
-    }
 }

@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import com.example.githubissuefinder.data.formatRelativeTime
 import kotlinx.coroutines.launch
@@ -55,6 +54,7 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.theme.colorScheme
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The repo-scoped issue list — see RepoIssuesStateHolder's class comment
@@ -204,7 +204,7 @@ fun RepoIssuesScreen(
     onBack: () -> Unit,
     onOpenHidden: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RepoIssuesViewModel = viewModel(),
+    viewModel: RepoIssuesViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current

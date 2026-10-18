@@ -19,7 +19,6 @@ import com.example.githubissuefinder.testutil.searchFailed
 import com.example.githubissuefinder.testutil.searchOk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -28,8 +27,8 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * TopReposViewModel over the real TopReposStateHolder (built on fakes and
- * installed as the app-wide instance for each test). What the state holder
+ * TopReposViewModel over the real TopReposStateHolder (built on
+ * fakes). What the state holder
  * decides is covered in TopReposStateHolderTest; this covers what the
  * ViewModel adds: the message text, the forwarding of actions, and the
  * pass-throughs for the repo cards.
@@ -39,20 +38,12 @@ class TopReposViewModelTest {
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
 
-    @After
-    fun tearDown() {
-        ViewModelFixtures.uninstall()
-    }
-
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
 
     /** A ViewModel whose state holder is the one built over [f]'s fakes. */
-    private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = AppConfigRepository.instance): TopReposViewModel {
-        f.installTopReposStateHolder()
-        f.installRepositories()
-        return TopReposViewModel(f.snippetRepository, config)
-    }
+    private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = f.appConfigRepository): TopReposViewModel =
+        f.topReposViewModel(config)
 
     private fun fullPage() = (1L..TOP_REPOS_PER_PAGE).map { issueDto(it, "a", "one") }
 

@@ -17,17 +17,13 @@ import kotlinx.coroutines.flow.StateFlow
  * AppConfig or where the value comes from), and the hidden-issue and
  * bookmark pass-throughs that more than one screen uses.
  *
- * Why a base class and not a line in each ViewModel: the repository
- * argument, its storage and the getters are written once here. A
- * subclass just says ": BaseViewModel()" and a new constant is one
- * getter in this file, readable from every screen that extends it.
+ * Why a base class and not a line in each ViewModel: the getters are
+ * written once here, and a new constant is one getter in this file,
+ * readable from every screen that extends it.
  *
- * Why the repository argument defaults to the app-wide instance: the
- * subclass needs no extra code in production, and a ViewModel whose
- * constructor arguments all have defaults still has the no-argument
- * constructor the default factory needs. A subclass that wants to be
- * tested with a different config takes an AppConfigRepository argument
- * of its own and passes it up.
+ * Its three repositories are constructor arguments like any other
+ * dependency: the Koin module supplies them, a subclass lists them in
+ * its own constructor and passes them up, and a test passes fakes.
  *
  * What belongs here is decided by one question: is this app-level, or
  * specific to one view? App-level data or capability that a ViewModel
@@ -40,7 +36,9 @@ import kotlinx.coroutines.flow.StateFlow
  * collects odd helpers stops being a standard).
  */
 abstract class BaseViewModel(
-    private val appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
+    private val appConfigRepository: AppConfigRepository,
+    private val hiddenIssuesRepository: HiddenIssuesRepository,
+    private val bookmarksRepository: BookmarksRepository,
 ) : ViewModel() {
 
     /** "A.B", shown in the drawer header. */
@@ -56,16 +54,13 @@ abstract class BaseViewModel(
      * Ids the user hid, to filter hidden issues out of a list at display
      * time. Shared by the screens that list issues (promoted here when a
      * second ViewModel needed it: the rule of two). A pass-through, so it
-     * lives here and not in a state holder; resolved when read, so a ViewModel
-     * that never uses it needs the repository to be neither set up nor
-     * installed. Tests install their own with
-     * HiddenIssuesRepository.replaceInstanceForTests().
+     * lives here and not in a state holder.
      */
-    val hiddenIds: StateFlow<Set<Long>> get() = HiddenIssuesRepository.instance.hiddenIds
+    val hiddenIds: StateFlow<Set<Long>> get() = hiddenIssuesRepository.hiddenIds
 
     /** Ids of bookmarked issues, to draw each issue card's star. */
-    val bookmarkedIds: StateFlow<Set<Long>> get() = BookmarksRepository.instance.bookmarkedIds
+    val bookmarkedIds: StateFlow<Set<Long>> get() = bookmarksRepository.bookmarkedIds
 
     /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
-    fun toggleBookmark(issue: Issue): Boolean = BookmarksRepository.instance.toggle(issue)
+    fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)
 }

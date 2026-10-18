@@ -1,6 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RepoIssuesStateHolder
 import com.example.githubissuefinder.model.Issue
@@ -28,18 +30,18 @@ import kotlinx.coroutines.flow.stateIn
  * Constructing this class starts a fresh visit to the screen
  * (RepoIssuesStateHolder.open()), as constructing it has always meant.
  *
- * The state holder and the hidden-issue repository are plain members, the
- * app-wide instances; tests install their own with
- * RepoIssuesStateHolder.replaceInstanceForTests() and
- * HiddenIssuesRepository.replaceInstanceForTests(). The hidden ids, the
- * bookmarked ids and the bookmark toggle come from BaseViewModel.
+ * The state holder and the hidden-issue repository are constructor
+ * arguments, supplied by the Koin module; tests pass their own. The
+ * hidden-issue repository is used here for hiding and unhiding, and is
+ * also the one BaseViewModel reads the hidden ids from. The hidden ids,
+ * the bookmarked ids and the bookmark toggle come from BaseViewModel.
  */
-class RepoIssuesViewModel : BaseViewModel() {
-
-    private val stateHolder = RepoIssuesStateHolder.instance
-
-    /** The hidden-issue repository, for hiding and unhiding. The hidden ids themselves come from BaseViewModel. */
-    private val hiddenIssuesRepository = HiddenIssuesRepository.instance
+class RepoIssuesViewModel(
+    private val stateHolder: RepoIssuesStateHolder,
+    private val hiddenIssuesRepository: HiddenIssuesRepository,
+    appConfigRepository: AppConfigRepository,
+    bookmarksRepository: BookmarksRepository,
+) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
 
     init {
         stateHolder.open()

@@ -3,7 +3,8 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.model.Issue
-import org.junit.After
+import com.example.githubissuefinder.testutil.testAppConfigRepository
+import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,16 +19,10 @@ class BookmarksViewModelTest {
         }
     }
 
-    @After
-    fun tearDown() {
-        BookmarksRepository.replaceInstanceForTests(null)
-    }
-
-    /** A ViewModel over a repository on [storage], installed as the app-wide one. */
+    /** A ViewModel over a repository on [storage]. */
     private fun viewModelOver(storage: FakeStorage): Pair<BookmarksViewModel, BookmarksRepository> {
         val repository = BookmarksRepository(storage)
-        BookmarksRepository.replaceInstanceForTests(repository)
-        return BookmarksViewModel() to repository
+        return BookmarksViewModel(repository, testAppConfigRepository(), testHiddenIssuesRepository()) to repository
     }
 
     private fun issue(id: Long) = Issue(

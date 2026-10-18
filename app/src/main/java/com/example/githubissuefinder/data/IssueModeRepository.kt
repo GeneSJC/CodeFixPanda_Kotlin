@@ -79,10 +79,10 @@ class SharedPreferencesIssueModeStorage(context: Context) : IssueModeStorage {
  * this was asked for, so this is a genuine gate, not a silent default.
  *
  * The stored value is read once, when the repository is constructed —
- * which init(context) does from MainActivity.onCreate, BEFORE
- * setContent, so the restored value (or lack of one) is already in
- * place by the time DiscoverNavHost computes its start destination on
- * first composition. A stored name that no longer matches any
+ * which happens when the first ViewModel that needs it is created, ahead
+ * of the first composition that reads it, so the restored value (or lack
+ * of one) is already in place by the time DiscoverNavHost computes its
+ * start destination. A stored name that no longer matches any
  * IssueLabelFilter (e.g. one renamed in a later version) restores as
  * null, which just shows the gate again rather than crashing.
  *
@@ -104,34 +104,5 @@ class IssueModeRepository(private val storage: IssueModeStorage) {
     private fun restore(): IssueLabelFilter? {
         val savedName = storage.load() ?: return null
         return IssueLabelFilter.entries.find { it.name == savedName }
-    }
-
-    companion object {
-        @Volatile
-        private var _instance: IssueModeRepository? = null
-
-        /**
-         * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as BookmarksRepository and HiddenIssuesRepository (this project
-         * has no DI framework yet). ViewModels take the repository as a
-         * constructor argument defaulting to this, so production code
-         * gets the real one while tests pass their own.
-         */
-        val instance: IssueModeRepository
-            get() = checkNotNull(_instance) {
-                "IssueModeRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /**
-         * Safe to call more than once (e.g. if MainActivity is ever
-         * recreated): only the first call constructs the instance, so a
-         * mode the user already picked this process is never clobbered
-         * by whatever was on disk before it.
-         */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = IssueModeRepository(SharedPreferencesIssueModeStorage(context))
-        }
     }
 }

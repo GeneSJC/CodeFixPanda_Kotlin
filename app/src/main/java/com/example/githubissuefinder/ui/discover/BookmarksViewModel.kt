@@ -1,6 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -11,12 +13,16 @@ import kotlinx.coroutines.flow.StateFlow
  * bookmark (also used for the star on a repo's issue cards) comes from
  * BaseViewModel, since two screens need it.
  *
- * The repository is a plain member, the app-wide instance; a test
- * installs one over a fake storage with
- * BookmarksRepository.replaceInstanceForTests().
+ * The repository is a constructor argument, supplied by the Koin module,
+ * so a test can pass one over a fake storage. It is also the one
+ * BaseViewModel reads the bookmarked ids from.
  */
-class BookmarksViewModel : BaseViewModel() {
+class BookmarksViewModel(
+    private val bookmarksRepository: BookmarksRepository,
+    appConfigRepository: AppConfigRepository,
+    hiddenIssuesRepository: HiddenIssuesRepository,
+) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
 
     /** Bookmarked issues, in the order they were saved. */
-    val bookmarks: StateFlow<List<Issue>> = BookmarksRepository.instance.bookmarks
+    val bookmarks: StateFlow<List<Issue>> = bookmarksRepository.bookmarks
 }

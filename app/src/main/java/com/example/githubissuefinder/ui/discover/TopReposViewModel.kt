@@ -2,6 +2,8 @@ package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.BookmarksRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.TopReposStateHolder
@@ -31,18 +33,18 @@ import kotlinx.coroutines.launch
  * (TopReposStateHolder.open()), which is what constructing it has always
  * meant: load the list for the default language, cache first.
  *
- * The state holder is a plain member, the app-wide TopReposStateHolder; tests
- * install their own with TopReposStateHolder.replaceInstanceForTests().
- * The remaining argument serves the repo cards (README previews) and is
- * not part of the list's data state. The hidden ids come from
- * BaseViewModel.
+ * The state holder is a constructor argument, supplied by the Koin module;
+ * tests pass their own. The snippet repository serves the repo cards
+ * (README previews) and is not part of the list's data state. The hidden
+ * ids come from BaseViewModel.
  */
 class TopReposViewModel(
-    private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
-    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
-) : BaseViewModel(appConfigRepository) {
-
-    private val stateHolder = TopReposStateHolder.instance
+    private val stateHolder: TopReposStateHolder,
+    private val snippetRepository: ReadmeSnippetRepository,
+    appConfigRepository: AppConfigRepository,
+    hiddenIssuesRepository: HiddenIssuesRepository,
+    bookmarksRepository: BookmarksRepository,
+) : BaseViewModel(appConfigRepository, hiddenIssuesRepository, bookmarksRepository) {
 
     init {
         stateHolder.open()

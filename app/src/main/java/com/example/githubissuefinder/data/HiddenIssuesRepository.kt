@@ -3,7 +3,7 @@ package com.example.githubissuefinder.data
 import android.content.Context
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
-import com.example.githubissuefinder.network.GitHubApiClient
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import java.io.File
 import java.util.concurrent.Executors
@@ -43,12 +43,12 @@ interface HiddenIssuesStorage {
  * user already saw change on screen, and matches every other store in
  * this app.
  */
-class JsonFileHiddenIssuesStorage(context: Context) : HiddenIssuesStorage {
+class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssuesStorage {
 
     private val file = File(context.applicationContext.filesDir, FILE_NAME)
     private val writer = Executors.newSingleThreadExecutor()
     private val adapter by lazy {
-        GitHubApiClient.moshi.adapter<List<HiddenIssue>>(
+        moshi.adapter<List<HiddenIssue>>(
             Types.newParameterizedType(List::class.java, HiddenIssue::class.java),
         )
     }
@@ -145,33 +145,4 @@ class HiddenIssuesRepository(
 
     private fun sortedNewestFirst(byId: Map<Long, HiddenIssue>): List<HiddenIssue> =
         byId.values.sortedByDescending { it.hiddenAtMs }
-
-    companion object {
-        @Volatile
-        private var _instance: HiddenIssuesRepository? = null
-
-        /**
-         * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as the other repositories (this project has no DI
-         * framework yet). ViewModels use it as a plain member (or through
-         * BaseViewModel); tests install their own with
-         * [replaceInstanceForTests].
-         */
-        val instance: HiddenIssuesRepository
-            get() = checkNotNull(_instance) {
-                "HiddenIssuesRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /** For tests only: installs [repository] as the instance, or with null drops it. Pair a call in setup with a null call in teardown. */
-        fun replaceInstanceForTests(repository: HiddenIssuesRepository?) {
-            _instance = repository
-        }
-
-        /** Safe to call more than once: only the first call constructs the instance. */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = HiddenIssuesRepository(JsonFileHiddenIssuesStorage(context))
-        }
-    }
 }

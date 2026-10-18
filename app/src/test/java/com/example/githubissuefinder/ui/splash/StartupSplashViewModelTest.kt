@@ -2,11 +2,17 @@ package com.example.githubissuefinder.ui.splash
 
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.data.StartupSplashStorage
+import com.example.githubissuefinder.testutil.testAppConfigRepository
+import com.example.githubissuefinder.testutil.testBookmarksRepository
+import com.example.githubissuefinder.testutil.testHiddenIssuesRepository
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StartupSplashViewModelTest {
+
+    private fun createViewModel(repository: StartupSplashRepository) =
+        StartupSplashViewModel(repository, testAppConfigRepository(), testHiddenIssuesRepository(), testBookmarksRepository())
 
     private class FakeStorage(var seen: Boolean = false) : StartupSplashStorage {
         override fun hasSeenFullAnimation(): Boolean = seen
@@ -17,27 +23,27 @@ class StartupSplashViewModelTest {
 
     @Test
     fun playsTheFullAnimationOnTheFirstLaunch() {
-        val viewModel = StartupSplashViewModel(StartupSplashRepository(FakeStorage()))
+        val viewModel = createViewModel(StartupSplashRepository(FakeStorage()))
         assertTrue(viewModel.playFullAnimation)
     }
 
     @Test
     fun playsTheShortSplashOnceTheFullOneWasSeen() {
-        val viewModel = StartupSplashViewModel(StartupSplashRepository(FakeStorage(seen = true)))
+        val viewModel = createViewModel(StartupSplashRepository(FakeStorage(seen = true)))
         assertFalse(viewModel.playFullAnimation)
     }
 
     @Test
     fun finishingRecordsThatTheAnimationWasSeen() {
         val storage = FakeStorage()
-        StartupSplashViewModel(StartupSplashRepository(storage)).onSplashFinished()
+        createViewModel(StartupSplashRepository(storage)).onSplashFinished()
         assertTrue(storage.seen)
     }
 
     /** The decision is made once per launch: finishing must not flip a splash that is still on screen. */
     @Test
     fun theDecisionDoesNotFlipAfterFinishing() {
-        val viewModel = StartupSplashViewModel(StartupSplashRepository(FakeStorage()))
+        val viewModel = createViewModel(StartupSplashRepository(FakeStorage()))
         viewModel.onSplashFinished()
         assertTrue(viewModel.playFullAnimation)
     }
@@ -45,9 +51,9 @@ class StartupSplashViewModelTest {
     @Test
     fun theNextLaunchGetsTheShortSplash() {
         val storage = FakeStorage()
-        StartupSplashViewModel(StartupSplashRepository(storage)).onSplashFinished()
+        createViewModel(StartupSplashRepository(storage)).onSplashFinished()
 
-        val nextLaunch = StartupSplashViewModel(StartupSplashRepository(storage))
+        val nextLaunch = createViewModel(StartupSplashRepository(storage))
 
         assertFalse(nextLaunch.playFullAnimation)
     }
