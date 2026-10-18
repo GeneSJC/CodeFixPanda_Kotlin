@@ -74,9 +74,10 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                         "Looking to make a contribution?",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 10.dp),
                     )
                     Text(
-                        "Select the issues you would like to look at",
+                        "Select the kind of issues you would like to see",
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
@@ -115,13 +116,15 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                 // touching the button.
                 Surface(shape = RoundedCornerShape(8.dp), color = accent) {
                     Text(
-                        mode.glyph,
-                        style = MaterialTheme.typography.titleMedium,
+                        // The text-presentation selector keeps a device from swapping in a colored
+                        // emoji glyph, which would ignore the white.
+                        mode.glyph + TEXT_PRESENTATION_SELECTOR,
+                        style = modeButtonTextStyle(),
                         color = Color.White,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     )
                 }
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
@@ -133,7 +136,7 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                     ) {
                         Text(
                             mode.displayName,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = modeButtonTextStyle(),
                             color = Color.White,
                         )
                     }
@@ -163,4 +166,12 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
             }
         }
     }
+}
+
+private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
+
+/** The icon chip and the button share this text size, 25% above titleMedium. */
+@Composable
+private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
+    it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
 }
