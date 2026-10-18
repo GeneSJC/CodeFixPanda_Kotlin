@@ -1,7 +1,5 @@
 package com.example.githubissuefinder.ui.components
 
-import android.content.Intent
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -32,9 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.Issue
 import kotlinx.coroutines.launch
@@ -46,9 +41,8 @@ import kotlinx.coroutines.launch
  * bookmark repository stays the single source of truth. Bookmark, hide and the
  * external-link badge are optional: each appears only when its callback is given.
  * Hide is a plain callback with no Snackbar here, because the card is about to leave the
- * list and would cancel its own scope; the screen owns the Undo Snackbar. Share opens the
- * system share sheet, and Copy Link shows a Toast, which needs nothing from the caller.
- * More in docs/design-notes.md, "Issue card".
+ * list and would cancel its own scope; the screen owns the Undo Snackbar. The revealed row is
+ * IssueCardActions. More in docs/design-notes.md, "Issue card".
  */
 @Composable
 fun IssueCard(
@@ -61,8 +55,6 @@ fun IssueCard(
     onHide: (() -> Unit)? = null,
     snackbarHostState: SnackbarHostState? = null,
 ) {
-    val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
@@ -104,59 +96,21 @@ fun IssueCard(
                     exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
                         fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (onHide != null) {
-                                CardBadge(glyph = "✕", onClick = onHide)
+                    IssueCardActions(
+                        issue = issue,
+                        isBookmarked = isBookmarked,
+                        onHide = onHide,
+                        onToggleBookmark = onToggleBookmark?.let { toggle ->
+                            {
+                                toggle()
+                                val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                snackbarHostState?.let { hostState ->
+                                    coroutineScope.launch { hostState.showSnackbar(message) }
+                                }
                             }
-                            if (onToggleBookmark != null) {
-                                CardBadge(
-                                    glyph = if (isBookmarked) "★" else "☆",
-                                    onClick = {
-                                        onToggleBookmark()
-                                        val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
-                                        snackbarHostState?.let { hostState ->
-                                            coroutineScope.launch { hostState.showSnackbar(message) }
-                                        }
-                                    },
-                                )
-                            }
-                            CardBadge(
-                                glyph = "📤",
-                                onClick = {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_SUBJECT, issue.title)
-                                        putExtra(
-                                            Intent.EXTRA_TEXT,
-                                            "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
-                                        )
-                                    }
-                                    context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
-                                },
-                            )
-                            CardBadge(
-                                glyph = "📋",
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString(issue.htmlUrl))
-                                    Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-                                },
-                            )
-                        }
-
-                        Text(
-                            text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                        },
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
                 }
             }
 
@@ -188,7 +142,7 @@ private const val CARD_EXPAND_COLLAPSE_DURATION_MS = 300
  * the caller animate the chevron.
  */
 @Composable
-private fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f) {
+internal fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f) {
     Surface(
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
