@@ -4,13 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
@@ -42,38 +39,30 @@ class MainActivity : ComponentActivity() {
             val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
             GitHubIssueFinderTheme(issueMode = issueMode) {
                 var showSplash by remember { mutableStateOf(true) }
-                // The app is composed from the splash's handoff (shortly before it ends) so the
-                // short splash can fade out over it.
-                var showApp by remember { mutableStateOf(false) }
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (showApp) {
-                        // The Discover flow.
-                        DiscoverNavHost()
+                if (showSplash) {
+                    // Full animation on the first launch, a short version that
+                    // starts at the settled title on every launch after — decided once
+                    // per launch, see StartupSplashViewModel.
+                    val splashViewModel: StartupSplashViewModel = viewModel()
+                    val onFinished = {
+                        splashViewModel.onSplashFinished()
+                        showSplash = false
                     }
-                    if (showSplash) {
-                        // Full animation on the first launch, a short fade-in
-                        // of the app name on every launch after — decided once
-                        // per launch, see StartupSplashViewModel.
-                        val splashViewModel: StartupSplashViewModel = viewModel()
-                        val onFinished = {
-                            splashViewModel.onSplashFinished()
-                            showApp = true
-                            showSplash = false
-                        }
-                        // Which splash plays, and with what parameters, lives
-                        // in ONE place now — AppStartSplashScreen.kt — rather
-                        // than switching on BuildConfig.SPLASH_ANIMATION here
-                        // directly, so the "production" flavor's "Play App
-                        // Start Animation" replay (see TopReposScreen.kt) can
-                        // never drift from what a real user actually sees at
-                        // launch.
-                        AppStartSplashScreen(
-                            onFinished = onFinished,
-                            animation = splashViewModel.splashAnimation,
-                            playFullAnimation = splashViewModel.playFullAnimation,
-                            onHandoff = { showApp = true },
-                        )
-                    }
+                    // Which splash plays, and with what parameters, lives
+                    // in ONE place now — AppStartSplashScreen.kt — rather
+                    // than switching on BuildConfig.SPLASH_ANIMATION here
+                    // directly, so the "production" flavor's "Play App
+                    // Start Animation" replay (see TopReposScreen.kt) can
+                    // never drift from what a real user actually sees at
+                    // launch.
+                    AppStartSplashScreen(
+                        onFinished = onFinished,
+                        animation = splashViewModel.splashAnimation,
+                        playFullAnimation = splashViewModel.playFullAnimation,
+                    )
+                } else {
+                    // The Discover flow.
+                    DiscoverNavHost()
                 }
             }
         }

@@ -35,7 +35,7 @@ class SharedPreferencesStartupSplashStorage(context: Context) : StartupSplashSto
 
 /**
  * The single owner of whether the full title-reveal animation has already played on this device:
- * the first launch plays it in full and later launches show a short fade-in. Plain methods and not a
+ * the first launch plays it in full and later launches show the short version. Plain methods and not a
  * StateFlow: the decision is read once per launch, before the splash starts, and must not flip
  * mid-animation when the flag is written at the end. The in-app "Play App Start Animation" replay
  * never touches it.
