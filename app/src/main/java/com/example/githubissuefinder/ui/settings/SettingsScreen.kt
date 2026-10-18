@@ -34,20 +34,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.TokenSource
 
 /**
- * Where a user supplies their own GitHub personal access token — needed
- * because the build-time token (local.properties) only exists for
- * someone building from source, so a person who installs a built APK
- * would otherwise have no way to make the app work at all.
- *
- * The token is shown in the clear as it is typed, on purpose: personal
- * access tokens are long strings of near-identical characters, and
- * being able to see what was pasted makes mistakes much easier to
- * spot. It needs no permissions and is stored only on this device (see
- * ApiTokenRepository for why that is an acceptable tradeoff).
- *
- * The text in the field is local draft state, not ViewModel state: it
- * only matters until Save is tapped. It is keyed on the saved token so
- * it resets to the saved value whenever that changes.
+ * Where a user supplies their own GitHub token; the build-time token exists only for someone
+ * building from source. The token is shown in the clear as it is typed, on purpose: near-identical
+ * characters make mistakes hard to spot otherwise, and it needs no permissions and stays on the
+ * device (see ApiTokenRepository). The text in the field is local draft state, keyed on the saved
+ * token so it resets when that changes.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

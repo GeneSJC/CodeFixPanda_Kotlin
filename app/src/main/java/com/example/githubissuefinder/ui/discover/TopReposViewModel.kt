@@ -17,25 +17,12 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 /**
- * The view model for TopReposScreen: it maps the Top Repos data state
- * to what the screen shows, and forwards the user's actions.
- *
- * The data state itself, the logic that loads and changes it, and the
- * long design history of how the list is built (the v0.42 data-layer
- * swap, pagination and cross-page dedup, the persistent cache, the
- * cache-preserving refresh) all live in TopReposStateHolder. This class
- * holds none of that state: [uiState] is the state holder's state with the
- * message text added (see TopReposUiMapping.kt), and [snackbarEvents]
- * are the state holder's events turned into text.
- *
- * Constructing this class starts a fresh visit to the screen
- * (TopReposStateHolder.open()), which is what constructing it has always
- * meant: load the list for the default language, cache first.
- *
- * The state holder and the two repositories are plain members that Koin
- * supplies; tests register their own. The snippet repository serves the
- * repo cards (README previews) and the hidden-issue repository the hidden
- * ids the list is filtered by; neither is part of the list's data state.
+ * The ViewModel for TopReposScreen: maps the Top Repos state to what the screen shows and forwards
+ * actions. The state and the logic live in TopReposStateHolder; [uiState] is its state with the
+ * message text added (TopReposUiMapping.kt) and [snackbarEvents] are its events turned into text.
+ * Constructing it starts a fresh visit (open()): load the default language, cache first. The state
+ * holder and repositories are plain members that Koin supplies; the snippet repository serves the
+ * card previews and the hidden-issue repository the hidden ids.
  */
 class TopReposViewModel : BaseViewModel() {
 

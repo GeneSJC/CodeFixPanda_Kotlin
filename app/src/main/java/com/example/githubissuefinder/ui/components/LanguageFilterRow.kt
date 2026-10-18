@@ -15,25 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.LanguageFilter
 
 /**
- * Shared language filter chip row, used by both Feed (v0.8) and the
- * Discover "Top Repos" landing screen (v0.26) — extracted here so both
- * screens render the identical set of language options from one source,
- * rather than duplicating the row. Same reasoning as extracting
- * SplashBrandMark so both splash animation variants share one resting
- * mark.
- *
- * `wrap` (added for TopReposScreen's landscape split view): false (the
- * default) keeps the original single-line, horizontally-scrolling
- * LazyRow — fine when this row spans the full screen width. true
- * switches to a FlowRow instead, wrapping chips onto as many lines as
- * needed rather than scrolling — needed once this row moved into a
- * narrow landscape side column, where a horizontal scroll would mean
- * two competing scroll directions on screen at once (this row
- * scrolling sideways, the repo list scrolling down) and would hide
- * chips off-screen with no visual hint they're there. Wrapping instead
- * keeps every language option visible at once, at the cost of the
- * column using more vertical space for this row — an accepted
- * tradeoff in a column that isn't showing anything else below it.
+ * The language filter chip row. `wrap` false (the default) is a single horizontally scrolling line;
+ * true wraps the chips onto as many lines as needed, used in the landscape side rail where a sideways
+ * scroll would compete with the list's vertical scroll and hide chips off-screen.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

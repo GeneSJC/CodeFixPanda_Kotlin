@@ -20,17 +20,10 @@ private const val FLASH_FADE_IN_MS = 300
 private const val FLASH_HOLD_MS = 1200L
 
 /**
- * The short splash shown on every launch after the first: the app name,
- * already centered in its final position (TitleWordmark — the same
- * layout as the full animation's last frame), fading in and holding for
- * about a second and a half total before handing off to the app. No
- * motion, no collision burst — the full title-reveal is fun once and a
- * bit much on repeat viewings.
- *
- * Pinned to the Good First Issue (purple) palette for the same reason
- * TitleRevealSplashScreen is: the splash is the project's fixed brand
- * identity, not something that should repaint itself green under Help
- * Wanted just because the root theme is mode-aware.
+ * The short splash for every launch after the first: the app name, already in its final position
+ * (TitleWordmark), fading in and holding for about a second and a half, with no motion. Pinned to the
+ * Good First Issue (purple) palette like TitleRevealSplashScreen, because the splash is the
+ * project's fixed brand identity and should not repaint green under Help Wanted.
  */
 @Composable
 fun TitleFlashSplashScreen(onFinished: () -> Unit) {

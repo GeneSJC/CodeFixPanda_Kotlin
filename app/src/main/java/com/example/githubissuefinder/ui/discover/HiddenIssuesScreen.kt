@@ -35,29 +35,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.formatRelativeTime
 
 /**
- * v0.51 ("Hide Issue", Part C of the Cache-Preserving Refresh sequence):
- * the permanent record of every issue hidden via the "✕" badge on
- * RepoIssuesScreen — reached from TopReposScreen's hamburger menu
- * ("Hidden") and from RepoIssuesScreen's own all-hidden empty state
- * ("View Hidden").
- *
- * Deliberately NOT built on IssueCard: HiddenIssue is a minimal
- * snapshot (id, title, repoFullName, htmlUrl, hiddenAtMs), not a full
- * Issue — no labels, comment count, or language to show, and that's by
- * design (see HiddenIssue's own doc comment for why the snapshot stays
- * small). A simple row is all there's real data for.
- *
- * The list comes from HiddenIssuesViewModel (which observes
- * HiddenIssuesRepository) — no separate loading, no local copy;
- * un-hiding a row makes it
- * disappear immediately via Compose recomposition, nothing extra
- * wired here for that to happen.
- *
- * "Unhide all" sits in the top bar behind a confirmation dialog, per
- * the spec — the one destructive-feeling action on this screen (in the
- * sense of reversing a lot of history at once, even though every
- * individual unhide is itself already fully reversible by hiding
- * again).
+ * The record of every issue hidden with a card's "✕" badge, reached from the Top Repos menu and from
+ * the repo screen's all-hidden state. A simple row, not IssueCard: HiddenIssue is a minimal snapshot
+ * (id, title, repo, URL, hidden time), so there are no labels or comment count to show. The list
+ * comes from HiddenIssuesViewModel, so un-hiding a row removes it immediately. "Unhide all" is in the
+ * top bar behind a confirmation, since it reverses a lot of history at once.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

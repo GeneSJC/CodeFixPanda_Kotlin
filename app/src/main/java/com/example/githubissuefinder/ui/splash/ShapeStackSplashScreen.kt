@@ -29,42 +29,13 @@ private const val APPEAR_MS = 400
 private const val HOLD_MS = 1400L
 
 /**
- * A "stop-motion" brand animation: a stack of colored shapes appear one
- * at a time — each fading/scaling in at a fixed, slightly offset and
- * rotated position, staying visible as the next one lands partially over
- * it — followed by the shared "GH" brand mark and app name as the final
- * frame.
- *
- * ORIGIN OF THIS DESIGN: while iterating on OrigamiSplashScreen's real
- * fold sequence (diamond -> triangle -> smaller triangle), the tween
- * easing plus the pause between folds produced a distinct "snap into a
- * pose, hold, snap to the next" rhythm — closer to classic cel animation
- * (draw a frame, hold it, draw the next) than to smooth continuous
- * folding. That rhythm was explicitly liked on its own terms, so this is
- * a SEPARATE animation built to lean into it directly, rather than a
- * replacement for the fold-based one — both now exist independently
- * (see MainActivity.kt and TopReposScreen.kt's hamburger menu). An
- * earlier version of this project briefly (and mistakenly) put this
- * content directly into OrigamiSplashScreen.kt itself, overwriting the
- * fold sequence; that was corrected in v0.33, splitting them back into
- * two separate files/options.
- *
- * Each shape's position/rotation is a fixed constant, not animated — the
- * ONLY animated properties are alpha and scale (a simple fade+grow-in),
- * which is why this carries none of the rotation-axis-composition risk
- * the fold-based animation needed to reason through. As low-risk as the
- * original coin flip's own single rotation.
- *
- * Total runtime is intentionally longer than the ~5 second target used
- * elsewhere (roughly 7-8 seconds) — compressing the hold times back down
- * would undercut the exact "cartoon-y, clunky-but-charming" quality that
- * was the whole point of this direction.
- *
- * Selectable via BuildConfig.SPLASH_ANIMATION ("shapeStack"). Built
- * entirely with core Compose APIs (Canvas + Path, graphicsLayer,
- * Animatable) — no third-party dependency. Exact shape positions are a
- * reasonable-effort layout, not visually tuned against a running
- * device — same caveat every splash variant in this project has had.
+ * A "stop-motion" brand animation: a stack of colored shapes appears one at a time, each fading and
+ * scaling in at a fixed offset and rotation and staying visible under the next, ending on the shared
+ * "GH" mark and app name. It leans into the snap-hold-snap rhythm that came out of tuning the origami
+ * folds, and is a separate option from that animation. Only alpha and scale animate; positions and
+ * rotations are constants, so there is no rotation-axis risk. The runtime (about 7 to 8 seconds) is
+ * intentionally longer than the usual target, since shorter holds would lose its clunky-but-charming
+ * quality. Core Compose APIs only; the shape layout is a reasonable-effort one.
  */
 @Composable
 fun ShapeStackSplashScreen(onFinished: () -> Unit) {

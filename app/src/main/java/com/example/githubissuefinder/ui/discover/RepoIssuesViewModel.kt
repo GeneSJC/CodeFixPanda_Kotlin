@@ -16,24 +16,12 @@ import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.inject
 
 /**
- * The view model for RepoIssuesScreen, the repo-scoped issue list: it
- * maps the repo-issues data state to what the screen shows, and forwards
- * the user's actions.
- *
- * The data state itself, the logic that loads and refreshes it, and the
- * long design history of this screen (why it makes no network call until
- * the user asks, the "Refresh this repo" write-back to the Top Repos
- * cache) all live in RepoIssuesStateHolder. This class holds none of that
- * state: [uiState] is the state holder's state with the message text added
- * (see RepoIssuesUiMapping.kt).
- *
- * Constructing this class starts a fresh visit to the screen
- * (RepoIssuesStateHolder.open()), as constructing it has always meant.
- *
- * The state holder and the two repositories are plain members that Koin
- * supplies; tests register their own. The hidden-issue repository serves
- * hiding and unhiding and the hidden ids the list is filtered by; the
- * bookmark repository serves the star on each card.
+ * The ViewModel for RepoIssuesScreen: maps the repo-issues state to what the screen shows and
+ * forwards actions. The state and the logic live in RepoIssuesStateHolder; [uiState] is its state
+ * with the message text added (RepoIssuesUiMapping.kt). Constructing it starts a fresh visit
+ * (open()). The state holder and the two repositories are plain members that Koin supplies: the
+ * hidden-issue repository serves hiding, unhiding and the hidden ids, and the bookmark repository
+ * the star on each card.
  */
 class RepoIssuesViewModel : BaseViewModel() {
 

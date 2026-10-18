@@ -34,59 +34,15 @@ private const val FOLD_MS = 700
 private const val PAUSE_MS = 200L
 
 /**
- * A one-shot brand animation replicating the first two real folds shared
- * by the origami bird/crane/boat sequences referenced when building
- * this: a diamond (a square, drawn lying on its side) folds in half
- * along its horizontal midline into a triangle, then that triangle
- * folds in half again along its vertical midline into a smaller
- * triangle. Deliberately stops there — the crane's later squash-folds
- * (corners tucking INTO the model) are a much harder class of problem
- * and weren't attempted, per the explicit "just start it" scope.
- *
- * RESTORED IN v0.33: this was briefly, mistakenly overwritten in v0.32
- * by what's now ShapeStackSplashScreen.kt — that was meant to be a
- * separate, additional animation, not a replacement for this one. Both
- * now exist as independently selectable options; see MainActivity.kt
- * and TopReposScreen.kt's hamburger menu.
- *
- * Also in v0.33: added a HOLD_FLAT_MS pause before fold 1 begins, so the
- * flat, unfolded diamond is visible for a beat before folding starts —
- * direct feedback that the fold previously began too abruptly.
- *
- * WHY THIS AVOIDS THE RISK THE PREVIOUS TWO ATTEMPTS HAD: both earlier
- * versions needed to combine a rotation around one axis with a
- * DIFFERENT static rotation on the same layer, which isn't something
- * this project could verify composes correctly without seeing it
- * render. This version sidesteps that entirely — every shape is drawn
- * ALREADY oriented as a diamond (not as a square that then gets
- * rotated), so both fold hinges are naturally horizontal or vertical
- * from the start. Fold 1 is a plain rotationX around a horizontal
- * hinge; fold 2 is a plain rotationY around a vertical hinge on the
- * result of fold 1. Neither needs a compound rotation on one layer —
- * each is exactly as simple as the coin flip's own single rotation.
- *
- * Three pieces, each independently simple:
- *  - topHalf: the diamond's top triangle. Animates rotationX (0->180°)
- *    during fold 1, hinged at its own bottom edge, then stays frozen.
- *  - bottomLeftHalf: the LEFT half of the diamond's bottom triangle.
- *    Never animates — it's the stationary reference for fold 2.
- *  - bottomRightHalf: the RIGHT half of the diamond's bottom triangle.
- *    Animates rotationY (0->180°) during fold 2, hinged at its own
- *    left edge (the shared vertical centerline).
- * Composed in that order (topHalf first) so it renders BELOW the
- * bottom pieces — during fold 1 the two halves barely overlap until
- * the very end, so this doesn't hide fold 1, and it means fold 2's
- * rotation (on top) stays visible instead of being covered by the
- * now-frozen top piece.
- *
- * Selectable via BuildConfig.SPLASH_ANIMATION ("origami"). Built
- * entirely with core Compose APIs (Canvas + Path, graphicsLayer
- * rotationX/rotationY, Animatable) — no third-party dependency.
- *
- * Exact corner alignment between pieces is a reasonable-effort match
- * to the reference diagrams, not pixel-verified against a running
- * device — treat as a likely candidate for a small follow-up tuning
- * pass, same caveat every splash variant in this project has had.
+ * A one-shot brand animation of the first two folds of an origami crane: a diamond folds in half
+ * along its horizontal midline into a triangle, then that triangle folds in half along its vertical
+ * midline. It stops there; the crane's later squash-folds are a much harder problem. Every shape is
+ * drawn already oriented as a diamond, so each fold is a plain single-axis rotation (rotationX around
+ * a horizontal hinge, then rotationY around a vertical one) with no compound rotation on one layer.
+ * Three pieces: topHalf (rotationX during fold 1), bottomLeftHalf (stationary) and bottomRightHalf
+ * (rotationY during fold 2), composed in that order so the top piece renders below and does not cover
+ * fold 2. A pause before fold 1 shows the flat diamond for a beat. Core Compose APIs only. Corner
+ * alignment is a reasonable-effort match, not pixel-verified.
  */
 @Composable
 fun OrigamiSplashScreen(onFinished: () -> Unit) {

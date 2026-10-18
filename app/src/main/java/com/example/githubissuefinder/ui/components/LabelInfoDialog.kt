@@ -14,16 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.IssueLabelFilter
 
 /**
- * Shared "what do these tags mean?" dialog, explaining "good first
- * issue" and "help wanted." Used by both Feed (v0.23) and the
- * repo-scoped RepoIssuesScreen (v0.38) — extracted here so both
- * screens show identical wording from one source, same reasoning as
- * LanguageFilterRow's (v0.27) and LabelFilterRow's (v0.38) extraction.
- *
- * Per-label wording now reads from IssueLabelFilter.description
- * directly rather than its own copy — IssueModeGateScreen's expanding
- * mode cards need that exact same wording, and keeping it in one place
- * on the enum means this dialog and those cards can't drift apart.
+ * The "what do these tags mean?" dialog for "good first issue" and "help wanted". The wording comes
+ * from IssueLabelFilter.description, shared with the gate screen's cards so they cannot drift apart.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
