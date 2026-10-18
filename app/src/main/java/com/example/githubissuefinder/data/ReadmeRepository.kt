@@ -43,14 +43,9 @@ fun interface ReadmeApi {
 }
 
 /**
- * GitHub's Contents API (GET /repos/{owner}/{repo}/readme), run off the
- * main thread. A different API and quota (5,000/hour authenticated)
- * from the Search API everything else uses, which is why README
- * fetches are deliberately NOT counted by IssueSearchRepository.rateLimit.
- *
- * This is the only place in the app that talks to GitHub for README
- * text: the README screen and the repo-card previews both go through
- * ReadmeRepository, which uses this.
+ * GitHub's Contents API (GET /repos/{owner}/{repo}/readme), run off the main thread. A different
+ * API and quota from search, so README fetches are deliberately not counted by
+ * IssueSearchRepository.rateLimit.
  */
 class GitHubReadmeApi(private val service: GitHubApiService) : ReadmeApi {
     override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
@@ -61,20 +56,11 @@ class GitHubReadmeApi(private val service: GitHubApiService) : ReadmeApi {
 }
 
 /**
- * The single place the app fetches a repo's README, and the first piece
- * of the data layer between ViewModels and the network (Group B of the
- * MVVM sweep). Before this, RepoReadmeViewModel and the README snippet
- * source each made the request and decoded the response themselves.
- *
- * Why a repository: it turns "an HTTP response" into a [ReadmeResult]
- * the callers can simply switch on, keeps the rules in one place (no
- * token means no request; a 404 is "no README", not an error; a body
- * that can't be decoded is its own outcome), and lets those rules be
- * unit-tested without a network.
- *
- * [hasToken] and [decode] are parameters so a test can control them:
- * the real base64 decoding uses android.util.Base64, which isn't
- * available in plain JVM unit tests.
+ * The single place the app fetches a repo's README. It turns an HTTP response into a
+ * [ReadmeResult] callers can switch on, and keeps the rules in one place: no token means no
+ * request, a 404 is "no README" and not an error, and an undecodable body is its own outcome.
+ * [hasToken] and [decode] are parameters so a test can control them; the real base64 decoding
+ * uses android.util.Base64, which plain JVM tests do not have.
  */
 class ReadmeRepository(
     private val api: ReadmeApi,

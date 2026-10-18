@@ -1,15 +1,9 @@
 package com.example.githubissuefinder.model
 
 /**
- * v0.51 ("Hide Issue", Part C of the Cache-Preserving Refresh sequence):
- * a minimal, standalone snapshot of a hidden issue — NOT the full Issue
- * model. Kept deliberately small (just enough to list and re-open the
- * issue later) so the Hidden list can still show and open an issue even
- * after its RepoIssueGroupRepository entry is gone entirely (e.g. after
- * Clear Cache, which does NOT touch this store — see HiddenIssuesRepository).
- *
- * Keyed by GitHub's own issue id wherever it's stored — globally
- * unique, so no repo-scoping is needed on the key itself.
+ * A minimal snapshot of a hidden issue, not the full Issue: just enough to list and re-open it, so
+ * the Hidden list still works after the issue's cache entry is gone (Clear Cache does not touch
+ * hidden issues). Keyed by GitHub's issue id, which is globally unique.
  */
 data class HiddenIssue(
     val id: Long,

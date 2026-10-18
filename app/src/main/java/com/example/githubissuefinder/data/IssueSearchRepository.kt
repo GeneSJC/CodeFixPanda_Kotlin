@@ -103,26 +103,13 @@ fun repoIssuesQuery(repoFullName: String, mode: IssueLabelFilter): String =
     "repo:$repoFullName label:\"${mode.queryValue}\" state:open"
 
 /**
- * The single place the app searches GitHub for issues: Top Repos' list
- * (and its Load More and "Check for New Repos"), and a single repo's
- * refresh. Before this, the two ViewModels built their queries, called
- * the API, read the rate-limit headers and sorted out the error cases
- * separately — the same code in three places.
- *
- * Why a repository: it turns "an HTTP response" into an
- * [IssueSearchResult] the callers can simply switch on, keeps the rules
- * in one place (no token means no request; the rate-limit state is
- * refreshed from every successful search), and lets those rules be
- * unit-tested without a network.
- *
- * The rate-limit chip's numbers live here ([rateLimit]), updated from
- * the headers of every SUCCESSFUL search. A failed response doesn't
- * update them (it is only inspected to tell a rate-limit 403 apart from
- * other errors). They describe the credential's shared Search API quota,
- * not any particular search's results, which is why they are held by this
- * repository and not by a screen's state.
- *
- * [hasToken] is a parameter so a test can control it.
+ * The single place the app searches GitHub for issues: Top Repos' list (with Load More and Check
+ * for New Repos) and a single repo's refresh. It turns an HTTP response into an [IssueSearchResult]
+ * callers can switch on, and keeps the rules in one place (no token means no request). The
+ * rate-limit chip's numbers live here in [rateLimit], updated from the headers of every successful
+ * search; a failed response is only inspected to tell a rate-limit 403 from other errors. They
+ * describe the credential's shared Search API quota, not one search, which is why a repository
+ * holds them and not a screen. [hasToken] is a parameter so a test can control it.
  */
 class IssueSearchRepository(
     private val api: IssueSearchApi,

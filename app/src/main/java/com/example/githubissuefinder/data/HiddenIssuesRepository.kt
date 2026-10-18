@@ -28,20 +28,11 @@ interface HiddenIssuesStorage {
 }
 
 /**
- * A plain JSON file in the app's private storage — the pattern this
- * project uses for lists of real objects (see BookmarksRepository and
- * RepoIssueGroupRepository), as opposed to SharedPreferences, which it
- * reserves for single primitive values. The file name is unchanged from
- * the old HiddenIssuesStore, so issues a user already hid are still
- * there after this refactor.
- *
- * Writes happen on a single background thread, in order: the previous
- * code started a fresh Thread per write, so two quick changes could
- * finish out of order and leave the older list on disk. One
- * single-thread executor keeps them in the order they were made. A
- * failed write is swallowed on purpose: it never rolls back what the
- * user already saw change on screen, and matches every other store in
- * this app.
+ * A JSON file in private storage, the project's pattern for lists of objects (SharedPreferences
+ * is for single values). The file name is unchanged, so issues hidden before the refactor are
+ * still hidden. Writes run in order on one background thread, so two quick changes cannot land
+ * out of order. A failed write is swallowed on purpose: it never rolls back what the user already
+ * saw, like every other store.
  */
 class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssuesStorage {
 
@@ -74,27 +65,12 @@ class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssues
 }
 
 /**
- * The single owner of which issues the user has hidden. Hiding is a
- * display-time filter, never a deletion: RepoIssueGroupRepository keeps the
- * raw data exactly as GitHub returned it, and this repository only
- * tracks WHICH issue ids should be filtered out of what is shown, so
- * Unhide is free and instant as long as the issue is still cached.
- *
- * Replaces the old HiddenIssuesStore object, which held Compose state
- * and wrote to disk from calls that three screens made directly with a
- * Context. Persistence is now a data-layer concern: ViewModels ask this
- * class to hide or unhide and observe the result, and no screen knows
- * how or when anything is written.
- *
- * Why the three values are StateFlows, updated together in one place
- * ([publish]): the screens that filter lists need [hiddenIds], the
- * Hidden screen needs [hiddenIssues] (newest first), and keeping both
- * as read-only views of one source means they can never disagree with
- * each other or with what is saved. The private mutable / public
- * read-only pairs are the standard encapsulation — only this class can
- * change them.
- *
- * [clock] is a parameter so a test can control "when it was hidden".
+ * The single owner of which issues the user has hidden. Hiding is a display-time filter, never a
+ * deletion: the cached data stays as GitHub returned it and this tracks which ids to filter out,
+ * so Unhide is instant while the issue is still cached. [hiddenIds] and [hiddenIssues] (newest
+ * first) are read-only views of one source, updated together in [publish], so they cannot
+ * disagree with each other or with what is saved. [clock] is a parameter so a test can control
+ * "when it was hidden".
  */
 class HiddenIssuesRepository(
     private val storage: HiddenIssuesStorage,

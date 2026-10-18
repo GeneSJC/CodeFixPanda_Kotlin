@@ -17,22 +17,10 @@ import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
 /**
- * `android:configChanges` in the manifest (orientation/screenSize/
- * screenLayout/smallestScreenSize/keyboardHidden/uiMode) tells the
- * system NOT to destroy and recreate this Activity on rotation —
- * added after two real, confirmed-on-device bugs traced back to the
- * same root cause: without it, Android's default behavior fully
- * destroys and recreates the Activity on every rotation, which
- * (1) reset `showSplash` below back to `true` on every rotation,
- * replaying the start animation on an already-running app, not just
- * at real cold start, and (2) was the suspected cause of a white
- * screen the app couldn't be navigated out of after rotating into
- * landscape — likely some piece of state (Navigation Compose's own
- * back stack among the candidates) not surviving that
- * destroy/recreate cycle cleanly. With this flag set, Compose instead
- * just recomposes in place on a configuration change — which is
- * already exactly how TopReposScreen's own landscape detection
- * (LocalConfiguration.current.orientation) expects to work.
+ * The manifest's android:configChanges stops the system from recreating this Activity on rotation.
+ * Recreation reset `showSplash` (replaying the start animation on a running app) and was the
+ * suspected cause of a white screen after rotating to landscape. With it, Compose just recomposes
+ * in place, which is how TopReposScreen's landscape detection expects to work.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,16 +61,7 @@ class MainActivity : ComponentActivity() {
                         playFullAnimation = splashViewModel.playFullAnimation,
                     )
                 } else {
-                    // The Discover flow (option C from the architecture
-                    // discussion): a ranked Top Repos landing screen.
-                    // Tapping a repo opens a real repo-scoped issue list
-                    // (RepoIssuesScreen) with proper back-navigation, via
-                    // DiscoverNavHost. This was formerly one of two
-                    // landing experiences selectable via
-                    // BuildConfig.LANDING_EXPERIENCE — the other,
-                    // "classic" (AppNavHost/FeedTabsScreen/Bookmarks), was
-                    // removed once this flow became the sole supported
-                    // experience.
+                    // The Discover flow.
                     DiscoverNavHost()
                 }
             }

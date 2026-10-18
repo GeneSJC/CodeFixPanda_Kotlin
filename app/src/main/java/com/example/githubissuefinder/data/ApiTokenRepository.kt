@@ -53,14 +53,11 @@ interface ApiTokenStorage {
 }
 
 /**
- * Plain SharedPreferences, deliberately NOT encrypted. The file lives in
- * the app's private storage, which Android's sandbox keeps other apps
- * out of, and the token this app asks for needs no permissions at all —
- * it only reads public data — so the worst a leak could do is spend the
- * user's rate limit. The remaining real exposure is Android's backup
- * and device-transfer copies of app data, which is why
- * res/xml/backup_rules.xml and data_extraction_rules.xml exclude this
- * file by name ([PREFS_NAME]) — keep those in sync if it ever changes.
+ * Plain SharedPreferences, deliberately not encrypted: the file is in the app's private storage,
+ * and the token needs no permissions (it only reads public data), so the worst a leak could do is
+ * spend the user's rate limit. Backup and device-transfer copies are the remaining exposure, which
+ * is why res/xml/backup_rules.xml and data_extraction_rules.xml exclude this file by name
+ * ([PREFS_NAME]); keep them in sync if it changes.
  */
 class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
 
@@ -75,26 +72,12 @@ class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
 }
 
 /**
- * The single owner of the GitHub token the app talks to GitHub with. It
- * combines the build-time token (from local.properties, only available
- * to someone building from source) with one the user can enter in the
- * app, so a person who installs a built APK can still supply their own.
- *
- * Why a repository, in the data layer: persistence and the
- * "which token wins" rule are data-layer concerns. Settings and the
- * network client both go through this class; nothing else knows the
- * token is stored in SharedPreferences, or in what order the sources
- * are consulted.
- *
- * Why [effectiveToken] and [userToken] are StateFlows: the network
- * client reads the current value on every request, so a token saved in
- * Settings applies immediately without a rebuild, and ViewModels can
- * observe a change (for example, Top Repos reloading once a token is
- * finally supplied). The private mutable / public read-only pairs are
- * the standard encapsulation — only this class can change the values.
- *
- * Both StateFlows are updated together in [setUserToken], under one
- * function, so they can never disagree with each other or with storage.
+ * The single owner of the GitHub token. It combines the build-time token (from local.properties,
+ * only available to someone building from source) with one the user enters in the app, so a person
+ * who installs a built APK can supply their own; the user's token wins. [effectiveToken] and
+ * [userToken] are StateFlows: the network client reads the current value on every request, so a
+ * saved token applies without a rebuild, and ViewModels can react to a change. Both are updated
+ * together in [setUserToken], so they cannot disagree with each other or with storage.
  */
 class ApiTokenRepository(
     private val storage: ApiTokenStorage,

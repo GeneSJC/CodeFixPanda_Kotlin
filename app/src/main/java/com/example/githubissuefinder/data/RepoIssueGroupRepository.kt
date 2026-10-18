@@ -16,14 +16,8 @@ import kotlinx.coroutines.withContext
 private const val FILE_NAME = "repo_issue_group_cache.json"
 
 /**
- * One cached result: the repo groups Top Repos had loaded for a
- * (language, Issue Mode) pair, plus how far Load More had gotten
- * (currentPage / canLoadMore), so restoring it puts Top Repos back
- * exactly where it was and not just back to page 1.
- *
- * Moved out of the old RepoIssueGroupCache object; the JSON on disk is
- * identical (it is keyed by field name, not class name), so a cache
- * written before this refactor still loads.
+ * One cached result: the groups Top Repos had loaded for a (language, mode) pair, plus how far
+ * Load More had got, so restoring it puts Top Repos back where it was and not at page 1.
  */
 data class RepoIssueGroupCacheEntry(
     val repoGroups: List<RepoIssueGroup>,
@@ -93,31 +87,12 @@ class JsonFileRepoIssueGroupStorage(context: Context, moshi: Moshi) : RepoIssueG
 }
 
 /**
- * The single owner of Top Repos' persisted results, keyed by
- * (language, Issue Mode): switching back to a combination already
- * visited this install is instant and free (zero Search API calls)
- * instead of re-spending calls every time.
- *
- * Replaces the old RepoIssueGroupCache object, which every caller had to
- * hand a Context and call off the main thread themselves. Persistence is
- * now a data-layer concern: the repository does its own file work on
- * [ioDispatcher], so a ViewModel just calls a suspend function, and a
- * test can swap the storage and the dispatcher.
- *
- * CACHE-FIRST, NEVER AUTO-REFRESHED: a cache hit is shown as-is with no
- * background re-fetch to "freshen" it — doing that would quietly spend
- * the exact calls this cache exists to avoid, on every visit. Getting
- * live data again is always an explicit, visible choice (see
- * TopReposStateHolder.checkForNewRepos()).
- *
- * Built after pagination, on purpose: an earlier draft was discarded
- * once Load More landed (this project's "stale means rebuild, not
- * patch" rule), because pagination changes what "the result for a
- * (language, mode) pair" even means — an accumulated, multi-page set.
- *
- * Why the mutex: saving and replacing are read-modify-write over one
- * combined file, so two overlapping calls could otherwise overwrite each
- * other's change.
+ * The single owner of Top Repos' persisted results, keyed by (language, mode): returning to a
+ * combination already visited is instant and costs no Search API calls. Cache-first and never
+ * auto-refreshed, since a background refresh would spend the calls this cache exists to save;
+ * fresh data is an explicit choice (see TopReposStateHolder.checkForNewRepos()). File work runs
+ * on [ioDispatcher], so a caller just calls a suspend function. The mutex guards the
+ * read-modify-write over the one combined file, so overlapping calls cannot overwrite each other.
  */
 class RepoIssueGroupRepository(
     private val storage: RepoIssueGroupStorage,
