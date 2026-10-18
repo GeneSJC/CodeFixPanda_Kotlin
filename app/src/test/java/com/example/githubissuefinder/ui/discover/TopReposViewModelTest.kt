@@ -28,9 +28,9 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * TopReposViewModel over the real TopReposService (built on fakes and
- * installed as the app-wide instance for each test). What the service
- * decides is covered in TopReposServiceTest; this covers what the
+ * TopReposViewModel over the real TopReposStateHolder (built on fakes and
+ * installed as the app-wide instance for each test). What the state holder
+ * decides is covered in TopReposStateHolderTest; this covers what the
  * ViewModel adds: the message text, the forwarding of actions, and the
  * pass-throughs for the repo cards.
  */
@@ -47,9 +47,9 @@ class TopReposViewModelTest {
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
 
-    /** A ViewModel whose service is the one built over [f]'s fakes. */
+    /** A ViewModel whose state holder is the one built over [f]'s fakes. */
     private fun viewModel(f: ViewModelFixtures, config: AppConfigRepository = AppConfigRepository.instance): TopReposViewModel {
-        f.installTopReposService()
+        f.installTopReposStateHolder()
         f.installRepositories()
         return TopReposViewModel(f.snippetRepository, config)
     }
@@ -157,7 +157,7 @@ class TopReposViewModelTest {
     // ---- forwarding ----
 
     @Test
-    fun theModeAndLanguageSwitchesReachTheService() {
+    fun theModeAndLanguageSwitchesReachTheStateHolder() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
         val vm = viewModel(f)

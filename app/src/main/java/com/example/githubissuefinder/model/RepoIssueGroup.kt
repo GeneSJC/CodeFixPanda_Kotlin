@@ -4,7 +4,7 @@ package com.example.githubissuefinder.model
  * A repo, as the repo-first Discover flow now builds it (v0.42): NOT a
  * fetched repository object at all — a group of Issue results that
  * happen to share the same parent repo. Replaces the old Repo model
- * entirely for this flow (see TopReposService's class comment for the
+ * entirely for this flow (see TopReposStateHolder's class comment for the
  * full reasoning on why the whole pipeline changed).
  *
  * Built purely by grouping a List<Issue> by repoFullName — every field
@@ -24,7 +24,7 @@ package com.example.githubissuefinder.model
  * here either.
  *
  * issues is deliberately the full List<Issue>, not just a count — see
- * RepoIssuesService, which uses this directly as the repo's issue
+ * RepoIssuesStateHolder, which uses this directly as the repo's issue
  * list for the currently active mode with ZERO additional network
  * calls, rather than re-fetching data this screen already fetched to
  * build the group in the first place.
@@ -36,6 +36,6 @@ data class RepoIssueGroup(
     val repoDisplayTitle: String,
     val issues: List<Issue>,
 ) {
-    /** Number of matching issues in THIS fetched batch — the ranking signal for v0.42 (see TopReposService). */
+    /** Number of matching issues in THIS fetched batch — the ranking signal for v0.42 (see TopReposStateHolder). */
     val matchCount: Int get() = issues.size
 }

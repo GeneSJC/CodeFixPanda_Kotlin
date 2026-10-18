@@ -6,8 +6,8 @@ import com.example.githubissuefinder.data.TopReposState
 import com.example.githubissuefinder.data.formatRelativeTime
 
 /**
- * Turns TopReposService's facts into what TopReposScreen shows. The
- * service reports what happened (HTTP 401, no network, a rate limit);
+ * Turns TopReposStateHolder's facts into what TopReposScreen shows. The
+ * state holder reports what happened (HTTP 401, no network, a rate limit);
  * the wording the user reads lives here, so it can change without
  * touching the data layer. Plain functions with no Android dependency,
  * so they are unit-tested directly.

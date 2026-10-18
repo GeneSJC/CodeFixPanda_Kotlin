@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The Top Repos data state: everything the screen's list is built from,
- * and nothing about how it is shown. TopReposService is the one place it
+ * and nothing about how it is shown. TopReposStateHolder is the one place it
  * lives and changes; TopReposViewModel maps it to TopReposUiState (which
  * adds the message text).
  */
@@ -77,7 +77,7 @@ sealed interface TopReposEvent {
 }
 
 /**
- * The service layer for the Top Repos list: the one place the list's
+ * The state holder for the Top Repos list: the one place the list's
  * data state lives, and the owner of all the logic that changes it.
  * TopReposViewModel does not hold or change this state; it maps it to
  * what the screen shows and forwards the user's actions here.
@@ -142,7 +142,7 @@ sealed interface TopReposEvent {
  * Tests build their own instance with fakes and install it with
  * [replaceInstanceForTests].
  */
-class TopReposService(
+class TopReposStateHolder(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val tokenRepository: ApiTokenRepository = ApiTokenRepository.instance,
     private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
@@ -363,9 +363,9 @@ class TopReposService(
      * disappears entirely, if it had zero open issues left) here too,
      * without a second network call.
      *
-     * RepoIssuesService and this service have no direct handle to each
-     * other, so RepoIssuesService writes straight to
-     * RepoIssueGroupRepository, the same persistence layer this service
+     * RepoIssuesStateHolder and this state holder have no direct handle to each
+     * other, so RepoIssuesStateHolder writes straight to
+     * RepoIssueGroupRepository, the same persistence layer this state holder
      * reads from and writes to, and this function pulls that change back
      * into the held state.
      *
@@ -570,21 +570,21 @@ class TopReposService(
 
     companion object {
         @Volatile
-        private var installed: TopReposService? = null
+        private var installed: TopReposStateHolder? = null
 
-        /** The app-wide service, built from the real repositories on first use. */
-        val instance: TopReposService
+        /** The app-wide state holder, built from the real repositories on first use. */
+        val instance: TopReposStateHolder
             get() = installed ?: synchronized(this) {
-                installed ?: TopReposService().also { installed = it }
+                installed ?: TopReposStateHolder().also { installed = it }
             }
 
         /**
-         * For tests only: installs [service] as the instance (or, with
+         * For tests only: installs [stateHolder] as the instance (or, with
          * null, drops it so the next access builds a fresh real one).
          * Tests call this in setup, and with null in teardown.
          */
-        fun replaceInstanceForTests(service: TopReposService?) {
-            installed = service
+        fun replaceInstanceForTests(stateHolder: TopReposStateHolder?) {
+            installed = stateHolder
         }
     }
 }

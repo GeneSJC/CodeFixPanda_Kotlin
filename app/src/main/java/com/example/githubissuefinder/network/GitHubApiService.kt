@@ -18,7 +18,7 @@ import retrofit2.http.Query
  * — the repo-first Discover flow no longer queries GitHub's repository
  * search at all. It now builds its repo list entirely by grouping
  * searchIssues results by their parent repo (see RepoIssueGroup.kt and
- * TopReposService's class comment for the full reasoning). Nothing
+ * TopReposStateHolder's class comment for the full reasoning). Nothing
  * else in this codebase called searchRepositories — confirmed before
  * removing it, not assumed.
  *

@@ -15,18 +15,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * RepoIssuesService against fakes: the real service over real
+ * RepoIssuesStateHolder against fakes: the real state holder over real
  * repositories whose storage and GitHub API are in-memory fakes, doing
  * its work immediately on the calling thread. The wording the user reads
  * is covered in RepoIssuesUiMappingTest and RepoIssuesViewModelTest.
  */
-class RepoIssuesServiceTest {
+class RepoIssuesStateHolderTest {
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
 
-    /** The service from [f], opened the way constructing the ViewModel opens it. */
-    private fun opened(f: ViewModelFixtures): RepoIssuesService = f.repoIssuesService.also { it.open() }
+    /** The state holder from [f], opened the way constructing the ViewModel opens it. */
+    private fun opened(f: ViewModelFixtures): RepoIssuesStateHolder = f.repoIssuesStateHolder.also { it.open() }
 
     private fun cacheWith(f: ViewModelFixtures, vararg groups: RepoIssueGroup) {
         f.cacheStorage.data = mapOf(
@@ -36,40 +36,40 @@ class RepoIssuesServiceTest {
 
     @Test
     fun loadingAGroupHoldsItsIssues() {
-        val service = opened(ViewModelFixtures())
+        val stateHolder = opened(ViewModelFixtures())
         val group = repoGroupOf("octo", "repo", 1, 2)
 
-        service.loadIfNeeded(group)
+        stateHolder.loadIfNeeded(group)
 
-        assertEquals(group.issues, service.state.value.issues)
+        assertEquals(group.issues, stateHolder.state.value.issues)
     }
 
     @Test
     fun loadingTheSameRepoAgainDoesNotReassignTheIssues() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2), issueDto(3))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         val group = repoGroupOf("octo", "repo", 1)
-        service.loadIfNeeded(group)
-        service.refreshThisRepo(group, kotlin)
+        stateHolder.loadIfNeeded(group)
+        stateHolder.refreshThisRepo(group, kotlin)
 
-        service.loadIfNeeded(group)
+        stateHolder.loadIfNeeded(group)
 
         // The refreshed list is kept, not reset to the group's original issues.
-        assertEquals(3, service.state.value.issues.size)
+        assertEquals(3, stateHolder.state.value.issues.size)
     }
 
     @Test
     fun refreshingFetchesTheReposIssuesAndHoldsThem() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2), issueDto(3))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         val group = repoGroupOf("octo", "repo", 1)
-        service.loadIfNeeded(group)
+        stateHolder.loadIfNeeded(group)
 
-        service.refreshThisRepo(group, kotlin)
+        stateHolder.refreshThisRepo(group, kotlin)
 
-        val state = service.state.value
+        val state = stateHolder.state.value
         assertEquals(listOf(1L, 2L, 3L), state.issues.map { it.id })
         assertTrue(state.hasRefreshed)
         assertFalse(state.isRefreshing)
@@ -83,9 +83,9 @@ class RepoIssuesServiceTest {
         val group = repoGroupOf("octo", "repo", 1)
         cacheWith(f, group, repoGroupOf("other", "thing", 9))
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2), issueDto(3))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.refreshThisRepo(group, kotlin)
+        stateHolder.refreshThisRepo(group, kotlin)
 
         val entry = f.cacheStorage.data.getValue(cacheKeyFor(kotlin, gfi))
         assertEquals(3, entry.repoGroups.first { it.repoFullName == "octo/repo" }.issues.size)
@@ -100,25 +100,25 @@ class RepoIssuesServiceTest {
         val group = repoGroupOf("octo", "repo", 1)
         cacheWith(f, group, repoGroupOf("other", "thing", 9))
         f.api.handler = { _, _, _ -> searchOk(emptyList()) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.refreshThisRepo(group, kotlin)
+        stateHolder.refreshThisRepo(group, kotlin)
 
         assertEquals(listOf("other/thing"), f.cacheStorage.data.getValue(cacheKeyFor(kotlin, gfi)).repoGroups.map { it.repoFullName })
-        assertTrue(service.state.value.issues.isEmpty())
+        assertTrue(stateHolder.state.value.issues.isEmpty())
     }
 
     @Test
     fun anErrorResponseKeepsItsCodeAndLeavesTheIssuesAlone() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchFailed(500) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         val group = repoGroupOf("octo", "repo", 1, 2)
-        service.loadIfNeeded(group)
+        stateHolder.loadIfNeeded(group)
 
-        service.refreshThisRepo(group, kotlin)
+        stateHolder.refreshThisRepo(group, kotlin)
 
-        val state = service.state.value
+        val state = stateHolder.state.value
         assertEquals(SearchFailure.Http(500), state.refreshFailure)
         assertFalse(state.isRefreshing)
         assertEquals(group.issues, state.issues)
@@ -128,40 +128,40 @@ class RepoIssuesServiceTest {
     fun aFailedRequestKeepsWhatWentWrong() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> throw java.io.IOException("no network") }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
+        stateHolder.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
 
-        assertEquals(SearchFailure.Failed("no network"), service.state.value.refreshFailure)
-        assertFalse(service.state.value.isRefreshing)
+        assertEquals(SearchFailure.Failed("no network"), stateHolder.state.value.refreshFailure)
+        assertFalse(stateHolder.state.value.isRefreshing)
     }
 
     @Test
     fun withoutATokenRefreshingDoesNothing() {
         val f = ViewModelFixtures(buildToken = "")
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
+        stateHolder.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
 
         assertTrue(f.api.calls.isEmpty())
-        assertFalse(service.state.value.isRefreshing)
+        assertFalse(stateHolder.state.value.isRefreshing)
     }
 
     @Test
     fun openingAgainStartsAFreshVisitWithNothingLeftOver() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         val group = repoGroupOf("octo", "repo", 1)
-        service.loadIfNeeded(group)
-        service.refreshThisRepo(group, kotlin)
-        assertTrue(service.state.value.hasRefreshed)
+        stateHolder.loadIfNeeded(group)
+        stateHolder.refreshThisRepo(group, kotlin)
+        assertTrue(stateHolder.state.value.hasRefreshed)
 
-        service.open()
+        stateHolder.open()
 
-        assertEquals(RepoIssuesState(), service.state.value)
+        assertEquals(RepoIssuesState(), stateHolder.state.value)
         // The same repo can be loaded again after a fresh visit.
-        service.loadIfNeeded(group)
-        assertEquals(group.issues, service.state.value.issues)
+        stateHolder.loadIfNeeded(group)
+        assertEquals(group.issues, stateHolder.state.value.issues)
     }
 }

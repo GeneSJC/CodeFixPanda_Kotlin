@@ -4,7 +4,7 @@ import com.example.githubissuefinder.data.RepoIssuesState
 import com.example.githubissuefinder.data.SearchFailure
 
 /**
- * Turns RepoIssuesService's facts into what RepoIssuesScreen shows: the
+ * Turns RepoIssuesStateHolder's facts into what RepoIssuesScreen shows: the
  * wording lives here, so it can change without touching the data layer.
  * Plain functions, unit-tested directly.
  */

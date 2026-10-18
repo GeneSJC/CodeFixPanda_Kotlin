@@ -2,7 +2,7 @@ package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.HiddenIssuesRepository
-import com.example.githubissuefinder.data.RepoIssuesService
+import com.example.githubissuefinder.data.RepoIssuesStateHolder
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
@@ -21,41 +21,41 @@ import kotlinx.coroutines.flow.stateIn
  * The data state itself, the logic that loads and refreshes it, and the
  * long design history of this screen (why it makes no network call until
  * the user asks, the "Refresh this repo" write-back to the Top Repos
- * cache) all live in RepoIssuesService. This class holds none of that
- * state: [uiState] is the service's state with the message text added
+ * cache) all live in RepoIssuesStateHolder. This class holds none of that
+ * state: [uiState] is the state holder's state with the message text added
  * (see RepoIssuesUiMapping.kt).
  *
  * Constructing this class starts a fresh visit to the screen
- * (RepoIssuesService.open()), as constructing it has always meant.
+ * (RepoIssuesStateHolder.open()), as constructing it has always meant.
  *
- * The service and the hidden-issue repository are plain members, the
+ * The state holder and the hidden-issue repository are plain members, the
  * app-wide instances; tests install their own with
- * RepoIssuesService.replaceInstanceForTests() and
+ * RepoIssuesStateHolder.replaceInstanceForTests() and
  * HiddenIssuesRepository.replaceInstanceForTests(). The hidden ids, the
  * bookmarked ids and the bookmark toggle come from BaseViewModel.
  */
 class RepoIssuesViewModel : BaseViewModel() {
 
-    private val service = RepoIssuesService.instance
+    private val stateHolder = RepoIssuesStateHolder.instance
 
     /** The hidden-issue repository, for hiding and unhiding. The hidden ids themselves come from BaseViewModel. */
     private val hiddenIssuesRepository = HiddenIssuesRepository.instance
 
     init {
-        service.open()
+        stateHolder.open()
     }
 
-    val uiState: StateFlow<RepoIssuesUiState> = service.state
+    val uiState: StateFlow<RepoIssuesUiState> = stateHolder.state
         .map { it.toUiState() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, service.state.value.toUiState())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState())
 
     /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
-    val mode: StateFlow<IssueLabelFilter?> = service.mode
+    val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode
 
-    fun loadIfNeeded(repoGroup: RepoIssueGroup) = service.loadIfNeeded(repoGroup)
+    fun loadIfNeeded(repoGroup: RepoIssueGroup) = stateHolder.loadIfNeeded(repoGroup)
 
-    /** The one explicit, user-initiated fetch for this repo; see RepoIssuesService.refreshThisRepo(). */
-    fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) = service.refreshThisRepo(repoGroup, language)
+    /** The one explicit, user-initiated fetch for this repo; see RepoIssuesStateHolder.refreshThisRepo(). */
+    fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) = stateHolder.refreshThisRepo(repoGroup, language)
 
     fun hideIssue(issue: Issue) {
         hiddenIssuesRepository.hide(issue)

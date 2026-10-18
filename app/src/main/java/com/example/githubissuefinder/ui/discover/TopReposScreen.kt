@@ -98,7 +98,7 @@ import kotlinx.coroutines.flow.collect
  *
  * v0.42 ("the data-layer swap"): this screen no longer shows a ranked
  * list of REPOS — it shows repos as they fall out of grouping actual
- * matching ISSUES by their parent repo. See TopReposService and
+ * matching ISSUES by their parent repo. See TopReposStateHolder and
  * RepoIssueGroup's doc comments for the full reasoning. Concretely,
  * this means:
  *  - Each card shows a match count (RepoIssueGroup.matchCount),
@@ -120,7 +120,7 @@ import kotlinx.coroutines.flow.collect
  *    fact.
  *  - No more cooldown, no more blocked-switch Snackbar: switching
  *    language or mode is a single Search API call now, not ~21 — see
- *    TopReposService's class comment. SnackbarHost/SnackbarHostState
+ *    TopReposStateHolder's class comment. SnackbarHost/SnackbarHostState
  *    are removed from this screen entirely since nothing shows one
  *    anymore.
  *
@@ -166,7 +166,7 @@ import kotlinx.coroutines.flow.collect
  * inline retry row if it failed (the existing list stays exactly as
  * it was either way — only the footer changes), or a plain "that's
  * everything" line once GitHub genuinely has nothing further for this
- * query. See TopReposService's class comment for the cross-page
+ * query. See TopReposStateHolder's class comment for the cross-page
  * grouping/dedup this relies on — a repo whose matches span two pages
  * updates the SAME card here, it doesn't appear a second time.
  *
@@ -213,13 +213,13 @@ import kotlinx.coroutines.flow.collect
  * under the language filter row, driven by uiState.lastUpdatedAtMs —
  * the only visible sign, most of the time, that this screen might be
  * showing cached data rather than something just fetched (see
- * TopReposService and RepoIssueGroupRepository doc comments). Two more
+ * TopReposStateHolder and RepoIssueGroupRepository doc comments). Two more
  * hamburger-menu items sit above the mode-switch pair, grouped with
  * the animation items via their own divider: "Check for New Repos"
  * (renamed in v0.49 from "Refresh" — was a forced live fetch that
  * REPLACED the whole list with just its own results, silently
  * discarding whatever Load More had accumulated; now updates the list with fresh
- * results instead, see TopReposService.checkForNewRepos()'s doc
+ * results instead, see TopReposStateHolder.checkForNewRepos()'s doc
  * comment) and "Clear Cache" (wipes the ENTIRE persistent cache, not
  * just the active combination — see RepoIssueGroupRepository.clearAll()'s
  * doc comment for why that's a known, named limitation rather than an
@@ -452,7 +452,7 @@ fun TopReposScreen(
     // RepoIssuesScreen (which is exactly when it matters: a "Refresh
     // this repo" there writes straight to the cache, not to this
     // screen's own ViewModel, since the two have no direct handle to
-    // each other — see TopReposService.syncFromCache()'s own doc
+    // each other — see TopReposStateHolder.syncFromCache()'s own doc
     // comment). Also fires on this screen's very first appearance,
     // which is a harmless, cheap (local file, no network) re-read of
     // what init{}'s own load() just populated.

@@ -6,10 +6,10 @@ import kotlinx.coroutines.SupervisorJob
 
 /**
  * The one coroutine scope for work that has to outlive any single
- * screen: the services that hold app-level data state run their work
- * here. A ViewModel's scope ends with its screen, so a service cannot
- * use it; sharing one scope means there is a single app-level lifetime
- * to reason about, however many services there are.
+ * screen: the state holders that hold app-level data state run their work
+ * here. A ViewModel's scope ends with its screen, so a state holder cannot
+ * use it; sharing one scope means there is a single app-level lifetime to
+ * reason about, however many state holders there are.
  *
  * A SupervisorJob so one failed task does not cancel the others, and the
  * main dispatcher so state updates happen where the screen reads them
@@ -20,8 +20,8 @@ import kotlinx.coroutines.SupervisorJob
  * This is a plain object, not a scope created in an Application class,
  * because this app has no Application subclass and initializes its
  * repositories the same way (see MainActivity.onCreate). Tests do not
- * use it: a service takes its scope as an argument, and tests pass their
- * own.
+ * use it: a state holder takes its scope as an argument, and tests pass
+ * their own.
  */
 object AppScope {
     val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
