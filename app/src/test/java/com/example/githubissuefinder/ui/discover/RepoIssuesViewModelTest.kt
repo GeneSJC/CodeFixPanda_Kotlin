@@ -3,12 +3,12 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.testutil.MainDispatcherRule
+import com.example.githubissuefinder.testutil.StopKoinRule
 import com.example.githubissuefinder.testutil.ViewModelFixtures
 import com.example.githubissuefinder.testutil.issueDto
 import com.example.githubissuefinder.testutil.repoGroupOf
 import com.example.githubissuefinder.testutil.searchFailed
 import com.example.githubissuefinder.testutil.searchOk
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -17,8 +17,8 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * RepoIssuesViewModel over the real RepoIssuesStateHolder (built on fakes and
- * installed as the app-wide instance for each test). What the state holder
+ * RepoIssuesViewModel over the real RepoIssuesStateHolder (built on
+ * fakes). What the state holder
  * decides is covered in RepoIssuesStateHolderTest; this covers what the
  * ViewModel adds: the message text, the forwarding of actions, and the
  * hide and bookmark pass-throughs.
@@ -28,18 +28,12 @@ class RepoIssuesViewModelTest {
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
 
-    @After
-    fun tearDown() {
-        ViewModelFixtures.uninstall()
-    }
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val kotlin = LanguageFilter.KOTLIN
 
-    private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel {
-        f.installRepoIssuesStateHolder()
-        f.installRepositories()
-        return RepoIssuesViewModel()
-    }
+    private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel = f.repoIssuesViewModel()
 
     @Test
     fun loadingAGroupShowsItsIssues() {

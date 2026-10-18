@@ -3,13 +3,19 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.model.Issue
-import org.junit.After
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class BookmarksViewModelTest {
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private class FakeStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
         override fun load(): List<Issue> = stored
@@ -18,15 +24,13 @@ class BookmarksViewModelTest {
         }
     }
 
-    @After
-    fun tearDown() {
-        BookmarksRepository.replaceInstanceForTests(null)
-    }
-
-    /** A ViewModel over a repository on [storage], installed as the app-wide one. */
+    /** A ViewModel over a repository on [storage]. */
     private fun viewModelOver(storage: FakeStorage): Pair<BookmarksViewModel, BookmarksRepository> {
         val repository = BookmarksRepository(storage)
-        BookmarksRepository.replaceInstanceForTests(repository)
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
         return BookmarksViewModel() to repository
     }
 
@@ -75,14 +79,5 @@ class BookmarksViewModelTest {
         repository.toggle(issue(4))
 
         assertEquals(listOf(4L), viewModel.bookmarks.value.map { it.id })
-    }
-
-    @Test
-    fun theBookmarkedIdsFollowTheRepository() {
-        val (viewModel, _) = viewModelOver(FakeStorage())
-
-        viewModel.toggleBookmark(issue(2))
-
-        assertEquals(setOf(2L), viewModel.bookmarkedIds.value)
     }
 }

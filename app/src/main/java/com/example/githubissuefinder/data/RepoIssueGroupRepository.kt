@@ -4,7 +4,7 @@ import android.content.Context
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.network.GitHubApiClient
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
@@ -59,13 +59,13 @@ interface RepoIssueGroupStorage {
  * and cheap at this size (a handful of language/mode combinations). A
  * JSON file and not Room, the same "avoid new persistence
  * infrastructure for a small, single-purpose cache" choice made before.
- * Uses GitHubApiClient.moshi rather than building a second Moshi.
+ * Takes the app-wide Moshi rather than building a second one.
  */
-class JsonFileRepoIssueGroupStorage(context: Context) : RepoIssueGroupStorage {
+class JsonFileRepoIssueGroupStorage(context: Context, moshi: Moshi) : RepoIssueGroupStorage {
 
     private val file = File(context.applicationContext.filesDir, FILE_NAME)
     private val adapter by lazy {
-        GitHubApiClient.moshi.adapter<Map<String, RepoIssueGroupCacheEntry>>(
+        moshi.adapter<Map<String, RepoIssueGroupCacheEntry>>(
             Types.newParameterizedType(Map::class.java, String::class.java, RepoIssueGroupCacheEntry::class.java),
         )
     }
@@ -190,30 +190,6 @@ class RepoIssueGroupRepository(
     suspend fun clearAll() {
         withContext(ioDispatcher) {
             lock.withLock { storage.clear() }
-        }
-    }
-
-    companion object {
-        @Volatile
-        private var _instance: RepoIssueGroupRepository? = null
-
-        /**
-         * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as the other repositories (this project has no DI
-         * framework yet). ViewModels take the repository as a
-         * constructor argument defaulting to this so tests can pass
-         * their own.
-         */
-        val instance: RepoIssueGroupRepository
-            get() = checkNotNull(_instance) {
-                "RepoIssueGroupRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /** Safe to call more than once: only the first call constructs the instance. */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = RepoIssueGroupRepository(JsonFileRepoIssueGroupStorage(context))
         }
     }
 }

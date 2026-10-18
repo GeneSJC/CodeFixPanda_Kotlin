@@ -1,8 +1,8 @@
 package com.example.githubissuefinder.ui.splash
 
-import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.BaseViewModel
+import org.koin.core.component.inject
 
 /**
  * Decides, once per launch, whether the start splash is the full
@@ -17,15 +17,12 @@ import com.example.githubissuefinder.ui.BaseViewModel
  * lifetime keeps one launch's splash consistent.
  *
  * Scoped to the Activity (obtained with viewModel() from MainActivity's
- * root composition). The repository is a constructor argument defaulting
- * to the app-wide instance so tests can pass one over a fake storage; a
- * ViewModel whose constructor arguments all have defaults still has the
- * no-argument constructor the default factory needs.
+ * root composition). The repository is a plain member that Koin supplies;
+ * a test registers one over a fake storage.
  */
-class StartupSplashViewModel(
-    private val repository: StartupSplashRepository = StartupSplashRepository.instance,
-    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
-) : BaseViewModel(appConfigRepository) {
+class StartupSplashViewModel : BaseViewModel() {
+
+    private val repository: StartupSplashRepository by inject()
 
     val playFullAnimation: Boolean = !repository.hasSeenFullAnimation
 

@@ -3,11 +3,18 @@ package com.example.githubissuefinder.ui.settings
 import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.ApiTokenStorage
 import com.example.githubissuefinder.data.TokenSource
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class ApiTokenViewModelTest {
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private class FakeStorage(var stored: String? = null) : ApiTokenStorage {
         override fun load(): String? = stored
@@ -16,8 +23,14 @@ class ApiTokenViewModelTest {
         }
     }
 
-    private fun viewModel(storage: FakeStorage = FakeStorage(), buildToken: String = "") =
-        ApiTokenViewModel(ApiTokenRepository(storage, buildToken))
+    private fun viewModel(storage: FakeStorage = FakeStorage(), buildToken: String = ""): ApiTokenViewModel {
+        val repository = ApiTokenRepository(storage, buildToken)
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return ApiTokenViewModel()
+    }
 
     @Test
     fun startsEmptyWithNoSourceWhenNothingIsConfigured() {

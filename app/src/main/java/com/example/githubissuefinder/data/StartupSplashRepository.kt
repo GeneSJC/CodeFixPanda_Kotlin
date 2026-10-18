@@ -61,22 +61,4 @@ class StartupSplashRepository(private val storage: StartupSplashStorage) {
     fun markFullAnimationSeen() {
         storage.markFullAnimationSeen()
     }
-
-    companion object {
-        @Volatile
-        private var _instance: StartupSplashRepository? = null
-
-        /** The app-wide instance — same plain-singleton-with-init(context) pattern as IssueModeRepository (this project has no DI framework yet). */
-        val instance: StartupSplashRepository
-            get() = checkNotNull(_instance) {
-                "StartupSplashRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /** Safe to call more than once: only the first call constructs the instance. */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = StartupSplashRepository(SharedPreferencesStartupSplashStorage(context))
-        }
-    }
 }

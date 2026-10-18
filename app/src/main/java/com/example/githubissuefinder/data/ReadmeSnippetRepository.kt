@@ -36,7 +36,7 @@ fun interface ReadmeSource {
  * outcome into what the snippet cache needs (see [toReadmeFetch]).
  */
 class GitHubReadmeSource(
-    private val repository: ReadmeRepository = ReadmeRepository.instance,
+    private val repository: ReadmeRepository,
 ) : ReadmeSource {
     override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch =
         repository.fetch(repoOwner, repoName).toReadmeFetch()
@@ -126,11 +126,6 @@ class ReadmeSnippetRepository(private val source: ReadmeSource) {
             // away mid-load) — leaves the repo eligible for a later retry.
             if (!resolved) inFlightOrLoaded.remove(repoFullName)
         }
-    }
-
-    companion object {
-        /** The app-wide instance. Needs no Context, so no init call is required. */
-        val instance: ReadmeSnippetRepository by lazy { ReadmeSnippetRepository(GitHubReadmeSource()) }
     }
 }
 

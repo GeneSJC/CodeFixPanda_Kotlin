@@ -660,7 +660,7 @@ fun TopReposScreen(
                         // it, since the title bar had no stable reserved
                         // space for it. Tapping it opens RateLimitDialog
                         // normally, EXCEPT when there's a token problem —
-                        // none configured at all (GitHubApiClient.hasToken
+                        // none configured at all (the hasToken flow is
                         // false) or one configured but rejected by GitHub
                         // (uiState.tokenRejected, a 401 response) — in
                         // either case "No rate limit data available yet."
@@ -1207,7 +1207,7 @@ private fun NoTokenMessage(onOpenSettings: () -> Unit) {
 
 /**
  * Shown instead of RateLimitDialog when there's a token problem —
- * either GitHubApiClient.hasToken is false (nothing configured at all)
+ * either hasToken is false (nothing configured at all)
  * or a configured token is being rejected by GitHub (tokenRejected,
  * true only once a live search has actually come back with an HTTP 401
  * — GitHub's own signal for bad/expired/revoked credentials, distinct

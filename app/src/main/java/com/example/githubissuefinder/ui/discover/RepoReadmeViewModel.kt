@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 
 /**
  * Loads a repo's README for the README screen. The request, the token
@@ -18,10 +19,8 @@ import kotlinx.coroutines.launch
  * this screen). This ViewModel only maps what the repository reports to
  * the screen's state (RepoReadmeUiState.toUiState()).
  *
- * The repository is a constructor argument defaulting to the app-wide
- * instance so a test can pass one over a fake; a ViewModel whose
- * constructor arguments all have defaults still has the no-argument
- * constructor the default factory needs. loadedFor* dedup guard follows
+ * The repository is a plain member that Koin supplies, so a test can
+ * register one over a fake. loadedFor* dedup guard follows
  * RepoIssuesViewModel's pattern, so navigating away and back within the
  * same process doesn't redundantly refetch.
  *
@@ -29,9 +28,9 @@ import kotlinx.coroutines.launch
  * WebView, per direct instruction) lives in RepoReadmeScreen; this
  * ViewModel only ever hands it a plain markdown String.
  */
-class RepoReadmeViewModel(
-    private val repository: ReadmeRepository = ReadmeRepository.instance,
-) : BaseViewModel() {
+class RepoReadmeViewModel : BaseViewModel() {
+
+    private val repository: ReadmeRepository by inject()
 
     private val _uiState = MutableStateFlow(RepoReadmeUiState())
     val uiState: StateFlow<RepoReadmeUiState> = _uiState.asStateFlow()

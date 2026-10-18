@@ -10,12 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
-import com.example.githubissuefinder.data.IssueModeRepository
-import com.example.githubissuefinder.data.BookmarksRepository
-import com.example.githubissuefinder.data.RepoIssueGroupRepository
-import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueModeViewModel
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
@@ -44,26 +38,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // v0.44: restore any previously-chosen Issue Mode BEFORE
-        // setContent, so it's already in place by the time
-        // DiscoverNavHost computes its startDestination on first
-        // composition — see IssueModeRepository's own doc comment.
-        IssueModeRepository.init(this)
-        // The GitHub token (user-entered, falling back to the build-time
-        // one) — must exist before anything touches GitHubApiClient.
-        ApiTokenRepository.init(this)
-        // v0.48: same reasoning, for the repo-first flow's persisted
-        // bookmarks — see BookmarksRepository's own doc comment.
-        BookmarksRepository.init(this)
-        // Top Repos' persisted results (language + mode keyed) — see RepoIssueGroupRepository.
-        RepoIssueGroupRepository.init(this)
-        // v0.51: same reasoning, for the repo-first flow's persisted
-        // hidden-issue repository — see HiddenIssuesRepository's own doc
-        // comment.
-        HiddenIssuesRepository.init(this)
-        // Whether this device has already seen the full start animation —
-        // same reasoning, see StartupSplashViewModel.
-        StartupSplashRepository.init(this)
         setContent {
             // App-wide Issue Mode (v0.41): observed through
             // IssueModeViewModel at this single root theme call, which

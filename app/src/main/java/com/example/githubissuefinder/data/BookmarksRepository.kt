@@ -2,7 +2,7 @@ package com.example.githubissuefinder.data
 
 import android.content.Context
 import com.example.githubissuefinder.model.Issue
-import com.example.githubissuefinder.network.GitHubApiClient
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import java.io.File
 import java.util.concurrent.Executors
@@ -38,12 +38,12 @@ interface BookmarksStorage {
  * on purpose: it never rolls back the toggle the user already saw
  * happen, matching every other store in this app.
  */
-class JsonFileBookmarksStorage(context: Context) : BookmarksStorage {
+class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorage {
 
     private val file = File(context.applicationContext.filesDir, FILE_NAME)
     private val writer = Executors.newSingleThreadExecutor()
     private val adapter by lazy {
-        GitHubApiClient.moshi.adapter<List<Issue>>(
+        moshi.adapter<List<Issue>>(
             Types.newParameterizedType(List::class.java, Issue::class.java),
         )
     }
@@ -123,34 +123,5 @@ class BookmarksRepository(private val storage: BookmarksStorage) {
         _bookmarkedIds.value = newState.keys.toSet()
         _bookmarks.value = newState.values.toList()
         storage.save(newState.values.toList())
-    }
-
-    companion object {
-        @Volatile
-        private var _instance: BookmarksRepository? = null
-
-        /**
-         * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as the other repositories (this project has no DI
-         * framework yet). ViewModels use it as a plain member (or through
-         * BaseViewModel); tests install their own with
-         * [replaceInstanceForTests].
-         */
-        val instance: BookmarksRepository
-            get() = checkNotNull(_instance) {
-                "BookmarksRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /** For tests only: installs [repository] as the instance, or with null drops it. Pair a call in setup with a null call in teardown. */
-        fun replaceInstanceForTests(repository: BookmarksRepository?) {
-            _instance = repository
-        }
-
-        /** Safe to call more than once: only the first call constructs the instance. */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = BookmarksRepository(JsonFileBookmarksStorage(context))
-        }
     }
 }
