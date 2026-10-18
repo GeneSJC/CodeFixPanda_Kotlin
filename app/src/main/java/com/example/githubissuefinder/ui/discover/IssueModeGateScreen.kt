@@ -19,12 +19,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +57,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     GitHubIssueFinderTheme(issueMode = null) {
         Scaffold(
             topBar = {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Text("GitHub Issue Finder", style = MaterialTheme.typography.titleLarge)
                     },
@@ -65,7 +65,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             },
         ) { padding ->
             Box(
-                modifier = Modifier.padding(padding).fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 8.dp),
+                modifier = Modifier.padding(padding).fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 16.dp),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -75,11 +75,20 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                         textAlign = TextAlign.Center,
                     )
                     Text(
-                        "What kind of issues would you like to look at? Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "What kind of issues would you like to look at?",
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                    Text(
+                        "Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize * 1.5f,
+                            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5f,
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 28.dp),
+                        modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         IssueLabelFilter.entries.forEach { mode ->
@@ -110,6 +119,13 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // The icon sits beside the button on the card, not inside it, so it can later
+                // become a per-mode icon without touching the button.
+                Text(
+                    mode.glyph,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(end = 12.dp),
+                )
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
@@ -119,12 +135,6 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            mode.glyph,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
                         Text(
                             mode.displayName,
                             style = MaterialTheme.typography.titleMedium,
