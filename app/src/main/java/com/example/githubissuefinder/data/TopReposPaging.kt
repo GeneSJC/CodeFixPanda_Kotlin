@@ -10,14 +10,9 @@ package com.example.githubissuefinder.data
 internal const val SEARCH_API_RESULT_CAP = 1000
 
 /**
- * False once there's nothing left worth requesting: either this
- * page came back short (fewer than TOP_REPOS_PER_PAGE items — the true end
- * of this query's results, not just an empty page), or the NEXT
- * page would start past GitHub's 1,000-result Search API cap.
- * Checked against the page just fetched, not the total the API
- * reports — total_count itself is only an estimate once a query
- * has more matches than the cap allows, so it isn't trustworthy
- * for this decision on its own.
+ * False once there is nothing left worth requesting: the page came back short (the true end of the
+ * results), or the next page would start past GitHub's 1,000-result cap. Checked against the page
+ * just fetched and not total_count, which is only an estimate once matches exceed the cap.
  */
 fun canRequestNextPage(fetchedThisPage: Int, justFetchedPage: Int): Boolean {
     if (fetchedThisPage < TOP_REPOS_PER_PAGE) return false

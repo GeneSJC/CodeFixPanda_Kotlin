@@ -57,50 +57,14 @@ fun ReadmeResult.toReadmeFetch(): ReadmeFetch = when (this) {
 }
 
 /**
- * A short, plain-text preview of each repo's README, shown on its
- * RepoCard (TopReposScreen) beneath the title row, collapsed to 2
- * lines with a tap-to-expand toggle revealing the rest of the stored
- * snippet (up to SNIPPET_MAX_CHARS) — no further network call on
- * expand, just a maxLines change against text already fetched.
+ * A short plain-text preview of each repo's README, for its card. Kept in memory as a StateFlow,
+ * not on disk: a snippet is cheap to refetch and need not survive process death. The ViewModel
+ * asks it to load a snippet when the card first appears.
  *
- * An in-memory cache exposed as a StateFlow, NOT persisted to disk: a
- * README snippet is cheap to refetch and has no reason to survive a
- * process death, so there's no need for an on-disk cache format.
- * TopReposViewModel asks it to load a card's snippet when the card
- * first appears, and the screen reads the result from the ViewModel —
- * the screen no longer reaches a singleton or triggers the network
- * request itself.
- *
- * COST, worth being direct about: RepoCards on screen can number in
- * the dozens once Load More is used, and each one's first composition
- * triggers ONE Contents API call here (GET /repos/{owner}/{repo}/readme)
- * — a different, far larger quota (5,000/hour authenticated) than the
- * Search API's 30/minute IssueSearchRepository.rateLimit tracks, same distinction
- * RepoReadmeViewModel's own doc comment makes. loadIfNeeded's dedup
- * guard means a SUCCESSFUL fetch (including a legitimate "no README"
- * 404) only ever happens once per repo per process lifetime — but see
- * the next paragraph for what "successful" deliberately excludes.
- *
- * RETRY ON TRANSIENT FAILURE ONLY: a real, observed bug — two repos
- * (Contextium, Stash) showed their README fine in RepoIssuesScreen's
- * full README widget (a separate fetch, RepoReadmeViewModel, triggered
- * on-demand one at a time) but never got a preview here at all. Root
- * cause: the original version of this store marked a repo "handled"
- * the moment loadIfNeeded was first called, success or failure alike —
- * so a transient failure during the list's initial load burst (many
- * cards' Contents-API calls firing at nearly the same moment) left
- * that card's preview permanently empty for the rest of the session,
- * with no way to recover short of restarting the app. Fixed by only
- * treating a THROWN exception as transient and worth retrying (removed
- * from inFlightOrLoaded, so a later recomposition — e.g. scrolling the
- * card off-screen and back — tries again); an actual HTTP response
- * (including a 404 genuinely meaning "no README") is still treated as
- * resolved and not retried, since that's a deterministic answer from
- * GitHub, not a blip.
- *
- * Replaces the old RepoReadmeSnippetStore object, which held Compose
- * state and was called directly by a card's composable, which also
- * kicked off its network request.
+ * Each card's first appearance costs one Contents API call (a different, far larger quota than
+ * search), so the dozens of cards after Load More add up. A real answer from GitHub, including a
+ * 404 "no README", is fetched once per repo per process; only a thrown exception is treated as
+ * transient and retried on a later recomposition. More in docs/design-notes.md, "README previews".
  */
 class ReadmeSnippetRepository(private val source: ReadmeSource) {
 
@@ -130,25 +94,10 @@ class ReadmeSnippetRepository(private val source: ReadmeSource) {
 }
 
 /**
- * Light markdown-to-plain-text cleanup — strips HTML tags entirely
- * (common at the top of a README: centered logo/badge blocks like
- * `<div align="center"><img src="..."></div>`, which would
- * otherwise show up as literal "<img src=..." junk in a plain Text,
- * since this never goes through Markwon the way the full README
- * view does), strips heading/list/quote markdown markers, and
- * collapses all whitespace (including blank lines between
- * paragraphs) to single spaces. A line that's ENTIRELY a tag (e.g.
- * a standalone `<img ...>` line) disappears completely rather than
- * leaving an empty line behind; a line that MIXES a tag with real
- * text (e.g. `<p align="center"> FoxyVPN - a VPN client`) keeps the
- * real text and drops just the tag. Not a general markdown/HTML
- * stripper — just enough that a typical README's opening content
- * reads as plain prose instead of showing raw markup.
- *
- * Truncates to SNIPPET_MAX_CHARS at the nearest earlier word
- * boundary (so a word is never cut mid-way) and appends "…" when
- * truncated — this is the full stored snippet; the UI itself
- * separately clamps to 2 lines when collapsed.
+ * Light markdown-to-plain-text cleanup: strips HTML tags (a README often opens with a centered
+ * logo block), heading, list and quote markers, and collapses whitespace. A line that is only a
+ * tag disappears; a line mixing a tag with text keeps the text. Truncates to SNIPPET_MAX_CHARS
+ * at a word boundary and appends "…". Not a general markdown stripper.
  */
 fun buildReadmeSnippet(markdown: String): String? {
     val htmlTag = Regex("<[^>]*>")

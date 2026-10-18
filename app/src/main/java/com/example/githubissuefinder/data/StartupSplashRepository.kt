@@ -34,24 +34,11 @@ class SharedPreferencesStartupSplashStorage(context: Context) : StartupSplashSto
 }
 
 /**
- * The single owner of whether the full title-reveal animation has
- * already played on this device. The first launch plays it in full;
- * every launch after that shows a short fade-in of the app name instead,
- * because the full animation is fun once and a bit much on the second
- * and third viewing.
- *
- * Why a repository and not a bare SharedPreferences call in the splash
- * code: persistence is a data-layer concern, and keeping it behind this
- * class means the ViewModel can be unit-tested with a fake and the UI
- * never decides when a disk write happens.
- *
- * Why plain methods instead of a StateFlow (unlike IssueModeRepository):
- * nothing needs to react to this value changing. The decision is read
- * ONCE per launch, before the splash starts (see StartupSplashViewModel),
- * and must not flip mid-animation when the flag is written at the end.
- *
- * The in-app "Play App Start Animation" replay never touches this: it
- * always plays the full animation and doesn't record anything.
+ * The single owner of whether the full title-reveal animation has already played on this device:
+ * the first launch plays it in full and later launches show a short fade-in. Plain methods and not a
+ * StateFlow: the decision is read once per launch, before the splash starts, and must not flip
+ * mid-animation when the flag is written at the end. The in-app "Play App Start Animation" replay
+ * never touches it.
  */
 class StartupSplashRepository(private val storage: StartupSplashStorage) {
 

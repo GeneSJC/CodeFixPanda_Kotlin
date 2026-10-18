@@ -11,25 +11,10 @@ data class RepoGroupUpdate(
 )
 
 /**
- * v0.49 ("Cache-Preserving Refresh"): addIssuesToRepoGroups()'s
- * counterpart for TopReposStateHolder.checkForNewRepos() — see that
- * function's own doc comment for why a separate function rather than a
- * flag on addIssuesToRepoGroups() itself. The key difference: where
- * addIssuesToRepoGroups() SKIPS an issue whose id is already present (correct
- * for Load More — the same issue genuinely showing up again across two
- * page fetches shouldn't be duplicated, and the copy already on screen
- * is just as current as a re-fetch would be), this REPLACES it with the
- * freshly-fetched copy, since the whole point here is picking up
- * changes (comment count, labels, updated time) to something already
- * on screen.
- *
- * A standalone, pure top-level function (not a private method on
- * TopReposViewModel, which is what it was originally written as) —
- * moved out specifically so it's directly unit-testable with plain
- * JUnit: TopReposViewModel extends AndroidViewModel, which needs a real
- * or mocked Application to construct, and this project has neither
- * Mockito nor Robolectric as a test dependency. This function touches
- * nothing Android-specific, so it doesn't need either.
+ * The counterpart of addIssuesToRepoGroups() for checkForNewRepos(). Where that one skips an issue
+ * whose id is already present (right for Load More, where the copy on screen is as current as a
+ * re-fetch), this replaces it with the freshly fetched copy, since the point is to pick up changes
+ * (comment count, labels, updated time). A pure top-level function so it is unit-testable directly.
  */
 fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): RepoGroupUpdate {
     val byRepo = LinkedHashMap<String, RepoIssueGroup>()
@@ -80,19 +65,11 @@ fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
     addIssuesToRepoGroups(emptyList(), issues)
 
 /**
- * v0.43: the actual cross-page step for Load More — see TopReposStateHolder's class comment for
- * the motivating scenario (one repo's matches spread across two
- * pages). Re-keys existing groups by repoFullName in a
- * LinkedHashMap (preserving their current order, so ties in the
- * final sort stay deterministic rather than depending on an
- * unordered HashMap's iteration), folds each new issue into its
- * repo's existing group if one exists (skipping it if that exact
- * issue id is somehow already present — defensive, in case
- * GitHub's result set shifts slightly between two page requests),
- * or starts a new group if this is the first issue seen for that
- * repo, then re-sorts everything by the now-current match count.
- * groupByRepo() above is just this function called with an empty
- * starting list — the very first page is added to nothing.
+ * The cross-page step for Load More. Re-keys the existing groups by repoFullName in a
+ * LinkedHashMap (so ties in the final sort stay deterministic), folds each new issue into its
+ * repo's group or starts a new one (skipping an issue id already present, in case GitHub's results
+ * shift between page requests), then re-sorts by the new match counts. groupByRepo() is this
+ * function called with an empty starting list.
  */
 fun addIssuesToRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>): List<RepoIssueGroup> {
     val byRepo = LinkedHashMap<String, RepoIssueGroup>()

@@ -54,3 +54,16 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Write-back.** A successful refresh updates the Top Repos cache entry the group came from, so the match count agrees on return. An empty result removes the repo from the cache: a repo cannot legitimately be on Top Repos with zero matching issues.
 - **The language is passed down** from Top Repos. The refresh needs an exact `LanguageFilter` for the query's `language:` qualifier and for the cache key, and a repo's display language string is not reliably reversible to one.
 - **Manual on purpose.** It is an explicit button with a visible cost note, not something that happens automatically.
+
+## Data layer
+
+- **Which storage.** SharedPreferences for single values (the Issue Mode, the token, the start-animation flag); a JSON file in private storage for lists of real objects (bookmarks, hidden issues, the Top Repos cache). Hand-rolling serialization for one enum value would be avoidable complexity. File names have been kept across refactors, so data saved earlier still loads.
+- **Writes.** File writes run in order on a single background thread. An earlier version started a thread per write, so two quick changes could finish out of order and leave the older list on disk. A failed write is swallowed on purpose: it never rolls back what the user already saw.
+- **Hiding is a display filter.** The hidden-issue repository stores only the ids to filter out; the cached data stays exactly as GitHub returned it, so Unhide is instant.
+- **The Top Repos cache** is keyed by (language, mode) and is cache-first, never auto-refreshed. Saving and replacing are read-modify-write over one combined file, so the repository takes a mutex.
+
+## README previews
+
+- **In memory only.** A snippet is cheap to refetch and has no reason to survive process death.
+- **Cost.** Each card's first appearance makes one Contents API call, a different and far larger quota (5,000 per hour authenticated) than the 30-per-minute Search API; after a few Load More taps there can be dozens of cards.
+- **Retry only on a thrown exception.** An early version marked a repo "handled" the moment it was first requested. Two repos whose README loaded fine on the repo screen never got a preview, because a transient failure during the initial burst of calls left their cards permanently empty. Now only an exception is retried (on a later recomposition); any real HTTP answer, including a 404 for "no README", is final.
