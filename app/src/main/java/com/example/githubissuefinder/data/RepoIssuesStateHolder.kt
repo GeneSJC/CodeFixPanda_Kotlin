@@ -33,113 +33,21 @@ data class RepoIssuesState(
 )
 
 /**
- * The state holder for the repo-scoped issue list: the one place the
- * state of the repo being viewed lives (its issues, whether a refresh is
- * running, the last result), and the owner of the logic that changes it.
- * RepoIssuesViewModel maps this state to what the screen shows and
- * forwards the user's actions here. (The long design history below was
- * the ViewModel's class comment; it is about this logic, so it moved with
- * it.)
+ * The state of the repo being viewed: its issues, whether a refresh is running, the last result,
+ * and the logic that changes it. RepoIssuesViewModel maps it to what the screen shows.
  *
- * The repo-scoped issue list — CM "B" of the Discover redesign
- * (option C from the architecture discussion): the drill-in that
- * every Discover CM since v0.25 has flagged as deferred, since tapping
- * a repo was previously a no-op.
+ * It shows only the issues already in the repo's group, so opening a repo makes no network call.
+ * refreshThisRepo() is the one explicit, user-initiated exception: a single call for the repo's
+ * open issues for the active mode and language (up to GitHub's 100 per call). It replaces the held
+ * issues with the complete result and writes the updated group back into the Top Repos cache, so
+ * the card's match count agrees on return; an empty result removes the repo from the cache. Top
+ * Repos picks the change up with syncFromCache(). A repo with more than 100 open matches for one
+ * label would still look partial; that is rare and deliberately not chased.
  *
- * v0.42, REVISED — the in-screen label picker (LabelFilterRow, which
- * let someone peek at the OTHER label within a repo, independent of
- * the app's active Issue Mode) is REMOVED. The original draft of this
- * CM had explicitly flagged that as "a real, open question, not
- * decided in this CM" — it's now been decided: Mode is a single,
- * deliberate, whole-app choice made once at the gate screen, and
- * nothing downstream offers a second way to change it, no matter how
- * many levels deep into the app. Same reasoning that removed the Top
- * Repos mode dropdown, applied here for consistency.
- *
- * The direct consequence: for a long time this screen made NO
- * network call, ever, for any reason. Every issue this screen could
- * possibly show was already sitting in repoGroup.issues — that's
- * exactly what a repo showing up on Top Repos at all already means
- * (see RepoIssueGroup). loadIfNeeded() is still a pure, synchronous
- * assignment, unchanged.
- *
- * v0.46 ("Check for More Issues") was the one, deliberate exception to
- * that "zero network calls" property. v0.50 ("Refresh this repo" write-
- * back) renames and reshapes it — read this before assuming the old
- * shape still holds. repoGroup.issues only ever contains whatever this
- * repo's matches happened to be swept up while Top Repos was building
- * its list (bounded by however far Load More had gotten at the time).
- * A repo with more matching issues than that is a real, confirmed
- * completeness gap — this screen could be showing a partial view
- * without any way to know it, and closed issues can only ever be
- * discovered this way too (GitHub's issue search only returns OPEN
- * issues, so it can never itself report "these are now closed").
- * refreshThisRepo() closes both gaps with ONE explicit, user-initiated
- * fetch: `repo:owner/name label:"..." state:open`, scoped to just this
- * repo and the active mode, asking for up to REPO_ISSUES_MAX_PER_PAGE (100 —
- * GitHub's own per-call max) results in a single call. On success, this
- * REPLACES `issues` outright with the complete result (not an incremental update —
- * there's nothing to dedup against, this call already returns
- * everything for this query) — correct here specifically because it IS
- * the complete live set for this one repo, unlike Top Repos' own
- * checkForNewRepos(), which updates a list from a partial page.
- *
- * UNLIKE v0.46: the button never disappears after use — hasRefreshed
- * drives a small result line ("All 7 open issues · checked 2m ago"),
- * not a one-time switch to a dead end. Re-tappable any number of times
- * this session.
- *
- * WRITE-BACK (new in v0.50): a successful refresh also updates the Top
- * Repos cache entry this repo's group came from
- * (RepoIssueGroupRepository.replaceRepoGroup()), so the match count on the
- * Top Repos card the user navigated from agrees on return — without
- * that, this screen's own state could show a repo as having 3 open
- * issues while Top Repos still showed 7 until the next full Top Repos
- * refresh. If the complete fetch comes back EMPTY, that repo is
- * removed from the cache entirely (replaceRepoGroup(updatedGroup =
- * null)) — a repo can't legitimately appear on Top Repos with zero
- * matching issues (see RepoIssueGroup's own doc comment), so a refresh
- * finding none left is exactly the moment for it to leave that list.
- * TopReposStateHolder.syncFromCache() is what actually pulls this updated
- * cache entry back into Top Repos' own in-memory state when the user
- * navigates back — see that function's doc comment for why a re-read
- * on return, rather than a shared ViewModel reference, was the chosen
- * mechanism (RepoIssuesScreen and TopReposScreen have no direct handle
- * to each other's ViewModel instances).
- *
- * language (the LanguageFilter Top Repos was actually filtered to when
- * this repo was tapped) is threaded down through DiscoverNavHost and
- * RepoIssuesScreen rather than re-derived from repoGroup.issues'
- * display strings — needed as an exact LanguageFilter value both for
- * the fetch's own `language:` query qualifier and to address the
- * correct (language, mode) cache entry for write-back; a repo's
- * display language string alone isn't reliably reversible back to one.
- *
- * WORTH BEING HONEST ABOUT: 100 covers the overwhelming majority of
- * real repos for a single label, but isn't an absolute guarantee of
- * completeness for a repo with more than 100 open matches on one
- * label — genuinely rare for "good first issue" or "help wanted"
- * specifically, and deliberately not chased further with a second
- * pagination system layered on top of this screen too. If that ever
- * turns out to matter in practice, extending this with its own Load
- * More is a bounded, well-understood follow-up (Top Repos already
- * proves the pattern) — not attempted here on spec alone.
- *
- * This is a genuinely different cost tradeoff than Top Repos ever had
- * to make, and deliberately NOT automatic — see refreshThisRepo()
- * and RepoIssuesScreen's own doc comments for why it's an explicit
- * button with a visible cost note, not something that just happens.
- *
- * Why a singleton: the state has to live somewhere that outlives any one
- * composition. open() starts a fresh visit to the screen (a new repo):
- * it clears the state and cancels a refresh still running from the
- * previous visit, which is what constructing a new ViewModel for each
- * visit used to do. loadedForRepoFullName exists only so the screen's
- * repeated loadIfNeeded() calls do not reassign issues the state holder
- * already holds. Nothing here needs a Context: the cache work lives in
- * RepoIssueGroupRepository, which does its own file I/O. The work runs in
- * the shared [AppScope]. The Koin module builds the one app-wide
- * instance; tests build their own over fakes.
+ * An app-wide singleton, because the state must outlive a composition. open() starts a fresh visit:
+ * it clears the state and cancels a refresh left over from the previous one. The work runs in the
+ * shared [AppScope]; the Koin module builds the instance. More in docs/design-notes.md,
+ * "Repo issues state".
  */
 class RepoIssuesStateHolder(
     private val modeRepository: IssueModeRepository,
@@ -175,19 +83,14 @@ class RepoIssuesStateHolder(
     }
 
     /**
-     * The one deliberate, explicit exception to this screen's
-     * otherwise-zero network calls — see the class comment for the
-     * full reasoning. A no-op if a refresh is already in flight — unlike
-     * v0.46's checkForMoreIssues(), NOT gated on hasRefreshed, since
-     * this is meant to be re-tappable.
+     * The one explicit network call on this screen. A no-op while a refresh is in flight; re-tappable,
+     * so it is not gated on hasRefreshed.
      */
     fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) {
         if (_state.value.isRefreshing) return
         if (tokenRepository.effectiveToken.value.isBlank()) return
 
-        // Defensive fallback only — DiscoverNavHost guarantees a mode
-        // is chosen before this screen is ever reachable. See
-        // IssueModeRepository.
+        // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
         val activeMode = resolveActiveMode(modeRepository.mode.value)
 
         scope.launch(visitJob) {
