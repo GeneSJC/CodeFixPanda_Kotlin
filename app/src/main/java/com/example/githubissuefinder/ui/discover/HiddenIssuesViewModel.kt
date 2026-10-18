@@ -4,6 +4,7 @@ import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.core.component.inject
 
 /**
  * The Hidden screen's interface to the hidden issues: the list to show,
@@ -11,14 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
  * HiddenIssuesRepository's job; the confirmation dialog for "Unhide
  * all" is presentational state and stays in the screen.
  *
- * The repository is a constructor argument defaulting to the app-wide
- * instance so a test can pass one over a fake storage; a ViewModel whose
- * constructor arguments all have defaults still has the no-argument
- * constructor the default factory needs.
+ * The repository is a plain member that Koin supplies; a test registers
+ * one over a fake storage.
  */
-class HiddenIssuesViewModel(
-    private val repository: HiddenIssuesRepository = HiddenIssuesRepository.instance,
-) : BaseViewModel() {
+class HiddenIssuesViewModel : BaseViewModel() {
+
+    private val repository: HiddenIssuesRepository by inject()
 
     /** Hidden issues, most recently hidden first. */
     val hiddenIssues: StateFlow<List<HiddenIssue>> = repository.hiddenIssues

@@ -1,7 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
-import com.example.githubissuefinder.data.AppConfigRepository
+import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
 import com.example.githubissuefinder.data.TopReposStateHolder
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 
 /**
  * The view model for TopReposScreen: it maps the Top Repos data state
@@ -31,18 +32,16 @@ import kotlinx.coroutines.launch
  * (TopReposStateHolder.open()), which is what constructing it has always
  * meant: load the list for the default language, cache first.
  *
- * The state holder is a plain member, the app-wide TopReposStateHolder; tests
- * install their own with TopReposStateHolder.replaceInstanceForTests().
- * The remaining argument serves the repo cards (README previews) and is
- * not part of the list's data state. The hidden ids come from
- * BaseViewModel.
+ * The state holder and the two repositories are plain members that Koin
+ * supplies; tests register their own. The snippet repository serves the
+ * repo cards (README previews) and the hidden-issue repository the hidden
+ * ids the list is filtered by; neither is part of the list's data state.
  */
-class TopReposViewModel(
-    private val snippetRepository: ReadmeSnippetRepository = ReadmeSnippetRepository.instance,
-    appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
-) : BaseViewModel(appConfigRepository) {
+class TopReposViewModel : BaseViewModel() {
 
-    private val stateHolder = TopReposStateHolder.instance
+    private val stateHolder: TopReposStateHolder by inject()
+    private val snippetRepository: ReadmeSnippetRepository by inject()
+    private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
 
     init {
         stateHolder.open()
@@ -54,6 +53,9 @@ class TopReposViewModel(
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
     val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage() }
+
+    /** Ids the user hid, to filter hidden issues out of the list at display time. */
+    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets

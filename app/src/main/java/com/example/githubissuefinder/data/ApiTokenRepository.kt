@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.data
 
 import android.content.Context
-import com.example.githubissuefinder.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -128,32 +127,5 @@ class ApiTokenRepository(
         _effectiveToken.value = resolveEffectiveToken(trimmed, buildToken)
         _tokenSource.value = tokenSourceOf(trimmed, buildToken)
         storage.save(trimmed.ifEmpty { null })
-    }
-
-    companion object {
-        @Volatile
-        private var _instance: ApiTokenRepository? = null
-
-        /**
-         * The app-wide instance, same plain-singleton-with-init(context)
-         * pattern as IssueModeRepository (this project has no DI
-         * framework yet). ViewModels take the repository as a
-         * constructor argument defaulting to this so tests can pass
-         * their own.
-         */
-        val instance: ApiTokenRepository
-            get() = checkNotNull(_instance) {
-                "ApiTokenRepository.init(context) must be called before use " +
-                    "(MainActivity.onCreate does this before setContent)."
-            }
-
-        /** Safe to call more than once: only the first call constructs the instance. */
-        fun init(context: Context) {
-            if (_instance != null) return
-            _instance = ApiTokenRepository(
-                storage = SharedPreferencesApiTokenStorage(context),
-                buildToken = BuildConfig.GITHUB_API_TOKEN,
-            )
-        }
     }
 }

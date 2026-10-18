@@ -5,12 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.BookmarksRepository
-import com.example.githubissuefinder.data.HiddenIssuesRepository
-import com.example.githubissuefinder.data.IssueModeRepository
-import com.example.githubissuefinder.data.RepoIssueGroupRepository
-import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.ui.settings.ApiTokenViewModel
 import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import org.junit.After
@@ -20,14 +14,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Creates each Issue Mode ViewModel through the real Android
- * ViewModelProvider machinery — the same reflection-based factory
- * Compose's viewModel() uses — which JVM unit tests can't do because
- * TopReposViewModel needs an Application. This guards the riskiest part
- * of the MVVM refactor: constructors with default arguments, plus the
- * JvmOverloads annotation on TopReposViewModel's, must still be found
- * by that factory, or the app would crash the moment a screen asks for
- * its ViewModel.
+ * Creates each ViewModel through the real Android ViewModelProvider
+ * machinery, the same reflection-based factory Compose's viewModel()
+ * uses, which JVM unit tests can't do. A ViewModel takes what it needs
+ * with `by inject()`, so it has a no-argument constructor the factory
+ * can find, and Koin (started by the app's own Application class, which
+ * this test process runs) supplies the repositories and state holders.
+ * If a definition is missing from the module, or the Android parts
+ * behind the storages cannot be built, this fails here instead of the app
+ * crashing the moment a screen asks for its ViewModel.
  *
  * Runs on a device or emulator. Creating TopReposViewModel starts its
  * initial load, which makes a real network request if a token is
@@ -44,12 +39,6 @@ class IssueModeViewModelCreationTest {
     fun setUp() {
         application = InstrumentationRegistry.getInstrumentation()
             .targetContext.applicationContext as Application
-        IssueModeRepository.init(application)
-        StartupSplashRepository.init(application)
-        ApiTokenRepository.init(application)
-        HiddenIssuesRepository.init(application)
-        BookmarksRepository.init(application)
-        RepoIssueGroupRepository.init(application)
         store = ViewModelStore()
     }
 

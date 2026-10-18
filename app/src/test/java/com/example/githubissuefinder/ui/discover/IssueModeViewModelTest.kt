@@ -3,11 +3,26 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.IssueModeStorage
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
+import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class IssueModeViewModelTest {
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
+    private fun createViewModel(repository: IssueModeRepository): IssueModeViewModel {
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return IssueModeViewModel()
+    }
 
     private class FakeStorage : IssueModeStorage {
         var stored: String? = null
@@ -19,14 +34,14 @@ class IssueModeViewModelTest {
 
     @Test
     fun modeIsNullUntilOneIsSelected() {
-        val viewModel = IssueModeViewModel(IssueModeRepository(FakeStorage()))
+        val viewModel = createViewModel(IssueModeRepository(FakeStorage()))
         assertNull(viewModel.mode.value)
     }
 
     @Test
     fun selectModeUpdatesObservedModeAndPersistsViaRepository() {
         val storage = FakeStorage()
-        val viewModel = IssueModeViewModel(IssueModeRepository(storage))
+        val viewModel = createViewModel(IssueModeRepository(storage))
 
         viewModel.selectMode(IssueLabelFilter.HELP_WANTED)
 
@@ -42,7 +57,7 @@ class IssueModeViewModelTest {
     @Test
     fun modeReflectsChangesMadeDirectlyOnTheRepository() {
         val repository = IssueModeRepository(FakeStorage())
-        val viewModel = IssueModeViewModel(repository)
+        val viewModel = createViewModel(repository)
 
         repository.setMode(IssueLabelFilter.GOOD_FIRST_ISSUE)
         assertEquals(IssueLabelFilter.GOOD_FIRST_ISSUE, viewModel.mode.value)
@@ -54,7 +69,7 @@ class IssueModeViewModelTest {
     @Test
     fun clearModeResetsToNoneAndClearsStorage() {
         val storage = FakeStorage()
-        val viewModel = IssueModeViewModel(IssueModeRepository(storage))
+        val viewModel = createViewModel(IssueModeRepository(storage))
         viewModel.selectMode(IssueLabelFilter.HELP_WANTED)
 
         viewModel.clearMode()
@@ -66,8 +81,8 @@ class IssueModeViewModelTest {
     @Test
     fun twoViewModelsOverOneRepositoryAgree() {
         val repository = IssueModeRepository(FakeStorage())
-        val first = IssueModeViewModel(repository)
-        val second = IssueModeViewModel(repository)
+        val first = createViewModel(repository)
+        val second = createViewModel(repository)
 
         first.selectMode(IssueLabelFilter.HELP_WANTED)
 
@@ -77,7 +92,7 @@ class IssueModeViewModelTest {
     @Test
     fun startsWithTheModeAlreadyStored() {
         val storage = FakeStorage().apply { stored = IssueLabelFilter.HELP_WANTED.name }
-        val viewModel = IssueModeViewModel(IssueModeRepository(storage))
+        val viewModel = createViewModel(IssueModeRepository(storage))
         assertEquals(IssueLabelFilter.HELP_WANTED, viewModel.mode.value)
     }
 }

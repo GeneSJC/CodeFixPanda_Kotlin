@@ -3,7 +3,7 @@ package com.example.githubissuefinder.data
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
-import com.example.githubissuefinder.network.GitHubApiClient
+import com.example.githubissuefinder.network.GitHubApiService
 import com.example.githubissuefinder.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -63,12 +63,12 @@ interface IssueSearchApi {
     suspend fun fetchRateLimit(): RateLimitInfo?
 }
 
-/** The real calls, run off the main thread through GitHubApiClient. */
-class GitHubIssueSearchApi : IssueSearchApi {
+/** The real calls, run off the main thread through the Retrofit service. */
+class GitHubIssueSearchApi(private val service: GitHubApiService) : IssueSearchApi {
 
     override suspend fun searchIssues(query: String, perPage: Int, page: Int): IssueSearchApiResponse =
         withContext(Dispatchers.IO) {
-            val response = GitHubApiClient.api.searchIssues(query = query, perPage = perPage, page = page)
+            val response = service.searchIssues(query = query, perPage = perPage, page = page)
             IssueSearchApiResponse(
                 code = response.code(),
                 isSuccessful = response.isSuccessful,
@@ -80,7 +80,7 @@ class GitHubIssueSearchApi : IssueSearchApi {
     override suspend fun fetchRateLimit(): RateLimitInfo? =
         withContext(Dispatchers.IO) {
             try {
-                val response = GitHubApiClient.api.getRateLimit()
+                val response = service.getRateLimit()
                 val body = response.body()
                 if (response.isSuccessful && body != null) body.toSearchRateLimitInfo() else null
             } catch (e: CancellationException) {
@@ -126,7 +126,7 @@ fun repoIssuesQuery(repoFullName: String, mode: IssueLabelFilter): String =
  */
 class IssueSearchRepository(
     private val api: IssueSearchApi,
-    private val hasToken: () -> Boolean = { ApiTokenRepository.instance.effectiveToken.value.isNotBlank() },
+    private val hasToken: () -> Boolean,
 ) {
 
     private val _rateLimit = MutableStateFlow<RateLimitInfo?>(null)
@@ -183,10 +183,5 @@ class IssueSearchRepository(
         } catch (e: Exception) {
             IssueSearchResult.Failed(e.message)
         }
-    }
-
-    companion object {
-        /** The app-wide instance. Needs no Context, so no init call is required. */
-        val instance: IssueSearchRepository by lazy { IssueSearchRepository(GitHubIssueSearchApi()) }
     }
 }
