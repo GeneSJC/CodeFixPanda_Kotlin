@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
  * [animation] ("coin", "origami", "shapeStack" or "titleReveal", the last at 0.5x speed).
  * MainActivity's cold-start splash calls it, and so does the "Play App Start Animation" menu entry,
  * so a replay can never drift from what a user actually saw. [playFullAnimation] false swaps in
- * TitleFlashSplashScreen, a short fade-in: a real launch passes false once the device has seen the
+ * TitleFlashSplashScreen, the app name with a short burst: a real launch passes false once the device has seen the
  * full animation. The default, true, is what the replay uses.
  */
 @Composable

@@ -7,8 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.platform.LocalDensity
@@ -55,14 +52,6 @@ private const val GIT_OVERSHOOT_TILT_DEGREES = -8f
 private const val GIT_REBOUND_TILT_DEGREES = 2.5f
 private const val GIT_OVERSHOOT_AT = 0.70
 private const val GIT_REBOUND_AT = 0.86
-
-// Scaled with the text (see SPLASH_TEXT_SCALE) so the burst keeps its
-// proportions relative to the bigger wordmark.
-private val BURST_SIZE = (120 * SPLASH_TEXT_SCALE).dp
-private const val BURST_START_SCALE = 0.4f
-private const val BURST_MAX_SCALE = 2.8f
-private const val BURST_START_ALPHA = 0.85f
-private const val BURST_HOLD_FRACTION = 0.45
 
 /**
  * A kinetic title-reveal splash: "Git" slides in from the left and overshoots before settling, "Hub"
@@ -113,8 +102,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val issueAlpha = remember { Animatable(0f) }
     val finderOffsetY = remember { Animatable(riseOffsetPx) }
     val finderAlpha = remember { Animatable(0f) }
-    val burstScale = remember { Animatable(BURST_START_SCALE) }
-    val burstAlpha = remember { Animatable(0f) }
+    val burst = remember { BurstAnimation() }
 
     // The whole wordmark stays invisible until the timeline is about to
     // start, as a second guard: even if some value were ever wrong for a
@@ -185,23 +173,10 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // The finishing burst: a soft radial pulse behind the wordmark, fired once everything has settled.
-        // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and scaling from
-        // the start left the circle nearly transparent by the time it was big enough to see.
+        // The finishing burst, fired once everything has settled.
         launch {
             delay((finderStartMs + finderDurationMs).toLong())
-            launch {
-                burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
-            }
-            burstAlpha.animateTo(
-                targetValue = 0f,
-                animationSpec = keyframes {
-                    durationMillis = burstDurationMs
-                    BURST_START_ALPHA at 0
-                    BURST_START_ALPHA at (burstDurationMs * BURST_HOLD_FRACTION).toInt()
-                    0f at burstDurationMs
-                },
-            )
+            burst.play(burstDurationMs)
         }
 
         // "Issue": a straight rise from below into place under "Git",
@@ -243,25 +218,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        // Drawn first so it sits BEHIND the wordmark below (draw order
-        // in Compose follows declaration order within a Box).
-        Box(
-            modifier = Modifier
-                .size(BURST_SIZE)
-                .graphicsLayer {
-                    scaleX = burstScale.value
-                    scaleY = burstScale.value
-                    alpha = burstAlpha.value
-                }
-                .background(
-                    Brush.radialGradient(
-                        0f to MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                        0.6f to MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        1f to MaterialTheme.colorScheme.primary.copy(alpha = 0f),
-                    ),
-                    CircleShape,
-                ),
-        )
+        // Drawn first so it sits behind the wordmark below.
+        SplashBurst(burst)
 
         TitleWordmark(
             modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
