@@ -2,6 +2,7 @@ package com.example.githubissuefinder.ui.splash
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -32,8 +33,6 @@ private const val BURST_BASE_DURATION_MS = 500
 // How long the settled title shows on its own before the burst begins.
 private const val TITLE_ONLY_MS = 1350L
 
-// The title fades in over the start of that time, so it does not pop into the first frame.
-private const val TITLE_FADE_IN_MS = 300
 
 // Shaved off the end of the copied hold, which otherwise leaves a perceptible pause after the burst.
 private const val END_TRIM_MS = 150L
@@ -48,7 +47,7 @@ private const val BURST_HOLD_FRACTION = 0.45
 
 /**
  * The short splash for every launch after the first: the title screen as the full animation leaves
- * it once settled, fading in and shown on its own for [TITLE_ONLY_MS], then the same "sonic boom" burst and hold
+ * it once settled, fading in until the burst ends, and on its own for [TITLE_ONLY_MS] before the burst, then the same "sonic boom" burst and hold
  * that animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
  * that ending, not shared code, so the first-launch animation is never at risk from changes here.
  * Like the original it lets two frames go by before starting, since the first frame of a cold start
@@ -69,7 +68,8 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
         withFrameNanos { }
         withFrameNanos { }
 
-        launch { titleAlpha.animateTo(1f, tween(TITLE_FADE_IN_MS)) }
+        // Linear, across the whole wait and the burst, so the fade is visible the entire time.
+        launch { titleAlpha.animateTo(1f, tween(TITLE_ONLY_MS.toInt() + burstDurationMs, easing = LinearEasing)) }
         delay(TITLE_ONLY_MS)
 
         // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and
