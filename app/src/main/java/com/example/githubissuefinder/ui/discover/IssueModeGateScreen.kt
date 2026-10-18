@@ -70,12 +70,12 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "What kind of issue are you looking for?",
+                        "Looking to make a contribution?",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                     )
                     Text(
-                        "Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
+                        "What kind of issues would you like to look at? Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
