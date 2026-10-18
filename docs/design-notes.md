@@ -36,3 +36,21 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Reset App** is the only way back to the gate once a mode is chosen. It clears the mode and navigates with `popUpTo(graph.id) { inclusive = true }`, wiping the whole back stack; a plain `navigate()` would add a second gate on top of the open screens. Bookmarks, hidden issues and the cache are untouched.
 - **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along. Typed navigation will revisit this.
 - **Hidden Issues** is reachable from the Top Repos menu and from the repo screen's "all hidden" state; both push it on top, so Back returns to where it was opened. A separate full-screen README destination was removed when the inline README widget replaced it.
+
+## Top Repos state
+
+- **One call per load.** The list is built from one Search API call for the active mode's label, grouped by parent repo (`repository_url`). A repo appears only if it had a matching issue in the batch, and the ranking is match count only. The old 60-second cooldown went away because one call per load no longer risks the 30-per-minute Search API cap.
+- **Load More adds, never appends.** A repo's matches are not guaranteed to land on one page, so naively appending would show it as a second card. New issues are re-grouped against the repos already held, then re-sorted; a repo's rank can legitimately change.
+- **Rate-limit event.** A Load More that returns 403 with `X-RateLimit-Remaining: 0` is the Search API rate limit, not a generic error. It emits one `RateLimited` event and leaves `canLoadMore` and `currentPage` untouched, so the button works again after the reset. Events are a `Channel` so each is delivered exactly once, not re-shown to every new collector.
+- **Cache-first.** A hit fills the state with no network call, including `currentPage` and `canLoadMore`, so Load More resumes where a previous session stopped. Every successful fetch writes the accumulated groups back. Fresh data is explicit, through "Check for New Repos".
+- **Check for New Repos replaced a refresh that lost data.** The old refresh went through `load()` and replaced the whole list with page 1: with 200 repos built from ten Load More taps, one refresh discarded nine taps' worth. The replacement fetches the same page 1 but updates the list in place, and never resets `currentPage`, or the data it exists to protect would be lost another way.
+- **Why `syncFromCache`.** Top Repos and the repo screen have no handle on each other's ViewModel. The repo screen writes its refreshed group to the cache, and Top Repos re-reads the cache when it is navigated back to.
+
+## Repo issues state
+
+- **Why it makes no network call on open.** Every issue the screen can show is already in the repo's group; that is what it means for the repo to be on Top Repos at all.
+- **Why there is a refresh at all.** The group holds only the matches swept up while Top Repos built its list, bounded by how far Load More had got, so a repo with more matches can look partial. Closed issues can only be discovered this way too, because issue search returns open issues only.
+- **The refresh** is one call (`repo:owner/name label:"..." state:open`, up to 100 per page). It replaces the held issues outright, which is right here because the result is the complete live set for the repo, unlike Check for New Repos, which updates from a partial page.
+- **Write-back.** A successful refresh updates the Top Repos cache entry the group came from, so the match count agrees on return. An empty result removes the repo from the cache: a repo cannot legitimately be on Top Repos with zero matching issues.
+- **The language is passed down** from Top Repos. The refresh needs an exact `LanguageFilter` for the query's `language:` qualifier and for the cache key, and a repo's display language string is not reliably reversible to one.
+- **Manual on purpose.** It is an explicit button with a visible cost note, not something that happens automatically.
