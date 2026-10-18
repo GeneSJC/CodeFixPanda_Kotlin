@@ -59,14 +59,14 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             topBar = {
                 TopAppBar(
                     title = {
-                        Text("GitHubIssueFinder", style = MaterialTheme.typography.titleLarge)
+                        Text("GitHub Issue Finder", style = MaterialTheme.typography.titleLarge)
                     },
                 )
             },
         ) { padding ->
             Box(
-                modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(padding).fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 8.dp),
+                contentAlignment = Alignment.TopCenter,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(

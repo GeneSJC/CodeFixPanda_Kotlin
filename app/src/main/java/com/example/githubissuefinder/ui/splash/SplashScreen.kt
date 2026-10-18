@@ -117,7 +117,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             }
 
             Text(
-                "GitHubIssueFinder",
+                "GitHub Issue Finder",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
