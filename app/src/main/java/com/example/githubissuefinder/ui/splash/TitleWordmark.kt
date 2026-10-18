@@ -38,8 +38,8 @@ private fun TextUnit.scaledBy(factor: Float): TextUnit = if (isSpecified) this *
 /**
  * The app name laid out as "Git|Hub" over "ISSUE Finder", centered —
  * shared by the full title-reveal animation (which passes motion
- * modifiers for each word) and the short fade-in splash (which passes
- * none), so the short version is literally the animation's final frame
+ * modifiers for each word) and the short splash (which passes
+ * none), so the short version starts on the animation's final frame
  * and the two can never drift apart in size or layout.
  */
 @Composable

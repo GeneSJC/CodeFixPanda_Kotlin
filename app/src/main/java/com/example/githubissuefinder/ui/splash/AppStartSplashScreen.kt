@@ -7,21 +7,13 @@ import androidx.compose.runtime.Composable
  * [animation] ("coin", "origami", "shapeStack" or "titleReveal", the last at 0.5x speed).
  * MainActivity's cold-start splash calls it, and so does the "Play App Start Animation" menu entry,
  * so a replay can never drift from what a user actually saw. [playFullAnimation] false swaps in
- * TitleFlashSplashScreen, the app name with a short burst: a real launch passes false once the
- * device has seen the full animation. The default, true, is what the replay uses. [onHandoff] is
- * called shortly before the short splash ends, so the app can start appearing underneath while it
- * fades out; the full animations never call it, and the caller shows the app when [onFinished]
- * arrives.
+ * TitleSettledSplashScreen, the title already settled and then the same burst and hold the full
+ * animation ends with: a real launch passes false once the device has seen the full animation. The default, true, is what the replay uses.
  */
 @Composable
-fun AppStartSplashScreen(
-    onFinished: () -> Unit,
-    animation: String,
-    playFullAnimation: Boolean = true,
-    onHandoff: () -> Unit = {},
-) {
+fun AppStartSplashScreen(onFinished: () -> Unit, animation: String, playFullAnimation: Boolean = true) {
     if (!playFullAnimation) {
-        TitleFlashSplashScreen(onFinished = onFinished, onHandoff = onHandoff)
+        TitleSettledSplashScreen(onFinished = onFinished)
         return
     }
     when (animation) {

@@ -5,7 +5,7 @@ import com.example.githubissuefinder.ui.BaseViewModel
 import org.koin.core.component.inject
 
 /**
- * Decides once per launch whether the start splash is the full title-reveal or the short fade-in,
+ * Decides once per launch whether the start splash is the full title-reveal or the short settled-title version,
  * depending on whether this device has already seen the full one finish. [playFullAnimation] is a
  * val computed at construction, not a live read: the flag is written when the animation ends, and
  * re-reading it would flip the answer mid-animation. Activity-scoped; the repository is a plain
