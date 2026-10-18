@@ -1,10 +1,10 @@
 package com.example.githubissuefinder.ui.discover
 
-import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.core.component.inject
 
 /**
  * The UI's one interface to the app-wide Issue Mode: the places that
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
  * the start destination) go through this, never straight to the
  * repository or to storage.
  *
- * Scope: obtained with koinViewModel() from the root composition, which
+ * Scope: obtained with viewModel() from the root composition, which
  * means it is scoped to the Activity — MainActivity and DiscoverNavHost
  * therefore receive the SAME instance, and the theme re-renders the
  * moment the gate screen's choice lands. (TopReposViewModel and
@@ -22,18 +22,17 @@ import kotlinx.coroutines.flow.StateFlow
  * (TopReposViewModel through TopReposStateHolder) talk to the repository directly for the same mode rather than going
  * through this one.)
  *
- * Why the repository is a constructor argument: the Koin module
- * supplies the real one, while a unit test passes its own backed by a
- * fake IssueModeStorage.
+ * Why the repository is a plain member that Koin supplies: production
+ * code gets the real one, while a unit test registers its own backed by
+ * a fake IssueModeStorage.
  *
  * Why [mode] just re-exposes the repository's StateFlow instead of
  * copying it into its own: there is only one source of truth for the
  * mode, and a second copy could drift out of sync with it.
  */
-class IssueModeViewModel(
-    private val repository: IssueModeRepository,
-    appConfig: AppConfig,
-) : BaseViewModel(appConfig) {
+class IssueModeViewModel : BaseViewModel() {
+
+    private val repository: IssueModeRepository by inject()
 
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode

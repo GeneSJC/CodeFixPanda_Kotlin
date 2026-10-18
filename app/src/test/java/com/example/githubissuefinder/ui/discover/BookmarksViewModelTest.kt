@@ -3,13 +3,19 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.BookmarksStorage
 import com.example.githubissuefinder.model.Issue
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
 import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class BookmarksViewModelTest {
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private class FakeStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
         override fun load(): List<Issue> = stored
@@ -21,7 +27,11 @@ class BookmarksViewModelTest {
     /** A ViewModel over a repository on [storage]. */
     private fun viewModelOver(storage: FakeStorage): Pair<BookmarksViewModel, BookmarksRepository> {
         val repository = BookmarksRepository(storage)
-        return BookmarksViewModel(repository, testAppConfig()) to repository
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return BookmarksViewModel() to repository
     }
 
     private fun issue(id: Long) = Issue(

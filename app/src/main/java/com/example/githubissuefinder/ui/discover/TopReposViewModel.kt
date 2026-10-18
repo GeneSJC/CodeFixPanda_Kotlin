@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
-import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 
 /**
  * The view model for TopReposScreen: it maps the Top Repos data state
@@ -32,18 +32,16 @@ import kotlinx.coroutines.launch
  * (TopReposStateHolder.open()), which is what constructing it has always
  * meant: load the list for the default language, cache first.
  *
- * The state holder and the two repositories are constructor arguments,
- * supplied by the Koin module; tests pass their own. The snippet
- * repository serves the repo cards (README previews) and the hidden-issue
- * repository the hidden ids the list is filtered by; neither is part of
- * the list's data state.
+ * The state holder and the two repositories are plain members that Koin
+ * supplies; tests register their own. The snippet repository serves the
+ * repo cards (README previews) and the hidden-issue repository the hidden
+ * ids the list is filtered by; neither is part of the list's data state.
  */
-class TopReposViewModel(
-    private val stateHolder: TopReposStateHolder,
-    private val snippetRepository: ReadmeSnippetRepository,
-    hiddenIssuesRepository: HiddenIssuesRepository,
-    appConfig: AppConfig,
-) : BaseViewModel(appConfig) {
+class TopReposViewModel : BaseViewModel() {
+
+    private val stateHolder: TopReposStateHolder by inject()
+    private val snippetRepository: ReadmeSnippetRepository by inject()
+    private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
 
     init {
         stateHolder.open()

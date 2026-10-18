@@ -3,6 +3,7 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.testutil.MainDispatcherRule
+import com.example.githubissuefinder.testutil.StopKoinRule
 import com.example.githubissuefinder.testutil.ViewModelFixtures
 import com.example.githubissuefinder.testutil.issueDto
 import com.example.githubissuefinder.testutil.repoGroupOf
@@ -26,6 +27,9 @@ class RepoIssuesViewModelTest {
 
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val kotlin = LanguageFilter.KOTLIN
 

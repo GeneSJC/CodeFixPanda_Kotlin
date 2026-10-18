@@ -11,6 +11,7 @@ import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.testutil.FakeReadmeSource
 import com.example.githubissuefinder.testutil.MainDispatcherRule
+import com.example.githubissuefinder.testutil.StopKoinRule
 import com.example.githubissuefinder.testutil.ViewModelFixtures
 import com.example.githubissuefinder.testutil.issueDto
 import com.example.githubissuefinder.testutil.repoGroupOf
@@ -36,6 +37,9 @@ class TopReposViewModelTest {
 
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
+
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN

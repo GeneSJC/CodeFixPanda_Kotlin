@@ -23,33 +23,22 @@ import com.example.githubissuefinder.data.SharedPreferencesStartupSplashStorage
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.data.TopReposStateHolder
 import com.example.githubissuefinder.network.GitHubApiClient
-import com.example.githubissuefinder.ui.discover.BookmarksViewModel
-import com.example.githubissuefinder.ui.discover.HiddenIssuesViewModel
-import com.example.githubissuefinder.ui.discover.IssueModeViewModel
-import com.example.githubissuefinder.ui.discover.RepoIssuesViewModel
-import com.example.githubissuefinder.ui.discover.RepoReadmeViewModel
-import com.example.githubissuefinder.ui.discover.TopReposViewModel
-import com.example.githubissuefinder.ui.settings.ApiTokenViewModel
-import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * The one place that says how the app's objects are built, bottom layer
- * first: shared plumbing, the repositories (data sources inside them),
- * the state holders, then the ViewModels. Each `get()` is resolved by
- * type, so a class asks for what it needs in its constructor and this
- * file only has to say how to build it.
+ * The one place that says how the app's shared objects are built, bottom
+ * layer first: shared plumbing, the repositories (data sources inside
+ * them), then the state holders. Each `get()` is resolved by type, so a
+ * class that is built here asks for what it needs in its constructor and
+ * this file only has to say how to build it.
  *
- * Every definition is a `single` except the ViewModels: one app-wide
- * instance of each repository and state holder, while a ViewModel is
- * created per screen and lives in the ViewModel store of its owner (the
- * Activity or a navigation destination), exactly as it did before.
- * `viewModelOf(::X)` builds a ViewModel from the arguments of its
- * constructor, each resolved by type.
+ * Every definition is a `single`: one app-wide instance of each. The
+ * ViewModels are not listed here. A ViewModel is created per screen by the
+ * default factory, and takes what it needs with `by inject()`, resolved
+ * against this module.
  */
 val appModule = module {
 
@@ -97,14 +86,4 @@ val appModule = module {
             tokenRepository = get(),
         )
     }
-
-    // ViewModels.
-    viewModelOf(::IssueModeViewModel)
-    viewModelOf(::StartupSplashViewModel)
-    viewModelOf(::ApiTokenViewModel)
-    viewModelOf(::RepoReadmeViewModel)
-    viewModelOf(::HiddenIssuesViewModel)
-    viewModelOf(::BookmarksViewModel)
-    viewModelOf(::RepoIssuesViewModel)
-    viewModelOf(::TopReposViewModel)
 }

@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 27
-val buildLabelB = 16
+val buildLabelB = 17
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -140,7 +140,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)

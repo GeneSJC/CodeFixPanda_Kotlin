@@ -1,10 +1,10 @@
 package com.example.githubissuefinder.ui.settings
 
 import com.example.githubissuefinder.data.ApiTokenRepository
-import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.TokenSource
 import com.example.githubissuefinder.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.core.component.inject
 
 /**
  * The Settings screen's interface to the GitHub token: what is saved,
@@ -17,13 +17,12 @@ import kotlinx.coroutines.flow.StateFlow
  * is tapped), so it stays in the composable — a ViewModel is for state
  * that is persisted, shared, or the result of a decision.
  *
- * The repository is a constructor argument, supplied by the Koin module,
- * so a test can pass one over a fake storage.
+ * The repository is a plain member that Koin supplies; a test registers
+ * one over a fake storage.
  */
-class ApiTokenViewModel(
-    private val repository: ApiTokenRepository,
-    appConfig: AppConfig,
-) : BaseViewModel(appConfig) {
+class ApiTokenViewModel : BaseViewModel() {
+
+    private val repository: ApiTokenRepository by inject()
 
     /** The token the user saved, or empty if none. */
     val userToken: StateFlow<String> = repository.userToken

@@ -131,15 +131,27 @@ class ViewModelFixtures(
         CoroutineScope(Dispatchers.Unconfined),
     )
 
-    /** A Top Repos ViewModel over the state holder and repositories above. */
-    fun topReposViewModel(config: AppConfig = appConfig) = TopReposViewModel(
-        topReposStateHolder, snippetRepository, hiddenIssuesRepository, config,
-    )
+    /** A Top Repos ViewModel that gets the state holder and repositories above (pair with [StopKoinRule]). */
+    fun topReposViewModel(config: AppConfig = appConfig): TopReposViewModel {
+        restartKoin {
+            single { topReposStateHolder }
+            single { snippetRepository }
+            single { hiddenIssuesRepository }
+            single { config }
+        }
+        return TopReposViewModel()
+    }
 
-    /** A repo-issues ViewModel over the state holder and repositories above. */
-    fun repoIssuesViewModel() = RepoIssuesViewModel(
-        repoIssuesStateHolder, hiddenIssuesRepository, bookmarksRepository, appConfig,
-    )
+    /** A repo-issues ViewModel that gets the state holder and repositories above (pair with [StopKoinRule]). */
+    fun repoIssuesViewModel(): RepoIssuesViewModel {
+        restartKoin {
+            single { repoIssuesStateHolder }
+            single { hiddenIssuesRepository }
+            single { bookmarksRepository }
+            single { appConfig }
+        }
+        return RepoIssuesViewModel()
+    }
 }
 
 /** A config for tests that do not care about its values. */

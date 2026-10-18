@@ -3,15 +3,26 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.IssueModeRepository
 import com.example.githubissuefinder.data.IssueModeStorage
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
 import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 
 class IssueModeViewModelTest {
 
-    private fun createViewModel(repository: IssueModeRepository) =
-        IssueModeViewModel(repository, testAppConfig())
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
+    private fun createViewModel(repository: IssueModeRepository): IssueModeViewModel {
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return IssueModeViewModel()
+    }
 
     private class FakeStorage : IssueModeStorage {
         var stored: String? = null

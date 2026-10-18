@@ -1,7 +1,6 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
-import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RepoIssuesStateHolder
@@ -14,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.component.inject
 
 /**
  * The view model for RepoIssuesScreen, the repo-scoped issue list: it
@@ -30,17 +30,16 @@ import kotlinx.coroutines.flow.stateIn
  * Constructing this class starts a fresh visit to the screen
  * (RepoIssuesStateHolder.open()), as constructing it has always meant.
  *
- * The state holder and the two repositories are constructor arguments,
- * supplied by the Koin module; tests pass their own. The hidden-issue
- * repository serves hiding and unhiding and the hidden ids the list is
- * filtered by; the bookmark repository serves the star on each card.
+ * The state holder and the two repositories are plain members that Koin
+ * supplies; tests register their own. The hidden-issue repository serves
+ * hiding and unhiding and the hidden ids the list is filtered by; the
+ * bookmark repository serves the star on each card.
  */
-class RepoIssuesViewModel(
-    private val stateHolder: RepoIssuesStateHolder,
-    private val hiddenIssuesRepository: HiddenIssuesRepository,
-    private val bookmarksRepository: BookmarksRepository,
-    appConfig: AppConfig,
-) : BaseViewModel(appConfig) {
+class RepoIssuesViewModel : BaseViewModel() {
+
+    private val stateHolder: RepoIssuesStateHolder by inject()
+    private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
+    private val bookmarksRepository: BookmarksRepository by inject()
 
     init {
         stateHolder.open()

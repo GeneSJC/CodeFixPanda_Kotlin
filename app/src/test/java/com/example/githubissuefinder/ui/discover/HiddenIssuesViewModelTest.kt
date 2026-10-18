@@ -4,15 +4,26 @@ import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.HiddenIssuesStorage
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
 import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class HiddenIssuesViewModelTest {
 
-    private fun createViewModel(repository: HiddenIssuesRepository) =
-        HiddenIssuesViewModel(repository, testAppConfig())
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
+    private fun createViewModel(repository: HiddenIssuesRepository): HiddenIssuesViewModel {
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return HiddenIssuesViewModel()
+    }
 
     private class FakeStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
         override fun load(): List<HiddenIssue> = stored

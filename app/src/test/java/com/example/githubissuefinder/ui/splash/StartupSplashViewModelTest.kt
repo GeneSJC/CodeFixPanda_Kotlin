@@ -2,15 +2,26 @@ package com.example.githubissuefinder.ui.splash
 
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.data.StartupSplashStorage
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
 import com.example.githubissuefinder.testutil.testAppConfig
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class StartupSplashViewModelTest {
 
-    private fun createViewModel(repository: StartupSplashRepository) =
-        StartupSplashViewModel(repository, testAppConfig())
+    @get:Rule
+    val stopKoin = StopKoinRule()
+
+    private fun createViewModel(repository: StartupSplashRepository): StartupSplashViewModel {
+        restartKoin {
+            single { repository }
+            single { testAppConfig() }
+        }
+        return StartupSplashViewModel()
+    }
 
     private class FakeStorage(var seen: Boolean = false) : StartupSplashStorage {
         override fun hasSeenFullAnimation(): Boolean = seen

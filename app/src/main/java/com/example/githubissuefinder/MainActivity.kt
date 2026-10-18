@@ -9,12 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.ui.discover.DiscoverNavHost
 import com.example.githubissuefinder.ui.discover.IssueModeViewModel
 import com.example.githubissuefinder.ui.splash.AppStartSplashScreen
 import com.example.githubissuefinder.ui.splash.StartupSplashViewModel
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
-import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * `android:configChanges` in the manifest (orientation/screenSize/
@@ -42,12 +42,12 @@ class MainActivity : ComponentActivity() {
             // App-wide Issue Mode (v0.41): observed through
             // IssueModeViewModel at this single root theme call, which
             // wraps the whole app — splash and the Discover flow alike.
-            // koinViewModel() here is Activity-scoped, so DiscoverNavHost's
-            // own koinViewModel() call gets this same instance and the
+            // viewModel() here is Activity-scoped, so DiscoverNavHost's
+            // own viewModel() call gets this same instance and the
             // theme updates the moment the gate screen's choice lands.
             // Null (no mode chosen yet) falls back to the original
             // light/dark scheme unchanged.
-            val issueModeViewModel: IssueModeViewModel = koinViewModel()
+            val issueModeViewModel: IssueModeViewModel = viewModel()
             val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
             GitHubIssueFinderTheme(issueMode = issueMode) {
                 var showSplash by remember { mutableStateOf(true) }
@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                     // Full animation on the first launch, a short fade-in
                     // of the app name on every launch after — decided once
                     // per launch, see StartupSplashViewModel.
-                    val splashViewModel: StartupSplashViewModel = koinViewModel()
+                    val splashViewModel: StartupSplashViewModel = viewModel()
                     val onFinished = {
                         splashViewModel.onSplashFinished()
                         showSplash = false

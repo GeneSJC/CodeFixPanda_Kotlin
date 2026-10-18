@@ -45,15 +45,16 @@ View (Compose screen)
   `TopReposEvent.RateLimited`); the ViewModels' `*UiMapping` files turn those facts into text.
   The state holders are tested without any UI.
 - **Koin supplies the dependencies.** `di/AppModule.kt` is the one place that says how the
-  app's objects are built, bottom layer first: repositories (with their data sources inside),
-  state holders, then ViewModels. A class lists what it needs as constructor arguments and
-  Koin resolves them by type, so a test builds the class directly over fakes. Repositories and
-  state holders are singletons; a ViewModel is created per screen by `koinViewModel()` and
-  lives in the ViewModel store of its owner. Concrete classes are registered, with no
-  interface per class: an interface appears where there is a second implementation to choose.
+  shared objects are built, bottom layer first: repositories (with their data sources inside),
+  then state holders. Those take what they need as constructor arguments. A ViewModel declares
+  what it needs as plain members, `private val repository: X by inject()`, so it keeps a
+  no-argument constructor and is created by the ordinary `viewModel()` factory. A test registers
+  fakes with `restartKoin { single { fake } }` and then constructs the ViewModel. Concrete
+  classes are registered, with no interface per class: an interface appears where there is a
+  second implementation to choose.
 - **Every top-level ViewModel extends `BaseViewModel`**, which carries the app-level values any
   screen may need (today the build configuration, an immutable `AppConfig`). It holds values
-  only: a ViewModel that needs a repository or a state holder takes it in its own constructor.
+  only: a ViewModel that needs a repository or a state holder declares it as its own member.
   A guard test fails if a ViewModel does not extend it.
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.

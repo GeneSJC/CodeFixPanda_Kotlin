@@ -67,6 +67,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.formatRelativeTime
@@ -90,7 +91,6 @@ import com.example.githubissuefinder.ui.theme.DrawerSectionSandbox
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.flow.collect
-import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * CM 1 of the "Discover" repo-first flow (option C from the architecture
@@ -126,7 +126,7 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * The hamburger menu (☰, v0.31, expanded over time as more animations
  * were added) opens with an OVERLAY-based animation-replay toolkit —
- * replayAnimation is local state inside THIS function, so koinViewModel()
+ * replayAnimation is local state inside THIS function, so viewModel()
  * above is only ever called once per real session — but what it shows
  * now depends on the drawer flag (viewModel.showDetailedDrawerMenu, from AppConfig; a plain
  * boolean val in app/build.gradle.kts, defaulting to false): true gets
@@ -363,7 +363,7 @@ fun TopReposScreen(
     onOpenSettings: () -> Unit,
     onResetApp: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: TopReposViewModel = koinViewModel(),
+    viewModel: TopReposViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showInfoDialog by remember { mutableStateOf(false) }

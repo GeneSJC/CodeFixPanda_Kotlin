@@ -31,8 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.formatRelativeTime
-import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * v0.51 ("Hide Issue", Part C of the Cache-Preserving Refresh sequence):
@@ -64,7 +64,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun HiddenIssuesScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HiddenIssuesViewModel = koinViewModel(),
+    viewModel: HiddenIssuesViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val hiddenIssues by viewModel.hiddenIssues.collectAsStateWithLifecycle()

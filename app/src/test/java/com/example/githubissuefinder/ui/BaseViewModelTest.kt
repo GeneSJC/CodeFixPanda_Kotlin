@@ -1,17 +1,26 @@
 package com.example.githubissuefinder.ui
 
 import com.example.githubissuefinder.data.AppConfig
+import com.example.githubissuefinder.testutil.StopKoinRule
+import com.example.githubissuefinder.testutil.restartKoin
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 /** BaseViewModel over a config: each getter forwards the matching AppConfig value. */
 class BaseViewModelTest {
 
-    private class TestViewModel(config: AppConfig) : BaseViewModel(config)
+    @get:Rule
+    val stopKoin = StopKoinRule()
 
-    private fun viewModel(config: AppConfig) = TestViewModel(config)
+    private class TestViewModel : BaseViewModel()
+
+    private fun viewModel(config: AppConfig): TestViewModel {
+        restartKoin { single { config } }
+        return TestViewModel()
+    }
 
     @Test
     fun gettersForwardTheConfigValues() {
