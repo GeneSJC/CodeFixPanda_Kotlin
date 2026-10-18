@@ -57,144 +57,14 @@ import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
- * The repo-scoped issue list — see RepoIssuesStateHolder's class comment
- * for the full design reasoning (why no language filter, why issues
- * open in GitHub directly instead of the existing DetailScreen, why no
- * "no token" check here, and why this screen makes no network calls
- * at all as of this revision).
- *
- * v0.42 ("the data-layer swap"): takes a RepoIssueGroup instead of a
- * Repo. THE REPO DESCRIPTION SECTION IS GONE — it used to sit right
- * below the TopAppBar, truncated with a "Read more" dialog —
- * repo.description doesn't exist anymore because an issue-search
- * response never included it (RepoIssueGroup has no such field). A
- * real, visible reduction, not a layout tweak — flagged prominently
- * because it's exactly the kind of change worth someone noticing on
- * purpose rather than discovering by absence.
- *
- * v0.42, REVISED — the interactive label picker (LabelFilterRow,
- * disabledLabels, the "no open X issues for this repo" Snackbar) is
- * REMOVED, replaced with a small static pill showing the app's active
- * Issue Mode — non-interactive, just a confirmation of which mode
- * you're already in. This mirrors removing the mode dropdown from Top
- * Repos, for the same reason: Mode is a single, deliberate, whole-app
- * choice made once at the gate screen, and no screen at any depth
- * offers a second way to change it. Each IssueCard shows an
- * external-link badge (see IssueCard's doc comment) since tapping one
- * opens GitHub directly, not an in-app screen.
- *
- * The "ⓘ" info icon (opening the same shared LabelInfoDialog Feed
- * uses) was removed from this screen entirely, per direct instruction,
- * along with the repoFullName subtitle under the title — this screen's
- * header is simplified down to just the repo's display title.
- * TopReposScreen keeps its own "ⓘ" for the same dialog.
- *
- * v0.46 ("Check for More Issues"), renamed and reshaped by v0.50
- * ("Refresh this repo" write-back): the LazyColumn now always ends in a
- * footer reflecting uiState.isRefreshing / hasRefreshed / refreshError
- * — an explicit "Refresh this repo" button (with a small cost note
- * underneath, "Uses one API call against your rate limit"), a small
- * inline spinner while that fetch is in flight, an inline retry row on
- * failure, or (once hasRefreshed) a small result line ABOVE the button,
- * not replacing it — v0.46's version hid the button for the rest of the
- * session once used; this one stays reusable. See
- * RepoIssuesStateHolder.refreshThisRepo()'s doc comment for what this
- * closes (a real completeness gap — this screen previously had no way
- * to show more of a repo's issues than happened to be swept up while
- * Top Repos was built, or to discover closed ones) and for the write-
- * back into Top Repos' own cache. The empty-state message ("No open
- * matching issues remain.") moved INSIDE the LazyColumn as its own
- * item, rather than replacing it entirely — the footer needs to render
- * either way, so there can't meaningfully be a screen with a list
- * showing but no footer. That message can only actually be reached
- * after a refresh finds zero — repoGroup.issues is never empty on this
- * screen's initial load (see RepoIssueGroup's own doc comment).
- *
- * v0.48: isBookmarked (hardcoded false before this CM — nothing wired
- * it to anything real) now reads the bookmarked ids from
- * RepoIssuesViewModel (which observes BookmarksRepository), and onToggleBookmark/snackbarHostState are wired through
- * to IssueCard's new bookmark toggle — see that file's own doc comment
- * for the full reasoning, including why this specific action uses a
- * real Snackbar rather than the Toast pattern Copy Link uses. This
- * screen gained a SnackbarHost for exactly this — it didn't have one
- * before this CM.
- *
- * v0.51 ("Hide Issue"): uiState.issues stays the RAW list — hidden
- * issues are filtered out at display time only, from
- * the hidden ids (RepoIssuesViewModel.hiddenIds, which observes
- * HiddenIssuesRepository), never removed from the underlying state or
- * cache. Tapping the new "✕" badge calls viewModel.hideIssue(), then
- * shows a Snackbar
- * with an Undo action using a coroutineScope scoped to THIS Composable
- * (rememberCoroutineScope), not IssueCard's own — the card that
- * triggered it is about to disappear from the list, which would cancel
- * a scope owned by that card before Undo could ever be tapped. See
- * IssueCard's own doc comment for why this couldn't live there.
- *
- * README access went through two shapes. First, a "📄" TopAppBar action
- * opening a separate full-screen destination (RepoReadmeScreen). That
- * was replaced with ReadmeExpandableSection — an inline expand/collapse
- * widget living right in the filter row below, per the originally-
- * discussed "expansion widget at the top of the view" design, built
- * once deliberately deferred behind the IssueCard density pass. See
- * that file's own doc comment for the full reasoning, including why
- * the separate screen came out entirely rather than staying as a
- * second access point. The underlying fetch (RepoReadmeViewModel) is
- * unchanged either way — still GitHub's Contents API, still
- * deliberately NOT tracked by the IssueSearchRepository.rateLimit chip this app shows
- * elsewhere, since it's a different API with a different, much larger
- * quota.
- *
- * The per-issue language tag (previously shown once per IssueCard) is
- * also gone from this screen's cards as of the same change — this app
- * currently only ever searches Kotlin issues in practice, so showing
- * it on every single card was genuinely redundant. It now appears
- * exactly ONCE, as a static pill in this screen's filter row, next to
- * the active Issue Mode pill, directly followed by the README toggle.
- *
- * The TopAppBar's actions slot briefly held the "ⓘ" info icon (moved
- * there to free up the filter row), then was replaced again — the "ⓘ"
- * came out of this screen entirely (see above), and that slot now
- * holds a single action opening the repo's main GitHub page directly
- * (https://github.com/{repoFullName}), using the same "↗" glyph/badge
- * look IssueCard's own external-link badge used before ITS glyph
- * changed to "→" (see IssueCard's doc comment, "COLLAPSIBLE CARD
- * PASS") — this header action is a distinct destination (the repo
- * itself, not any one issue), so it deliberately kept the diagonal
- * glyph rather than following that same rename.
- *
- * README FULL-HEIGHT EXPAND (added October 5, 2026, per direct
- * instruction, after seeing the expanded README on-device) — TWO
- * revisions in the same day, second one superseding the first:
- *
- * v1 (same-day, since replaced): gave ReadmeExpandableBody weight(1f)
- * in the main Column and skipped composing the issue LazyColumn
- * entirely while expanded. This filled the content area correctly,
- * but broke the expand animation: weight(1f) with Column's default
- * fill=true FORCES a child to exactly that weighted size on every
- * frame, which fights AnimatedVisibility's own size interpolation —
- * the README jumped straight to full size instead of visibly growing
- * into it. Collapse still animated (weight(1f) was removed the moment
- * readmeExpanded went false), but the list reappeared un-animated
- * underneath it and visibly shifted position as the README kept
- * shrinking beside it in the same Column — reported as "the issue
- * cards move up with it."
- *
- * v2 (this version): the README is a genuine OVERLAY, not a layout
- * participant competing for space with the list. The issue LazyColumn
- * is now ALWAYS composed, always fillMaxSize() inside a Box — nothing
- * conditional about it anymore, so issueListState no longer needs to
- * survive a disappear/reappear cycle (kept anyway; harmless, and still
- * good practice to hoist it). ReadmeExpandableBody is a SECOND child of
- * that same Box, composed after the LazyColumn so it draws on top, with
- * its own opaque background (see ReadmeBody in
- * ReadmeExpandableSection.kt) so the list is never visible through a
- * partially-expanded README. Because Box children don't support
- * weight() at all, nothing forces ReadmeExpandableBody's size — its own
- * AnimatedVisibility is free to animate smoothly in both directions:
- * expanding, it visibly grows over the content; collapsing, it visibly
- * shrinks away and reveals the already-static, already-full-height list
- * sitting underneath it the whole time — exactly the effect asked for.
+ * The issue list for one repo. It makes no network call on open: it shows the issues already
+ * in the group and ends in a "Refresh this repo" button, an explicit call with a visible cost,
+ * plus a spinner, retry row or result line. Hidden issues are filtered at display time from
+ * the raw list; hiding shows an Undo Snackbar owned by this screen, because the card that
+ * triggered it is about to leave the list. The README is an overlay over an always-composed
+ * list, so it can animate its size freely. The pill in the filter row shows the active mode;
+ * it is not a control, since the mode is one whole-app choice. More in docs/design-notes.md,
+ * "Repo issues screen".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,18 +81,13 @@ fun RepoIssuesScreen(
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    // Hoisted so the issue list's scroll position survives being
-    // conditionally un-composed while the README is expanded (see the
-    // README full-height section below) — a LazyColumn created fresh
-    // each time would otherwise reset to the top.
+    // Hoisted so the list's scroll position is kept.
     val issueListState = rememberLazyListState()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsStateWithLifecycle()
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, hiddenIds)
 
-    // Defensive fallback only — DiscoverNavHost guarantees a mode is
-    // chosen before this screen is ever reachable. See
-    // IssueModeRepository.
+    // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
     val mode by viewModel.mode.collectAsStateWithLifecycle()
     val activeMode = resolveActiveMode(mode)
 
@@ -300,13 +165,7 @@ fun RepoIssuesScreen(
                 }
             }
 
-            // The issue list is now ALWAYS composed, always full-size —
-            // the README overlay (below) is a second Box child drawn on
-            // top of it, not a competitor for the Column's weighted
-            // space. See this function's own doc comment, "README
-            // FULL-HEIGHT EXPAND," for why this replaced an earlier,
-            // same-day version that gave the README weight(1f) directly
-            // in this Column instead.
+            // Always composed and full-size; the README overlay below is drawn on top of it.
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyColumn(
                     state = issueListState,
@@ -401,20 +260,9 @@ fun RepoIssuesScreen(
 }
 
 /**
- * v0.46, renamed/reshaped by v0.50: the one place on this screen
- * anything can be "loading" or "errored" — see RepoIssuesUiState's own
- * doc comment for why that's scoped narrowly to this footer rather than
- * the whole screen. Deliberately a manual button, not automatic, with a
- * visible cost note — same "every network call stays a visible,
- * intentional choice" instinct Top Repos' own Load More button is built
- * around.
- *
- * UNLIKE v0.46's version: hasRefreshed no longer hides the button — the
- * idle state always shows the button (re-tappable indefinitely), and
- * ADDS a small result line above it once hasRefreshed is true ("All 7
- * open issues · checked 2m ago", or "No open issues remain · checked
- * just now" for the zero case — see the LazyColumn's own empty-state
- * item for what the MAIN list area shows in that same situation).
+ * The one place on this screen that can be loading or errored. A manual button with a visible
+ * cost note, in the same spirit as Load More on Top Repos. The idle state keeps the button and
+ * adds a result line above it once a refresh has run.
  */
 @Composable
 private fun RefreshThisRepoFooter(
