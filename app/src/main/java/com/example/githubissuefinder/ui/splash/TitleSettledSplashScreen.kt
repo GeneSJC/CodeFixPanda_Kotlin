@@ -25,10 +25,11 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// The burst and hold are carried over unchanged from TitleRevealSplashScreen, so this ending plays
-// exactly as the full animation's does. They are the BASE (1x) values; speedMultiplier scales them.
-private const val HOLD_BASE_MS = 900
-private const val BURST_BASE_DURATION_MS = 500
+// The burst look is carried over from TitleRevealSplashScreen. The burst is 25% slower than there
+// (625 vs 500) with the hold lengthened to match, so the pause after it is unchanged. They are the
+// BASE (1x) values; speedMultiplier scales them.
+private const val HOLD_BASE_MS = 1025
+private const val BURST_BASE_DURATION_MS = 625
 
 // How long the settled title shows on its own before the burst begins.
 private const val TITLE_ONLY_MS = 1350L
