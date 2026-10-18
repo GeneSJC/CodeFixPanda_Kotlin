@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -75,18 +76,8 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                         textAlign = TextAlign.Center,
                     )
                     Text(
-                        "What kind of issues would you like to look at?",
+                        "Select the issues you would like to look at",
                         style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                    Text(
-                        "Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = MaterialTheme.typography.bodyMedium.fontSize * 1.5f,
-                            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5f,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
                     )
@@ -119,13 +110,18 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // The icon sits beside the button on the card, not inside it, so it can later
-                // become a per-mode icon without touching the button.
-                Text(
-                    mode.glyph,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(end = 12.dp),
-                )
+                // The icon sits beside the button on the card, not inside it, in the button's
+                // color so the two read as a pair, and can later become a per-mode icon without
+                // touching the button.
+                Surface(shape = RoundedCornerShape(8.dp), color = accent) {
+                    Text(
+                        mode.glyph,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.width(5.dp))
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
