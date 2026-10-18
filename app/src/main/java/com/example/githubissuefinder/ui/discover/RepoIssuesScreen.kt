@@ -40,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,7 +53,7 @@ import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.IssueCard
-import com.example.githubissuefinder.ui.theme.colorScheme
+import com.example.githubissuefinder.ui.components.ModePill
 
 /**
  * The issue list for one repo. It makes no network call on open: it shows the issues already
@@ -126,44 +125,11 @@ fun RepoIssuesScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .background(activeMode.colorScheme().primary, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            activeMode.displayName,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White,
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                RoundedCornerShape(8.dp),
-                            )
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            "Kotlin",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        )
-                    }
-                    ReadmeToggleButton(
-                        expanded = readmeExpanded,
-                        onClick = { readmeExpanded = !readmeExpanded },
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-            }
+            RepoIssuesFilterRow(
+                mode = activeMode,
+                readmeExpanded = readmeExpanded,
+                onToggleReadme = { readmeExpanded = !readmeExpanded },
+            )
 
             // Always composed and full-size; the README overlay below is drawn on top of it.
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -255,6 +221,43 @@ fun RepoIssuesScreen(
                         .padding(horizontal = 16.dp),
                 )
             }
+        }
+    }
+}
+
+/** The row under the title: the active mode, the language, and the README toggle. */
+@Composable
+private fun RepoIssuesFilterRow(
+    mode: IssueLabelFilter,
+    readmeExpanded: Boolean,
+    onToggleReadme: () -> Unit,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ModePill(mode = mode)
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer,
+                        RoundedCornerShape(8.dp),
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    "Kotlin",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+            ReadmeToggleButton(
+                expanded = readmeExpanded,
+                onClick = onToggleReadme,
+                modifier = Modifier.padding(start = 8.dp),
+            )
         }
     }
 }

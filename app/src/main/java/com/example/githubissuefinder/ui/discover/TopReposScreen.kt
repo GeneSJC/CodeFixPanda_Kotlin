@@ -38,6 +38,7 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
+import com.example.githubissuefinder.ui.components.ModePill
 import kotlinx.coroutines.flow.collect
 
 /**
