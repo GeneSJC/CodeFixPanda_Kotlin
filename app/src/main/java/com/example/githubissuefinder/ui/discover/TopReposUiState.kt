@@ -4,7 +4,6 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 
 data class TopReposUiState(
-    /** v0.42: repos: List<Repo> replaced by repoGroups: List<RepoIssueGroup> — see TopReposStateHolder's class comment. */
     val repoGroups: List<RepoIssueGroup> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
