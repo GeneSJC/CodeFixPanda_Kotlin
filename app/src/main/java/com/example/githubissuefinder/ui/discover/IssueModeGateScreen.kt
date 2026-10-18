@@ -16,15 +16,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,29 +58,29 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     GitHubIssueFinderTheme(issueMode = null) {
         Scaffold(
             topBar = {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
-                        Text("GitHubIssueFinder", style = MaterialTheme.typography.titleLarge)
+                        Text("GitHub Issue Finder", style = MaterialTheme.typography.titleLarge)
                     },
                 )
             },
         ) { padding ->
             Box(
-                modifier = Modifier.padding(padding).fillMaxSize().padding(24.dp),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(padding).fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 16.dp),
+                contentAlignment = Alignment.TopCenter,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "What are you looking for?",
+                        "Looking to make a contribution?",
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 10.dp),
                     )
                     Text(
-                        "Pick a mode to focus the whole app around — you can switch again anytime from the menu at the top.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        "Select the kind of issues you would like to see",
+                        style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 28.dp),
+                        modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         IssueLabelFilter.entries.forEach { mode ->
@@ -110,6 +111,20 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // The icon sits beside the button on the card, not inside it, in the button's
+                // color so the two read as a pair, and can later become a per-mode icon without
+                // touching the button.
+                Surface(shape = RoundedCornerShape(8.dp), color = accent) {
+                    Text(
+                        // The text-presentation selector keeps a device from swapping in a colored
+                        // emoji glyph, which would ignore the white.
+                        mode.glyph + TEXT_PRESENTATION_SELECTOR,
+                        style = modeButtonTextStyle(),
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.width(20.dp))
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
@@ -120,14 +135,8 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            mode.glyph,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                        Text(
                             mode.displayName,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = modeButtonTextStyle(),
                             color = Color.White,
                         )
                     }
@@ -157,4 +166,12 @@ private fun ModeCard(mode: IssueLabelFilter, onSelect: () -> Unit) {
             }
         }
     }
+}
+
+private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
+
+/** The icon chip and the button share this text size, 25% above titleMedium. */
+@Composable
+private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
+    it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
 }

@@ -75,7 +75,7 @@ fun SettingsScreen(
         ) {
             Text("GitHub token", style = MaterialTheme.typography.titleMedium)
             Text(
-                "GitHubIssueFinder needs a GitHub personal access token to search for " +
+                "GitHub Issue Finder needs a GitHub personal access token to search for " +
                     "issues. It needs no permissions, and it stays on this device.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -40,8 +40,8 @@ class MainActivity : ComponentActivity() {
             GitHubIssueFinderTheme(issueMode = issueMode) {
                 var showSplash by remember { mutableStateOf(true) }
                 if (showSplash) {
-                    // Full animation on the first launch, a short fade-in
-                    // of the app name on every launch after — decided once
+                    // Full animation on the first launch, a short version that
+                    // starts at the settled title on every launch after — decided once
                     // per launch, see StartupSplashViewModel.
                     val splashViewModel: StartupSplashViewModel = viewModel()
                     val onFinished = {
