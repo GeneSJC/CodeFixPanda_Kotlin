@@ -18,16 +18,11 @@ import androidx.compose.ui.unit.dp
 private const val NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=GitHubIssueFinder"
 
 /**
- * A step-by-step walkthrough for someone who has never made a GitHub
- * personal access token, reachable from Settings and from the app's
- * "no token" / "token rejected" messages so a user can always get back
- * to it.
- *
- * Deliberately recommends a classic token with every permission
- * unchecked: the app only reads public data, so a token with no
- * permissions is enough, and it means a leaked token can do almost
- * nothing. GitHub renames its menus now and then, so the step wording
- * is a starting point to re-check against GitHub's current screens.
+ * A step-by-step walkthrough for someone who has never made a GitHub personal access token,
+ * reachable from Settings and from the "no token" and "token rejected" messages. It recommends a
+ * classic token with every permission unchecked: the app only reads public data, so a leaked token
+ * can do almost nothing. GitHub renames its menus now and then, so re-check the wording against its
+ * current screens.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

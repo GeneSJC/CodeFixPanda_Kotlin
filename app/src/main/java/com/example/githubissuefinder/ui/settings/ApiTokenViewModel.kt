@@ -7,18 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
 
 /**
- * The Settings screen's interface to the GitHub token: what is saved,
- * which source is currently in effect, and saving or clearing the
- * user's own. Persistence and the "user token beats build token" rule
- * live in ApiTokenRepository, not here.
- *
- * Deliberately NOT holding the text the user is typing: that draft is
- * purely presentational, short-lived state (it only matters until Save
- * is tapped), so it stays in the composable — a ViewModel is for state
- * that is persisted, shared, or the result of a decision.
- *
- * The repository is a plain member that Koin supplies; a test registers
- * one over a fake storage.
+ * The Settings screen's interface to the GitHub token: what is saved, which source is in effect, and
+ * saving or clearing the user's own. Persistence and the "user token beats build token" rule are in
+ * ApiTokenRepository. It deliberately does not hold the text being typed: that draft is short-lived
+ * presentation state and stays in the composable.
  */
 class ApiTokenViewModel : BaseViewModel() {
 

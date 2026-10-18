@@ -39,26 +39,11 @@ private val TOSS_HEIGHT = 150.dp
 private val COIN_SIZE = 96.dp
 
 /**
- * A one-shot ~5 second brand animation shown before the main app: the
- * shared "GH" brand mark (see SplashBrandMark.kt) tosses into the air,
- * spins, falls, bounces once, and settles — then calls onFinished() to
- * hand off to the real app content.
- *
- * Selectable via BuildConfig.SPLASH_ANIMATION ("coin", the default) as
- * an alternative to OrigamiSplashScreen — see MainActivity.kt.
- *
- * NOT the system SplashScreen API. Android's built-in cold-start splash
- * is meant for brief, simple branding — Google's own guidance
- * discourages long custom animations there, and the OS can cut it
- * short. This is a custom first Compose screen instead: MainActivity
- * launches instantly, and this is simply the first thing shown, with
- * full control over timing and no OS constraints.
- *
- * Built entirely with core Compose animation APIs (graphicsLayer
- * rotationX + cameraDistance for the pseudo-3D flip, Animatable, spring
- * for the landing bounce) — no third-party library, no import
- * uncertainty. Exact spacing/sizing is a reasonable starting point, not
- * visually tuned against a real device.
+ * A one-shot brand animation (about 5 seconds): the shared "GH" mark tosses into the air, spins,
+ * falls, bounces once and settles, then calls onFinished(). It is a custom first Compose screen and
+ * not the system SplashScreen API, which is meant for brief branding and which the OS can cut short.
+ * Core Compose animation APIs only (graphicsLayer rotationX with cameraDistance for the pseudo-3D
+ * flip, Animatable, spring for the bounce); spacing and sizing are a starting point.
  */
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {

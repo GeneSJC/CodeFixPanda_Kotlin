@@ -11,22 +11,12 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 /**
- * Loads a repo's README for the README screen. The request, the token
- * check and the decoding all live in ReadmeRepository (see its doc
- * comment, and ReadmeDto's, for why this is a different API/quota from
- * everything else in this app and deliberately not tracked by
- * IssueSearchRepository.rateLimit — per direct instruction: no rate-limit indicator for
- * this screen). This ViewModel only maps what the repository reports to
- * the screen's state (RepoReadmeUiState.toUiState()).
- *
- * The repository is a plain member that Koin supplies, so a test can
- * register one over a fake. loadedFor* dedup guard follows
- * RepoIssuesViewModel's pattern, so navigating away and back within the
- * same process doesn't redundantly refetch.
- *
- * Rendering itself (Markwon, native TextView — explicitly NOT a
- * WebView, per direct instruction) lives in RepoReadmeScreen; this
- * ViewModel only ever hands it a plain markdown String.
+ * Loads a repo's README for the README widget. The request, token check and decoding live in
+ * ReadmeRepository, which uses a different API and quota from search and is deliberately not shown
+ * in the rate-limit chip. This ViewModel maps what the repository reports to the screen's state. A
+ * loadedFor* guard avoids refetching when the user navigates away and back within the process.
+ * Rendering (Markwon in a native TextView, not a WebView) is the screen's job; this hands it a plain
+ * markdown String.
  */
 class RepoReadmeViewModel : BaseViewModel() {
 

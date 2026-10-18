@@ -67,3 +67,17 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **In memory only.** A snippet is cheap to refetch and has no reason to survive process death.
 - **Cost.** Each card's first appearance makes one Contents API call, a different and far larger quota (5,000 per hour authenticated) than the 30-per-minute Search API; after a few Load More taps there can be dozens of cards.
 - **Retry only on a thrown exception.** An early version marked a repo "handled" the moment it was first requested. Two repos whose README loaded fine on the repo screen never got a preview, because a transient failure during the initial burst of calls left their cards permanently empty. Now only an exception is retried (on a later recomposition); any real HTTP answer, including a 404 for "no README", is final.
+
+## Mode gate
+
+- **A literal gate.** With no mode chosen the app shows this screen instead of a silent default; the mode is one deliberate choice made here.
+- **Nested theme.** The screen's content sits in a theme with `issueMode = null`. Tapping a card sets the mode synchronously, so the single root theme recomposed every visible screen, including this one still fading out; the theme's crossfade covers only a handful of color roles, so the subheader and text color visibly snapped to the new mode's tone just before the transition. Pinning this subtree to the neutral scheme removes the snap.
+- **Expanding cards.** "Good first issue" is not self-explanatory to someone outside open-source convention. Only the colored pill selects a mode; a separate chevron reveals the description, which is the same wording `LabelInfoDialog` uses, held in one place so the two cannot drift.
+
+## Splash screens
+
+- **Pinned palette.** The splash is the project's fixed brand identity, so every splash uses the Good First Issue (purple) palette and does not repaint under Help Wanted.
+- **Not GitHub's logo.** The "GH" mark is the project's own: an independent, unaffiliated portfolio project.
+- **Which one plays** is chosen in one place, `AppStartSplashScreen`, which both the cold start and the menu replay call, so a replay cannot drift from what a user saw. After the first launch a short fade-in replaces the full animation.
+- **Origami fold.** Every shape is drawn already oriented as a diamond so each fold is a single-axis rotation; two earlier attempts needed to compose two rotations on one layer, which could not be verified without seeing it render.
+- **Shape stack** is a separate animation built to keep the snap-and-hold rhythm that emerged while tuning the folds. It is deliberately longer than the others.

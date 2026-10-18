@@ -65,44 +65,13 @@ private const val BURST_START_ALPHA = 0.85f
 private const val BURST_HOLD_FRACTION = 0.45
 
 /**
- * A kinetic title-reveal splash: "Git" slides in from the left and
- * overshoots into a lurch before settling ("Screeching Stop"), "Hub"
- * slides in from the right and shudders on impact, then "Issue" and
- * "Finder" rise straight up from below into place under "Git" and "Hub"
- * respectively — spelling out the app's own name, not GitHub's (see
- * SplashBrandMark.kt's doc comment on why this project uses its own
- * brand colors rather than GitHub's).
- *
- * Selectable via BuildConfig.SPLASH_ANIMATION, alongside "coin",
- * "origami", and "shapeStack" — see MainActivity.kt.
- *
- * Choreographed from a real reference animation Gene captured frame-by-
- * frame from a separate web prototype (a kinetic-typography player with
- * its own named stages and an explicit "+28px, -4.5° tilt" spec for the
- * "Git" overshoot, which is where those two constants above come from
- * directly). That same reference player has its own 0.25x/0.5x/1x/1.5x/
- * 2x playback-speed control — [speedMultiplier] mirrors that exact
- * convention rather than inventing a different one: actual stage
- * durations are each BASE_MS / speedMultiplier, so 0.5x means every
- * duration doubles (half playback speed, i.e. twice as slow), 1x (the
- * default) reproduces the reference's own numbers exactly. One
- * composable, not a duplicated "slow variant" screen — see
- * TopReposScreen.kt's replay menu for where 0.5x is offered alongside
- * the standard 1x.
- *
- * An earlier version also showed oversized, barely-visible "ghost"
- * copies of "Issue" and "Finder" from the first frame, fading out as the
- * real words arrived; removed because the faint imprint of upcoming
- * text didn't read well. The text itself is drawn by TitleWordmark,
- * shared with the short fade-in splash (TitleFlashSplashScreen) and
- * scaled up 70% (SPLASH_TEXT_SCALE) so it fills more of the screen.
- *
- * Each word gets its own Animatable(s) launched in a separate coroutine
- * with a `delay()` to its stage's start time, rather than one shared
- * global progress value — keeps each word's motion independently
- * readable, and matches the reference's own per-word stage structure
- * more directly than deriving everything from a single 0..1 fraction
- * would.
+ * A kinetic title-reveal splash: "Git" slides in from the left and overshoots before settling, "Hub"
+ * slides in from the right and shudders on impact, then "Issue" and "Finder" rise into place beneath
+ * them, spelling the app's own name (see SplashBrandMark.kt on why it does not use GitHub's brand).
+ * [speedMultiplier] scales every stage duration (0.5 means twice as slow), so one composable serves
+ * the standard and half-speed replays. Each word has its own Animatable(s), launched in a coroutine
+ * with a delay to its stage start, which keeps each word's motion readable. The text is drawn by
+ * TitleWordmark, shared with the short fade-in splash.
  */
 @Composable
 fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f) {
@@ -216,22 +185,9 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // The finishing burst: a soft radial pulse behind the wordmark,
-        // fired once EVERYTHING has settled — the moment "Finder" lands,
-        // after "Git", "Hub" and "Issue" are all in place — as the final
-        // flourish of the whole animation. (It used to fire when "Hub"
-        // hit "Git", which put the glow in the middle of the build-up
-        // instead of at the end.) A cheap radial-gradient stand-in for
-        // the glow in Gene's captured reference frames.
-        //
-        // Alpha deliberately HOLDS near its starting value for the first
-        // BURST_HOLD_FRACTION of the duration, rather than fading on the
-        // same default easing driving the scale-up — both moving fast
-        // right from the start (as plain default-eased tweens) meant the
-        // circle was already nearly transparent by the time it grew
-        // large enough to actually notice, so in practice nothing
-        // visible ever showed up. Holding alpha up while the scale grows,
-        // THEN fading, is what actually makes the burst readable.
+        // The finishing burst: a soft radial pulse behind the wordmark, fired once everything has settled.
+        // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and scaling from
+        // the start left the circle nearly transparent by the time it was big enough to see.
         launch {
             delay((finderStartMs + finderDurationMs).toLong())
             launch {

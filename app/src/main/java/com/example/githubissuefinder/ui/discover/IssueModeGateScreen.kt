@@ -41,67 +41,15 @@ import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
- * The Issue Mode gate (v0.41): shown by DiscoverNavHost instead of the
- * normal repo-first flow whenever the Issue Mode is null — a real,
- * literal gate rather than a silent default to one mode or the other,
- * per how this was explicitly asked for ("you have to set it into the
- * mode you're looking for").
- *
- * One card per IssueLabelFilter.entries — NOT hardcoded to exactly two
- * cards for GFI/HW specifically, so a future third or fourth Mode (the
- * explicit "not limited to 2 or 3 or 4" goal) shows up here for free
- * the moment it's added to that enum and given a colorScheme() branch
- * in ModeColorSchemes.kt, with no change needed to this file.
- *
- * Each card is tinted with a light hint of that mode's own primary
- * color (at low alpha, against the screen's still-neutral default
- * background — this screen itself deliberately doesn't switch the app
- * theme, since no mode is chosen yet) — a small preview of what
- * you're about to switch into, not the full pastel background that
- * only applies once a mode is actually active.
- *
- * NESTED GitHubIssueFinderTheme(issueMode = null): added after a real,
- * reported artifact — tapping a card calls onModeSelected, which sets
- * the Issue Mode synchronously, and MainActivity's single root theme
- * call reads that same value, so EVERY currently-composed screen
- * (including this one, still visible/fading during the nav transition
- * to Top Repos) recomposes with the new mode's colors immediately.
- * Theme.kt's animateAllColors() only crossfades a handful of roles
- * (primary, background, etc.) — onSurfaceVariant and the default text
- * color aren't among them, so this screen's subheader/title visibly
- * SNAPPED from the neutral scheme's muted gray to the new mode's
- * (unanimated) tone in the instant before the screen changed — reported
- * as "it goes into a darker, more readable color, but then it just
- * changes to the next screen." The subheader text itself never changes
- * by selection; only its inherited color did, incidentally, contradicting
- * this screen's own stated intent just above ("deliberately doesn't
- * switch the app theme"). Wrapping this screen's own content in a
- * second, explicitly issueMode = null GitHubIssueFinderTheme pins
- * MaterialTheme.colorScheme to the neutral baseline for everything in
- * this subtree, regardless of what the Issue Mode becomes mid-tap —
- * restoring that stated intent rather than adding a new one.
- *
- * APP TITLE: added a plain TopAppBar (title only, no navigation icon —
- * this is the very first screen, nothing to navigate back to) so a user
- * landing here — including one who taps Reset App later and ends up
- * back here — can see which app this is, same as every other screen in
- * this flow.
- *
- * EXPANDING MODE CARDS (added after direct feedback that "good first
- * issue" wasn't self-explanatory to a user who isn't deep in GitHub/
- * OSS jargon): replaces this screen's earlier plain, whole-card-tappable
- * shape. The colored pill itself is now the ONLY thing that selects a
- * mode (ModeCard's onSelect) — tapping anywhere else on the card no
- * longer does. A separate chevron to the pill's right toggles an inline
- * description (IssueLabelFilter.description — the same wording
- * LabelInfoDialog shows, now sourced from one place so the two can't
- * drift apart) without selecting anything, so a user can read what a
- * mode means before committing to it. A plain monochrome glyph
- * (IssueLabelFilter.glyph) sits in the pill next to its name — this
- * codebase's existing plain-text-symbol convention (see e.g.
- * RepoIssuesScreen's "←"/"↗"), not an icon-library drawable, and
- * rendered in the same white as the pill's own text so it reads as
- * monochromatic rather than a colorful emoji.
+ * The Issue Mode gate, shown by DiscoverNavHost whenever no mode is chosen: a literal gate, not a
+ * silent default. One card per IssueLabelFilter entry, so a new mode appears here once it is added
+ * to the enum and given a color scheme. Each card is tinted with a light hint of its mode's color;
+ * the screen itself does not switch the app theme, since no mode is chosen yet. The colored pill is
+ * the only thing that selects a mode; a chevron toggles an inline description (the same wording as
+ * LabelInfoDialog) so a user can read what a mode means before committing.
+ * The content sits in a nested theme with issueMode = null: tapping a card sets the mode
+ * synchronously, and without the wrapper this screen's text color snapped to the new mode's tone just
+ * before the transition. More in docs/design-notes.md, "Mode gate".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

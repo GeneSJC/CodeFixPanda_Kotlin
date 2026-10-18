@@ -7,28 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
 
 /**
- * The UI's one interface to the app-wide Issue Mode: the places that
- * need to react to it at the very top of the app (MainActivity, to pick
- * a color scheme) or to change it before any screen-level ViewModel
- * exists (DiscoverNavHost, for the gate screen's choice and for picking
- * the start destination) go through this, never straight to the
- * repository or to storage.
- *
- * Scope: obtained with viewModel() from the root composition, which
- * means it is scoped to the Activity — MainActivity and DiscoverNavHost
- * therefore receive the SAME instance, and the theme re-renders the
- * moment the gate screen's choice lands. (TopReposViewModel and
- * RepoIssuesViewModel are scoped to their own nav destinations, so they
- * (TopReposViewModel through TopReposStateHolder) talk to the repository directly for the same mode rather than going
- * through this one.)
- *
- * Why the repository is a plain member that Koin supplies: production
- * code gets the real one, while a unit test registers its own backed by
- * a fake IssueModeStorage.
- *
- * Why [mode] just re-exposes the repository's StateFlow instead of
- * copying it into its own: there is only one source of truth for the
- * mode, and a second copy could drift out of sync with it.
+ * The UI's one interface to the app-wide Issue Mode, for the places that need it at the very top of
+ * the app (MainActivity, for the color scheme; DiscoverNavHost, for the gate and the start
+ * destination). It is Activity-scoped, so both receive the same instance and the theme updates the
+ * moment the gate's choice lands; the screen ViewModels reach the mode through their state holders.
+ * [mode] re-exposes the repository's StateFlow rather than copying it, so there is one source of
+ * truth. The repository is a plain member that Koin supplies; a test registers its own over a fake
+ * IssueModeStorage.
  */
 class IssueModeViewModel : BaseViewModel() {
 
