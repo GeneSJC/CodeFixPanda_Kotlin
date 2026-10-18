@@ -56,7 +56,7 @@ abstract class BaseViewModel(
      * Ids the user hid, to filter hidden issues out of a list at display
      * time. Shared by the screens that list issues (promoted here when a
      * second ViewModel needed it: the rule of two). A pass-through, so it
-     * lives here and not in a service; resolved when read, so a ViewModel
+     * lives here and not in a state holder; resolved when read, so a ViewModel
      * that never uses it needs the repository to be neither set up nor
      * installed. Tests install their own with
      * HiddenIssuesRepository.replaceInstanceForTests().

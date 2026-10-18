@@ -4,7 +4,7 @@ import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
 
 data class TopReposUiState(
-    /** v0.42: repos: List<Repo> replaced by repoGroups: List<RepoIssueGroup> — see TopReposService's class comment. */
+    /** v0.42: repos: List<Repo> replaced by repoGroups: List<RepoIssueGroup> — see TopReposStateHolder's class comment. */
     val repoGroups: List<RepoIssueGroup> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -42,7 +42,7 @@ data class TopReposUiState(
     // within 60s already risked the 30/min cap. This screen's ENTIRE
     // load is now a single issue-search call — a genuine architectural
     // side benefit of the pipeline swap, not something separately
-    // decided. See TopReposService's class comment.
+    // decided. See TopReposStateHolder's class comment.
 
     /**
      * v0.43 (pagination): which page of the current query has been
@@ -89,7 +89,7 @@ data class TopReposUiState(
     /**
      * True while the list can't load because of the token: none is set,
      * or GitHub rejected the one in use. When the token changes in this
-     * state, TopReposService reloads; when it is already working, a
+     * state, TopReposStateHolder reloads; when it is already working, a
      * change doesn't disturb the list.
      */
     val needsTokenFix: Boolean

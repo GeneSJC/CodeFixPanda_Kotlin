@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.githubissuefinder.data.AppConfigRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
-import com.example.githubissuefinder.data.TopReposService
+import com.example.githubissuefinder.data.TopReposStateHolder
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.ui.BaseViewModel
@@ -22,17 +22,17 @@ import kotlinx.coroutines.launch
  * The data state itself, the logic that loads and changes it, and the
  * long design history of how the list is built (the v0.42 data-layer
  * swap, pagination and cross-page dedup, the persistent cache, the
- * cache-preserving refresh) all live in TopReposService. This class
- * holds none of that state: [uiState] is the service's state with the
+ * cache-preserving refresh) all live in TopReposStateHolder. This class
+ * holds none of that state: [uiState] is the state holder's state with the
  * message text added (see TopReposUiMapping.kt), and [snackbarEvents]
- * are the service's events turned into text.
+ * are the state holder's events turned into text.
  *
  * Constructing this class starts a fresh visit to the screen
- * (TopReposService.open()), which is what constructing it has always
+ * (TopReposStateHolder.open()), which is what constructing it has always
  * meant: load the list for the default language, cache first.
  *
- * The service is a plain member, the app-wide TopReposService; tests
- * install their own with TopReposService.replaceInstanceForTests().
+ * The state holder is a plain member, the app-wide TopReposStateHolder; tests
+ * install their own with TopReposStateHolder.replaceInstanceForTests().
  * The remaining argument serves the repo cards (README previews) and is
  * not part of the list's data state. The hidden ids come from
  * BaseViewModel.
@@ -42,34 +42,34 @@ class TopReposViewModel(
     appConfigRepository: AppConfigRepository = AppConfigRepository.instance,
 ) : BaseViewModel(appConfigRepository) {
 
-    private val service = TopReposService.instance
+    private val stateHolder = TopReposStateHolder.instance
 
     init {
-        service.open()
+        stateHolder.open()
     }
 
-    val uiState: StateFlow<TopReposUiState> = service.state
+    val uiState: StateFlow<TopReposUiState> = stateHolder.state
         .map { it.toUiState() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, service.state.value.toUiState())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState())
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
-    val snackbarEvents: Flow<String> = service.events.map { it.toMessage() }
+    val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage() }
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
-    val rateLimit: StateFlow<RateLimitInfo?> = service.rateLimit
+    val rateLimit: StateFlow<RateLimitInfo?> = stateHolder.rateLimit
 
     /** Whether a token is in use right now, for the rate-limit chip's tap (a token problem, or the real dialog). */
-    val hasToken: StateFlow<Boolean> = service.hasToken
+    val hasToken: StateFlow<Boolean> = stateHolder.hasToken
 
     /**
      * The active Issue Mode, or null while none is chosen (which
      * DiscoverNavHost prevents from ever being observed here — see
      * IssueModeGateScreen).
      */
-    val mode: StateFlow<IssueLabelFilter?> = service.mode
+    val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode
 
     /**
      * A repo card appeared on screen: load its README preview if it
@@ -80,7 +80,7 @@ class TopReposViewModel(
         viewModelScope.launch { snippetRepository.loadIfNeeded(repoOwner, repoName, repoFullName) }
     }
 
-    fun onLanguageSelected(language: LanguageFilter) = service.selectLanguage(language)
+    fun onLanguageSelected(language: LanguageFilter) = stateHolder.selectLanguage(language)
 
     /**
      * Handler for the two hamburger-menu items TopReposScreen offers
@@ -89,23 +89,23 @@ class TopReposViewModel(
      * TopReposScreen's doc comment for the full reasoning, including why
      * this is not a return to IssueModeGateScreen.
      */
-    fun onModeSelected(mode: IssueLabelFilter) = service.selectMode(mode)
+    fun onModeSelected(mode: IssueLabelFilter) = stateHolder.selectMode(mode)
 
     /** Retries the INITIAL load — for when the list is empty because the first fetch failed. Unrelated to retryLoadMore(), which retries a failed Load More instead. */
-    fun retry() = service.retry()
+    fun retry() = stateHolder.retry()
 
-    /** Fetches the next page and adds it to what's shown; safe to wire straight to a button (see TopReposService.loadMore()). */
-    fun loadMore() = service.loadMore()
+    /** Fetches the next page and adds it to what's shown; safe to wire straight to a button (see TopReposStateHolder.loadMore()). */
+    fun loadMore() = stateHolder.loadMore()
 
     /** Retries a Load More that failed — distinct from retry(), which is for the initial load. */
-    fun retryLoadMore() = service.retryLoadMore()
+    fun retryLoadMore() = stateHolder.retryLoadMore()
 
-    /** "Check for New Repos": see TopReposService.checkForNewRepos() for what it does and what it leaves untouched. */
-    fun checkForNewRepos() = service.checkForNewRepos()
+    /** "Check for New Repos": see TopReposStateHolder.checkForNewRepos() for what it does and what it leaves untouched. */
+    fun checkForNewRepos() = stateHolder.checkForNewRepos()
 
-    /** Clears the ENTIRE persistent cache and reloads; see TopReposService.clearCache(). */
-    fun clearCache() = service.clearCache()
+    /** Clears the ENTIRE persistent cache and reloads; see TopReposStateHolder.clearCache(). */
+    fun clearCache() = stateHolder.clearCache()
 
-    /** Pulls a change made elsewhere (a repo refreshed from RepoIssuesScreen) back into the list; see TopReposService.syncFromCache(). */
-    fun syncFromCache() = service.syncFromCache()
+    /** Pulls a change made elsewhere (a repo refreshed from RepoIssuesScreen) back into the list; see TopReposStateHolder.syncFromCache(). */
+    fun syncFromCache() = stateHolder.syncFromCache()
 }

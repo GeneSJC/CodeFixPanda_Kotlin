@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The repo-issues data state: what the screen's list and refresh footer
- * are built from, and nothing about how it is shown. RepoIssuesService is
+ * are built from, and nothing about how it is shown. RepoIssuesStateHolder is
  * the one place it lives and changes; RepoIssuesViewModel maps it to
  * RepoIssuesUiState (which adds the message text).
  */
@@ -33,7 +33,7 @@ data class RepoIssuesState(
 )
 
 /**
- * The service layer for the repo-scoped issue list: the one place the
+ * The state holder for the repo-scoped issue list: the one place the
  * state of the repo being viewed lives (its issues, whether a refresh is
  * running, the last result), and the owner of the logic that changes it.
  * RepoIssuesViewModel maps this state to what the screen shows and
@@ -100,7 +100,7 @@ data class RepoIssuesState(
  * null)) — a repo can't legitimately appear on Top Repos with zero
  * matching issues (see RepoIssueGroup's own doc comment), so a refresh
  * finding none left is exactly the moment for it to leave that list.
- * TopReposService.syncFromCache() is what actually pulls this updated
+ * TopReposStateHolder.syncFromCache() is what actually pulls this updated
  * cache entry back into Top Repos' own in-memory state when the user
  * navigates back — see that function's doc comment for why a re-read
  * on return, rather than a shared ViewModel reference, was the chosen
@@ -135,13 +135,13 @@ data class RepoIssuesState(
  * it clears the state and cancels a refresh still running from the
  * previous visit, which is what constructing a new ViewModel for each
  * visit used to do. loadedForRepoFullName exists only so the screen's
- * repeated loadIfNeeded() calls do not reassign issues the service
+ * repeated loadIfNeeded() calls do not reassign issues the state holder
  * already holds. Nothing here needs a Context: the cache work lives in
  * RepoIssueGroupRepository, which does its own file I/O. The work runs in
  * the shared [AppScope]. Tests build an instance over fakes and install
  * it with [replaceInstanceForTests].
  */
-class RepoIssuesService(
+class RepoIssuesStateHolder(
     private val modeRepository: IssueModeRepository = IssueModeRepository.instance,
     private val cacheRepository: RepoIssueGroupRepository = RepoIssueGroupRepository.instance,
     private val searchRepository: IssueSearchRepository = IssueSearchRepository.instance,
@@ -232,21 +232,21 @@ class RepoIssuesService(
 
     companion object {
         @Volatile
-        private var installed: RepoIssuesService? = null
+        private var installed: RepoIssuesStateHolder? = null
 
-        /** The app-wide service, built from the real repositories on first use. */
-        val instance: RepoIssuesService
+        /** The app-wide state holder, built from the real repositories on first use. */
+        val instance: RepoIssuesStateHolder
             get() = installed ?: synchronized(this) {
-                installed ?: RepoIssuesService().also { installed = it }
+                installed ?: RepoIssuesStateHolder().also { installed = it }
             }
 
         /**
-         * For tests only: installs [service] as the instance (or, with
+         * For tests only: installs [stateHolder] as the instance (or, with
          * null, drops it so the next access builds a fresh real one).
          * Tests call this in setup, and with null in teardown.
          */
-        fun replaceInstanceForTests(service: RepoIssuesService?) {
-            installed = service
+        fun replaceInstanceForTests(stateHolder: RepoIssuesStateHolder?) {
+            installed = stateHolder
         }
     }
 }

@@ -57,7 +57,7 @@ import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.theme.colorScheme
 
 /**
- * The repo-scoped issue list — see RepoIssuesService's class comment
+ * The repo-scoped issue list — see RepoIssuesStateHolder's class comment
  * for the full design reasoning (why no language filter, why issues
  * open in GitHub directly instead of the existing DetailScreen, why no
  * "no token" check here, and why this screen makes no network calls
@@ -98,7 +98,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
  * failure, or (once hasRefreshed) a small result line ABOVE the button,
  * not replacing it — v0.46's version hid the button for the rest of the
  * session once used; this one stays reusable. See
- * RepoIssuesService.refreshThisRepo()'s doc comment for what this
+ * RepoIssuesStateHolder.refreshThisRepo()'s doc comment for what this
  * closes (a real completeness gap — this screen previously had no way
  * to show more of a repo's issues than happened to be swept up while
  * Top Repos was built, or to discover closed ones) and for the write-

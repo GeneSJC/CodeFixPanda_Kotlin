@@ -9,7 +9,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The wording the repo-issues screen shows for the service's facts, and the state-to-UI mapping. */
+/** The wording the repo-issues screen shows for the state holder's facts, and the state-to-UI mapping. */
 class RepoIssuesUiMappingTest {
 
     @Test

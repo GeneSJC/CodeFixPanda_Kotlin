@@ -18,20 +18,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * TopReposService against fakes: the real service over real repositories
+ * TopReposStateHolder against fakes: the real state holder over real repositories
  * whose storage and GitHub API are in-memory fakes, doing its work
  * immediately on the calling thread. These cover everything that decides
  * what the Top Repos list holds; the wording the user reads is covered
  * in TopReposUiMappingTest and TopReposViewModelTest.
  */
-class TopReposServiceTest {
+class TopReposStateHolderTest {
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
     private val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInLabel = "45s")
 
-    /** The service from [f], opened the way constructing the ViewModel opens it. */
-    private fun opened(f: ViewModelFixtures): TopReposService = f.topReposService.also { it.open() }
+    /** The state holder from [f], opened the way constructing the ViewModel opens it. */
+    private fun opened(f: ViewModelFixtures): TopReposStateHolder = f.topReposStateHolder.also { it.open() }
 
     private fun cached(f: ViewModelFixtures, entry: RepoIssueGroupCacheEntry) {
         f.cacheStorage.data = mapOf(cacheKeyFor(kotlin, gfi) to entry)
@@ -148,12 +148,12 @@ class TopReposServiceTest {
         f.api.handler = { _, _, page ->
             if (page == 1) searchOk(fullPage("a", "one", 1), total = 200) else searchOk(listOf(issueDto(500, "b", "two")), total = 200)
         }
-        val service = opened(f)
-        assertTrue(service.state.value.canLoadMore)
+        val stateHolder = opened(f)
+        assertTrue(stateHolder.state.value.canLoadMore)
 
-        service.loadMore()
+        stateHolder.loadMore()
 
-        val state = service.state.value
+        val state = stateHolder.state.value
         assertEquals(2, state.currentPage)
         assertEquals(listOf("a/one", "b/two"), state.repoGroups.map { it.repoFullName })
         assertFalse(state.canLoadMore)
@@ -165,28 +165,28 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInLabel = "40s")
         f.api.handler = { _, _, page -> if (page == 1) searchOk(fullPage(), total = 200) else searchFailed(403, exhausted) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.loadMore()
+        stateHolder.loadMore()
 
-        val state = service.state.value
+        val state = stateHolder.state.value
         assertTrue(state.canLoadMore)
         assertEquals(1, state.currentPage)
         assertNull(state.loadMoreFailure)
         assertFalse(state.isLoadingMore)
-        assertEquals(TopReposEvent.RateLimited, service.events.first())
+        assertEquals(TopReposEvent.RateLimited, stateHolder.events.first())
     }
 
     @Test
     fun aFailedLoadMoreKeepsItsFailureForTheFooter() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, page -> if (page == 1) searchOk(fullPage(), total = 200) else searchFailed(500) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.loadMore()
+        stateHolder.loadMore()
 
-        assertEquals(SearchFailure.Http(500), service.state.value.loadMoreFailure)
-        assertFalse(service.state.value.isLoadingMore)
+        assertEquals(SearchFailure.Http(500), stateHolder.state.value.loadMoreFailure)
+        assertFalse(stateHolder.state.value.isLoadingMore)
     }
 
     // ---- switching ----
@@ -195,9 +195,9 @@ class TopReposServiceTest {
     fun choosingTheOtherModeSwitchesAndReloads() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.selectMode(IssueLabelFilter.HELP_WANTED)
+        stateHolder.selectMode(IssueLabelFilter.HELP_WANTED)
 
         assertEquals(IssueLabelFilter.HELP_WANTED, f.modeRepository.mode.value)
         assertEquals(topReposQuery(IssueLabelFilter.HELP_WANTED, kotlin), f.api.calls.last().first)
@@ -207,10 +207,10 @@ class TopReposServiceTest {
     fun choosingTheModeThatIsAlreadyActiveDoesNothing() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         val callsBefore = f.api.calls.size
 
-        service.selectMode(gfi)
+        stateHolder.selectMode(gfi)
 
         assertEquals(callsBefore, f.api.calls.size)
     }
@@ -219,11 +219,11 @@ class TopReposServiceTest {
     fun choosingAnotherLanguageReloadsForIt() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.selectLanguage(LanguageFilter.JAVA)
+        stateHolder.selectLanguage(LanguageFilter.JAVA)
 
-        assertEquals(LanguageFilter.JAVA, service.state.value.selectedLanguage)
+        assertEquals(LanguageFilter.JAVA, stateHolder.state.value.selectedLanguage)
         assertEquals(topReposQuery(gfi, LanguageFilter.JAVA), f.api.calls.last().first)
     }
 
@@ -231,10 +231,10 @@ class TopReposServiceTest {
     fun clearingTheCacheEmptiesItAndLoadsFreshData() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
         assertEquals(1, f.api.calls.size)
 
-        service.clearCache()
+        stateHolder.clearCache()
 
         // Had the cache survived, the reload would have been a cache hit with no new search.
         assertEquals(2, f.api.calls.size)
@@ -246,13 +246,13 @@ class TopReposServiceTest {
     fun savingATokenWhileThereWasNoneLoadsTheList() {
         val f = ViewModelFixtures(buildToken = "")
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
-        assertTrue(service.state.value.noTokenConfigured)
+        val stateHolder = opened(f)
+        assertTrue(stateHolder.state.value.noTokenConfigured)
 
         f.tokenRepository.setUserToken("my-token")
 
-        assertFalse(service.state.value.noTokenConfigured)
-        assertEquals(1, service.state.value.repoGroups.size)
+        assertFalse(stateHolder.state.value.noTokenConfigured)
+        assertEquals(1, stateHolder.state.value.repoGroups.size)
     }
 
     @Test
@@ -260,15 +260,15 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         var rejecting = true
         f.api.handler = { _, _, _ -> if (rejecting) searchFailed(401) else searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
-        assertTrue(service.state.value.tokenRejected)
+        val stateHolder = opened(f)
+        assertTrue(stateHolder.state.value.tokenRejected)
         rejecting = false
 
         f.tokenRepository.setUserToken("fresh-token")
 
-        assertFalse(service.state.value.tokenRejected)
-        assertNull(service.state.value.loadFailure)
-        assertEquals(1, service.state.value.repoGroups.size)
+        assertFalse(stateHolder.state.value.tokenRejected)
+        assertNull(stateHolder.state.value.loadFailure)
+        assertEquals(1, stateHolder.state.value.repoGroups.size)
     }
 
     @Test
@@ -287,25 +287,25 @@ class TopReposServiceTest {
     fun changingTheTokenReplacesTheOldRateLimitWithTheNewTokensNumbers() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1)), rateLimit = limit) }
-        val service = opened(f)
-        assertEquals(limit, service.rateLimit.value)
+        val stateHolder = opened(f)
+        assertEquals(limit, stateHolder.rateLimit.value)
         val newTokensLimit = RateLimitInfo(remaining = 5, limit = 30, used = 25, resetsInLabel = "10s")
         f.api.rateLimit = newTokensLimit
 
         f.tokenRepository.setUserToken("another-token")
 
-        assertEquals(newTokensLimit, service.rateLimit.value)
+        assertEquals(newTokensLimit, stateHolder.rateLimit.value)
     }
 
     @Test
     fun hasTokenFollowsTheTokenRepository() {
         val f = ViewModelFixtures(buildToken = "")
-        val service = opened(f)
-        assertFalse(service.hasToken.value)
+        val stateHolder = opened(f)
+        assertFalse(stateHolder.hasToken.value)
 
         f.tokenRepository.setUserToken("x")
 
-        assertTrue(service.hasToken.value)
+        assertTrue(stateHolder.hasToken.value)
     }
 
     // ---- Check for New Repos / write-back ----
@@ -315,15 +315,15 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1), page = 1, more = true, at = 777L))
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1, "a", "one"), issueDto(2, "b", "two")), total = 9) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.checkForNewRepos()
+        stateHolder.checkForNewRepos()
 
-        val event = service.events.first() as TopReposEvent.NewReposChecked
+        val event = stateHolder.events.first() as TopReposEvent.NewReposChecked
         assertEquals(1, event.newRepoCount)
         assertEquals(1, event.newIssueCount)
         assertEquals(777L, event.previousUpdatedAtMs)
-        val state = service.state.value
+        val state = stateHolder.state.value
         assertEquals(setOf("a/one", "b/two"), state.repoGroups.map { it.repoFullName }.toSet())
         assertEquals(9, state.totalIssueCount)
         // Load More's progress is left exactly where it was.
@@ -337,11 +337,11 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1)))
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1, "a", "one"))) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.checkForNewRepos()
+        stateHolder.checkForNewRepos()
 
-        val event = service.events.first() as TopReposEvent.NewReposChecked
+        val event = stateHolder.events.first() as TopReposEvent.NewReposChecked
         assertEquals(0, event.newRepoCount)
         assertEquals(0, event.newIssueCount)
     }
@@ -351,24 +351,24 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1)))
         f.api.handler = { _, _, _ -> searchFailed(500) }
-        val service = opened(f)
+        val stateHolder = opened(f)
 
-        service.checkForNewRepos()
+        stateHolder.checkForNewRepos()
 
-        assertEquals(TopReposEvent.CheckFailedHttp(500), service.events.first())
+        assertEquals(TopReposEvent.CheckFailedHttp(500), stateHolder.events.first())
     }
 
     @Test
     fun aRepoRefreshedElsewhereIsAdoptedFromTheCache() = runBlocking {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1, 2)))
-        val service = opened(f)
-        assertEquals(2, service.state.value.repoGroups.single().matchCount)
+        val stateHolder = opened(f)
+        assertEquals(2, stateHolder.state.value.repoGroups.single().matchCount)
 
         f.cacheRepository.replaceRepoGroup(kotlin, gfi, "a/one", repoGroupOf("a", "one", 1))
-        service.syncFromCache()
+        stateHolder.syncFromCache()
 
-        assertEquals(1, service.state.value.repoGroups.single().matchCount)
+        assertEquals(1, stateHolder.state.value.repoGroups.single().matchCount)
     }
 
     // ---- visits ----
@@ -377,13 +377,13 @@ class TopReposServiceTest {
     fun openingAgainStartsAFreshVisitInTheDefaultLanguage() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val service = opened(f)
-        service.selectLanguage(LanguageFilter.JAVA)
+        val stateHolder = opened(f)
+        stateHolder.selectLanguage(LanguageFilter.JAVA)
 
-        service.open()
+        stateHolder.open()
 
-        assertEquals(kotlin, service.state.value.selectedLanguage)
-        assertFalse(service.state.value.isLoading)
+        assertEquals(kotlin, stateHolder.state.value.selectedLanguage)
+        assertFalse(stateHolder.state.value.isLoading)
     }
 
     @Test
@@ -391,11 +391,11 @@ class TopReposServiceTest {
         val f = ViewModelFixtures()
         cached(f, entry(repoGroupOf("a", "one", 1)))
         f.api.handler = { _, _, _ -> searchFailed(500) }
-        val service = opened(f)
-        service.checkForNewRepos()
+        val stateHolder = opened(f)
+        stateHolder.checkForNewRepos()
 
-        service.open()
+        stateHolder.open()
 
-        assertNull(withTimeoutOrNull(50) { service.events.first() })
+        assertNull(withTimeoutOrNull(50) { stateHolder.events.first() })
     }
 }

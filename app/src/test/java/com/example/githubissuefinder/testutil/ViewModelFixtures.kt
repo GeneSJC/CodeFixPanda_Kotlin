@@ -18,8 +18,8 @@ import com.example.githubissuefinder.data.ReadmeSource
 import com.example.githubissuefinder.data.RepoIssueGroupCacheEntry
 import com.example.githubissuefinder.data.RepoIssueGroupRepository
 import com.example.githubissuefinder.data.RepoIssueGroupStorage
-import com.example.githubissuefinder.data.RepoIssuesService
-import com.example.githubissuefinder.data.TopReposService
+import com.example.githubissuefinder.data.RepoIssuesStateHolder
+import com.example.githubissuefinder.data.TopReposStateHolder
 import com.example.githubissuefinder.data.toIssue
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
@@ -97,7 +97,7 @@ class FakeReadmeSource(var result: ReadmeFetch = ReadmeFetch.Resolved(null)) : R
     override suspend fun fetch(repoOwner: String, repoName: String): ReadmeFetch = result
 }
 
-/** Everything a Top Repos or repo-issues ViewModel (or the Top Repos service) is built from, wired over fakes, with the pieces a test needs to poke at. */
+/** Everything a Top Repos or repo-issues ViewModel (or the Top Repos state holder) is built from, wired over fakes, with the pieces a test needs to poke at. */
 class ViewModelFixtures(
     mode: IssueLabelFilter? = IssueLabelFilter.GOOD_FIRST_ISSUE,
     buildToken: String = "build-token",
@@ -115,26 +115,26 @@ class ViewModelFixtures(
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api, { tokenRepository.effectiveToken.value.isNotBlank() })
 
-    /** A Top Repos service over the fakes above, running its work immediately on the calling thread. */
-    val topReposService = TopReposService(
+    /** A Top Repos state holder over the fakes above, running its work immediately on the calling thread. */
+    val topReposStateHolder = TopReposStateHolder(
         modeRepository, tokenRepository, cacheRepository, searchRepository,
         CoroutineScope(Dispatchers.Unconfined),
     )
 
-    /** A repo-issues service over the fakes above, running its work immediately on the calling thread. */
-    val repoIssuesService = RepoIssuesService(
+    /** A repo-issues state holder over the fakes above, running its work immediately on the calling thread. */
+    val repoIssuesStateHolder = RepoIssuesStateHolder(
         modeRepository, cacheRepository, searchRepository, tokenRepository,
         CoroutineScope(Dispatchers.Unconfined),
     )
 
-    /** Makes RepoIssuesViewModel use [repoIssuesService]; pair with [uninstall] in teardown. */
-    fun installRepoIssuesService() {
-        RepoIssuesService.replaceInstanceForTests(repoIssuesService)
+    /** Makes RepoIssuesViewModel use [repoIssuesStateHolder]; pair with [uninstall] in teardown. */
+    fun installRepoIssuesStateHolder() {
+        RepoIssuesStateHolder.replaceInstanceForTests(repoIssuesStateHolder)
     }
 
-    /** Makes TopReposViewModel use [topReposService]; pair with [uninstall] in teardown. */
-    fun installTopReposService() {
-        TopReposService.replaceInstanceForTests(topReposService)
+    /** Makes TopReposViewModel use [topReposStateHolder]; pair with [uninstall] in teardown. */
+    fun installTopReposStateHolder() {
+        TopReposStateHolder.replaceInstanceForTests(topReposStateHolder)
     }
 
     /** Makes the hidden-issue and bookmark repositories that BaseViewModel reads the fakes above; pair with [uninstall] in teardown. */
@@ -146,8 +146,8 @@ class ViewModelFixtures(
     companion object {
         /** Removes everything the install functions put in place. Call it in teardown. */
         fun uninstall() {
-            TopReposService.replaceInstanceForTests(null)
-            RepoIssuesService.replaceInstanceForTests(null)
+            TopReposStateHolder.replaceInstanceForTests(null)
+            RepoIssuesStateHolder.replaceInstanceForTests(null)
             HiddenIssuesRepository.replaceInstanceForTests(null)
             BookmarksRepository.replaceInstanceForTests(null)
         }

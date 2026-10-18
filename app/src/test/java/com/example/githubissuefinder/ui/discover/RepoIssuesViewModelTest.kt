@@ -17,9 +17,9 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * RepoIssuesViewModel over the real RepoIssuesService (built on fakes and
- * installed as the app-wide instance for each test). What the service
- * decides is covered in RepoIssuesServiceTest; this covers what the
+ * RepoIssuesViewModel over the real RepoIssuesStateHolder (built on fakes and
+ * installed as the app-wide instance for each test). What the state holder
+ * decides is covered in RepoIssuesStateHolderTest; this covers what the
  * ViewModel adds: the message text, the forwarding of actions, and the
  * hide and bookmark pass-throughs.
  */
@@ -36,7 +36,7 @@ class RepoIssuesViewModelTest {
     private val kotlin = LanguageFilter.KOTLIN
 
     private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel {
-        f.installRepoIssuesService()
+        f.installRepoIssuesStateHolder()
         f.installRepositories()
         return RepoIssuesViewModel()
     }
@@ -94,7 +94,7 @@ class RepoIssuesViewModelTest {
     }
 
     @Test
-    fun theModeComesFromTheService() {
+    fun theModeComesFromTheStateHolder() {
         val vm = viewModel(ViewModelFixtures(mode = IssueLabelFilter.HELP_WANTED))
 
         assertEquals(IssueLabelFilter.HELP_WANTED, vm.mode.value)
