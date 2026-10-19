@@ -22,4 +22,28 @@
     <string name="readme_token_required">A GitHub token is required to load a README.</string>
     <string name="readme_unreadable">Couldn\'t read this README\'s content.</string>
     <string name="readme_load_failed">Couldn\'t load the README: %1$s</string>
+
+    <!-- Settings, the token help dialog and the mode gate. -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_token_heading">GitHub token</string>
+    <string name="settings_token_explainer">GitHub Issue Finder needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
+    <string name="settings_token_label">Your GitHub token</string>
+    <string name="action_save">Save</string>
+    <string name="settings_remove_token">Remove my token</string>
+    <string name="settings_how_to_get_token">How do I get a token?</string>
+    <string name="token_help_title">How to get a GitHub token</string>
+    <string name="token_help_intro">GitHub Issue Finder needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>
+    <string name="token_help_step1">Sign in at github.com. You can create a free account if you don\'t have one.</string>
+    <string name="token_help_step2">Open Settings → Developer settings → Personal access tokens → Tokens (classic), then choose Generate new token (classic). The button below takes you straight there.</string>
+    <string name="token_help_step3">Name it \"GitHub Issue Finder\" and pick an expiration. Leave every permission (scope) unchecked.</string>
+    <string name="token_help_step4">Tap Generate token, then copy the token. GitHub shows it only once, so copy it before leaving the page.</string>
+    <string name="token_help_step5">Come back here, paste it into the token box, and tap Save.</string>
+    <string name="token_help_footer">Your token stays on this device and is sent only to GitHub. A token saved here replaces any token built into the app.</string>
+    <string name="token_help_open_github">Open GitHub</string>
+    <string name="action_close">Close</string>
+    <string name="token_source_user">Using the token you entered.</string>
+    <string name="token_source_build">Using the token built into this app. Enter your own below to replace it.</string>
+    <string name="token_source_none">No token yet — the app can\'t search GitHub until you add one.</string>
+    <string name="gate_headline">Looking to make a contribution on GitHub?</string>
+    <string name="gate_prompt">Select the kind of issues you would like to see</string>
 </resources>
