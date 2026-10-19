@@ -80,4 +80,61 @@
     <string name="token_problem_title">GitHub API token needed</string>
     <string name="token_problem_rejected">GitHub isn\'t accepting the token this app is using (it may be expired, revoked, or otherwise invalid). Enter a new personal access token in Settings.</string>
     <string name="token_problem_missing">This app needs a GitHub personal access token to make live requests against the Search API. Enter one in Settings.</string>
+
+    <!-- Rate-limit chip and dialog. -->
+    <string name="rate_limit_meter_description">Search API rate limit</string>
+    <string name="rate_limit_dialog_title">Search API Rate Limit</string>
+    <string name="rate_limit_no_data">No rate limit data available yet.</string>
+    <string name="rate_limit_remaining">Remaining</string>
+    <string name="rate_limit_limit">Limit</string>
+    <string name="rate_limit_used">Used</string>
+    <string name="rate_limit_resets_in">Resets in</string>
+    <string name="rate_limit_search_note">This reflects GitHub\'s Search API limit specifically, which is separate from and stricter than the general REST API limit.</string>
+    <string name="rate_limit_gauge_description">Rate limit gauge: %1$d of %2$d remaining</string>
+
+    <!-- Lists, hidden issues, bookmarks, label info and the issue card. -->
+    <string name="action_retry">Retry</string>
+    <string name="repo_list_empty">No repos with an open %1$s issue found for this language right now.</string>
+    <string name="repo_card_all_hidden">All hidden</string>
+    <string name="action_load_more">Load More</string>
+    <string name="load_more_end">That\'s everything GitHub has for this search.</string>
+    <string name="repo_list_updated">Updated %1$s</string>
+    <string name="repo_issues_none_match">No open matching issues remain.</string>
+    <string name="repo_issues_all_hidden">All matching issues in this repo are hidden.</string>
+    <string name="repo_issues_view_hidden">View Hidden</string>
+    <string name="repo_issues_none_remain">No open issues remain</string>
+    <string name="repo_issues_refresh">Refresh this repo</string>
+    <string name="repo_issues_refresh_cost">Uses one API call against your rate limit.</string>
+    <string name="hidden_title">Hidden</string>
+    <string name="hidden_unhide_all">Unhide all</string>
+    <string name="hidden_empty">Nothing hidden yet — tap the ✕ on any issue in a repo\'s list to remove it from view. It stays reversible: come back here to unhide it any time.</string>
+    <string name="hidden_item_subtitle">%1$s · Hidden %2$s</string>
+    <string name="hidden_unhide">Unhide</string>
+    <string name="hidden_unhide_all_title">Unhide all %1$d issues?</string>
+    <string name="hidden_unhide_all_message">They\'ll reappear wherever they\'re still cached — Top Repos and repo lists alike.</string>
+    <string name="bookmarks_title">Bookmarks</string>
+    <string name="bookmarks_empty">No bookmarks yet — tap the ★ on any issue to save it here.</string>
+    <string name="label_info_title">What do these tags mean?</string>
+    <string name="label_info_footer">Both are GitHub-wide conventions applied by each repo\'s own maintainers, not enforced or verified by GitHub itself — actual difficulty and quality can vary a lot from repo to repo.</string>
+    <string name="share_issue_chooser">Share issue</string>
+    <string name="link_copied">Link copied</string>
+    <string name="comments_and_updated">%1$s · %2$s</string>
+    <string name="readme_not_found">%1$s doesn\'t have a README at the root of its default branch.</string>
+    <plurals name="match_count">
+        <item quantity="one">%d match</item>
+        <item quantity="other">%d matches</item>
+    </plurals>
+    <plurals name="repo_count">
+        <item quantity="one">%d repo</item>
+        <item quantity="other">%d repos</item>
+    </plurals>
+    <plurals name="repo_issues_all_open">
+        <item quantity="one">All %d open issue</item>
+        <item quantity="other">All %d open issues</item>
+    </plurals>
+    <plurals name="comment_count">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <string name="repo_issues_status_checked">%1$s · checked %2$s</string>
 </resources>

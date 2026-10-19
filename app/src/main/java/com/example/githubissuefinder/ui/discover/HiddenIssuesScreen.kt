@@ -29,9 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.formatRelativeTime
 
 /**
@@ -56,7 +58,7 @@ fun HiddenIssuesScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Hidden") },
+                title = { Text(stringResource(R.string.hidden_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
@@ -65,7 +67,7 @@ fun HiddenIssuesScreen(
                 actions = {
                     if (hiddenIssues.isNotEmpty()) {
                         TextButton(onClick = { showUnhideAllConfirm = true }) {
-                            Text("Unhide all")
+                            Text(stringResource(R.string.hidden_unhide_all))
                         }
                     }
                 },
@@ -78,8 +80,7 @@ fun HiddenIssuesScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "Nothing hidden yet — tap the ✕ on any issue in a repo's list to " +
-                        "remove it from view. It stays reversible: come back here to unhide it any time.",
+                    stringResource(R.string.hidden_empty),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -103,13 +104,13 @@ fun HiddenIssuesScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(hidden.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
                                 Text(
-                                    "${hidden.repoFullName} · Hidden ${formatRelativeTime(hidden.hiddenAtMs)}",
+                                    stringResource(R.string.hidden_item_subtitle, hidden.repoFullName, formatRelativeTime(hidden.hiddenAtMs)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             TextButton(onClick = { viewModel.unhide(hidden.id) }) {
-                                Text("Unhide")
+                                Text(stringResource(R.string.hidden_unhide))
                             }
                         }
                     }
@@ -121,19 +122,19 @@ fun HiddenIssuesScreen(
     if (showUnhideAllConfirm) {
         AlertDialog(
             onDismissRequest = { showUnhideAllConfirm = false },
-            title = { Text("Unhide all ${hiddenIssues.size} issues?") },
-            text = { Text("They'll reappear wherever they're still cached — Top Repos and repo lists alike.") },
+            title = { Text(stringResource(R.string.hidden_unhide_all_title, hiddenIssues.size)) },
+            text = { Text(stringResource(R.string.hidden_unhide_all_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.unhideAll()
                     showUnhideAllConfirm = false
                 }) {
-                    Text("Unhide all")
+                    Text(stringResource(R.string.hidden_unhide_all))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showUnhideAllConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )

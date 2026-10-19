@@ -29,10 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
@@ -75,13 +78,12 @@ internal fun RepoListBody(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(uiState.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
                     Button(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) {
-                        Text("Retry")
+                        Text(stringResource(R.string.action_retry))
                     }
                 }
             }
             hiddenGroups.isEmpty() -> CenteredMessage(
-                text = "No repos with an open ${currentMode.displayName} issue found for " +
-                    "this language right now.",
+                text = stringResource(R.string.repo_list_empty, currentMode.displayName),
             )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -168,7 +170,7 @@ private fun RepoCard(
                     color = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Text(
-                        if (group.issues.isEmpty()) "All hidden" else matchCountLabel(group.matchCount),
+                        if (group.issues.isEmpty()) stringResource(R.string.repo_card_all_hidden) else matchCountLabel(group.matchCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -217,7 +219,8 @@ private fun RepoCard(
     }
 }
 
-private fun matchCountLabel(count: Int): String = if (count == 1) "1 match" else "$count matches"
+@Composable
+private fun matchCountLabel(count: Int): String = pluralStringResource(R.plurals.match_count, count, count)
 
 /**
  * The expand/collapse chevron for a card's README preview; used inline when collapsed and
@@ -268,7 +271,7 @@ private fun LoadMoreFooter(
                 textAlign = TextAlign.Center,
             )
             Button(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Retry")
+                Text(stringResource(R.string.action_retry))
             }
         }
         isLoadingMore -> Box(
@@ -278,10 +281,10 @@ private fun LoadMoreFooter(
             CircularProgressIndicator(modifier = Modifier.size(28.dp))
         }
         canLoadMore -> Button(onClick = onLoadMore, modifier = Modifier.fillMaxWidth()) {
-            Text("Load More")
+            Text(stringResource(R.string.action_load_more))
         }
         else -> Text(
-            "That's everything GitHub has for this search.",
+            stringResource(R.string.load_more_end),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

@@ -28,11 +28,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.RateLimitInfo
 import kotlin.math.cos
 import kotlin.math.sin
@@ -84,10 +86,11 @@ internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
 @Composable
 private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
     val needleColor = MaterialTheme.colorScheme.onSecondaryContainer
+    val description = stringResource(R.string.rate_limit_meter_description)
     Canvas(
         modifier = modifier
             .size(width = 24.dp, height = 15.dp)
-            .semantics { contentDescription = "Search API rate limit" },
+            .semantics { contentDescription = description },
     ) {
         val strokeWidthPx = 4.dp.toPx()
         val hubRadiusPx = 2.5.dp.toPx()
@@ -142,24 +145,23 @@ internal fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         },
-        title = { Text("Search API Rate Limit") },
+        title = { Text(stringResource(R.string.rate_limit_dialog_title)) },
         text = {
             if (info == null) {
-                Text("No rate limit data available yet.")
+                Text(stringResource(R.string.rate_limit_no_data))
             } else {
                 // Scrollable because the larger text can make the dialog
                 // taller than the screen, e.g. in landscape.
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     RateLimitDial(info = info)
-                    RateLimitRow("Remaining", "${info.remaining}")
-                    RateLimitRow("Limit", "${info.limit}")
-                    RateLimitRow("Used", "${info.used}")
-                    RateLimitRow("Resets in", info.resetsInLabel)
+                    RateLimitRow(stringResource(R.string.rate_limit_remaining), "${info.remaining}")
+                    RateLimitRow(stringResource(R.string.rate_limit_limit), "${info.limit}")
+                    RateLimitRow(stringResource(R.string.rate_limit_used), "${info.used}")
+                    RateLimitRow(stringResource(R.string.rate_limit_resets_in), info.resetsInLabel)
                     Text(
-                        "This reflects GitHub's Search API limit specifically, which is " +
-                            "separate from and stricter than the general REST API limit.",
+                        stringResource(R.string.rate_limit_search_note),
                         style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp),
@@ -185,11 +187,12 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
+        val gaugeDescription = stringResource(R.string.rate_limit_gauge_description, info.remaining, info.limit)
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
-                .semantics { contentDescription = "Rate limit gauge: ${info.remaining} of ${info.limit} remaining" },
+                .semantics { contentDescription = gaugeDescription },
         ) {
             val strokeWidthPx = 20.dp.toPx()
             val radius = (minOf(size.width / 2f, size.height) - strokeWidthPx / 2f).coerceAtLeast(0f)
@@ -238,7 +241,7 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
 
         Text("${info.remaining}", style = MaterialTheme.typography.headlineMedium)
         Text(
-            "Remaining",
+            stringResource(R.string.rate_limit_remaining),
             style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
             color = onSurfaceVariant,
         )
