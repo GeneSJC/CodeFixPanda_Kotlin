@@ -195,7 +195,7 @@ private fun rememberModeButtonWidth(): Dp {
     val style = modeButtonTextStyle()
     return remember(style, density) {
         val widestTextPx = IssueLabelFilter.entries.maxOf { textMeasurer.measure(it.displayName, style).size.width }
-        with(density) { widestTextPx.toDp() } + 2 * MODE_BUTTON_SIDE_PADDING
+        with(density) { widestTextPx.toDp() } + MODE_BUTTON_SIDE_PADDING * 2
     }
 }
 
