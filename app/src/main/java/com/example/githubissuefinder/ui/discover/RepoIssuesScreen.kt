@@ -3,22 +3,15 @@ package com.example.githubissuefinder.ui.discover
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +21,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,18 +33,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
-import com.example.githubissuefinder.data.formatRelativeTime
 import kotlinx.coroutines.launch
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
-import com.example.githubissuefinder.ui.components.IssueCard
 import com.example.githubissuefinder.ui.components.ModePill
 
 /**
@@ -133,81 +122,33 @@ fun RepoIssuesScreen(
 
             // Always composed and full-size; the README overlay below is drawn on top of it.
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                LazyColumn(
-                    state = issueListState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (uiState.issues.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    "No open matching issues remain.",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    } else if (visibleIssues.isEmpty()) {
-                        item {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Text(
-                                    "All matching issues in this repo are hidden.",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                )
-                                TextButton(onClick = onOpenHidden) {
-                                    Text("View Hidden")
-                                }
-                            }
-                        }
-                    } else {
-                        items(visibleIssues, key = { it.id }) { issue ->
-                            IssueCard(
-                                issue = issue,
-                                isBookmarked = issue.id in bookmarkedIds,
-                                showExternalLinkIndicator = true,
-                                onClick = {
-                                    context.startActivity(
-                                        Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
-                                    )
-                                },
-                                onToggleBookmark = { viewModel.toggleBookmark(issue) },
-                                onHide = {
-                                    viewModel.hideIssue(issue)
-                                    coroutineScope.launch {
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "Issue hidden",
-                                            actionLabel = "Undo",
-                                            duration = SnackbarDuration.Short,
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            viewModel.unhideIssue(issue.id)
-                                        }
-                                    }
-                                },
-                                snackbarHostState = snackbarHostState,
+                RepoIssueList(
+                    uiState = uiState,
+                    visibleIssues = visibleIssues,
+                    bookmarkedIds = bookmarkedIds,
+                    listState = issueListState,
+                    snackbarHostState = snackbarHostState,
+                    onIssueClick = { issue ->
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)))
+                    },
+                    onToggleBookmark = { issue -> viewModel.toggleBookmark(issue) },
+                    onHide = { issue ->
+                        viewModel.hideIssue(issue)
+                        coroutineScope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = "Issue hidden",
+                                actionLabel = "Undo",
+                                duration = SnackbarDuration.Short,
                             )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                viewModel.unhideIssue(issue.id)
+                            }
                         }
-                    }
-                    item(key = "refreshThisRepoFooter") {
-                        RefreshThisRepoFooter(
-                            isRefreshing = uiState.isRefreshing,
-                            hasRefreshed = uiState.hasRefreshed,
-                            lastRefreshedAtMs = uiState.lastRefreshedAtMs,
-                            refreshError = uiState.refreshError,
-                            currentIssueCount = uiState.issues.size,
-                            onRefresh = { viewModel.refreshThisRepo(repoGroup, language) },
-                            onRetry = { viewModel.refreshThisRepo(repoGroup, language) },
-                        )
-                    }
-                }
+                    },
+                    onOpenHidden = onOpenHidden,
+                    onRefresh = { viewModel.refreshThisRepo(repoGroup, language) },
+                    modifier = Modifier.fillMaxSize(),
+                )
 
                 ReadmeExpandableBody(
                     expanded = readmeExpanded,
@@ -257,75 +198,6 @@ private fun RepoIssuesFilterRow(
                 expanded = readmeExpanded,
                 onClick = onToggleReadme,
                 modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-    }
-}
-
-/**
- * The one place on this screen that can be loading or errored. A manual button with a visible
- * cost note, in the same spirit as Load More on Top Repos. The idle state keeps the button and
- * adds a result line above it once a refresh has run.
- */
-@Composable
-private fun RefreshThisRepoFooter(
-    isRefreshing: Boolean,
-    hasRefreshed: Boolean,
-    lastRefreshedAtMs: Long?,
-    refreshError: String?,
-    currentIssueCount: Int,
-    onRefresh: () -> Unit,
-    onRetry: () -> Unit,
-) {
-    when {
-        refreshError != null -> Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                refreshError,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center,
-            )
-            Button(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Retry")
-            }
-        }
-        isRefreshing -> Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(modifier = Modifier.size(28.dp))
-        }
-        else -> Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (hasRefreshed) {
-                val statusText = if (currentIssueCount == 0) {
-                    "No open issues remain"
-                } else {
-                    "All $currentIssueCount open issue${if (currentIssueCount == 1) "" else "s"}"
-                }
-                val checkedText = lastRefreshedAtMs?.let { " · checked ${formatRelativeTime(it)}" }.orEmpty()
-                Text(
-                    "$statusText$checkedText",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-            }
-            Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
-                Text("Refresh this repo")
-            }
-            Text(
-                "Uses one API call against your rate limit.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp),
             )
         }
     }
