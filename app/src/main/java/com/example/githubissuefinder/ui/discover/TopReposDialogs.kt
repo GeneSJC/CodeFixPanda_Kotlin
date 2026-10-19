@@ -9,7 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -17,32 +19,23 @@ internal fun RankingInfoDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Got it") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_got_it)) }
         },
-        title = { Text("How are these repos ranked?") },
+        title = { Text(stringResource(R.string.ranking_dialog_title)) },
         text = {
             Column {
                 Text(
-                    "This list is built directly from matching issues, not from a separate " +
-                        "repo search — every repo shown is guaranteed to have at least one " +
-                        "open issue for whichever mode you're in.",
+                    stringResource(R.string.ranking_dialog_built_from_issues),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 10.dp),
                 )
                 Text(
-                    "The number on each card is simply how many matching issues that repo " +
-                        "had in this batch — repos with more matches sort higher. It isn't a " +
-                        "measure of the repo's overall popularity or health (stars, forks, " +
-                        "how recently it was updated) the way an earlier version of this " +
-                        "screen used — that data isn't available without extra lookups this " +
-                        "version deliberately doesn't make yet.",
+                    stringResource(R.string.ranking_dialog_card_number),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 10.dp),
                 )
                 Text(
-                    "A future update may add that context back for repos worth a closer look, " +
-                        "without giving up the guarantee that every repo shown here actually " +
-                        "has something open for you.",
+                    stringResource(R.string.ranking_dialog_future),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -58,21 +51,20 @@ internal fun RankingInfoDialog(onDismiss: () -> Unit) {
 internal fun ClearCacheDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Clear cache?") },
+        title = { Text(stringResource(R.string.clear_cache_dialog_title)) },
         text = {
             Text(
-                "Removes every cached repo/issue list so the next load fetches live data. " +
-                    "Bookmarks and hidden issues are kept.",
+                stringResource(R.string.clear_cache_dialog_message),
             )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Clear Cache")
+                Text(stringResource(R.string.action_clear_cache))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )

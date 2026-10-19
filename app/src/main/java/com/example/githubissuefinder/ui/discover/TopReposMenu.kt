@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.components.VersionLabel
 import com.example.githubissuefinder.ui.theme.DrawerSectionFindIssues
@@ -47,44 +49,44 @@ internal fun TopReposMenu(
         // the version line in chat.
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(
-                "GitHub Issue Finder",
+                stringResource(R.string.app_name),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
             )
             VersionLabel(label = buildLabel)
         }
         HorizontalDivider()
-        DrawerMenuSection(header = "Repo Management", background = DrawerSectionRepoManagement) {
+        DrawerMenuSection(header = stringResource(R.string.menu_section_repo_management), background = DrawerSectionRepoManagement) {
             DropdownMenuItem(
-                text = { Text("Bookmarks") },
+                text = { Text(stringResource(R.string.menu_bookmarks)) },
                 onClick = {
                     onDismiss()
                     onOpenBookmarks()
                 },
             )
             DropdownMenuItem(
-                text = { Text("Hidden Issues") },
+                text = { Text(stringResource(R.string.menu_hidden_issues)) },
                 onClick = {
                     onDismiss()
                     onOpenHidden()
                 },
             )
             DropdownMenuItem(
-                text = { Text("Check for New Repos") },
+                text = { Text(stringResource(R.string.menu_check_new_repos)) },
                 onClick = {
                     onDismiss()
                     onCheckForNewRepos()
                 },
             )
             DropdownMenuItem(
-                text = { Text("Clear Cache") },
+                text = { Text(stringResource(R.string.action_clear_cache)) },
                 onClick = {
                     onDismiss()
                     onClearCache()
                 },
             )
             DropdownMenuItem(
-                text = { Text("Settings") },
+                text = { Text(stringResource(R.string.menu_settings)) },
                 onClick = {
                     onDismiss()
                     onOpenSettings()
@@ -92,7 +94,7 @@ internal fun TopReposMenu(
             )
             // No confirmation: nothing is destroyed. Clears the mode and returns to the gate screen.
             DropdownMenuItem(
-                text = { Text("Reset App") },
+                text = { Text(stringResource(R.string.menu_reset_app)) },
                 onClick = {
                     onDismiss()
                     onResetApp()
@@ -100,16 +102,16 @@ internal fun TopReposMenu(
             )
         }
         HorizontalDivider()
-        DrawerMenuSection(header = "Find Issues", background = DrawerSectionFindIssues) {
+        DrawerMenuSection(header = stringResource(R.string.menu_section_find_issues), background = DrawerSectionFindIssues) {
             DropdownMenuItem(
-                text = { Text("Find Good First Issues") },
+                text = { Text(stringResource(R.string.menu_find_good_first_issues)) },
                 onClick = {
                     onDismiss()
                     onSelectMode(IssueLabelFilter.GOOD_FIRST_ISSUE)
                 },
             )
             DropdownMenuItem(
-                text = { Text("Find Help Wanted Issues") },
+                text = { Text(stringResource(R.string.menu_find_help_wanted_issues)) },
                 onClick = {
                     onDismiss()
                     onSelectMode(IssueLabelFilter.HELP_WANTED)
@@ -117,39 +119,39 @@ internal fun TopReposMenu(
             )
         }
         HorizontalDivider()
-        DrawerMenuSection(header = "Sandbox", background = DrawerSectionSandbox) {
+        DrawerMenuSection(header = stringResource(R.string.menu_section_sandbox), background = DrawerSectionSandbox) {
             // Detailed menu: one entry per animation (a dev aid). Otherwise a single "Play App Start Animation".
             if (showAllAnimations) {
                 DropdownMenuItem(
-                    text = { Text("Play Origami Animation") },
+                    text = { Text(stringResource(R.string.menu_play_origami)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.ORIGAMI)
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("Play Shape Stack Animation") },
+                    text = { Text(stringResource(R.string.menu_play_shape_stack)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.SHAPE_STACK)
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("Play Coin Animation") },
+                    text = { Text(stringResource(R.string.menu_play_coin)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.COIN)
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("Play Title Reveal Animation") },
+                    text = { Text(stringResource(R.string.menu_play_title_reveal)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.TITLE_REVEAL)
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text("Play Title Reveal Animation (0.5x Speed)") },
+                    text = { Text(stringResource(R.string.menu_play_title_reveal_half_speed)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.TITLE_REVEAL_HALF_SPEED)
@@ -157,7 +159,7 @@ internal fun TopReposMenu(
                 )
             } else {
                 DropdownMenuItem(
-                    text = { Text("Play App Start Animation") },
+                    text = { Text(stringResource(R.string.menu_play_app_start)) },
                     onClick = {
                         onDismiss()
                         onReplay(AnimationReplay.APP_START)

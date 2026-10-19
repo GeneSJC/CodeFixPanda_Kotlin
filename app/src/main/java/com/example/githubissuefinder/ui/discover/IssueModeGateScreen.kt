@@ -37,11 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 import com.example.githubissuefinder.ui.theme.colorScheme
@@ -66,7 +68,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Text("GitHub Issue Finder", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                     },
                 )
             },
@@ -77,14 +79,14 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Looking to make a contribution on GitHub?",
+                        stringResource(R.string.gate_headline),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(vertical = 10.dp),
                     )
                     Text(
-                        "Select the kind of issues you would like to see",
+                        stringResource(R.string.gate_prompt),
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),

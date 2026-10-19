@@ -22,7 +22,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.ui.theme.colorScheme
 import kotlinx.coroutines.delay
@@ -162,7 +164,7 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
             }
 
             Text(
-                "GitHub Issue Finder",
+                stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier

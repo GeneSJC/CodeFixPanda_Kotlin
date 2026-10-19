@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,12 +26,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.TokenSource
 
 /**
@@ -56,7 +59,7 @@ fun SettingsScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
@@ -73,15 +76,14 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("GitHub token", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.settings_token_heading), style = MaterialTheme.typography.titleMedium)
             Text(
-                "GitHub Issue Finder needs a GitHub personal access token to search for " +
-                    "issues. It needs no permissions, and it stays on this device.",
+                stringResource(R.string.settings_token_explainer),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                sourceDescription(source),
+                stringResource(sourceDescriptionRes(source)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (source == TokenSource.NONE) {
                     MaterialTheme.colorScheme.error
@@ -92,7 +94,7 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = draft,
                 onValueChange = { draft = it },
-                label = { Text("Your GitHub token") },
+                label = { Text(stringResource(R.string.settings_token_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
@@ -106,16 +108,16 @@ fun SettingsScreen(
                     onClick = { viewModel.saveToken(draft) },
                     enabled = draft.trim() != savedToken,
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.action_save))
                 }
                 if (savedToken.isNotEmpty()) {
                     OutlinedButton(onClick = { viewModel.clearToken() }) {
-                        Text("Remove my token", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(stringResource(R.string.settings_remove_token), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
             TextButton(onClick = { showHelp = true }) {
-                Text("How do I get a token?")
+                Text(stringResource(R.string.settings_how_to_get_token))
             }
         }
     }
@@ -125,8 +127,9 @@ fun SettingsScreen(
     }
 }
 
-private fun sourceDescription(source: TokenSource): String = when (source) {
-    TokenSource.USER -> "Using the token you entered."
-    TokenSource.BUILD -> "Using the token built into this app. Enter your own below to replace it."
-    TokenSource.NONE -> "No token yet — the app can't search GitHub until you add one."
+@StringRes
+private fun sourceDescriptionRes(source: TokenSource): Int = when (source) {
+    TokenSource.USER -> R.string.token_source_user
+    TokenSource.BUILD -> R.string.token_source_build
+    TokenSource.NONE -> R.string.token_source_none
 }

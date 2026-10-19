@@ -30,7 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.Issue
 import kotlinx.coroutines.launch
 
@@ -56,6 +58,8 @@ fun IssueCard(
     snackbarHostState: SnackbarHostState? = null,
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val bookmarkedMessage = stringResource(R.string.bookmarked_message)
+    val unbookmarkedMessage = stringResource(R.string.unbookmarked_message)
     var expanded by remember { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
@@ -103,7 +107,7 @@ fun IssueCard(
                         onToggleBookmark = onToggleBookmark?.let { toggle ->
                             {
                                 toggle()
-                                val message = if (isBookmarked) "Unbookmarked" else "Bookmarked"
+                                val message = if (isBookmarked) unbookmarkedMessage else bookmarkedMessage
                                 snackbarHostState?.let { hostState ->
                                     coroutineScope.launch { hostState.showSnackbar(message) }
                                 }
