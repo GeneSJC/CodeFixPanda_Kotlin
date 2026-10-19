@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.ui
 
 import com.example.githubissuefinder.data.AppConfig
+import com.example.githubissuefinder.testutil.FakeStringResolver
 import com.example.githubissuefinder.testutil.StopKoinRule
 import com.example.githubissuefinder.testutil.restartKoin
 import org.junit.Assert.assertEquals
@@ -15,10 +16,15 @@ class BaseViewModelTest {
     @get:Rule
     val stopKoin = StopKoinRule()
 
-    private class TestViewModel : BaseViewModel()
+    private class TestViewModel : BaseViewModel() {
+        fun text(id: Int, vararg args: Any) = string(id, *args)
+    }
 
     private fun viewModel(config: AppConfig): TestViewModel {
-        restartKoin { single { config } }
+        restartKoin {
+            single { config }
+            single<StringResolver> { FakeStringResolver }
+        }
         return TestViewModel()
     }
 
@@ -36,5 +42,12 @@ class BaseViewModelTest {
         val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
 
         assertFalse(vm.showDetailedDrawerMenu)
+    }
+
+    @Test
+    fun stringResolvesThroughTheRegisteredResolver() {
+        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
+
+        assertEquals(FakeStringResolver(7, "a", 2), vm.text(7, "a", 2))
     }
 }

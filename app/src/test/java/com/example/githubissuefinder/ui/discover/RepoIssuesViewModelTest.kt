@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.testutil.FakeStringResolver
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.testutil.MainDispatcherRule
@@ -31,6 +33,7 @@ class RepoIssuesViewModelTest {
     @get:Rule
     val stopKoin = StopKoinRule()
 
+    private val s = FakeStringResolver
     private val kotlin = LanguageFilter.KOTLIN
 
     private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel = f.repoIssuesViewModel()
@@ -72,7 +75,7 @@ class RepoIssuesViewModelTest {
 
         vm.refreshThisRepo(group, kotlin)
 
-        assertEquals("GitHub returned an error (HTTP 500)", vm.uiState.value.refreshError)
+        assertEquals(s(R.string.error_http, 500), vm.uiState.value.refreshError)
         assertEquals(group.issues, vm.uiState.value.issues)
     }
 
@@ -84,7 +87,7 @@ class RepoIssuesViewModelTest {
 
         vm.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
 
-        assertEquals("Couldn't refresh this repo: no network", vm.uiState.value.refreshError)
+        assertEquals(s(R.string.refresh_repo_failed, "no network"), vm.uiState.value.refreshError)
     }
 
     @Test
