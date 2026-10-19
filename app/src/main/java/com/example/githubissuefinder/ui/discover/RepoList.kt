@@ -39,6 +39,7 @@ import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.nameRes
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -83,7 +84,7 @@ internal fun RepoListBody(
                 }
             }
             hiddenGroups.isEmpty() -> CenteredMessage(
-                text = stringResource(R.string.repo_list_empty, currentMode.displayName),
+                text = stringResource(R.string.repo_list_empty, stringResource(currentMode.nameRes())),
             )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),

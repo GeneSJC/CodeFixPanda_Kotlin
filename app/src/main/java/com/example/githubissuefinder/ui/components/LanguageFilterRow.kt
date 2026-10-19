@@ -11,8 +11,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.model.LanguageFilter
+import com.example.githubissuefinder.ui.nameRes
 
 /**
  * The language filter chip row. `wrap` false (the default) is a single horizontally scrolling line;
@@ -37,7 +39,7 @@ fun LanguageFilterRow(
                 FilterChip(
                     selected = option == selected,
                     onClick = { onSelect(option) },
-                    label = { Text(option.displayName) },
+                    label = { Text(stringResource(option.nameRes())) },
                 )
             }
         }
@@ -51,7 +53,7 @@ fun LanguageFilterRow(
                 FilterChip(
                     selected = option == selected,
                     onClick = { onSelect(option) },
-                    label = { Text(option.displayName) },
+                    label = { Text(stringResource(option.nameRes())) },
                 )
             }
         }

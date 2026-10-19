@@ -144,4 +144,29 @@
     <string name="version_label">Build %1$s</string>
     <string name="issue_hidden_message">Issue hidden</string>
     <string name="action_undo">Undo</string>
+
+    <!-- Relative time. -->
+    <string name="time_recently">recently</string>
+    <string name="time_just_now">just now</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_days_ago">%1$dd ago</string>
+
+    <!-- Rate-limit reset time. -->
+    <string name="resets_in_unknown">unknown</string>
+    <string name="resets_in_seconds">%1$ds</string>
+    <string name="resets_in_minutes_seconds">%1$dm %2$ds</string>
+
+    <!-- Issue modes and languages. -->
+    <string name="mode_good_first_issue_name">good first issue</string>
+    <string name="mode_help_wanted_name">help wanted</string>
+    <string name="mode_good_first_issue_button">Good First Issue</string>
+    <string name="mode_help_wanted_button">Help Wanted</string>
+    <string name="mode_good_first_issue_description">A label maintainers apply to issues they consider good starting points for new contributors — usually well-scoped and not requiring deep familiarity with the codebase. A good place for a newer or beginner developer to start.</string>
+    <string name="mode_help_wanted_description">A broader label signaling that maintainers welcome outside help on this particular issue — maintainers raising a flag that they could use a hand. Can range from simple to fairly involved — less beginner-specific than \"good first issue.\"</string>
+    <string name="language_any">Any</string>
+    <string name="language_kotlin" translatable="false">Kotlin</string>
+    <string name="language_java" translatable="false">Java</string>
+    <string name="language_swift" translatable="false">Swift</string>
+    <string name="language_javascript" translatable="false">JavaScript</string>
+    <string name="language_python" translatable="false">Python</string>
 </resources>

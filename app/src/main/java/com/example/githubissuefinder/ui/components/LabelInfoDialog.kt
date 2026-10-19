@@ -14,10 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.descriptionRes
+import com.example.githubissuefinder.ui.nameRes
 
 /**
  * The "what do these tags mean?" dialog for "good first issue" and "help wanted". The wording comes
- * from IssueLabelFilter.description, shared with the gate screen's cards so they cannot drift apart.
+ * from IssueLabelFilter.descriptionRes(), shared with the gate screen's cards so they cannot drift apart.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,12 +34,12 @@ fun LabelInfoDialog(onDismiss: () -> Unit) {
             Column {
                 IssueLabelFilter.entries.forEach { mode ->
                     Text(
-                        mode.displayName,
+                        stringResource(mode.nameRes()),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        mode.description,
+                        stringResource(mode.descriptionRes()),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 2.dp, bottom = 12.dp),
                     )

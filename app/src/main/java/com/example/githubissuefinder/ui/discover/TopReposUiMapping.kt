@@ -4,7 +4,7 @@ import com.example.githubissuefinder.data.TopReposEvent
 import com.example.githubissuefinder.data.SearchFailure
 import com.example.githubissuefinder.data.TopReposState
 import com.example.githubissuefinder.R
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.ui.relativeTime
 import com.example.githubissuefinder.ui.StringResolver
 
 /**
@@ -38,7 +38,7 @@ fun TopReposEvent.toMessage(string: StringResolver): String = when (this) {
     TopReposEvent.RateLimited -> string(R.string.search_rate_limited)
     is TopReposEvent.NewReposChecked ->
         if (newRepoCount == 0 && newIssueCount == 0) {
-            string(R.string.nothing_new_since, formatRelativeTime(previousUpdatedAtMs ?: checkedAtMs))
+            string(R.string.nothing_new_since, string.relativeTime(previousUpdatedAtMs ?: checkedAtMs))
         } else {
             string(
                 R.string.new_repos_and_issues,

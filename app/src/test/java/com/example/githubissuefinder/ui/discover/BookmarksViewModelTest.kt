@@ -43,7 +43,7 @@ class BookmarksViewModelTest {
         labels = emptyList(),
         language = null,
         commentCount = 0,
-        updatedAtLabel = "just now",
+        updatedAtMs = null,
         htmlUrl = "https://github.com/octo/repo/issues/$id",
     )
 

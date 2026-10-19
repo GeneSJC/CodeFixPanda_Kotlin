@@ -31,7 +31,7 @@ class IssueSearchRepositoryTest {
 
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
-    private val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInLabel = "45s")
+    private val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInSeconds = 45L)
 
     private fun dto(id: Long) = IssueDto(
         id = id, number = 1, title = "Issue $id", body = "body", state = "open",
@@ -138,7 +138,7 @@ class IssueSearchRepositoryTest {
 
     @Test
     fun aFourOhThreeWithNothingLeftIsRateLimited() = runBlocking {
-        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInLabel = "40s")
+        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInSeconds = 40L)
         val result = repository(FakeApi(search = { failed(403, exhausted) })).searchTopRepos(gfi, kotlin, 1)
         assertEquals(IssueSearchResult.HttpError(403, rateLimited = true), result)
     }

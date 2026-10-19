@@ -24,7 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.R
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.ui.relativeTimeText
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.components.IssueCard
 
@@ -156,7 +156,7 @@ private fun RefreshThisRepoFooter(
                     pluralStringResource(R.plurals.repo_issues_all_open, currentIssueCount, currentIssueCount)
                 }
                 val statusLine = if (lastRefreshedAtMs != null) {
-                    stringResource(R.string.repo_issues_status_checked, statusText, formatRelativeTime(lastRefreshedAtMs))
+                    stringResource(R.string.repo_issues_status_checked, statusText, relativeTimeText(lastRefreshedAtMs))
                 } else {
                     statusText
                 }

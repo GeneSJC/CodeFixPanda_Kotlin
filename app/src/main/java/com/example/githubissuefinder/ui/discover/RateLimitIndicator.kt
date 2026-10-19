@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.RateLimitInfo
+import com.example.githubissuefinder.ui.resetsInText
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -159,7 +160,7 @@ internal fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                     RateLimitRow(stringResource(R.string.rate_limit_remaining), "${info.remaining}")
                     RateLimitRow(stringResource(R.string.rate_limit_limit), "${info.limit}")
                     RateLimitRow(stringResource(R.string.rate_limit_used), "${info.used}")
-                    RateLimitRow(stringResource(R.string.rate_limit_resets_in), info.resetsInLabel)
+                    RateLimitRow(stringResource(R.string.rate_limit_resets_in), resetsInText(info.resetsInSeconds))
                     Text(
                         stringResource(R.string.rate_limit_search_note),
                         style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),

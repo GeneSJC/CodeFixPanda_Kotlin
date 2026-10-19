@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.githubissuefinder.R
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.ui.relativeTimeText
 
 /**
  * The record of every issue hidden with a card's "✕" badge, reached from the Top Repos menu and from
@@ -104,7 +104,7 @@ fun HiddenIssuesScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(hidden.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
                                 Text(
-                                    stringResource(R.string.hidden_item_subtitle, hidden.repoFullName, formatRelativeTime(hidden.hiddenAtMs)),
+                                    stringResource(R.string.hidden_item_subtitle, hidden.repoFullName, relativeTimeText(hidden.hiddenAtMs)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
