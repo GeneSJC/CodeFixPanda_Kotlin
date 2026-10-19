@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.data
 
+import com.example.githubissuefinder.R
+import com.example.githubissuefinder.testutil.FakeStringResolver
 import com.example.githubissuefinder.ui.discover.toUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -9,6 +11,8 @@ import org.junit.Test
 
 /** How a README outcome counts for the repo-card preview cache, and what the README screen shows for it. */
 class ReadmeResultMappingTest {
+
+    private val s = FakeStringResolver
 
     // ---- preview cache ----
 
@@ -38,7 +42,7 @@ class ReadmeResultMappingTest {
 
     @Test
     fun foundShowsTheMarkdown() {
-        val state = ReadmeResult.Found("# Hi").toUiState()
+        val state = ReadmeResult.Found("# Hi").toUiState(s)
         assertFalse(state.isLoading)
         assertEquals("# Hi", state.markdown)
         assertNull(state.errorMessage)
@@ -46,7 +50,7 @@ class ReadmeResultMappingTest {
 
     @Test
     fun notFoundShowsTheNoReadmeState() {
-        val state = ReadmeResult.NotFound.toUiState()
+        val state = ReadmeResult.NotFound.toUiState(s)
         assertFalse(state.isLoading)
         assertTrue(state.notFound)
         assertNull(state.errorMessage)
@@ -54,17 +58,17 @@ class ReadmeResultMappingTest {
 
     @Test
     fun theErrorStatesKeepTheirExistingWording() {
-        assertEquals("A GitHub token is required to load a README.", ReadmeResult.NoToken.toUiState().errorMessage)
-        assertEquals("GitHub returned an error (HTTP 503)", ReadmeResult.HttpError(503).toUiState().errorMessage)
-        assertEquals("Couldn't read this README's content.", ReadmeResult.Unreadable.toUiState().errorMessage)
-        assertEquals("Couldn't load the README: boom", ReadmeResult.Failed("boom").toUiState().errorMessage)
-        assertEquals("Couldn't load the README: unknown error", ReadmeResult.Failed(null).toUiState().errorMessage)
+        assertEquals(s(R.string.readme_token_required), ReadmeResult.NoToken.toUiState(s).errorMessage)
+        assertEquals(s(R.string.error_http, 503), ReadmeResult.HttpError(503).toUiState(s).errorMessage)
+        assertEquals(s(R.string.readme_unreadable), ReadmeResult.Unreadable.toUiState(s).errorMessage)
+        assertEquals(s(R.string.readme_load_failed, "boom"), ReadmeResult.Failed("boom").toUiState(s).errorMessage)
+        assertEquals(s(R.string.readme_load_failed, s(R.string.error_unknown)), ReadmeResult.Failed(null).toUiState(s).errorMessage)
     }
 
     @Test
     fun everyErrorStateIsNotLoading() {
         listOf(
             ReadmeResult.NoToken, ReadmeResult.HttpError(500), ReadmeResult.Unreadable, ReadmeResult.Failed("x"),
-        ).forEach { assertFalse(it.toUiState().isLoading) }
+        ).forEach { assertFalse(it.toUiState(s).isLoading) }
     }
 }

@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">GitHub Issue Finder</string>
+
+    <!-- Wording the ViewModels build from the data layer's facts. -->
+    <string name="error_unknown">unknown error</string>
+    <string name="error_http">GitHub returned an error (HTTP %1$d)</string>
+    <string name="load_issues_failed">Couldn\'t load issues: %1$s</string>
+    <string name="refresh_repo_failed">Couldn\'t refresh this repo: %1$s</string>
+    <string name="search_rate_limited">GitHub\'s search rate limit was reached — try again shortly</string>
+    <string name="nothing_new_since">Nothing new since %1$s</string>
+    <string name="new_repos_and_issues">%1$s, %2$s</string>
+    <plurals name="new_repos">
+        <item quantity="one">%d new repo</item>
+        <item quantity="other">%d new repos</item>
+    </plurals>
+    <plurals name="new_issues">
+        <item quantity="one">%d new issue</item>
+        <item quantity="other">%d new issues</item>
+    </plurals>
+    <string name="check_new_repos_failed_http">Couldn\'t check for new repos (HTTP %1$d)</string>
+    <string name="check_new_repos_failed">Couldn\'t check for new repos: %1$s</string>
+    <string name="readme_token_required">A GitHub token is required to load a README.</string>
+    <string name="readme_unreadable">Couldn\'t read this README\'s content.</string>
+    <string name="readme_load_failed">Couldn\'t load the README: %1$s</string>
 </resources>

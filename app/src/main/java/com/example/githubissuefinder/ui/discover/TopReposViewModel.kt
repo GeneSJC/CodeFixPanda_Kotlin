@@ -35,11 +35,11 @@ class TopReposViewModel : BaseViewModel() {
     }
 
     val uiState: StateFlow<TopReposUiState> = stateHolder.state
-        .map { it.toUiState() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState())
+        .map { it.toUiState(string) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState(string))
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
-    val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage() }
+    val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage(string) }
 
     /** Ids the user hid, to filter hidden issues out of the list at display time. */
     val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds

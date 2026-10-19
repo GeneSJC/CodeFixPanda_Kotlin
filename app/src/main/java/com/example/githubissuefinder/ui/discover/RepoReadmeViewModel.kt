@@ -33,7 +33,7 @@ class RepoReadmeViewModel : BaseViewModel() {
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, notFound = false) }
-            _uiState.value = repository.fetch(repoOwner, repoName).toUiState()
+            _uiState.value = repository.fetch(repoOwner, repoName).toUiState(string)
         }
     }
 }
