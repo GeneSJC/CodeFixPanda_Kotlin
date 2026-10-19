@@ -137,4 +137,11 @@
         <item quantity="other">%d comments</item>
     </plurals>
     <string name="repo_issues_status_checked">%1$s · checked %2$s</string>
+
+    <!-- Issue card messages, build label, splash and the repo issues snackbar. -->
+    <string name="bookmarked_message">Bookmarked</string>
+    <string name="unbookmarked_message">Unbookmarked</string>
+    <string name="version_label">Build %1$s</string>
+    <string name="issue_hidden_message">Issue hidden</string>
+    <string name="action_undo">Undo</string>
 </resources>
