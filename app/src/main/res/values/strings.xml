@@ -46,4 +46,38 @@
     <string name="token_source_none">No token yet — the app can\'t search GitHub until you add one.</string>
     <string name="gate_headline">Looking to make a contribution on GitHub?</string>
     <string name="gate_prompt">Select the kind of issues you would like to see</string>
+
+    <!-- Top Repos menu, dialogs and token notices. -->
+    <string name="menu_section_repo_management">Repo Management</string>
+    <string name="menu_bookmarks">Bookmarks</string>
+    <string name="menu_hidden_issues">Hidden Issues</string>
+    <string name="menu_check_new_repos">Check for New Repos</string>
+    <string name="action_clear_cache">Clear Cache</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_reset_app">Reset App</string>
+    <string name="menu_section_find_issues">Find Issues</string>
+    <string name="menu_find_good_first_issues">Find Good First Issues</string>
+    <string name="menu_find_help_wanted_issues">Find Help Wanted Issues</string>
+    <string name="menu_section_sandbox">Sandbox</string>
+    <string name="menu_play_origami">Play Origami Animation</string>
+    <string name="menu_play_shape_stack">Play Shape Stack Animation</string>
+    <string name="menu_play_coin">Play Coin Animation</string>
+    <string name="menu_play_title_reveal">Play Title Reveal Animation</string>
+    <string name="menu_play_title_reveal_half_speed">Play Title Reveal Animation (0.5x Speed)</string>
+    <string name="menu_play_app_start">Play App Start Animation</string>
+    <string name="action_got_it">Got it</string>
+    <string name="ranking_dialog_title">How are these repos ranked?</string>
+    <string name="ranking_dialog_built_from_issues">This list is built directly from matching issues, not from a separate repo search — every repo shown is guaranteed to have at least one open issue for whichever mode you\'re in.</string>
+    <string name="ranking_dialog_card_number">The number on each card is simply how many matching issues that repo had in this batch — repos with more matches sort higher. It isn\'t a measure of the repo\'s overall popularity or health (stars, forks, how recently it was updated) the way an earlier version of this screen used — that data isn\'t available without extra lookups this version deliberately doesn\'t make yet.</string>
+    <string name="ranking_dialog_future">A future update may add that context back for repos worth a closer look, without giving up the guarantee that every repo shown here actually has something open for you.</string>
+    <string name="clear_cache_dialog_title">Clear cache?</string>
+    <string name="clear_cache_dialog_message">Removes every cached repo/issue list so the next load fetches live data. Bookmarks and hidden issues are kept.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="no_token_message">This screen needs a live GitHub connection. Add a free GitHub token in Settings to see ranked repos here.</string>
+    <string name="no_token_add">Add your token</string>
+    <string name="action_open_settings">Open Settings</string>
+    <string name="token_problem_how_to">How to get a token</string>
+    <string name="token_problem_title">GitHub API token needed</string>
+    <string name="token_problem_rejected">GitHub isn\'t accepting the token this app is using (it may be expired, revoked, or otherwise invalid). Enter a new personal access token in Settings.</string>
+    <string name="token_problem_missing">This app needs a GitHub personal access token to make live requests against the Search API. Enter one in Settings.</string>
 </resources>
