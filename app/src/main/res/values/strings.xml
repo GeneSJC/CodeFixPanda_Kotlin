@@ -150,4 +150,9 @@
     <string name="time_just_now">just now</string>
     <string name="time_hours_ago">%1$dh ago</string>
     <string name="time_days_ago">%1$dd ago</string>
+
+    <!-- Rate-limit reset time. -->
+    <string name="resets_in_unknown">unknown</string>
+    <string name="resets_in_seconds">%1$ds</string>
+    <string name="resets_in_minutes_seconds">%1$dm %2$ds</string>
 </resources>

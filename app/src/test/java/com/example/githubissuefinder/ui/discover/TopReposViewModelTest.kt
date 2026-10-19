@@ -106,7 +106,7 @@ class TopReposViewModelTest {
     @Test
     fun theRateLimitComesFromTheSearchRepository() {
         val f = ViewModelFixtures()
-        val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInLabel = "45s")
+        val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInSeconds = 45L)
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1)), rateLimit = limit) }
 
         val vm = viewModel(f)
@@ -129,7 +129,7 @@ class TopReposViewModelTest {
     @Test
     fun theRateLimitedLoadMoreSaysSo() = runBlocking {
         val f = ViewModelFixtures()
-        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInLabel = "40s")
+        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInSeconds = 40L)
         f.api.handler = { _, _, page -> if (page == 1) searchOk(fullPage(), total = 200) else searchFailed(403, exhausted) }
         val vm = viewModel(f)
 
