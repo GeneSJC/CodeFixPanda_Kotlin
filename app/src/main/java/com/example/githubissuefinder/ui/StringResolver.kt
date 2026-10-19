@@ -3,6 +3,9 @@ package com.example.githubissuefinder.ui
 import android.content.Context
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Turns a string resource into text for the wording a ViewModel builds. Fixed text in a composable
@@ -22,4 +25,14 @@ class ContextStringResolver(private val context: Context) : StringResolver {
 
     override fun plural(id: Int, count: Int, vararg args: Any): String =
         context.resources.getQuantityString(id, count, *args)
+}
+
+/**
+ * A resolver over the current Context, for text a composable builds from a value that changes while
+ * it is on screen (see RelativeTime.kt). Fixed text still uses stringResource.
+ */
+@Composable
+fun rememberStringResolver(): StringResolver {
+    val context = LocalContext.current
+    return remember(context) { ContextStringResolver(context) }
 }

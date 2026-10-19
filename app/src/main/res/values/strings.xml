@@ -144,4 +144,10 @@
     <string name="version_label">Build %1$s</string>
     <string name="issue_hidden_message">Issue hidden</string>
     <string name="action_undo">Undo</string>
+
+    <!-- Relative time. -->
+    <string name="time_recently">recently</string>
+    <string name="time_just_now">just now</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_days_ago">%1$dd ago</string>
 </resources>

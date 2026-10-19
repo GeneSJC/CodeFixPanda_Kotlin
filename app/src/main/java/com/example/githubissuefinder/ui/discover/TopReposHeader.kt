@@ -11,7 +11,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.githubissuefinder.R
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.ui.relativeTimeText
 
 /** The repo-count chip and the "Updated X ago" line, as two siblings for the caller's Row. */
 @Composable
@@ -28,7 +28,7 @@ internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?) {
         )
     }
     Text(
-        lastUpdatedAtMs?.let { stringResource(R.string.repo_list_updated, formatRelativeTime(it)) }.orEmpty(),
+        lastUpdatedAtMs?.let { stringResource(R.string.repo_list_updated, relativeTimeText(it)) }.orEmpty(),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 8.dp),

@@ -28,7 +28,7 @@ class RepoIssueGroupingTest {
         labels = emptyList(),
         language = null,
         commentCount = commentCount,
-        updatedAtLabel = "just now",
+        updatedAtMs = null,
         htmlUrl = "https://github.com/$repoOwner/$repoName/issues/$id",
     )
 
