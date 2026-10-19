@@ -114,12 +114,9 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
         colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.10f)),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // One button: the icon and the name each sit in a slot as wide as the widest of any
-                // mode, so both buttons are the same width and symmetric.
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                // One button, centered in the card: the icon and the name each sit in a slot as wide
+                // as the widest of any mode, so both buttons are the same width and symmetric.
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
@@ -139,21 +136,22 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
                             )
                         }
                         Spacer(modifier = Modifier.width(MODE_ICON_TEXT_GAP))
-                        Box(modifier = Modifier.width(slots.text), contentAlignment = Alignment.Center) {
+                        // Start-aligned, so the first letters of the names line up.
+                        Box(modifier = Modifier.width(slots.text), contentAlignment = Alignment.CenterStart) {
                             Text(
-                                mode.displayName,
+                                mode.buttonLabel(),
                                 style = modeButtonTextStyle(),
                                 color = Color.White,
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
                 Text(
                     "⌄",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
+                        .align(Alignment.CenterEnd)
                         .padding(start = 8.dp)
                         .rotate(chevronRotation)
                         .clickable { expanded = !expanded },
@@ -174,6 +172,10 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
         }
     }
 }
+
+/** The mode name with each word capitalized, for the button ("Good First Issue"). */
+private fun IssueLabelFilter.buttonLabel() =
+    displayName.split(" ").joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
@@ -197,7 +199,7 @@ private fun rememberModeButtonSlots(): ModeButtonSlots {
         with(density) {
             ModeButtonSlots(
                 icon = widestPx { it.glyph + TEXT_PRESENTATION_SELECTOR }.toDp(),
-                text = widestPx { it.displayName }.toDp(),
+                text = widestPx { it.buttonLabel() }.toDp(),
             )
         }
     }
@@ -205,5 +207,5 @@ private fun rememberModeButtonSlots(): ModeButtonSlots {
 
 private val MODE_BUTTON_SIDE_PADDING = 14.dp
 
-// Half the distance the separate icon chip used to keep from the button.
-private val MODE_ICON_TEXT_GAP = 24.dp
+// Half the 24dp this started at.
+private val MODE_ICON_TEXT_GAP = 12.dp
