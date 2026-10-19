@@ -60,7 +60,7 @@ import com.example.githubissuefinder.ui.theme.colorScheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
-    val buttonWidth = rememberModeButtonWidth()
+    val slots = rememberModeButtonSlots()
     GitHubIssueFinderTheme(issueMode = null) {
         Scaffold(
             topBar = {
@@ -91,7 +91,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         IssueLabelFilter.entries.forEach { mode ->
-                            ModeCard(mode = mode, buttonWidth = buttonWidth, onSelect = { onModeSelected(mode) })
+                            ModeCard(mode = mode, slots = slots, onSelect = { onModeSelected(mode) })
                         }
                     }
                 }
@@ -101,7 +101,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
 }
 
 @Composable
-private fun ModeCard(mode: IssueLabelFilter, buttonWidth: Dp, onSelect: () -> Unit) {
+private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: () -> Unit) {
     val accent = mode.colorScheme().primary
     var expanded by rememberSaveable { mutableStateOf(false) }
     val chevronRotation by animateFloatAsState(
@@ -118,35 +118,34 @@ private fun ModeCard(mode: IssueLabelFilter, buttonWidth: Dp, onSelect: () -> Un
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // The icon sits beside the button on the card, not inside it, in the button's
-                // color so the two read as a pair, and can later become a per-mode icon without
-                // touching the button.
-                Surface(shape = RoundedCornerShape(8.dp), color = accent) {
-                    Text(
-                        // The text-presentation selector keeps a device from swapping in a colored
-                        // emoji glyph, which would ignore the white.
-                        mode.glyph + TEXT_PRESENTATION_SELECTOR,
-                        style = modeButtonTextStyle(),
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    )
-                }
-                Spacer(modifier = Modifier.width(20.dp))
+                // One button: the icon and the name each sit in a slot as wide as the widest of any
+                // mode, so both buttons are the same width and symmetric.
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
                     color = accent,
                 ) {
                     Row(
-                        modifier = Modifier.width(buttonWidth).padding(vertical = 10.dp),
-                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(horizontal = MODE_BUTTON_SIDE_PADDING, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            mode.displayName,
-                            style = modeButtonTextStyle(),
-                            color = Color.White,
-                        )
+                        Box(modifier = Modifier.width(slots.icon), contentAlignment = Alignment.Center) {
+                            Text(
+                                // The text-presentation selector keeps a device from swapping in a
+                                // colored emoji glyph, which would ignore the white.
+                                mode.glyph + TEXT_PRESENTATION_SELECTOR,
+                                style = modeButtonTextStyle(),
+                                color = Color.White,
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(MODE_ICON_TEXT_GAP))
+                        Box(modifier = Modifier.width(slots.text), contentAlignment = Alignment.Center) {
+                            Text(
+                                mode.displayName,
+                                style = modeButtonTextStyle(),
+                                color = Color.White,
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -178,25 +177,33 @@ private fun ModeCard(mode: IssueLabelFilter, buttonWidth: Dp, onSelect: () -> Un
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
-/** The icon chip and the button share this text size, 25% above titleMedium. */
+/** The icon and the name share this text size, 25% above titleMedium. */
 @Composable
 private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
     it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
 }
 
-/**
- * One width for every mode button: the widest mode name plus the usual side padding, so the colored
- * buttons are the same size with each name centered in its own.
- */
+/** The widths of the icon slot and the name slot: the widest of any mode, shared by every button. */
+private class ModeButtonSlots(val icon: Dp, val text: Dp)
+
 @Composable
-private fun rememberModeButtonWidth(): Dp {
+private fun rememberModeButtonSlots(): ModeButtonSlots {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val style = modeButtonTextStyle()
     return remember(style, density) {
-        val widestTextPx = IssueLabelFilter.entries.maxOf { textMeasurer.measure(it.displayName, style).size.width }
-        with(density) { widestTextPx.toDp() } + MODE_BUTTON_SIDE_PADDING * 2
+        fun widestPx(text: (IssueLabelFilter) -> String) =
+            IssueLabelFilter.entries.maxOf { textMeasurer.measure(text(it), style).size.width }
+        with(density) {
+            ModeButtonSlots(
+                icon = widestPx { it.glyph + TEXT_PRESENTATION_SELECTOR }.toDp(),
+                text = widestPx { it.displayName }.toDp(),
+            )
+        }
     }
 }
 
 private val MODE_BUTTON_SIDE_PADDING = 14.dp
+
+// Half the distance the separate icon chip used to keep from the button.
+private val MODE_ICON_TEXT_GAP = 24.dp
