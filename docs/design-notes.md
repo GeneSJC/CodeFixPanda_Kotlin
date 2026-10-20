@@ -95,3 +95,13 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Old caches.** Issues saved before the timestamp was stored have no `updatedAtMs`, so they show "recently" until the repo is refreshed. Bookmarked issues are never refreshed, so older bookmarks keep showing "recently".
 - **Left as symbols.** Glyphs such as ← ↗ ⌄ ☰ ✕ ★ and the "—" placeholder are drawing, not wording, and stay in code.
 
+## Demo data
+
+- **The token decides.** With no token the app shows demo data; with one it shows real data. The choice is made per call by small switching data sources (`SwitchedIssueSearchApi`, `SwitchedReadmeApi`, `SwitchedRepoIssueGroupStorage`), because a token can be added or removed while the app runs. Repositories and state holders are unchanged and never learn which source answered. The no-token screen and the `NoToken` results are gone: no token is no longer a dead end.
+- **The data.** `data/demo/DemoData.kt`: three fake repos (Kotlin, Java, Python), thirteen issues, every title starting "[Demo]", written as the DTOs GitHub returns so the real mapper handles them. Ids are negative, so a demo issue can never be mistaken for a real one. `DemoIssueSearchApi` reads the same `label:`, `language:` and `repo:` qualifiers the real API is sent, so language filtering and a single repo's refresh behave as usual. It reports no rate limit, so the chip stays "—". `DemoReadmeApi` returns a short README in the Contents API's base64 form.
+- **Cache isolation.** Demo results are cached in memory (`InMemoryRepoIssueGroupStorage`), never in the real cache file. Clear Cache clears the cache in use.
+- **Tag on saved items.** `Issue.tag` (and `HiddenIssue.tag`) is null for real data and "demo" for demo data, and is saved with the item. `ApiTokenRepository.activeTag` is the tag of the data in use (none with a token, "demo" without). The Bookmarks and Hidden view models list only the entries whose tag equals it, so each mode sees only its own; the other mode's entries stay saved and reappear when that mode is back. Unhide all only touches the data in use. Screens never mention demo.
+- **Banner.** `DemoBanner` shows under the title bar of Top Repos and the repo issues screen while there is no token, with a button to Settings.
+- **Switching reloads.** `TopReposStateHolder` reloads the list when the tag flips, from the cache of the data now in use.
+- **Known loose ends.** A demo issue's link points at a github.com address that does not exist. Demo bookmarks and hidden entries live in the real bookmarks and hidden files, hidden by the filter rather than stored elsewhere.
+

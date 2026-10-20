@@ -80,7 +80,7 @@ class DemoIssueSearchApiTest {
 
     @Test
     fun theRepositoryTurnsDemoResultsIntoTaggedIssues() = runBlocking {
-        val repository = IssueSearchRepository(api, hasToken = { true })
+        val repository = IssueSearchRepository(api)
 
         val result = repository.searchTopRepos(gfi, LanguageFilter.ANY, page = 1)
 
@@ -93,7 +93,6 @@ class DemoIssueSearchApiTest {
     fun aDemoReadmeIsReadableMarkdown() = runBlocking {
         val repository = ReadmeRepository(
             api = DemoReadmeApi(),
-            hasToken = { true },
             decode = { content, _ -> content?.let { String(Base64.decode(it), Charsets.UTF_8) } },
         )
 
