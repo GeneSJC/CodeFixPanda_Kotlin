@@ -39,6 +39,12 @@ class RepoIssuesViewModelTest {
     private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel = f.repoIssuesViewModel()
 
     @Test
+    fun theDemoBannerIsOnExactlyWhileThereIsNoToken() {
+        assertTrue(viewModel(ViewModelFixtures(buildToken = "")).isDemo.value)
+        assertFalse(viewModel(ViewModelFixtures()).isDemo.value)
+    }
+
+    @Test
     fun loadingAGroupShowsItsIssues() {
         val vm = viewModel(ViewModelFixtures())
         val group = repoGroupOf("octo", "repo", 1, 2)

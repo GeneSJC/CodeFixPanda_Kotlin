@@ -2,6 +2,8 @@ package com.example.githubissuefinder.data
 
 import com.example.githubissuefinder.model.DEMO_TAG
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -152,6 +154,18 @@ class ApiTokenRepositoryTest {
         assertNull(activeTagFor("abc"))
         assertNull(ApiTokenRepository(FakeStorage("user"), buildToken = "").activeTag.value)
         assertNull(ApiTokenRepository(FakeStorage(), buildToken = "build").activeTag.value)
+    }
+
+    @Test
+    fun isDemoIsTrueExactlyWhileThereIsNoToken() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        assertTrue(repository.isDemo.value)
+
+        repository.setUserToken("abc")
+        assertFalse(repository.isDemo.value)
+
+        repository.setUserToken("")
+        assertTrue(repository.isDemo.value)
     }
 
     @Test

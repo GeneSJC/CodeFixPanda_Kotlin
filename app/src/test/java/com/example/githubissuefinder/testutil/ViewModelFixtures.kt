@@ -138,6 +138,7 @@ class ViewModelFixtures(
             single { topReposStateHolder }
             single { snippetRepository }
             single { hiddenIssuesRepository }
+            single { tokenRepository }
             single { config }
             single<StringResolver> { FakeStringResolver }
         }
@@ -150,6 +151,7 @@ class ViewModelFixtures(
             single { repoIssuesStateHolder }
             single { hiddenIssuesRepository }
             single { bookmarksRepository }
+            single { tokenRepository }
             single { appConfig }
             single<StringResolver> { FakeStringResolver }
         }

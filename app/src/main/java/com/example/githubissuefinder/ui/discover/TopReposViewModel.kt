@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeSnippetRepository
@@ -29,6 +30,7 @@ class TopReposViewModel : BaseViewModel() {
     private val stateHolder: TopReposStateHolder by inject()
     private val snippetRepository: ReadmeSnippetRepository by inject()
     private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
+    private val tokenRepository: ApiTokenRepository by inject()
 
     init {
         stateHolder.open()
@@ -46,6 +48,9 @@ class TopReposViewModel : BaseViewModel() {
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
+
+    /** True while the demo data is shown (no token), for the banner. */
+    val isDemo: StateFlow<Boolean> = tokenRepository.isDemo
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
     val rateLimit: StateFlow<RateLimitInfo?> = stateHolder.rateLimit

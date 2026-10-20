@@ -103,6 +103,11 @@ class ApiTokenRepository(
      */
     val activeTag: StateFlow<String?> = _activeTag.asStateFlow()
 
+    private val _isDemo = MutableStateFlow(_activeTag.value == DEMO_TAG)
+
+    /** True while the demo data is in use (no token), for the banner. */
+    val isDemo: StateFlow<Boolean> = _isDemo.asStateFlow()
+
     private val _tokenSource = MutableStateFlow(tokenSourceOf(_userToken.value, buildToken))
 
     /** Which source [effectiveToken] came from. */
@@ -118,6 +123,7 @@ class ApiTokenRepository(
         _userToken.value = trimmed
         _effectiveToken.value = resolveEffectiveToken(trimmed, buildToken)
         _activeTag.value = activeTagFor(_effectiveToken.value)
+        _isDemo.value = _activeTag.value == DEMO_TAG
         _tokenSource.value = tokenSourceOf(trimmed, buildToken)
         storage.save(trimmed.ifEmpty { null })
     }

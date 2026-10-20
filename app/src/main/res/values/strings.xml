@@ -166,4 +166,7 @@
     <string name="language_swift" translatable="false">Swift</string>
     <string name="language_javascript" translatable="false">JavaScript</string>
     <string name="language_python" translatable="false">Python</string>
+
+    <!-- Demo mode. -->
+    <string name="demo_banner_message">Demo data — add a GitHub token in Settings to see real issues.</string>
 </resources>

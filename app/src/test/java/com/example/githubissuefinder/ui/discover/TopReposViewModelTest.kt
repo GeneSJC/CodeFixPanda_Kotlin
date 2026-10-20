@@ -115,6 +115,12 @@ class TopReposViewModelTest {
     }
 
     @Test
+    fun theDemoBannerIsOnExactlyWhileThereIsNoToken() {
+        assertTrue(viewModel(ViewModelFixtures(buildToken = "")).isDemo.value)
+        assertFalse(viewModel(ViewModelFixtures()).isDemo.value)
+    }
+
+    @Test
     fun withoutATokenHasTokenIsFalse() {
         val f = ViewModelFixtures(buildToken = "")
 
