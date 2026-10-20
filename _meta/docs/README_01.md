@@ -22,7 +22,7 @@ this way, without needing a real or mocked `Application`).
   annotation (method) or the class declaration (whole class), or right-click the file in the
   Project view → **Run 'RepoIssueGroupingTest'**.
 - **Whole package**: right-click a package under `app/src/test/java/` (e.g.
-  `com.example.githubissuefinder.data`) → **Run Tests in '...'**.
+  `io.github.genesjc.githubissuefinder.data`) → **Run Tests in '...'**.
 - **Whole module**: right-click `app` (or `app/src/test/java`) → **Run All Tests**, or use
   the pre-configured **app** run configuration's dropdown if one exists.
 - Results show in the **Run** panel with per-test pass/fail and a re-run-failed option — no
@@ -30,16 +30,19 @@ this way, without needing a real or mocked `Application`).
 
 ### Bash Shell
 
-Local (JVM) unit tests — no emulator or physical device required:
+Local (JVM) unit tests — no emulator or physical device required. The project has two build
+flavors (`foss` and `commercial`); this task runs the unit tests for both:
 
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
+One flavor only: `./gradlew testFossDebugUnitTest`
+
 Run a single test class:
 
 ```bash
-./gradlew :app:testDebugUnitTest --tests "com.example.githubissuefinder.data.RepoIssueGroupingTest"
+./gradlew :app:testDebugUnitTest --tests "io.github.genesjc.githubissuefinder.data.RepoIssueGroupingTest"
 ```
 
 Instrumented tests (`app/src/androidTest/java/`) require a device or emulator and aren't
@@ -51,9 +54,9 @@ covered by the command above:
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs `testDebugUnitTest` and `assembleDebug` on every push and
+`.github/workflows/ci.yml` runs `testDebugUnitTest` and `assembleDebug` (both flavors) on every push and
 pull request against `develop`/`main`, on GitHub's own runners (which have normal internet
 access, unlike the Claude Code sandbox's blocked Gradle toolchain download). It currently
 just reports status on the PR — it is NOT yet a required check in branch protection, so it
-doesn't block merging. Test result reports are uploaded as a workflow artifact
+doesn't block merging. Test result reports (one folder per flavor) are uploaded as a workflow artifact
 (`unit-test-results`) for a few weeks after each run.

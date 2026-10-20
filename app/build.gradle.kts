@@ -42,19 +42,18 @@ val localProperties = Properties().apply {
 // ("I'm still seeing 13.1"). Corrected here to 15 (PR #15, the
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
-val buildLabelA = 32
-val buildLabelB = 6
+val buildLabelA = 33
+val buildLabelB = 2
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
 android {
-    namespace = "com.example.githubissuefinder"
+    namespace = "io.github.genesjc.githubissuefinder"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.githubissuefinder"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -96,11 +95,31 @@ android {
         // a fresh clone/run shows the clean, production-like menu rather
         // than this project's own dev tooling — see TopReposScreen.kt.
         // Deliberately a plain boolean val, same pattern as the field
-        // above, not a Gradle product flavor: this is the only
-        // thing it currently controls, so a flavor's build-variant
-        // machinery (separate installable variants, an application-id
-        // suffix, etc.) would be more than this needs.
+        // above, not a product flavor: this is a developer aid, and a
+        // flavor would be more than it needs. The flavors below exist
+        // for a different reason (what each published build contains).
         buildConfigField("Boolean", "SHOW_DETAILED_DRAWER_MENU", "$showDetailedDrawerMenu")
+    }
+
+    // The project is published two ways from one codebase: foss is the
+    // open-source build posted to GitHub, commercial is the build for
+    // Google Play. A flavor (and not a runtime flag) is what keeps code
+    // that only the commercial build may contain out of the open one at
+    // compile time. The two ids are written out in full, not derived, because
+    // a published Play id can never change. Both can be installed on one device.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("foss") {
+            dimension = "distribution"
+            isDefault = true // a fresh checkout builds and runs the open build
+            applicationId = "io.github.genesjc.githubissuefinder"
+            versionNameSuffix = "-foss"
+        }
+        create("commercial") {
+            dimension = "distribution"
+            applicationId = "io.github.genesjc.githubissuefinder.commercial"
+            versionNameSuffix = "-commercial"
+        }
     }
 
     buildTypes {
