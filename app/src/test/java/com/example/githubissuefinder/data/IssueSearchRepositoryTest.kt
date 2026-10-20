@@ -120,7 +120,7 @@ class IssueSearchRepositoryTest {
     fun aFailedSearchDoesNotUpdateTheRateLimit() = runBlocking {
         var failing = false
         val repo = repository(
-            FakeApi(search = { if (failing) failed(500, rateLimit = RateLimitInfo(5, 30, 25, "10s")) else ok(1, rateLimit = limit) }),
+            FakeApi(search = { if (failing) failed(500, rateLimit = RateLimitInfo(5, 30, 25, 10L)) else ok(1, rateLimit = limit) }),
         )
         repo.searchTopRepos(gfi, kotlin, 1)
         failing = true
@@ -190,7 +190,7 @@ class IssueSearchRepositoryTest {
 
     @Test
     fun theRateLimitIsNotLookedUpWhenAlreadyKnown() = runBlocking {
-        val api = FakeApi(search = { ok(1, rateLimit = limit) }, rateLimit = RateLimitInfo(1, 30, 29, "5s"))
+        val api = FakeApi(search = { ok(1, rateLimit = limit) }, rateLimit = RateLimitInfo(1, 30, 29, 5L))
         val repo = repository(api)
         repo.searchTopRepos(gfi, kotlin, 1)
 
