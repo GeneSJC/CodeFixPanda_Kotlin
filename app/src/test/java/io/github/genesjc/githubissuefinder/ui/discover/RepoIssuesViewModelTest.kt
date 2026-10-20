@@ -39,6 +39,17 @@ class RepoIssuesViewModelTest {
     private fun viewModel(f: ViewModelFixtures): RepoIssuesViewModel = f.repoIssuesViewModel()
 
     @Test
+    fun canShowAdsFollowsTheAdsController() {
+        val f = ViewModelFixtures()
+        val vm = viewModel(f)
+        assertFalse(vm.canShowAds.value)
+
+        f.adsController.canShowAds.value = true
+
+        assertTrue(vm.canShowAds.value)
+    }
+
+    @Test
     fun theDemoBannerIsOnExactlyWhileThereIsNoToken() {
         assertTrue(viewModel(ViewModelFixtures(buildToken = "")).isDemo.value)
         assertFalse(viewModel(ViewModelFixtures()).isDemo.value)

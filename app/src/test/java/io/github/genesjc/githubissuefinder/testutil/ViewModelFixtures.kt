@@ -1,5 +1,6 @@
 package io.github.genesjc.githubissuefinder.testutil
 
+import io.github.genesjc.githubissuefinder.ads.AdsController
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
 import io.github.genesjc.githubissuefinder.data.ApiTokenStorage
 import io.github.genesjc.githubissuefinder.data.AppConfig
@@ -114,6 +115,7 @@ class ViewModelFixtures(
     val tokenStorage = FakeApiTokenStorage()
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
     val appConfig = testAppConfig()
+    val adsController = FakeAdsController()
     val hiddenIssuesRepository = HiddenIssuesRepository(FakeHiddenIssuesStorage())
     val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
@@ -139,6 +141,7 @@ class ViewModelFixtures(
             single { snippetRepository }
             single { hiddenIssuesRepository }
             single { tokenRepository }
+            single<AdsController> { adsController }
             single { config }
             single<StringResolver> { FakeStringResolver }
         }
@@ -152,6 +155,7 @@ class ViewModelFixtures(
             single { hiddenIssuesRepository }
             single { bookmarksRepository }
             single { tokenRepository }
+            single<AdsController> { adsController }
             single { appConfig }
             single<StringResolver> { FakeStringResolver }
         }

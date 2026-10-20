@@ -1,6 +1,7 @@
 package io.github.genesjc.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
+import io.github.genesjc.githubissuefinder.ads.AdsController
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
 import io.github.genesjc.githubissuefinder.data.BookmarksRepository
 import io.github.genesjc.githubissuefinder.data.HiddenIssuesRepository
@@ -30,6 +31,7 @@ class RepoIssuesViewModel : BaseViewModel() {
     private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
     private val bookmarksRepository: BookmarksRepository by inject()
     private val tokenRepository: ApiTokenRepository by inject()
+    private val adsController: AdsController by inject()
 
     init {
         stateHolder.open()
@@ -41,6 +43,9 @@ class RepoIssuesViewModel : BaseViewModel() {
 
     /** True while the demo data is shown (no token), for the banner. */
     val isDemo: StateFlow<Boolean> = tokenRepository.isDemo
+
+    /** True when an ad may be shown on this screen (always false in the open build). */
+    val canShowAds: StateFlow<Boolean> = adsController.canShowAds
 
     /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
     val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode
