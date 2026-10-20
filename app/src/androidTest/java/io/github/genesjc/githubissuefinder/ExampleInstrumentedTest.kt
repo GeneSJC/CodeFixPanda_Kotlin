@@ -19,6 +19,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("io.github.genesjc.githubissuefinder", appContext.packageName)
+        // Each flavor installs under its own application id.
+        assertEquals(BuildConfig.APPLICATION_ID, appContext.packageName)
     }
 }

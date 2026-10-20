@@ -105,3 +105,10 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Switching reloads.** `TopReposStateHolder` reloads the list when the tag flips, from the cache of the data now in use.
 - **Known loose ends.** A demo issue's link points at a github.com address that does not exist. Demo bookmarks and hidden entries live in the real bookmarks and hidden files, hidden by the filter rather than stored elsewhere.
 
+## Build flavors
+
+- **Why flavors now.** The project is published two ways from one codebase: `foss` for GitHub and `commercial` for Google Play. An earlier note kept build options as plain booleans rather than flavors, which is still right for developer aids such as the detailed drawer menu. A flavor is the only way to keep code that just the commercial build may contain out of the open build at compile time; a runtime flag would leave it in the open APK.
+- **Ids.** `io.github.genesjc.githubissuefinder` (foss) and `io.github.genesjc.githubissuefinder.commercial`, written out in full in `app/build.gradle.kts` rather than derived, because a published Play id cannot change. The code package and the `namespace` are `io.github.genesjc.githubissuefinder`, replacing the `com.example` placeholder.
+- **This change adds no differences.** The flavors, the ids, version suffixes and the CI and docs adjustments only. Flavor-specific source folders (`src/foss`, `src/commercial`) are created when the first flavor-specific code arrives. Git cannot hold an empty folder.
+- **Side effects.** Variants are `fossDebug`, `commercialDebug` and so on; CI's `testDebugUnitTest` and `assembleDebug` now cover both flavors. An existing install under the old id is a different app, so it does not update in place.
+

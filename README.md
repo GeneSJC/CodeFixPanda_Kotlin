@@ -76,6 +76,22 @@ View (Compose screen)
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.
 
+## Build flavors
+
+One codebase, two published builds, as a `distribution` flavor dimension:
+
+| Flavor | Published to | Application id | Version suffix |
+|---|---|---|---|
+| `foss` | GitHub, as the open-source build | `io.github.genesjc.githubissuefinder` | `-foss` |
+| `commercial` | Google Play | `io.github.genesjc.githubissuefinder.commercial` | `-commercial` |
+
+`foss` is the default, so a fresh checkout builds and runs the open build; pick `commercialDebug`
+in Android Studio's Build Variants to run the other. The two ids differ, so both can be installed on
+one device. The reason for flavors and not a runtime flag is that code only the commercial build may
+contain stays out of the open build at compile time. Today the two flavors are identical; what
+makes them differ (advertising, in the commercial flavor only) comes in a later change. The code
+package is `io.github.genesjc.githubissuefinder` in both.
+
 ## Building and testing
 
 See `_meta/docs/README_01.md` for running the tests and the CI setup.
