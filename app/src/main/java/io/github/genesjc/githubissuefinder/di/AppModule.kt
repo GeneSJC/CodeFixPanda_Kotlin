@@ -60,7 +60,14 @@ val appModule = module {
     single<StringResolver> { ContextStringResolver(androidContext()) }
 
     // Build-time constants: the one place BuildConfig is read.
-    single { AppConfig(BuildConfig.BUILD_LABEL, BuildConfig.SPLASH_ANIMATION, BuildConfig.SHOW_DETAILED_DRAWER_MENU) }
+    // The label names the flavor too, so the drawer shows which build is running (foss or commercial).
+    single {
+        AppConfig(
+            "${BuildConfig.BUILD_LABEL} (${BuildConfig.FLAVOR})",
+            BuildConfig.SPLASH_ANIMATION,
+            BuildConfig.SHOW_DETAILED_DRAWER_MENU,
+        )
+    }
 
     // Repositories over local storage.
     single { ApiTokenRepository(SharedPreferencesApiTokenStorage(androidContext()), BuildConfig.GITHUB_API_TOKEN) }

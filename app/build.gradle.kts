@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 34
-val buildLabelB = 1
+val buildLabelB = 2
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -189,3 +189,23 @@ val printBuildLabel = tasks.register("printBuildLabel") {
 
 tasks.matching { it.name in setOf("assembleDebug", "assembleRelease", "installDebug", "testDebugUnitTest") }
     .configureEach { finalizedBy(printBuildLabel) }
+
+// Android Studio's Run and Build use the selected variant's own tasks (for example
+// installCommercialDebug), not the aggregate ones above, so each variant gets its own line naming
+// the variant, e.g. "Build 34.2 (commercialDebug)". That is how to confirm which variant just ran.
+for (flavor in listOf("Foss", "Commercial")) {
+    for (type in listOf("Debug", "Release")) {
+        val variant = "${flavor.replaceFirstChar { it.lowercase() }}$type"
+        val line = "Build $buildLabelA.$buildLabelB ($variant)"
+        val printVariantLabel = tasks.register("print${flavor}${type}Label") {
+            doLast {
+                println()
+                println(line)
+            }
+        }
+        val variantTasks = setOf(
+            "assemble$flavor$type", "install$flavor$type", "bundle$flavor$type", "test${flavor}${type}UnitTest",
+        )
+        tasks.matching { it.name in variantTasks }.configureEach { finalizedBy(printVariantLabel) }
+    }
+}
