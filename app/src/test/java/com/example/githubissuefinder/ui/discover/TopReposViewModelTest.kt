@@ -115,12 +115,11 @@ class TopReposViewModelTest {
     }
 
     @Test
-    fun noTokenShowsTheNoTokenState() {
+    fun withoutATokenHasTokenIsFalse() {
         val f = ViewModelFixtures(buildToken = "")
 
         val vm = viewModel(f)
 
-        assertTrue(vm.uiState.value.noTokenConfigured)
         assertFalse(vm.hasToken.value)
     }
 

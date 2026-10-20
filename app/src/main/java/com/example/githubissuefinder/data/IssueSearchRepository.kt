@@ -28,9 +28,6 @@ data class IssueSearchPage(val issues: List<Issue>, val totalCount: Int)
 sealed interface IssueSearchResult {
     data class Success(val page: IssueSearchPage) : IssueSearchResult
 
-    /** No GitHub token is in use, so nothing was requested. */
-    data object NoToken : IssueSearchResult
-
     /**
      * GitHub answered with an error. [rateLimited] is true for a 403 whose
      * rate-limit headers say nothing is left — GitHub's own signal for
@@ -107,15 +104,15 @@ fun repoIssuesQuery(repoFullName: String, mode: IssueLabelFilter): String =
 /**
  * The single place the app searches GitHub for issues: Top Repos' list (with Load More and Check
  * for New Repos) and a single repo's refresh. It turns an HTTP response into an [IssueSearchResult]
- * callers can switch on, and keeps the rules in one place (no token means no request). The
+ * callers can switch on, and keeps the rules in one place. Which data source answers (real, or the
+ * demo one when there is no token) is decided beneath it, in the [IssueSearchApi] it is given. The
  * rate-limit chip's numbers live here in [rateLimit], updated from the headers of every successful
  * search; a failed response is only inspected to tell a rate-limit 403 from other errors. They
  * describe the credential's shared Search API quota, not one search, which is why a repository
- * holds them and not a screen. [hasToken] is a parameter so a test can control it.
+ * holds them and not a screen.
  */
 class IssueSearchRepository(
     private val api: IssueSearchApi,
-    private val hasToken: () -> Boolean,
 ) {
 
     private val _rateLimit = MutableStateFlow<RateLimitInfo?>(null)
@@ -144,13 +141,12 @@ class IssueSearchRepository(
      * stays blank, and the next search fills it in.
      */
     suspend fun loadRateLimitIfUnknown() {
-        if (_rateLimit.value != null || !hasToken()) return
+        if (_rateLimit.value != null) return
         val info = api.fetchRateLimit() ?: return
         if (_rateLimit.value == null) _rateLimit.value = info
     }
 
     private suspend fun search(query: String, perPage: Int, page: Int, language: LanguageFilter): IssueSearchResult {
-        if (!hasToken()) return IssueSearchResult.NoToken
         return try {
             val response = api.searchIssues(query, perPage, page)
             val body = response.body

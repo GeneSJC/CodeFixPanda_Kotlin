@@ -90,7 +90,6 @@ val appModule = module {
                 demo = DemoIssueSearchApi(),
                 useDemo = { tokens.activeTag.value == DEMO_TAG },
             ),
-            hasToken = { tokens.effectiveToken.value.isNotBlank() },
         )
     }
     single {
@@ -101,7 +100,6 @@ val appModule = module {
                 demo = DemoReadmeApi(),
                 useDemo = { tokens.activeTag.value == DEMO_TAG },
             ),
-            hasToken = { tokens.effectiveToken.value.isNotBlank() },
         )
     }
     single { ReadmeSnippetRepository(GitHubReadmeSource(get())) }

@@ -97,7 +97,6 @@ fun TopReposScreen(
             onRetryLoadMore = viewModel::retryLoadMore,
             onRepoCardShown = { group -> viewModel.onRepoCardShown(group.repoOwner, group.repoName, group.repoFullName) },
             onRepoClick = onRepoClick,
-            onOpenSettings = onOpenSettings,
             modifier = listModifier,
         )
     }

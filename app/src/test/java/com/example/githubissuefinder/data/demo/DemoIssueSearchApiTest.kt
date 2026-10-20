@@ -9,6 +9,8 @@ import com.example.githubissuefinder.data.topReposQuery
 import com.example.githubissuefinder.model.DEMO_TAG
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -16,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** The demo data source answers the same queries as GitHub, from the fake issues. */
+@OptIn(ExperimentalEncodingApi::class)
 class DemoIssueSearchApiTest {
 
     private val api = DemoIssueSearchApi()
@@ -91,7 +94,7 @@ class DemoIssueSearchApiTest {
         val repository = ReadmeRepository(
             api = DemoReadmeApi(),
             hasToken = { true },
-            decode = { content, _ -> content?.let { String(kotlin.io.encoding.Base64.decode(it), Charsets.UTF_8) } },
+            decode = { content, _ -> content?.let { String(Base64.decode(it), Charsets.UTF_8) } },
         )
 
         val result = repository.fetch("demo-org", "demo-tasks-app")

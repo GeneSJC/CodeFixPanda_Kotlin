@@ -22,21 +22,10 @@ class ReadmeRepositoryTest {
 
     private fun repository(
         api: ReadmeApi,
-        hasToken: Boolean = true,
         decode: (String?, String?) -> String? = { content, _ -> content?.let { "decoded:$it" } },
-    ) = ReadmeRepository(api, { hasToken }, decode)
+    ) = ReadmeRepository(api, decode)
 
     private fun fetch(repository: ReadmeRepository) = runBlocking { repository.fetch("octo", "repo") }
-
-    @Test
-    fun noTokenMeansNoRequestIsMade() {
-        val api = FakeApi { ReadmeApiResponse(200, true, body()) }
-
-        val result = fetch(repository(api, hasToken = false))
-
-        assertEquals(ReadmeResult.NoToken, result)
-        assertEquals(0, api.calls)
-    }
 
     @Test
     fun aSuccessfulResponseIsDecodedIntoFound() {

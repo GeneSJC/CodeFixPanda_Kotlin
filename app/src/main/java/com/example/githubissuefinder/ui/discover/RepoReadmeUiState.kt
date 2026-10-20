@@ -20,8 +20,6 @@ data class RepoReadmeUiState(
 fun ReadmeResult.toUiState(string: StringResolver): RepoReadmeUiState = when (this) {
     is ReadmeResult.Found -> RepoReadmeUiState(isLoading = false, markdown = markdown)
     ReadmeResult.NotFound -> RepoReadmeUiState(isLoading = false, notFound = true)
-    ReadmeResult.NoToken ->
-        RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.readme_token_required))
     is ReadmeResult.HttpError ->
         RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.error_http, code))
     ReadmeResult.Unreadable ->

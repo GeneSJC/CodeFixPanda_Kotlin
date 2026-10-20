@@ -19,7 +19,6 @@
     </plurals>
     <string name="check_new_repos_failed_http">Couldn\'t check for new repos (HTTP %1$d)</string>
     <string name="check_new_repos_failed">Couldn\'t check for new repos: %1$s</string>
-    <string name="readme_token_required">A GitHub token is required to load a README.</string>
     <string name="readme_unreadable">Couldn\'t read this README\'s content.</string>
     <string name="readme_load_failed">Couldn\'t load the README: %1$s</string>
 
@@ -73,8 +72,6 @@
     <string name="clear_cache_dialog_title">Clear cache?</string>
     <string name="clear_cache_dialog_message">Removes every cached repo/issue list so the next load fetches live data. Bookmarks and hidden issues are kept.</string>
     <string name="action_cancel">Cancel</string>
-    <string name="no_token_message">This screen needs a live GitHub connection. Add a free GitHub token in Settings to see ranked repos here.</string>
-    <string name="no_token_add">Add your token</string>
     <string name="action_open_settings">Open Settings</string>
     <string name="token_problem_how_to">How to get a token</string>
     <string name="token_problem_title">GitHub API token needed</string>

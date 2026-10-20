@@ -8,16 +8,9 @@ data class TopReposUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     /**
-     * True when no GitHub token is configured. This screen has NO
-     * sample-data fallback yet, unlike Feed (v0.10) — deliberately out
-     * of scope for CM 1, since the "Discover" flow is still being
-     * proven out. A token is required to see anything here for now.
-     */
-    val noTokenConfigured: Boolean = false,
-    /**
      * True when a token is configured but GitHub rejected it (HTTP 401, distinct from a 403 rate limit).
-     * Its own field, not folded into errorMessage, so the rate-limit chip's tap can tell "no token" from
-     * "a token that does not work".
+     * Its own field, not folded into errorMessage, so the rate-limit chip's tap can tell a token that
+     * does not work from a failed load.
      */
     val tokenRejected: Boolean = false,
     /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
@@ -76,11 +69,9 @@ data class TopReposUiState(
     val lastUpdatedAtMs: Long? = null,
 ) {
     /**
-     * True while the list can't load because of the token: none is set,
-     * or GitHub rejected the one in use. When the token changes in this
-     * state, TopReposStateHolder reloads; when it is already working, a
-     * change doesn't disturb the list.
+     * True while the list can't load because GitHub rejected the token in use. When the token changes in
+     * this state, TopReposStateHolder reloads.
      */
     val needsTokenFix: Boolean
-        get() = noTokenConfigured || tokenRejected
+        get() = tokenRejected
 }

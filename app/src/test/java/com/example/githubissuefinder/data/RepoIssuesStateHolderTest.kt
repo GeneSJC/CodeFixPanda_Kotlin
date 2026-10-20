@@ -137,17 +137,6 @@ class RepoIssuesStateHolderTest {
     }
 
     @Test
-    fun withoutATokenRefreshingDoesNothing() {
-        val f = ViewModelFixtures(buildToken = "")
-        val stateHolder = opened(f)
-
-        stateHolder.refreshThisRepo(repoGroupOf("octo", "repo", 1), kotlin)
-
-        assertTrue(f.api.calls.isEmpty())
-        assertFalse(stateHolder.state.value.isRefreshing)
-    }
-
-    @Test
     fun openingAgainStartsAFreshVisitWithNothingLeftOver() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2))) }

@@ -118,7 +118,7 @@ class ViewModelFixtures(
     val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
-    val searchRepository = IssueSearchRepository(api, { tokenRepository.effectiveToken.value.isNotBlank() })
+    val searchRepository = IssueSearchRepository(api)
 
     /** A Top Repos state holder over the fakes above, running its work immediately on the calling thread. */
     val topReposStateHolder = TopReposStateHolder(

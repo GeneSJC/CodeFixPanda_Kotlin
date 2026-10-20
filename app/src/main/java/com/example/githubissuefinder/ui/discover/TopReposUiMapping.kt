@@ -23,7 +23,6 @@ fun TopReposState.toUiState(string: StringResolver): TopReposUiState = TopReposU
     repoGroups = repoGroups,
     isLoading = isLoading,
     errorMessage = loadFailure?.toMessage(string),
-    noTokenConfigured = noTokenConfigured,
     tokenRejected = tokenRejected,
     selectedLanguage = selectedLanguage,
     totalIssueCount = totalIssueCount,
