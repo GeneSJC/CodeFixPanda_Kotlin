@@ -35,7 +35,8 @@ Decisions that are worth remembering but too long for a code comment. Code point
 
 - **The gate is a real destination.** An earlier version returned early outside the NavHost; Top Repos was then the only back-stack entry and pressing Back closed the app. That was found by pressing Back on a device.
 - **Reset App** is the only way back to the gate once a mode is chosen. It clears the mode and navigates with `popUpTo(graph.id) { inclusive = true }`, wiping the whole back stack; a plain `navigate()` would add a second gate on top of the open screens. Bookmarks, hidden issues and the cache are untouched.
-- **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along. Typed navigation will revisit this.
+- **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along.
+- **Typed navigation: considered, not adopted.** Type-safe routes need the Kotlin serialization plugin (a build change) and a second serialization library next to Moshi. The six routes are named constants with no arguments, so the compiler already rejects a mistyped route and there are no hand-built arguments to protect. The host's copy of the selection is acceptable for the reason above. Revisit if a route ever needs arguments.
 - **Hidden Issues** is reachable from the Top Repos menu and from the repo screen's "all hidden" state; both push it on top, so Back returns to where it was opened. A separate full-screen README destination was removed when the inline README widget replaced it.
 
 ## Top Repos state

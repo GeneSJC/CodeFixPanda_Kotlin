@@ -52,10 +52,21 @@ View (Compose screen)
   fakes with `restartKoin { single { fake } }` and then constructs the ViewModel. Concrete
   classes are registered, with no interface per class: an interface appears where there is a
   second implementation to choose.
-- **Every top-level ViewModel extends `BaseViewModel`**, which carries the app-level values any
-  screen may need (today the build configuration, an immutable `AppConfig`). It holds values
-  only: a ViewModel that needs a repository or a state holder declares it as its own member.
-  A guard test fails if a ViewModel does not extend it.
+- **Every top-level ViewModel extends `BaseViewModel`**, which carries the app-wide values and
+  cross-cutting helpers any screen may need: the build configuration (an immutable `AppConfig`)
+  and `string(...)` for resolving string resources. Logging would be another fit. A ViewModel
+  that needs a repository or a state holder declares it as its own member. A guard test fails if
+  a ViewModel does not extend it.
+- **Every user-facing word is a string resource.** Fixed text is resolved in the composable with
+  `stringResource`; text built from the data layer's facts is resolved in the ViewModel through
+  `BaseViewModel.string`, and the data and model layers hold facts (timestamps, seconds, query
+  values), never wording. Tests use a fake resolver that echoes the resource id and arguments.
+- **Navigation stays on string routes, by decision.** There are six routes, each a named
+  constant, and none takes an argument; the selected repo is passed as host state, not through
+  the route. Type-safe routes (Navigation Compose 2.8+) would need the Kotlin serialization
+  plugin and a second serialization library, and would add nothing here, because the usual
+  weakness of string routes is hand-built arguments, which this app has none of. Considered and
+  decided against, to be revisited if a route ever needs arguments.
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.
 
