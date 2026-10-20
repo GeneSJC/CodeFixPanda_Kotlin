@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 32
-val buildLabelB = 1
+val buildLabelB = 2
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 

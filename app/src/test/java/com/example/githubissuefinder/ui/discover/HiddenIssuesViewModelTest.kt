@@ -1,5 +1,9 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.testutil.MainDispatcherRule
+import com.example.githubissuefinder.testutil.FakeApiTokenStorage
+import com.example.githubissuefinder.model.DEMO_TAG
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.HiddenIssuesStorage
 import com.example.githubissuefinder.model.HiddenIssue
@@ -15,11 +19,19 @@ import org.junit.Test
 class HiddenIssuesViewModelTest {
 
     @get:Rule
+    val mainDispatcher = MainDispatcherRule()
+
+    @get:Rule
     val stopKoin = StopKoinRule()
 
-    private fun createViewModel(repository: HiddenIssuesRepository): HiddenIssuesViewModel {
+    /** A ViewModel over [repository]; [tokens] decides whether the real or the demo data is in use (a real token by default). */
+    private fun createViewModel(
+        repository: HiddenIssuesRepository,
+        tokens: ApiTokenRepository = ApiTokenRepository(FakeApiTokenStorage("token"), buildToken = ""),
+    ): HiddenIssuesViewModel {
         restartKoin {
             single { repository }
+            single { tokens }
             single { testAppConfig() }
         }
         return HiddenIssuesViewModel()
@@ -85,5 +97,54 @@ class HiddenIssuesViewModelTest {
         repository.hide(issue(4))
 
         assertEquals(listOf(4L), viewModel.hiddenIssues.value.map { it.id })
+    }
+
+    @Test
+    fun withATokenOnlyUntaggedIssuesAreListed() {
+        val repository = HiddenIssuesRepository(FakeStorage())
+        repository.hide(issue(1))
+        repository.hide(issue(2).copy(tag = DEMO_TAG))
+
+        val viewModel = createViewModel(repository)
+
+        assertEquals(listOf(1L), viewModel.hiddenIssues.value.map { it.id })
+    }
+
+    @Test
+    fun withoutATokenOnlyDemoIssuesAreListed() {
+        val repository = HiddenIssuesRepository(FakeStorage())
+        repository.hide(issue(1))
+        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        val noToken = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
+
+        val viewModel = createViewModel(repository, noToken)
+
+        assertEquals(listOf(2L), viewModel.hiddenIssues.value.map { it.id })
+    }
+
+    @Test
+    fun theListSwitchesWhenATokenIsAdded() {
+        val repository = HiddenIssuesRepository(FakeStorage())
+        repository.hide(issue(1))
+        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        val tokens = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
+        val viewModel = createViewModel(repository, tokens)
+
+        tokens.setUserToken("token")
+
+        assertEquals(listOf(1L), viewModel.hiddenIssues.value.map { it.id })
+    }
+
+    @Test
+    fun unhideAllOnlyTouchesTheDataInUse() {
+        val repository = HiddenIssuesRepository(FakeStorage())
+        repository.hide(issue(1))
+        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        val viewModel = createViewModel(repository)
+
+        viewModel.unhideAll()
+
+        assertTrue(viewModel.hiddenIssues.value.isEmpty())
+        assertEquals(listOf(2L), repository.hiddenIssues.value.map { it.id })
     }
 }

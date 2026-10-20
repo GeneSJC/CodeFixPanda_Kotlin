@@ -97,6 +97,7 @@ class HiddenIssuesRepository(
             repoFullName = issue.repoFullName,
             htmlUrl = issue.htmlUrl,
             hiddenAtMs = clock(),
+            tag = issue.tag,
         )
         publish(hiddenById + (issue.id to snapshot))
     }
@@ -106,9 +107,11 @@ class HiddenIssuesRepository(
         publish(hiddenById - issueId)
     }
 
-    fun unhideAll() {
-        if (hiddenById.isEmpty()) return
-        publish(emptyMap())
+    /** Unhides every hidden issue carrying [tag] (null for real data), leaving other sources' entries alone. */
+    fun unhideAll(tag: String?) {
+        val remaining = hiddenById.filterValues { it.tag != tag }
+        if (remaining.size == hiddenById.size) return
+        publish(remaining)
     }
 
     /** The one place state changes: update every view of it, then save. */
