@@ -49,6 +49,8 @@ data class IssueSearchApiResponse(
     val isSuccessful: Boolean,
     val body: IssueSearchResponseDto?,
     val rateLimit: RateLimitInfo?,
+    /** The tag to put on the issues in [body] (see Issue.tag): null for real GitHub data. */
+    val tag: String? = null,
 )
 
 /**
@@ -161,7 +163,7 @@ class IssueSearchRepository(
             _rateLimit.value = response.rateLimit
             IssueSearchResult.Success(
                 IssueSearchPage(
-                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue) },
+                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue, tag = response.tag) },
                     totalCount = body.totalCount,
                 ),
             )
