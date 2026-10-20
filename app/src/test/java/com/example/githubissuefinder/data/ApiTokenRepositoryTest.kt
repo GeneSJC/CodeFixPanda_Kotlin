@@ -1,6 +1,9 @@
 package com.example.githubissuefinder.data
 
+import com.example.githubissuefinder.model.DEMO_TAG
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -136,5 +139,43 @@ class ApiTokenRepositoryTest {
         repository.setUserToken("first")
         repository.setUserToken("second")
         assertEquals("second", repository.effectiveToken.value)
+    }
+
+    // ---- which data is in use ----
+
+    @Test
+    fun noTokenMeansTheDemoTag() {
+        assertEquals(DEMO_TAG, activeTagFor(""))
+        assertEquals(DEMO_TAG, ApiTokenRepository(FakeStorage(), buildToken = "").activeTag.value)
+    }
+
+    @Test
+    fun aTokenMeansNoTag() {
+        assertNull(activeTagFor("abc"))
+        assertNull(ApiTokenRepository(FakeStorage("user"), buildToken = "").activeTag.value)
+        assertNull(ApiTokenRepository(FakeStorage(), buildToken = "build").activeTag.value)
+    }
+
+    @Test
+    fun isDemoIsTrueExactlyWhileThereIsNoToken() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        assertTrue(repository.isDemo.value)
+
+        repository.setUserToken("abc")
+        assertFalse(repository.isDemo.value)
+
+        repository.setUserToken("")
+        assertTrue(repository.isDemo.value)
+    }
+
+    @Test
+    fun theTagFollowsTheTokenAsItIsSetAndCleared() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+
+        repository.setUserToken("abc")
+        assertNull(repository.activeTag.value)
+
+        repository.setUserToken("")
+        assertEquals(DEMO_TAG, repository.activeTag.value)
     }
 }

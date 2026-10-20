@@ -10,9 +10,9 @@ import java.util.TimeZone
 /**
  * Converts a raw API DTO into the Issue domain model. [languageFilter] is passed in because the
  * search endpoint does not return a repo's language; for now the language is simply what was
- * searched for.
+ * searched for. [tag] marks the issue's source (see Issue.tag); null for real GitHub data.
  */
-fun IssueDto.toIssue(languageFilter: String?): Issue {
+fun IssueDto.toIssue(languageFilter: String?, tag: String? = null): Issue {
     val segments = repositoryUrl.trimEnd('/').split("/")
     val owner = segments.getOrElse(segments.size - 2) { "" }
     val name = segments.getOrElse(segments.size - 1) { "" }
@@ -28,6 +28,7 @@ fun IssueDto.toIssue(languageFilter: String?): Issue {
         commentCount = comments,
         updatedAtMs = parseGitHubTimestamp(updatedAt),
         htmlUrl = htmlUrl,
+        tag = tag,
     )
 }
 

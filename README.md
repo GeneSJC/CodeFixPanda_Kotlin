@@ -61,6 +61,12 @@ View (Compose screen)
   `stringResource`; text built from the data layer's facts is resolved in the ViewModel through
   `BaseViewModel.string`, and the data and model layers hold facts (timestamps, seconds, query
   values), never wording. Tests use a fake resolver that echoes the resource id and arguments.
+- **No token means demo data.** The app runs without a GitHub token: the search, README and cache
+  data sources are switched on every call between the real ones and demo ones (three fake repos,
+  every title marked "[Demo]", a banner on the list screens), so the repositories and state holders
+  above them never know which answered. Entering a token switches to real data at once. Saved
+  bookmarks and hidden issues carry a tag (`Issue.tag`, null for real data), and each mode lists only
+  the entries whose tag matches the data in use.
 - **Navigation stays on string routes, by decision.** There are six routes, each a named
   constant, and none takes an argument; the selected repo is passed as host state, not through
   the route. Type-safe routes (Navigation Compose 2.8+) would need the Kotlin serialization

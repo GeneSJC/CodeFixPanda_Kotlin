@@ -1,6 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
 import androidx.lifecycle.viewModelScope
+import com.example.githubissuefinder.data.ApiTokenRepository
 import com.example.githubissuefinder.data.BookmarksRepository
 import com.example.githubissuefinder.data.HiddenIssuesRepository
 import com.example.githubissuefinder.data.RepoIssuesStateHolder
@@ -28,6 +29,7 @@ class RepoIssuesViewModel : BaseViewModel() {
     private val stateHolder: RepoIssuesStateHolder by inject()
     private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
     private val bookmarksRepository: BookmarksRepository by inject()
+    private val tokenRepository: ApiTokenRepository by inject()
 
     init {
         stateHolder.open()
@@ -36,6 +38,9 @@ class RepoIssuesViewModel : BaseViewModel() {
     val uiState: StateFlow<RepoIssuesUiState> = stateHolder.state
         .map { it.toUiState(string) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState(string))
+
+    /** True while the demo data is shown (no token), for the banner. */
+    val isDemo: StateFlow<Boolean> = tokenRepository.isDemo
 
     /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
     val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode

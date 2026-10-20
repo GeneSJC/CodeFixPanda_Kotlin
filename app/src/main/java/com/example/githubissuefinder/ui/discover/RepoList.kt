@@ -57,7 +57,6 @@ internal fun RepoListBody(
     onRetryLoadMore: () -> Unit,
     onRepoCardShown: (RepoIssueGroup) -> Unit,
     onRepoClick: (RepoIssueGroup, LanguageFilter) -> Unit,
-    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Observed here, not in the screen, so only the list recomposes as README previews arrive.
@@ -65,7 +64,6 @@ internal fun RepoListBody(
     val rawGroupsByName = remember(uiState.repoGroups) { uiState.repoGroups.associateBy { it.repoFullName } }
     Box(modifier = modifier) {
         when {
-            uiState.noTokenConfigured -> NoTokenMessage(onOpenSettings = onOpenSettings)
             uiState.isLoading && uiState.repoGroups.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,

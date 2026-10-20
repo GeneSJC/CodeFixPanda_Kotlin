@@ -96,17 +96,6 @@ class TopReposStateHolderTest {
     // ---- loading: problems ----
 
     @Test
-    fun noTokenHoldsTheNoTokenStateAndSearchesNothing() {
-        val f = ViewModelFixtures(buildToken = "")
-
-        val state = opened(f).state.value
-
-        assertTrue(state.noTokenConfigured)
-        assertFalse(state.isLoading)
-        assertTrue(f.api.calls.isEmpty())
-    }
-
-    @Test
     fun aRejectedTokenIsFlagged() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchFailed(401) }
@@ -243,16 +232,19 @@ class TopReposStateHolderTest {
     // ---- token changes ----
 
     @Test
-    fun savingATokenWhileThereWasNoneLoadsTheList() {
+    fun savingATokenWhileThereWasNoneReloadsTheListFromTheDataNowInUse() {
         val f = ViewModelFixtures(buildToken = "")
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
         val stateHolder = opened(f)
-        assertTrue(stateHolder.state.value.noTokenConfigured)
+        val callsBefore = f.api.calls.size
+        // The cache for the data in use is separate (demo and real never share one), so the new data has none yet.
+        f.cacheStorage.data = emptyMap()
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2, "other", "repo"))) }
 
         f.tokenRepository.setUserToken("my-token")
 
-        assertFalse(stateHolder.state.value.noTokenConfigured)
-        assertEquals(1, stateHolder.state.value.repoGroups.size)
+        assertTrue(f.api.calls.size > callsBefore)
+        assertEquals(2, stateHolder.state.value.repoGroups.size)
     }
 
     @Test

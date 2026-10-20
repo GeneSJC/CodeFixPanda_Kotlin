@@ -88,7 +88,6 @@ class RepoIssuesStateHolder(
      */
     fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) {
         if (_state.value.isRefreshing) return
-        if (tokenRepository.effectiveToken.value.isBlank()) return
 
         // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
         val activeMode = resolveActiveMode(modeRepository.mode.value)
@@ -118,7 +117,6 @@ class RepoIssuesStateHolder(
                     is IssueSearchResult.HttpError -> _state.update {
                         it.copy(isRefreshing = false, refreshFailure = SearchFailure.Http(result.code))
                     }
-                    IssueSearchResult.NoToken -> _state.update { it.copy(isRefreshing = false) }
                     is IssueSearchResult.Failed -> showRefreshFailure(result.message)
                 }
             } catch (e: CancellationException) {
