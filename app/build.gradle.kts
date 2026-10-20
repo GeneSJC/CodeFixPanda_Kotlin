@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 34
-val buildLabelB = 2
+val buildLabelB = 3
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -122,8 +122,17 @@ android {
         }
     }
 
+    // The AdMob app id the commercial build's manifest needs (src/commercial/AndroidManifest.xml). Debug
+    // always uses Google's published sample id, so a developer can never serve or tap real ads. Release
+    // reads the real id from the admobAppId Gradle property (gradle.properties or CI, never committed)
+    // and falls back to the sample id. The foss build ignores it: it has no ads manifest entries.
+    val admobSampleAppId = "ca-app-pub-3940256099942544~3347511713"
     buildTypes {
+        debug {
+            manifestPlaceholders["admobAppId"] = admobSampleAppId
+        }
         release {
+            manifestPlaceholders["admobAppId"] = providers.gradleProperty("admobAppId").orElse(admobSampleAppId).get()
             optimization {
                 enable = false
             }
@@ -159,6 +168,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
+    // Only the commercial build contains the ads software; the foss build never does (see
+    // scripts/check-foss-clean.sh). The string form is used because the typed accessor for a flavor's
+    // configuration is not generated when the flavors are declared in this same script.
+    add("commercialImplementation", libs.play.services.ads)
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)
@@ -205,6 +218,8 @@ for (flavor in listOf("Foss", "Commercial")) {
         }
         val variantTasks = setOf(
             "assemble$flavor$type", "install$flavor$type", "bundle$flavor$type", "test${flavor}${type}UnitTest",
+            // The task Android Studio's plain Build runs for the selected variant.
+            "create${flavor}${type}ApkListingFile",
         )
         tasks.matching { it.name in variantTasks }.configureEach { finalizedBy(printVariantLabel) }
     }

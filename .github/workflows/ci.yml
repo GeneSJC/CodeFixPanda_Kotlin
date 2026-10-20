@@ -40,6 +40,11 @@ jobs:
       - name: Compile (debug)
         run: ./gradlew assembleDebug --stacktrace
 
+      # Proves the open (foss) build has no ads libraries or manifest entries, and that the check can
+      # tell (the commercial build must have them). See scripts/check-foss-clean.sh.
+      - name: Open build contains no ads software
+        run: ./scripts/check-foss-clean.sh
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
