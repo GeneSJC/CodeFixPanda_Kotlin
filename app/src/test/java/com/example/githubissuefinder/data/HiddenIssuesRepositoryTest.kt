@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.data
 
+import com.example.githubissuefinder.model.DEMO_TAG
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
 import org.junit.Assert.assertEquals
@@ -125,7 +126,7 @@ class HiddenIssuesRepositoryTest {
         repository.hide(issue(1))
         repository.hide(issue(2))
 
-        repository.unhideAll()
+        repository.unhideAll(tag = null)
 
         assertTrue(repository.hiddenIds.value.isEmpty())
         assertTrue(repository.hiddenIssues.value.isEmpty())
@@ -135,8 +136,27 @@ class HiddenIssuesRepositoryTest {
     @Test
     fun unhideAllWhenNothingIsHiddenDoesNotWrite() {
         val storage = FakeStorage()
-        repository(storage).unhideAll()
+        repository(storage).unhideAll(tag = null)
         assertEquals(0, storage.saveCount)
+    }
+
+    @Test
+    fun hidingKeepsTheIssuesTag() {
+        val repository = repository(FakeStorage())
+        repository.hide(issue(1).copy(tag = DEMO_TAG))
+
+        assertEquals(DEMO_TAG, repository.hiddenIssues.value.single().tag)
+    }
+
+    @Test
+    fun unhideAllLeavesEntriesWithAnotherTagAlone() {
+        val repository = repository(FakeStorage())
+        repository.hide(issue(1))
+        repository.hide(issue(2).copy(tag = DEMO_TAG))
+
+        repository.unhideAll(tag = null)
+
+        assertEquals(listOf(2L), repository.hiddenIssues.value.map { it.id })
     }
 
     /** A new repository over the same storage stands in for killing and relaunching the app. */

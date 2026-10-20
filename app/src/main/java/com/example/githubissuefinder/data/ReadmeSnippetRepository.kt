@@ -17,9 +17,6 @@ sealed interface ReadmeFetch {
 
     /** A network failure or timeout: worth trying again later, not cached as "no preview". */
     data object Transient : ReadmeFetch
-
-    /** Nothing to ask with right now (no token). Not recorded, so it is tried again once there is one. */
-    data object Unavailable : ReadmeFetch
 }
 
 /**
@@ -46,13 +43,11 @@ class GitHubReadmeSource(
  * How a README outcome counts for the preview cache. A real answer from
  * GitHub — including "no README" (404), an error response, or a README
  * that can't be decoded — is final: there is simply no preview, and it is
- * not retried. A failed request is transient and worth retrying, and no
- * token means there is nothing to ask with yet.
+ * not retried. A failed request is transient and worth retrying.
  */
 fun ReadmeResult.toReadmeFetch(): ReadmeFetch = when (this) {
     is ReadmeResult.Found -> ReadmeFetch.Resolved(markdown)
     ReadmeResult.NotFound, is ReadmeResult.HttpError, ReadmeResult.Unreadable -> ReadmeFetch.Resolved(null)
-    ReadmeResult.NoToken -> ReadmeFetch.Unavailable
     is ReadmeResult.Failed -> ReadmeFetch.Transient
 }
 
@@ -85,9 +80,9 @@ class ReadmeSnippetRepository(private val source: ReadmeSource) {
                 resolved = true
             }
         } finally {
-            // Anything but a definite answer — a transient failure, no
-            // token yet, or this call being cancelled (a card scrolled
-            // away mid-load) — leaves the repo eligible for a later retry.
+            // Anything but a definite answer — a transient failure, or this
+            // call being cancelled (a card scrolled away mid-load) — leaves
+            // the repo eligible for a later retry.
             if (!resolved) inFlightOrLoaded.remove(repoFullName)
         }
     }

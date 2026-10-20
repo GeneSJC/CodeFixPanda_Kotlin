@@ -74,7 +74,6 @@ class TopReposUiMappingTest {
             lastUpdatedAtMs = 777L,
             isLoading = true,
             isLoadingMore = true,
-            noTokenConfigured = true,
             tokenRejected = true,
             loadFailure = SearchFailure.Http(401),
             loadMoreFailure = SearchFailure.Failed("boom"),
@@ -90,7 +89,6 @@ class TopReposUiMappingTest {
         assertEquals(777L, ui.lastUpdatedAtMs)
         assertTrue(ui.isLoading)
         assertTrue(ui.isLoadingMore)
-        assertTrue(ui.noTokenConfigured)
         assertTrue(ui.tokenRejected)
         assertEquals(s(R.string.error_http, 401), ui.errorMessage)
         assertEquals(s(R.string.load_issues_failed, "boom"), ui.loadMoreError)

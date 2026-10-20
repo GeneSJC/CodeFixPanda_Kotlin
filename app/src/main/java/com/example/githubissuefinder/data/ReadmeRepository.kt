@@ -19,7 +19,6 @@ sealed interface ReadmeResult {
     data object NotFound : ReadmeResult
 
     /** No GitHub token is in use, so nothing was requested. */
-    data object NoToken : ReadmeResult
 
     /** GitHub answered, but with an error (anything other than success or the 404 above). */
     data class HttpError(val code: Int) : ReadmeResult
@@ -57,19 +56,18 @@ class GitHubReadmeApi(private val service: GitHubApiService) : ReadmeApi {
 
 /**
  * The single place the app fetches a repo's README. It turns an HTTP response into a
- * [ReadmeResult] callers can switch on, and keeps the rules in one place: no token means no
- * request, a 404 is "no README" and not an error, and an undecodable body is its own outcome.
- * [hasToken] and [decode] are parameters so a test can control them; the real base64 decoding
+ * [ReadmeResult] callers can switch on, and keeps the rules in one place: a 404 is "no README" and
+ * not an error, and an undecodable body is its own outcome. Whether the real or the demo API answers
+ * is decided beneath it, in the [ReadmeApi] it is given.
+ * [decode] is a parameter so a test can control it; the real base64 decoding
  * uses android.util.Base64, which plain JVM tests do not have.
  */
 class ReadmeRepository(
     private val api: ReadmeApi,
-    private val hasToken: () -> Boolean,
     private val decode: (content: String?, encoding: String?) -> String? = ::decodeGitHubContentsBase64,
 ) {
 
     suspend fun fetch(repoOwner: String, repoName: String): ReadmeResult {
-        if (!hasToken()) return ReadmeResult.NoToken
         return try {
             val response = api.getReadme(repoOwner, repoName)
             if (response.code == 404) return ReadmeResult.NotFound

@@ -7,11 +7,6 @@ import org.junit.Test
 class TopReposUiStateTest {
 
     @Test
-    fun needsATokenFixWhenNoTokenIsConfigured() {
-        assertTrue(TopReposUiState(noTokenConfigured = true).needsTokenFix)
-    }
-
-    @Test
     fun needsATokenFixWhenGitHubRejectedTheToken() {
         assertTrue(TopReposUiState(tokenRejected = true).needsTokenFix)
     }

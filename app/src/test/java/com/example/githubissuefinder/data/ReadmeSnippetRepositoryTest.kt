@@ -74,18 +74,6 @@ class ReadmeSnippetRepositoryTest {
     }
 
     @Test
-    fun noTokenIsNotRecordedAndIsRetriedOnceThereIsOne() {
-        val source = FakeSource(ReadmeFetch.Unavailable, ReadmeFetch.Resolved("Now with a token"))
-        val repository = ReadmeSnippetRepository(source)
-
-        load(repository)
-        assertTrue(repository.snippets.value.isEmpty())
-
-        load(repository)
-        assertEquals("Now with a token", repository.snippets.value["octo/repo"])
-    }
-
-    @Test
     fun differentReposAreTrackedSeparately() {
         val repository = ReadmeSnippetRepository(FakeSource(ReadmeFetch.Resolved("Text")))
 

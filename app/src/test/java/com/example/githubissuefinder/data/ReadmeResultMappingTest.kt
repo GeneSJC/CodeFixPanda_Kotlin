@@ -33,11 +33,6 @@ class ReadmeResultMappingTest {
         assertEquals(ReadmeFetch.Transient, ReadmeResult.Failed("x").toReadmeFetch())
     }
 
-    @Test
-    fun noTokenIsUnavailableSoItIsRetriedOnceThereIsOne() {
-        assertEquals(ReadmeFetch.Unavailable, ReadmeResult.NoToken.toReadmeFetch())
-    }
-
     // ---- README screen ----
 
     @Test
@@ -58,7 +53,6 @@ class ReadmeResultMappingTest {
 
     @Test
     fun theErrorStatesKeepTheirExistingWording() {
-        assertEquals(s(R.string.readme_token_required), ReadmeResult.NoToken.toUiState(s).errorMessage)
         assertEquals(s(R.string.error_http, 503), ReadmeResult.HttpError(503).toUiState(s).errorMessage)
         assertEquals(s(R.string.readme_unreadable), ReadmeResult.Unreadable.toUiState(s).errorMessage)
         assertEquals(s(R.string.readme_load_failed, "boom"), ReadmeResult.Failed("boom").toUiState(s).errorMessage)
@@ -68,7 +62,7 @@ class ReadmeResultMappingTest {
     @Test
     fun everyErrorStateIsNotLoading() {
         listOf(
-            ReadmeResult.NoToken, ReadmeResult.HttpError(500), ReadmeResult.Unreadable, ReadmeResult.Failed("x"),
+            ReadmeResult.HttpError(500), ReadmeResult.Unreadable, ReadmeResult.Failed("x"),
         ).forEach { assertFalse(it.toUiState(s).isLoading) }
     }
 }

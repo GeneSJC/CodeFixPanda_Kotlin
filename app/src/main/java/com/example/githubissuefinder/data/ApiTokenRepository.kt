@@ -1,5 +1,6 @@
 package com.example.githubissuefinder.data
 
+import com.example.githubissuefinder.model.DEMO_TAG
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,6 +95,19 @@ class ApiTokenRepository(
     /** The token to send to GitHub, or empty if there is none at all. */
     val effectiveToken: StateFlow<String> = _effectiveToken.asStateFlow()
 
+    private val _activeTag = MutableStateFlow(activeTagFor(_effectiveToken.value))
+
+    /**
+     * The tag of the data in use: none with a token (real GitHub data), [DEMO_TAG] without one (demo
+     * data). The one fact that decides which saved items a screen lists. Updated with [effectiveToken].
+     */
+    val activeTag: StateFlow<String?> = _activeTag.asStateFlow()
+
+    private val _isDemo = MutableStateFlow(_activeTag.value == DEMO_TAG)
+
+    /** True while the demo data is in use (no token), for the banner. */
+    val isDemo: StateFlow<Boolean> = _isDemo.asStateFlow()
+
     private val _tokenSource = MutableStateFlow(tokenSourceOf(_userToken.value, buildToken))
 
     /** Which source [effectiveToken] came from. */
@@ -108,7 +122,12 @@ class ApiTokenRepository(
         val trimmed = raw.trim()
         _userToken.value = trimmed
         _effectiveToken.value = resolveEffectiveToken(trimmed, buildToken)
+        _activeTag.value = activeTagFor(_effectiveToken.value)
+        _isDemo.value = _activeTag.value == DEMO_TAG
         _tokenSource.value = tokenSourceOf(trimmed, buildToken)
         storage.save(trimmed.ifEmpty { null })
     }
 }
+
+/** No token means the demo data is in use; any token means the real data. */
+internal fun activeTagFor(effectiveToken: String): String? = if (effectiveToken.isBlank()) DEMO_TAG else null

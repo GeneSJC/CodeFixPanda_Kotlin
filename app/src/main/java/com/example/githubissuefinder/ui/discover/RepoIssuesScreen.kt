@@ -44,6 +44,7 @@ import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.IssueLabelFilter
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.components.DemoBanner
 import com.example.githubissuefinder.ui.components.ModePill
 
 /**
@@ -63,10 +64,12 @@ fun RepoIssuesScreen(
     language: LanguageFilter,
     onBack: () -> Unit,
     onOpenHidden: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -91,30 +94,33 @@ fun RepoIssuesScreen(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/${repoGroup.repoFullName}"),
-                                ),
-                            )
-                        },
-                    ) {
-                        Text("↗", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Text("←", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://github.com/${repoGroup.repoFullName}"),
+                                    ),
+                                )
+                            },
+                        ) {
+                            Text("↗", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
+                )
+                if (isDemo) DemoBanner(onOpenSettings = onOpenSettings)
+            }
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {

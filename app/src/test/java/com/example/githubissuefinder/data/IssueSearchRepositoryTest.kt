@@ -49,7 +49,7 @@ class IssueSearchRepositoryTest {
     private fun failed(code: Int, rateLimit: RateLimitInfo? = null) =
         IssueSearchApiResponse(code = code, isSuccessful = false, body = null, rateLimit = rateLimit)
 
-    private fun repository(api: IssueSearchApi, hasToken: Boolean = true) = IssueSearchRepository(api, { hasToken })
+    private fun repository(api: IssueSearchApi) = IssueSearchRepository(api)
 
     // ---- query builders ----
 
@@ -69,14 +69,6 @@ class IssueSearchRepositoryTest {
     }
 
     // ---- searching ----
-
-    @Test
-    fun noTokenMeansNoRequestIsMade() = runBlocking {
-        val api = FakeApi()
-        assertEquals(IssueSearchResult.NoToken, repository(api, hasToken = false).searchTopRepos(gfi, kotlin, 1))
-        assertEquals(IssueSearchResult.NoToken, repository(api, hasToken = false).searchRepoIssues("octo/repo", gfi, kotlin))
-        assertTrue(api.calls.isEmpty())
-    }
 
     @Test
     fun topReposAsksForThePageWithTheTopReposPageSize() = runBlocking {
@@ -197,18 +189,6 @@ class IssueSearchRepositoryTest {
         repo.loadRateLimitIfUnknown()
 
         assertEquals(limit, repo.rateLimit.value)
-        assertEquals(0, api.rateLimitCalls)
-    }
-
-    @Test
-    fun theRateLimitIsNotLookedUpWithoutAToken() = runBlocking {
-        val api = FakeApi(rateLimit = limit)
-
-        val repo = repository(api, hasToken = false)
-
-        repo.loadRateLimitIfUnknown()
-
-        assertNull(repo.rateLimit.value)
         assertEquals(0, api.rateLimitCalls)
     }
 

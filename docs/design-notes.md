@@ -35,7 +35,8 @@ Decisions that are worth remembering but too long for a code comment. Code point
 
 - **The gate is a real destination.** An earlier version returned early outside the NavHost; Top Repos was then the only back-stack entry and pressing Back closed the app. That was found by pressing Back on a device.
 - **Reset App** is the only way back to the gate once a mode is chosen. It clears the mode and navigates with `popUpTo(graph.id) { inclusive = true }`, wiping the whole back stack; a plain `navigate()` would add a second gate on top of the open screens. Bookmarks, hidden issues and the cache are untouched.
-- **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along. Typed navigation will revisit this.
+- **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along.
+- **Typed navigation: considered, not adopted.** Type-safe routes need the Kotlin serialization plugin (a build change) and a second serialization library next to Moshi. The six routes are named constants with no arguments, so the compiler already rejects a mistyped route and there are no hand-built arguments to protect. The host's copy of the selection is acceptable for the reason above. Revisit if a route ever needs arguments.
 - **Hidden Issues** is reachable from the Top Repos menu and from the repo screen's "all hidden" state; both push it on top, so Back returns to where it was opened. A separate full-screen README destination was removed when the inline README widget replaced it.
 
 ## Top Repos state
@@ -93,4 +94,14 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Time-dependent text in a composable.** A "3h ago" line is worded when it is drawn, because the clock moves while the screen is open. A composable uses `relativeTimeText(ms)` or `resetsInText(seconds)`, which build on `rememberStringResolver()`. Generated text from a ViewModel still goes through `BaseViewModel.string`.
 - **Old caches.** Issues saved before the timestamp was stored have no `updatedAtMs`, so they show "recently" until the repo is refreshed. Bookmarked issues are never refreshed, so older bookmarks keep showing "recently".
 - **Left as symbols.** Glyphs such as ← ↗ ⌄ ☰ ✕ ★ and the "—" placeholder are drawing, not wording, and stay in code.
+
+## Demo data
+
+- **The token decides.** With no token the app shows demo data; with one it shows real data. The choice is made per call by small switching data sources (`SwitchedIssueSearchApi`, `SwitchedReadmeApi`, `SwitchedRepoIssueGroupStorage`), because a token can be added or removed while the app runs. Repositories and state holders are unchanged and never learn which source answered. The no-token screen and the `NoToken` results are gone: no token is no longer a dead end.
+- **The data.** `data/demo/DemoData.kt`: three fake repos (Kotlin, Java, Python), thirteen issues, every title starting "[Demo]", written as the DTOs GitHub returns so the real mapper handles them. Ids are negative, so a demo issue can never be mistaken for a real one. `DemoIssueSearchApi` reads the same `label:`, `language:` and `repo:` qualifiers the real API is sent, so language filtering and a single repo's refresh behave as usual. It reports no rate limit, so the chip stays "—". `DemoReadmeApi` returns a short README in the Contents API's base64 form.
+- **Cache isolation.** Demo results are cached in memory (`InMemoryRepoIssueGroupStorage`), never in the real cache file. Clear Cache clears the cache in use.
+- **Tag on saved items.** `Issue.tag` (and `HiddenIssue.tag`) is null for real data and "demo" for demo data, and is saved with the item. `ApiTokenRepository.activeTag` is the tag of the data in use (none with a token, "demo" without). The Bookmarks and Hidden view models list only the entries whose tag equals it, so each mode sees only its own; the other mode's entries stay saved and reappear when that mode is back. Unhide all only touches the data in use. Screens never mention demo.
+- **Banner.** `DemoBanner` shows under the title bar of Top Repos and the repo issues screen while there is no token, with a button to Settings.
+- **Switching reloads.** `TopReposStateHolder` reloads the list when the tag flips, from the cache of the data now in use.
+- **Known loose ends.** A demo issue's link points at a github.com address that does not exist. Demo bookmarks and hidden entries live in the real bookmarks and hidden files, hidden by the filter rather than stored elsewhere.
 

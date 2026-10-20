@@ -21,7 +21,14 @@ import com.example.githubissuefinder.data.SharedPreferencesApiTokenStorage
 import com.example.githubissuefinder.data.SharedPreferencesIssueModeStorage
 import com.example.githubissuefinder.data.SharedPreferencesStartupSplashStorage
 import com.example.githubissuefinder.data.StartupSplashRepository
+import com.example.githubissuefinder.data.SwitchedIssueSearchApi
+import com.example.githubissuefinder.data.SwitchedReadmeApi
+import com.example.githubissuefinder.data.SwitchedRepoIssueGroupStorage
 import com.example.githubissuefinder.data.TopReposStateHolder
+import com.example.githubissuefinder.data.demo.DemoIssueSearchApi
+import com.example.githubissuefinder.data.demo.DemoReadmeApi
+import com.example.githubissuefinder.data.demo.InMemoryRepoIssueGroupStorage
+import com.example.githubissuefinder.model.DEMO_TAG
 import com.example.githubissuefinder.network.GitHubApiClient
 import com.example.githubissuefinder.ui.ContextStringResolver
 import com.example.githubissuefinder.ui.StringResolver
@@ -61,16 +68,39 @@ val appModule = module {
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
     single { BookmarksRepository(JsonFileBookmarksStorage(androidContext(), moshi = get())) }
     single { HiddenIssuesRepository(JsonFileHiddenIssuesStorage(androidContext(), moshi = get())) }
-    single { RepoIssueGroupRepository(JsonFileRepoIssueGroupStorage(androidContext(), moshi = get())) }
-
-    // Repositories over the GitHub API.
+    // The cache is the real file with a token, an in-memory copy without one (demo data).
     single {
         val tokens = get<ApiTokenRepository>()
-        IssueSearchRepository(GitHubIssueSearchApi(get()), hasToken = { tokens.effectiveToken.value.isNotBlank() })
+        RepoIssueGroupRepository(
+            SwitchedRepoIssueGroupStorage(
+                live = JsonFileRepoIssueGroupStorage(androidContext(), moshi = get()),
+                demo = InMemoryRepoIssueGroupStorage(),
+                useDemo = { tokens.activeTag.value == DEMO_TAG },
+            ),
+        )
+    }
+
+    // Repositories over the GitHub API. With no token the demo data sources answer instead, chosen
+    // on every call because a token can be added or removed while the app runs.
+    single {
+        val tokens = get<ApiTokenRepository>()
+        IssueSearchRepository(
+            api = SwitchedIssueSearchApi(
+                live = GitHubIssueSearchApi(get()),
+                demo = DemoIssueSearchApi(),
+                useDemo = { tokens.activeTag.value == DEMO_TAG },
+            ),
+        )
     }
     single {
         val tokens = get<ApiTokenRepository>()
-        ReadmeRepository(GitHubReadmeApi(get()), hasToken = { tokens.effectiveToken.value.isNotBlank() })
+        ReadmeRepository(
+            api = SwitchedReadmeApi(
+                live = GitHubReadmeApi(get()),
+                demo = DemoReadmeApi(),
+                useDemo = { tokens.activeTag.value == DEMO_TAG },
+            ),
+        )
     }
     single { ReadmeSnippetRepository(GitHubReadmeSource(get())) }
 

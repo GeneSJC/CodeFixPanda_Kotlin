@@ -42,8 +42,6 @@ data class TopReposState(
     val isLoading: Boolean = false,
     /** True while a Load More is in flight, kept separate from [isLoading] so the visible list never disappears behind a spinner. */
     val isLoadingMore: Boolean = false,
-    /** True when no GitHub token is configured at all. */
-    val noTokenConfigured: Boolean = false,
     /** True when a token is configured but GitHub rejected it (HTTP 401). */
     val tokenRejected: Boolean = false,
     /** Set when the whole list failed to load. */
@@ -51,9 +49,9 @@ data class TopReposState(
     /** Set when a Load More failed; the list itself is left exactly as it was. */
     val loadMoreFailure: SearchFailure? = null,
 ) {
-    /** True while the list cannot load because of the token: none is set, or GitHub rejected the one in use. */
+    /** True while the list cannot load because GitHub rejected the token in use. */
     val needsTokenFix: Boolean
-        get() = noTokenConfigured || tokenRejected
+        get() = tokenRejected
 }
 
 /** One-shot things the screen should tell the user, reported as facts. The ViewModel turns them into the Snackbar text. */
@@ -140,6 +138,13 @@ class TopReposStateHolder(
                 }
             }
         }
+        // Adding or removing a token switches between demo and real data, so what is listed is reloaded
+        // (from the cache of the data now in use, else from its source).
+        scope.launch {
+            tokenRepository.activeTag.drop(1).collect {
+                if (!_state.value.needsTokenFix) load(_state.value.selectedLanguage)
+            }
+        }
     }
 
     /**
@@ -197,7 +202,7 @@ class TopReposStateHolder(
      * are left alone, so this never resets how far Load More has got.
      */
     fun checkForNewRepos() {
-        if (isCheckingForNewRepos || !hasTokenNow()) return
+        if (isCheckingForNewRepos) return
         val activeMode = resolveActiveMode(modeRepository.mode.value)
         val snapshot = _state.value
         val language = snapshot.selectedLanguage
@@ -248,7 +253,6 @@ class TopReposStateHolder(
                     }
                     is IssueSearchResult.HttpError -> eventChannel.trySend(TopReposEvent.CheckFailedHttp(result.code))
                     is IssueSearchResult.Failed -> eventChannel.trySend(TopReposEvent.CheckFailed(result.message))
-                    IssueSearchResult.NoToken -> Unit
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -275,7 +279,6 @@ class TopReposStateHolder(
      * screen writes to the cache and this pulls the change back. A no-op if nothing is cached.
      */
     fun syncFromCache() {
-        if (!hasTokenNow()) return
         val activeMode = resolveActiveMode(modeRepository.mode.value)
         val language = _state.value.selectedLanguage
         launchInVisit {
@@ -293,11 +296,6 @@ class TopReposStateHolder(
     }
 
     private fun load(language: LanguageFilter) {
-        if (!hasTokenNow()) {
-            _state.update { it.copy(noTokenConfigured = true, isLoading = false) }
-            return
-        }
-
         // Defensive fallback only: DiscoverNavHost never shows this screen while the mode is null.
         val activeMode = resolveActiveMode(modeRepository.mode.value)
 
@@ -312,7 +310,7 @@ class TopReposStateHolder(
         }
 
         launchInVisit {
-            _state.update { it.copy(isLoading = true, loadFailure = null, noTokenConfigured = false) }
+            _state.update { it.copy(isLoading = true, loadFailure = null) }
             val cached = cacheRepository.load(language, activeMode)
             if (cached != null) {
                 _state.update {
@@ -339,15 +337,7 @@ class TopReposStateHolder(
         launchInVisit { searchRepository.loadRateLimitIfUnknown() }
     }
 
-    /** Whether a token is in use right now. */
-    private fun hasTokenNow(): Boolean = tokenRepository.effectiveToken.value.isNotBlank()
-
     private fun fetchPage(language: LanguageFilter, page: Int, isLoadMore: Boolean) {
-        if (!hasTokenNow()) {
-            _state.update { it.copy(noTokenConfigured = true, isLoading = false) }
-            return
-        }
-
         // Defensive fallback only — see load().
         val activeMode = resolveActiveMode(modeRepository.mode.value)
 
@@ -355,7 +345,7 @@ class TopReposStateHolder(
             if (isLoadMore) {
                 _state.update { it.copy(isLoadingMore = true, loadMoreFailure = null) }
             } else {
-                _state.update { it.copy(isLoading = true, loadFailure = null, noTokenConfigured = false) }
+                _state.update { it.copy(isLoading = true, loadFailure = null) }
             }
             try {
                 when (val result = searchRepository.searchTopRepos(activeMode, language, page)) {
@@ -414,8 +404,6 @@ class TopReposStateHolder(
                             }
                         }
                     }
-                    IssueSearchResult.NoToken ->
-                        _state.update { it.copy(noTokenConfigured = true, isLoading = false, isLoadingMore = false) }
                     is IssueSearchResult.Failed -> showLoadFailure(isLoadMore, result.message)
                 }
             } catch (e: CancellationException) {

@@ -36,6 +36,7 @@ import com.example.githubissuefinder.data.filterHiddenIssues
 import com.example.githubissuefinder.data.resolveActiveMode
 import com.example.githubissuefinder.model.LanguageFilter
 import com.example.githubissuefinder.model.RepoIssueGroup
+import com.example.githubissuefinder.ui.components.DemoBanner
 import com.example.githubissuefinder.ui.components.LabelInfoDialog
 import com.example.githubissuefinder.ui.components.LanguageFilterRow
 import com.example.githubissuefinder.ui.components.ModePill
@@ -77,6 +78,7 @@ fun TopReposScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val rateLimit by viewModel.rateLimit.collectAsStateWithLifecycle()
     val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
+    val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
@@ -97,7 +99,6 @@ fun TopReposScreen(
             onRetryLoadMore = viewModel::retryLoadMore,
             onRepoCardShown = { group -> viewModel.onRepoCardShown(group.repoOwner, group.repoName, group.repoFullName) },
             onRepoClick = onRepoClick,
-            onOpenSettings = onOpenSettings,
             modifier = listModifier,
         )
     }
@@ -118,65 +119,68 @@ fun TopReposScreen(
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        // In landscape this content lives in the left rail instead.
-                        if (!isLandscape) {
-                            Column {
-                                ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                ) {
-                                    RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
+                Column {
+                    TopAppBar(
+                        title = {
+                            // In landscape this content lives in the left rail instead.
+                            if (!isLandscape) {
+                                Column {
+                                    ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(top = 4.dp),
+                                    ) {
+                                        RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
+                                    }
                                 }
                             }
-                        }
-                    },
-                    navigationIcon = {
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Text("☰", style = MaterialTheme.typography.titleLarge)
+                        },
+                        navigationIcon = {
+                            Box {
+                                IconButton(onClick = { showMenu = true }) {
+                                    Text("☰", style = MaterialTheme.typography.titleLarge)
+                                }
+                                TopReposMenu(
+                                    expanded = showMenu,
+                                    onDismiss = { showMenu = false },
+                                    buildLabel = viewModel.buildLabel,
+                                    showAllAnimations = viewModel.showDetailedDrawerMenu,
+                                    onOpenBookmarks = onOpenBookmarks,
+                                    onOpenHidden = onOpenHidden,
+                                    onCheckForNewRepos = viewModel::checkForNewRepos,
+                                    onClearCache = { showClearCacheConfirm = true },
+                                    onOpenSettings = onOpenSettings,
+                                    onResetApp = onResetApp,
+                                    onSelectMode = viewModel::onModeSelected,
+                                    onReplay = { replayAnimation = it },
+                                )
                             }
-                            TopReposMenu(
-                                expanded = showMenu,
-                                onDismiss = { showMenu = false },
-                                buildLabel = viewModel.buildLabel,
-                                showAllAnimations = viewModel.showDetailedDrawerMenu,
-                                onOpenBookmarks = onOpenBookmarks,
-                                onOpenHidden = onOpenHidden,
-                                onCheckForNewRepos = viewModel::checkForNewRepos,
-                                onClearCache = { showClearCacheConfirm = true },
-                                onOpenSettings = onOpenSettings,
-                                onResetApp = onResetApp,
-                                onSelectMode = viewModel::onModeSelected,
-                                onReplay = { replayAnimation = it },
+                        },
+                        actions = {
+                            // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
+                            // problem the tap explains it instead of opening the rate-limit dialog.
+                            RateLimitChip(
+                                info = rateLimit,
+                                onClick = {
+                                    if (hasToken && !uiState.tokenRejected) {
+                                        showRateLimitDialog = true
+                                    } else {
+                                        showTokenProblemDialog = true
+                                    }
+                                },
                             )
-                        }
-                    },
-                    actions = {
-                        // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
-                        // problem the tap explains it instead of opening the rate-limit dialog.
-                        RateLimitChip(
-                            info = rateLimit,
-                            onClick = {
-                                if (hasToken && !uiState.tokenRejected) {
-                                    showRateLimitDialog = true
-                                } else {
-                                    showTokenProblemDialog = true
-                                }
-                            },
-                        )
-                        Text(
-                            "ⓘ",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .clickable { showInfoDialog = true }
-                                .padding(end = 16.dp),
-                        )
-                    },
-                )
+                            Text(
+                                "ⓘ",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .clickable { showInfoDialog = true }
+                                    .padding(end = 16.dp),
+                            )
+                        },
+                    )
+                    if (isDemo) DemoBanner(onOpenSettings = onOpenSettings)
+                }
             },
         ) { padding ->
             if (isLandscape) {
