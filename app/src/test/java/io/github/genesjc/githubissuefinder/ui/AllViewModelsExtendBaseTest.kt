@@ -1,5 +1,6 @@
 package io.github.genesjc.githubissuefinder.ui
 
+import io.github.genesjc.githubissuefinder.ui.ads.AdsViewModel
 import io.github.genesjc.githubissuefinder.ui.discover.BookmarksViewModel
 import io.github.genesjc.githubissuefinder.ui.discover.HiddenIssuesViewModel
 import io.github.genesjc.githubissuefinder.ui.discover.IssueModeViewModel
@@ -32,6 +33,7 @@ class AllViewModelsExtendBaseTest {
             IssueModeViewModel::class.java,
             ApiTokenViewModel::class.java,
             StartupSplashViewModel::class.java,
+            AdsViewModel::class.java,
         )
 
         viewModels.forEach { viewModel ->

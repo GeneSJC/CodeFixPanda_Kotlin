@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.genesjc.githubissuefinder.ui.ads.AdsViewModel
 import io.github.genesjc.githubissuefinder.ui.discover.DiscoverNavHost
 import io.github.genesjc.githubissuefinder.ui.discover.IssueModeViewModel
 import io.github.genesjc.githubissuefinder.ui.splash.AppStartSplashScreen
@@ -23,9 +25,14 @@ import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
  * in place, which is how TopReposScreen's landscape detection expects to work.
  */
 class MainActivity : ComponentActivity() {
+
+    private val adsViewModel: AdsViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Consent, then advertising, in the commercial build; nothing in the open build.
+        adsViewModel.start(this)
         setContent {
             // App-wide Issue Mode (v0.41): observed through
             // IssueModeViewModel at this single root theme call, which
