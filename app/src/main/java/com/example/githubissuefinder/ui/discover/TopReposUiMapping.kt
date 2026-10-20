@@ -3,24 +3,26 @@ package com.example.githubissuefinder.ui.discover
 import com.example.githubissuefinder.data.TopReposEvent
 import com.example.githubissuefinder.data.SearchFailure
 import com.example.githubissuefinder.data.TopReposState
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.R
+import com.example.githubissuefinder.ui.relativeTime
+import com.example.githubissuefinder.ui.StringResolver
 
 /**
  * Turns TopReposStateHolder's facts into what TopReposScreen shows. The
  * state holder reports what happened (HTTP 401, no network, a rate limit);
  * the wording the user reads lives here, so it can change without
- * touching the data layer. Plain functions with no Android dependency,
- * so they are unit-tested directly.
+ * touching the data layer. Plain functions that take the [StringResolver],
+ * so they are unit-tested directly with a fake.
  */
-fun SearchFailure.toMessage(): String = when (this) {
-    is SearchFailure.Http -> "GitHub returned an error (HTTP $code)"
-    is SearchFailure.Failed -> "Couldn't load issues: ${message ?: "unknown error"}"
+fun SearchFailure.toMessage(string: StringResolver): String = when (this) {
+    is SearchFailure.Http -> string(R.string.error_http, code)
+    is SearchFailure.Failed -> string(R.string.load_issues_failed, message ?: string(R.string.error_unknown))
 }
 
-fun TopReposState.toUiState(): TopReposUiState = TopReposUiState(
+fun TopReposState.toUiState(string: StringResolver): TopReposUiState = TopReposUiState(
     repoGroups = repoGroups,
     isLoading = isLoading,
-    errorMessage = loadFailure?.toMessage(),
+    errorMessage = loadFailure?.toMessage(string),
     noTokenConfigured = noTokenConfigured,
     tokenRejected = tokenRejected,
     selectedLanguage = selectedLanguage,
@@ -28,19 +30,22 @@ fun TopReposState.toUiState(): TopReposUiState = TopReposUiState(
     currentPage = currentPage,
     isLoadingMore = isLoadingMore,
     canLoadMore = canLoadMore,
-    loadMoreError = loadMoreFailure?.toMessage(),
+    loadMoreError = loadMoreFailure?.toMessage(string),
     lastUpdatedAtMs = lastUpdatedAtMs,
 )
 
-fun TopReposEvent.toMessage(): String = when (this) {
-    TopReposEvent.RateLimited -> "GitHub's search rate limit was reached — try again shortly"
+fun TopReposEvent.toMessage(string: StringResolver): String = when (this) {
+    TopReposEvent.RateLimited -> string(R.string.search_rate_limited)
     is TopReposEvent.NewReposChecked ->
         if (newRepoCount == 0 && newIssueCount == 0) {
-            "Nothing new since ${formatRelativeTime(previousUpdatedAtMs ?: checkedAtMs)}"
+            string(R.string.nothing_new_since, string.relativeTime(previousUpdatedAtMs ?: checkedAtMs))
         } else {
-            "$newRepoCount new repo${if (newRepoCount == 1) "" else "s"}, " +
-                "$newIssueCount new issue${if (newIssueCount == 1) "" else "s"}"
+            string(
+                R.string.new_repos_and_issues,
+                string.plural(R.plurals.new_repos, newRepoCount, newRepoCount),
+                string.plural(R.plurals.new_issues, newIssueCount, newIssueCount),
+            )
         }
-    is TopReposEvent.CheckFailedHttp -> "Couldn't check for new repos (HTTP $code)"
-    is TopReposEvent.CheckFailed -> "Couldn't check for new repos: ${message ?: "unknown error"}"
+    is TopReposEvent.CheckFailedHttp -> string(R.string.check_new_repos_failed_http, code)
+    is TopReposEvent.CheckFailed -> string(R.string.check_new_repos_failed, message ?: string(R.string.error_unknown))
 }

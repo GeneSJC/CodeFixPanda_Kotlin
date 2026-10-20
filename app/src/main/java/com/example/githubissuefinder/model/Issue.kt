@@ -16,7 +16,8 @@ data class Issue(
     val labels: List<IssueLabel>,
     val language: String?,
     val commentCount: Int,
-    val updatedAtLabel: String,
+    /** When GitHub last updated the issue (epoch millis); null if the timestamp could not be read. */
+    val updatedAtMs: Long? = null,
     /** Public GitHub URL for this issue — used by the "Open in GitHub" action. */
     val htmlUrl: String,
 ) {

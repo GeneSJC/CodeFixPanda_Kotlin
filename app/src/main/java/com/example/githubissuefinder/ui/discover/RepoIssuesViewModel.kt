@@ -34,8 +34,8 @@ class RepoIssuesViewModel : BaseViewModel() {
     }
 
     val uiState: StateFlow<RepoIssuesUiState> = stateHolder.state
-        .map { it.toUiState() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState())
+        .map { it.toUiState(string) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState(string))
 
     /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
     val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode

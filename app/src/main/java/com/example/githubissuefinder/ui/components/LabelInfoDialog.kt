@@ -9,13 +9,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.descriptionRes
+import com.example.githubissuefinder.ui.nameRes
 
 /**
  * The "what do these tags mean?" dialog for "good first issue" and "help wanted". The wording comes
- * from IssueLabelFilter.description, shared with the gate screen's cards so they cannot drift apart.
+ * from IssueLabelFilter.descriptionRes(), shared with the gate screen's cards so they cannot drift apart.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,27 +27,25 @@ fun LabelInfoDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Got it") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_got_it)) }
         },
-        title = { Text("What do these tags mean?") },
+        title = { Text(stringResource(R.string.label_info_title)) },
         text = {
             Column {
                 IssueLabelFilter.entries.forEach { mode ->
                     Text(
-                        mode.displayName,
+                        stringResource(mode.nameRes()),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        mode.description,
+                        stringResource(mode.descriptionRes()),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 2.dp, bottom = 12.dp),
                     )
                 }
                 Text(
-                    "Both are GitHub-wide conventions applied by each repo's own maintainers, " +
-                        "not enforced or verified by GitHub itself — actual difficulty and " +
-                        "quality can vary a lot from repo to repo.",
+                    stringResource(R.string.label_info_footer),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

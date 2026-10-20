@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.githubissuefinder.R
 
 /**
  * The on-device build label, "Build A.B", passed in from the ViewModel's buildLabel. Its single
@@ -15,7 +17,7 @@ import androidx.compose.ui.Modifier
 @Composable
 fun VersionLabel(label: String, modifier: Modifier = Modifier) {
     Text(
-        "Build $label",
+        stringResource(R.string.version_label, label),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier,

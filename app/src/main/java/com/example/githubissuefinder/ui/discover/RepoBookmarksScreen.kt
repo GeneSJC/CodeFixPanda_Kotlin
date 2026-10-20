@@ -23,9 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.ui.components.IssueCard
 
 /**
@@ -50,7 +52,7 @@ fun RepoBookmarksScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Bookmarks") },
+                title = { Text(stringResource(R.string.bookmarks_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("←", style = MaterialTheme.typography.titleLarge)
@@ -65,7 +67,7 @@ fun RepoBookmarksScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "No bookmarks yet — tap the ★ on any issue to save it here.",
+                    stringResource(R.string.bookmarks_empty),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

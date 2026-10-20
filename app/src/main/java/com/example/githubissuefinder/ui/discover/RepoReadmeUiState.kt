@@ -1,6 +1,8 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.ReadmeResult
+import com.example.githubissuefinder.ui.StringResolver
 
 data class RepoReadmeUiState(
     val isLoading: Boolean = true,
@@ -13,17 +15,17 @@ data class RepoReadmeUiState(
 /**
  * What the README screen shows for each way fetching can end. A pure
  * function, so each message and state can be unit-tested; the wording is
- * what the screen has always shown for these cases.
+ * what the screen has always shown for these cases, now from string resources.
  */
-fun ReadmeResult.toUiState(): RepoReadmeUiState = when (this) {
+fun ReadmeResult.toUiState(string: StringResolver): RepoReadmeUiState = when (this) {
     is ReadmeResult.Found -> RepoReadmeUiState(isLoading = false, markdown = markdown)
     ReadmeResult.NotFound -> RepoReadmeUiState(isLoading = false, notFound = true)
     ReadmeResult.NoToken ->
-        RepoReadmeUiState(isLoading = false, errorMessage = "A GitHub token is required to load a README.")
+        RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.readme_token_required))
     is ReadmeResult.HttpError ->
-        RepoReadmeUiState(isLoading = false, errorMessage = "GitHub returned an error (HTTP $code)")
+        RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.error_http, code))
     ReadmeResult.Unreadable ->
-        RepoReadmeUiState(isLoading = false, errorMessage = "Couldn't read this README's content.")
+        RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.readme_unreadable))
     is ReadmeResult.Failed ->
-        RepoReadmeUiState(isLoading = false, errorMessage = "Couldn't load the README: ${message ?: "unknown error"}")
+        RepoReadmeUiState(isLoading = false, errorMessage = string(R.string.readme_load_failed, message ?: string(R.string.error_unknown)))
 }

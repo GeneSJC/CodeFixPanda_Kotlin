@@ -22,6 +22,7 @@ import com.example.githubissuefinder.data.RepoIssueGroupStorage
 import com.example.githubissuefinder.data.RepoIssuesStateHolder
 import com.example.githubissuefinder.data.TopReposStateHolder
 import com.example.githubissuefinder.data.toIssue
+import com.example.githubissuefinder.ui.StringResolver
 import com.example.githubissuefinder.model.HiddenIssue
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.model.IssueLabelFilter
@@ -138,6 +139,7 @@ class ViewModelFixtures(
             single { snippetRepository }
             single { hiddenIssuesRepository }
             single { config }
+            single<StringResolver> { FakeStringResolver }
         }
         return TopReposViewModel()
     }
@@ -149,6 +151,7 @@ class ViewModelFixtures(
             single { hiddenIssuesRepository }
             single { bookmarksRepository }
             single { appConfig }
+            single<StringResolver> { FakeStringResolver }
         }
         return RepoIssuesViewModel()
     }

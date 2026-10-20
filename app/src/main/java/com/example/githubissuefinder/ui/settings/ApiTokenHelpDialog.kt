@@ -12,7 +12,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 
 /** Opens GitHub's "new classic token" form with the description already filled in. */
 private const val NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=GitHub%20Issue%20Finder"
@@ -30,36 +32,29 @@ fun ApiTokenHelpDialog(onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("How to get a GitHub token") },
+        title = { Text(stringResource(R.string.token_help_title)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
-                    "GitHub Issue Finder needs a free GitHub personal access token to search " +
-                        "for issues. It only reads public information, so your token needs " +
-                        "no permissions at all.",
+                    stringResource(R.string.token_help_intro),
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                Step("1.", "Sign in at github.com. You can create a free account if you don't have one.")
+                Step("1.", stringResource(R.string.token_help_step1))
                 Step(
                     "2.",
-                    "Open Settings → Developer settings → Personal access tokens → " +
-                        "Tokens (classic), then choose Generate new token (classic). " +
-                        "The button below takes you straight there.",
+                    stringResource(R.string.token_help_step2),
                 )
                 Step(
                     "3.",
-                    "Name it \"GitHub Issue Finder\" and pick an expiration. Leave every " +
-                        "permission (scope) unchecked.",
+                    stringResource(R.string.token_help_step3),
                 )
                 Step(
                     "4.",
-                    "Tap Generate token, then copy the token. GitHub shows it only once, " +
-                        "so copy it before leaving the page.",
+                    stringResource(R.string.token_help_step4),
                 )
-                Step("5.", "Come back here, paste it into the token box, and tap Save.")
+                Step("5.", stringResource(R.string.token_help_step5))
                 Text(
-                    "Your token stays on this device and is sent only to GitHub. A token " +
-                        "saved here replaces any token built into the app.",
+                    stringResource(R.string.token_help_footer),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp),
@@ -67,10 +62,10 @@ fun ApiTokenHelpDialog(onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { uriHandler.openUri(NEW_TOKEN_URL) }) { Text("Open GitHub") }
+            TextButton(onClick = { uriHandler.openUri(NEW_TOKEN_URL) }) { Text(stringResource(R.string.token_help_open_github)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         },
     )
 }

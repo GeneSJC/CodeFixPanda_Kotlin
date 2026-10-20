@@ -1,5 +1,7 @@
 package com.example.githubissuefinder.ui.discover
 
+import com.example.githubissuefinder.testutil.FakeStringResolver
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.AppConfig
 import com.example.githubissuefinder.data.RateLimitInfo
 import com.example.githubissuefinder.data.ReadmeFetch
@@ -41,6 +43,8 @@ class TopReposViewModelTest {
     @get:Rule
     val stopKoin = StopKoinRule()
 
+    private val s = FakeStringResolver
+
     private val gfi = IssueLabelFilter.GOOD_FIRST_ISSUE
     private val kotlin = LanguageFilter.KOTLIN
 
@@ -76,7 +80,7 @@ class TopReposViewModelTest {
         val state = viewModel(f).uiState.value
 
         assertTrue(state.tokenRejected)
-        assertEquals("GitHub returned an error (HTTP 401)", state.errorMessage)
+        assertEquals(s(R.string.error_http, 401), state.errorMessage)
     }
 
     @Test
@@ -84,7 +88,7 @@ class TopReposViewModelTest {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> throw java.io.IOException("boom") }
 
-        assertEquals("Couldn't load issues: boom", viewModel(f).uiState.value.errorMessage)
+        assertEquals(s(R.string.load_issues_failed, "boom"), viewModel(f).uiState.value.errorMessage)
     }
 
     @Test
@@ -95,14 +99,14 @@ class TopReposViewModelTest {
 
         vm.loadMore()
 
-        assertEquals("GitHub returned an error (HTTP 500)", vm.uiState.value.loadMoreError)
+        assertEquals(s(R.string.error_http, 500), vm.uiState.value.loadMoreError)
         assertNull(vm.uiState.value.errorMessage)
     }
 
     @Test
     fun theRateLimitComesFromTheSearchRepository() {
         val f = ViewModelFixtures()
-        val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInLabel = "45s")
+        val limit = RateLimitInfo(remaining = 29, limit = 30, used = 1, resetsInSeconds = 45L)
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1)), rateLimit = limit) }
 
         val vm = viewModel(f)
@@ -125,13 +129,13 @@ class TopReposViewModelTest {
     @Test
     fun theRateLimitedLoadMoreSaysSo() = runBlocking {
         val f = ViewModelFixtures()
-        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInLabel = "40s")
+        val exhausted = RateLimitInfo(remaining = 0, limit = 30, used = 30, resetsInSeconds = 40L)
         f.api.handler = { _, _, page -> if (page == 1) searchOk(fullPage(), total = 200) else searchFailed(403, exhausted) }
         val vm = viewModel(f)
 
         vm.loadMore()
 
-        assertEquals("GitHub's search rate limit was reached — try again shortly", vm.snackbarEvents.first())
+        assertEquals(s(R.string.search_rate_limited), vm.snackbarEvents.first())
     }
 
     @Test
@@ -145,7 +149,10 @@ class TopReposViewModelTest {
 
         vm.checkForNewRepos()
 
-        assertEquals("1 new repo, 1 new issue", vm.snackbarEvents.first())
+        assertEquals(
+            s(R.string.new_repos_and_issues, s.plural(R.plurals.new_repos, 1, 1), s.plural(R.plurals.new_issues, 1, 1)),
+            vm.snackbarEvents.first(),
+        )
     }
 
     // ---- forwarding ----

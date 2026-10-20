@@ -37,12 +37,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.IssueLabelFilter
+import com.example.githubissuefinder.ui.buttonLabelRes
+import com.example.githubissuefinder.ui.descriptionRes
 import com.example.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 import com.example.githubissuefinder.ui.theme.colorScheme
 
@@ -66,7 +70,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Text("GitHub Issue Finder", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                     },
                 )
             },
@@ -77,14 +81,14 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Looking to make a contribution on GitHub?",
+                        stringResource(R.string.gate_headline),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(vertical = 10.dp),
                     )
                     Text(
-                        "Select the kind of issues you would like to see",
+                        stringResource(R.string.gate_prompt),
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
@@ -139,7 +143,7 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
                         // Start-aligned, so the first letters of the names line up.
                         Box(modifier = Modifier.width(slots.text), contentAlignment = Alignment.CenterStart) {
                             Text(
-                                mode.buttonLabel(),
+                                stringResource(mode.buttonLabelRes()),
                                 style = modeButtonTextStyle(),
                                 color = Color.White,
                             )
@@ -163,7 +167,7 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
                 exit = shrinkVertically(animationSpec = tween(220)) + fadeOut(animationSpec = tween(220)),
             ) {
                 Text(
-                    mode.description,
+                    stringResource(mode.descriptionRes()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 12.dp),
@@ -172,10 +176,6 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
         }
     }
 }
-
-/** The mode name with each word capitalized, for the button ("Good First Issue"). */
-private fun IssueLabelFilter.buttonLabel() =
-    displayName.split(" ").joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
@@ -193,13 +193,14 @@ private fun rememberModeButtonSlots(): ModeButtonSlots {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val style = modeButtonTextStyle()
-    return remember(style, density) {
+    val labels = IssueLabelFilter.entries.associateWith { stringResource(it.buttonLabelRes()) }
+    return remember(style, density, labels) {
         fun widestPx(text: (IssueLabelFilter) -> String) =
             IssueLabelFilter.entries.maxOf { textMeasurer.measure(text(it), style).size.width }
         with(density) {
             ModeButtonSlots(
                 icon = widestPx { it.glyph + TEXT_PRESENTATION_SELECTOR }.toDp(),
-                text = widestPx { it.buttonLabel() }.toDp(),
+                text = widestPx { labels.getValue(it) }.toDp(),
             )
         }
     }

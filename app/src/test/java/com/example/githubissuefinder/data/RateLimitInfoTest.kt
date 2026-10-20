@@ -19,22 +19,17 @@ class RateLimitInfoTest {
         assertEquals(29, info.remaining)
         assertEquals(30, info.limit)
         assertEquals(1, info.used)
-        assertEquals("45s", info.resetsInLabel)
+        assertEquals(45L, info.resetsInSeconds)
     }
 
     @Test
-    fun resetsInUnderAMinuteIsShownInSeconds() {
-        assertEquals("59s", formatResetsIn(resetEpochSeconds = 1059, nowSeconds = 1000))
+    fun secondsUntilResetCountsFromNow() {
+        assertEquals(59L, secondsUntilReset(resetEpochSeconds = 1059, nowSeconds = 1000))
+        assertEquals(125L, secondsUntilReset(resetEpochSeconds = 1125, nowSeconds = 1000))
     }
 
     @Test
-    fun resetsInAMinuteOrMoreIsShownAsMinutesAndSeconds() {
-        assertEquals("1m 0s", formatResetsIn(resetEpochSeconds = 1060, nowSeconds = 1000))
-        assertEquals("2m 5s", formatResetsIn(resetEpochSeconds = 1125, nowSeconds = 1000))
-    }
-
-    @Test
-    fun aResetTimeInThePastIsShownAsZeroSeconds() {
-        assertEquals("0s", formatResetsIn(resetEpochSeconds = 900, nowSeconds = 1000))
+    fun aResetTimeInThePastIsZeroSeconds() {
+        assertEquals(0L, secondsUntilReset(resetEpochSeconds = 900, nowSeconds = 1000))
     }
 }

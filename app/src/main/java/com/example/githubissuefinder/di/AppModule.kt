@@ -23,6 +23,8 @@ import com.example.githubissuefinder.data.SharedPreferencesStartupSplashStorage
 import com.example.githubissuefinder.data.StartupSplashRepository
 import com.example.githubissuefinder.data.TopReposStateHolder
 import com.example.githubissuefinder.network.GitHubApiClient
+import com.example.githubissuefinder.ui.ContextStringResolver
+import com.example.githubissuefinder.ui.StringResolver
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.koin.android.ext.koin.androidContext
@@ -46,6 +48,9 @@ val appModule = module {
     single { Moshi.Builder().add(KotlinJsonAdapterFactory()).build() }
     single { GitHubApiClient(tokenRepository = get(), moshi = get()) }
     single { get<GitHubApiClient>().api }
+
+    // Resolves string resources for the wording ViewModels build.
+    single<StringResolver> { ContextStringResolver(androidContext()) }
 
     // Build-time constants: the one place BuildConfig is read.
     single { AppConfig(BuildConfig.BUILD_LABEL, BuildConfig.SPLASH_ANIMATION, BuildConfig.SHOW_DETAILED_DRAWER_MENU) }

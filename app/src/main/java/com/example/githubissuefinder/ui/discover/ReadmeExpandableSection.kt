@@ -33,11 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.R
 import io.noties.markwon.Markwon
 
 /**
@@ -140,7 +142,7 @@ private fun ReadmeBody(uiState: RepoReadmeUiState, repoFullName: String) {
                 CircularProgressIndicator(modifier = Modifier.heightIn(max = 28.dp))
             }
             uiState.notFound -> CenteredReadmeMessage(
-                "$repoFullName doesn't have a README at the root of its default branch.",
+                stringResource(R.string.readme_not_found, repoFullName),
             )
             uiState.errorMessage != null -> CenteredReadmeMessage(uiState.errorMessage.orEmpty())
             uiState.markdown != null -> ReadmeMarkdownContent(uiState.markdown)

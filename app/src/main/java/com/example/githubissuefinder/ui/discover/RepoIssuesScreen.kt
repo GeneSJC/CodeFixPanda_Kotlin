@@ -33,9 +33,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.data.filterHiddenIssuesFlat
 import kotlinx.coroutines.launch
 import com.example.githubissuefinder.data.resolveActiveMode
@@ -73,6 +75,8 @@ fun RepoIssuesScreen(
     val issueListState = rememberLazyListState()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsStateWithLifecycle()
+    val issueHiddenMessage = stringResource(R.string.issue_hidden_message)
+    val undoLabel = stringResource(R.string.action_undo)
     val visibleIssues = filterHiddenIssuesFlat(uiState.issues, hiddenIds)
 
     // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
@@ -136,8 +140,8 @@ fun RepoIssuesScreen(
                         viewModel.hideIssue(issue)
                         coroutineScope.launch {
                             val result = snackbarHostState.showSnackbar(
-                                message = "Issue hidden",
-                                actionLabel = "Undo",
+                                message = issueHiddenMessage,
+                                actionLabel = undoLabel,
                                 duration = SnackbarDuration.Short,
                             )
                             if (result == SnackbarResult.ActionPerformed) {

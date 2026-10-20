@@ -30,7 +30,7 @@ class RepoIssueGroupRepositoryTest {
 
     private fun issue(id: Long, owner: String = "octo", repo: String = "repo") = Issue(
         id = id, title = "Issue $id", bodyText = "", repoOwner = owner, repoName = repo, labels = emptyList(),
-        language = null, commentCount = 0, updatedAtLabel = "just now",
+        language = null, commentCount = 0, updatedAtMs = null,
         htmlUrl = "https://github.com/$owner/$repo/issues/$id",
     )
 

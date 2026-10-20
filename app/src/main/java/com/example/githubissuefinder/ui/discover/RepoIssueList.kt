@@ -19,9 +19,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.githubissuefinder.data.formatRelativeTime
+import com.example.githubissuefinder.R
+import com.example.githubissuefinder.ui.relativeTimeText
 import com.example.githubissuefinder.model.Issue
 import com.example.githubissuefinder.ui.components.IssueCard
 
@@ -58,7 +61,7 @@ internal fun RepoIssueList(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        "No open matching issues remain.",
+                        stringResource(R.string.repo_issues_none_match),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -70,12 +73,12 @@ internal fun RepoIssueList(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        "All matching issues in this repo are hidden.",
+                        stringResource(R.string.repo_issues_all_hidden),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
                     TextButton(onClick = onOpenHidden) {
-                        Text("View Hidden")
+                        Text(stringResource(R.string.repo_issues_view_hidden))
                     }
                 }
             }
@@ -133,7 +136,7 @@ private fun RefreshThisRepoFooter(
                 textAlign = TextAlign.Center,
             )
             Button(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Retry")
+                Text(stringResource(R.string.action_retry))
             }
         }
         isRefreshing -> Box(
@@ -148,13 +151,17 @@ private fun RefreshThisRepoFooter(
         ) {
             if (hasRefreshed) {
                 val statusText = if (currentIssueCount == 0) {
-                    "No open issues remain"
+                    stringResource(R.string.repo_issues_none_remain)
                 } else {
-                    "All $currentIssueCount open issue${if (currentIssueCount == 1) "" else "s"}"
+                    pluralStringResource(R.plurals.repo_issues_all_open, currentIssueCount, currentIssueCount)
                 }
-                val checkedText = lastRefreshedAtMs?.let { " · checked ${formatRelativeTime(it)}" }.orEmpty()
+                val statusLine = if (lastRefreshedAtMs != null) {
+                    stringResource(R.string.repo_issues_status_checked, statusText, relativeTimeText(lastRefreshedAtMs))
+                } else {
+                    statusText
+                }
                 Text(
-                    "$statusText$checkedText",
+                    statusLine,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -162,10 +169,10 @@ private fun RefreshThisRepoFooter(
                 )
             }
             Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
-                Text("Refresh this repo")
+                Text(stringResource(R.string.repo_issues_refresh))
             }
             Text(
-                "Uses one API call against your rate limit.",
+                stringResource(R.string.repo_issues_refresh_cost),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

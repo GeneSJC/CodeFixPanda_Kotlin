@@ -25,7 +25,7 @@ class HiddenIssueFilteringTest {
         labels = emptyList(),
         language = null,
         commentCount = 0,
-        updatedAtLabel = "just now",
+        updatedAtMs = null,
         htmlUrl = "https://github.com/$repoOwner/$repoName/issues/$id",
     )
 

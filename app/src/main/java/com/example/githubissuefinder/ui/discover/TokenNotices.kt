@@ -17,8 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.ui.settings.ApiTokenHelpDialog
 
 /**
@@ -33,14 +35,13 @@ internal fun NoTokenMessage(onOpenSettings: () -> Unit) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "This screen needs a live GitHub connection. Add a free GitHub token " +
-                    "in Settings to see ranked repos here.",
+                stringResource(R.string.no_token_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
             Button(onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
-                Text("Add your token")
+                Text(stringResource(R.string.no_token_add))
             }
         }
     }
@@ -67,22 +68,17 @@ internal fun TokenProblemDialog(
                     onDismiss()
                     onOpenSettings()
                 },
-            ) { Text("Open Settings") }
+            ) { Text(stringResource(R.string.action_open_settings)) }
         },
         dismissButton = {
-            TextButton(onClick = { showHelp = true }) { Text("How to get a token") }
+            TextButton(onClick = { showHelp = true }) { Text(stringResource(R.string.token_problem_how_to)) }
         },
-        title = { Text("GitHub API token needed") },
+        title = { Text(stringResource(R.string.token_problem_title)) },
         text = {
             Text(
-                if (tokenRejected) {
-                    "GitHub isn't accepting the token this app is using (it may be " +
-                        "expired, revoked, or otherwise invalid). Enter a new personal " +
-                        "access token in Settings."
-                } else {
-                    "This app needs a GitHub personal access token to make live requests " +
-                        "against the Search API. Enter one in Settings."
-                },
+                stringResource(
+                    if (tokenRejected) R.string.token_problem_rejected else R.string.token_problem_missing,
+                ),
             )
         },
     )

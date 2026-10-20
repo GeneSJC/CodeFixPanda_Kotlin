@@ -12,9 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.example.githubissuefinder.R
 import com.example.githubissuefinder.model.Issue
+import com.example.githubissuefinder.ui.relativeTimeText
 
 /**
  * The row an expanded issue card reveals: the action badges (hide, bookmark, share, copy link)
@@ -33,6 +37,8 @@ internal fun IssueCardActions(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val shareChooserTitle = stringResource(R.string.share_issue_chooser)
+    val linkCopiedMessage = stringResource(R.string.link_copied)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -60,20 +66,24 @@ internal fun IssueCardActions(
                             "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
                         )
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share issue"))
+                    context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                 },
             )
             CardBadge(
                 glyph = "📋",
                 onClick = {
                     clipboardManager.setText(AnnotatedString(issue.htmlUrl))
-                    Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, linkCopiedMessage, Toast.LENGTH_SHORT).show()
                 },
             )
         }
 
         Text(
-            text = "${issue.commentCount} comments · ${issue.updatedAtLabel}",
+            text = stringResource(
+                R.string.comments_and_updated,
+                pluralStringResource(R.plurals.comment_count, issue.commentCount, issue.commentCount),
+                relativeTimeText(issue.updatedAtMs),
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
