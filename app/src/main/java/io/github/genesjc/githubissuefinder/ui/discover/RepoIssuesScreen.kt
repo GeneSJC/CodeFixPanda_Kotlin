@@ -123,7 +123,7 @@ fun RepoIssuesScreen(
                         }
                     },
                 )
-                if (isDemo) DemoBanner(onOpenSettings = onOpenSettings)
+                if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
             }
         },
     ) { padding ->
