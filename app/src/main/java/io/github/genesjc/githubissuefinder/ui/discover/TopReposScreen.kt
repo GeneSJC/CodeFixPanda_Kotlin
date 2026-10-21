@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ import io.github.genesjc.githubissuefinder.data.filterHiddenIssues
 import io.github.genesjc.githubissuefinder.data.resolveActiveMode
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
+import io.github.genesjc.githubissuefinder.ui.ads.AdBanner
 import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.LabelInfoDialog
 import io.github.genesjc.githubissuefinder.ui.components.LanguageFilterRow
@@ -82,6 +84,7 @@ fun TopReposScreen(
     val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
     val privacyOptionsRequired by viewModel.privacyOptionsRequired.collectAsStateWithLifecycle()
+    val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
     val activity = LocalContext.current.findActivity()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
@@ -122,6 +125,7 @@ fun TopReposScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = { if (canShowAds) AdBanner(modifier = Modifier.navigationBarsPadding()) },
             topBar = {
                 Column {
                     TopAppBar(
