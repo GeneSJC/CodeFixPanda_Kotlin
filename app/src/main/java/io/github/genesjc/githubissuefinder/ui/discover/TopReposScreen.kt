@@ -2,7 +2,6 @@ package io.github.genesjc.githubissuefinder.ui.discover
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -175,21 +174,26 @@ fun TopReposScreen(
                         actions = {
                             // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
                             // problem the tap explains it instead of opening the rate-limit dialog.
-                            // The ad-free offer sits above the chip, which keeps to the bottom of the bar. In the open
-                            // build the line draws nothing, so the chip is not affected.
-                            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom) {
-                                AdFreeOfferLine(
-                                    adFreeUntilMs = adFreeUntilMs,
-                                    canOffer = canOfferAdFree,
-                                    onOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                    modifier = Modifier.padding(end = 12.dp, bottom = 2.dp),
-                                )
+                            // The rate-limit chip is on the top row, level with the mode pill, and the ad-free offer sits
+                            // below it, level with the repo count. In the open build the line draws nothing.
+                            Column(horizontalAlignment = Alignment.End) {
                                 RateLimitChip(
                                     info = rateLimit,
                                     onClick = {
                                         if (hasToken && !uiState.tokenRejected) {
                                             showRateLimitDialog = true
                                         } else {
+                                            showTokenProblemDialog = true
+                                        }
+                                    },
+                                )
+                                AdFreeOfferLine(
+                                    adFreeUntilMs = adFreeUntilMs,
+                                    canOffer = canOfferAdFree,
+                                    onOffer = { activity?.let(viewModel::onAdFreeOffer) },
+                                    modifier = Modifier.padding(end = 12.dp, top = 2.dp),
+                                )
+                            } else {
                                             showTokenProblemDialog = true
                                         }
                                     },
