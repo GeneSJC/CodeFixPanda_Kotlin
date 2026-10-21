@@ -29,7 +29,7 @@ private const val SAMPLE_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/921458974
  * thread) and report [canShowAds]. [privacyOptionsRequired] tells the app to offer a way to reopen the
  * user's choices. The SDK itself is not unit-tested; the shared code is tested against a fake.
  */
-class AdMobAdsController(private val context: Context) : AdsController {
+class AdMobAdsController(private val context: Context, private val adFree: AdFreePeriod) : AdsController {
 
     private val _canShowAds = MutableStateFlow(false)
     override val canShowAds: StateFlow<Boolean> = _canShowAds.asStateFlow()
@@ -41,14 +41,30 @@ class AdMobAdsController(private val context: Context) : AdsController {
     override val adsAreLive: Boolean =
         !BuildConfig.DEBUG && BuildConfig.ADMOB_BANNER_UNIT_ID != SAMPLE_BANNER_UNIT_ID
 
+    override val adFreeUntilMs: StateFlow<Long> = adFree.untilMs
+
+    private val _canOfferAdFree = MutableStateFlow(false)
+    override val canOfferAdFree: StateFlow<Boolean> = _canOfferAdFree.asStateFlow()
+
     private val started = AtomicBoolean(false)
     private val sdkStarted = AtomicBoolean(false)
 
     @Volatile
     private var sdkReady = false
 
+    // Starts from the saved state so a banner never flashes up in the middle of a period.
+    @Volatile
+    private var adFreeActive = adFree.isActive()
+
     override fun start(activity: Activity) {
         if (!started.compareAndSet(false, true)) return
+        // Hides the banner when a period starts and brings it back by itself when the period ends.
+        CoroutineScope(Dispatchers.Default).launch {
+            adFree.active.collect {
+                adFreeActive = it
+                publish()
+            }
+        }
         val consent = UserMessagingPlatform.getConsentInformation(activity)
         consent.requestConsentInfoUpdate(
             activity,
@@ -62,6 +78,9 @@ class AdMobAdsController(private val context: Context) : AdsController {
         publish()
     }
 
+    // The rewarded video arrives in the next step; until then the offer is never available.
+    override fun showAdFreeOffer(activity: Activity) = Unit
+
     override fun showPrivacyOptions(activity: Activity) {
         UserMessagingPlatform.showPrivacyOptionsForm(activity) { _ -> publish() }
     }
@@ -73,7 +92,7 @@ class AdMobAdsController(private val context: Context) : AdsController {
             consent.privacyOptionsRequirementStatus == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
         val allowed = consent.canRequestAds()
         if (allowed) startSdkOnce()
-        _canShowAds.value = allowed && sdkReady
+        _canShowAds.value = allowed && sdkReady && !adFreeActive
     }
 
     /** The SDK is started off the main thread, as Google advises, and only after consent allows ads. */

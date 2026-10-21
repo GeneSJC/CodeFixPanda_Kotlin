@@ -8,5 +8,6 @@ import org.koin.dsl.module
  * supplies a controller that never shows ads.
  */
 val adsModule = module {
-    single<AdsController> { AdMobAdsController(androidContext()) }
+    single { AdFreePeriod(SharedPreferencesAdFreeStorage(androidContext())) }
+    single<AdsController> { AdMobAdsController(androidContext(), get()) }
 }

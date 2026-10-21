@@ -24,7 +24,13 @@ class NoAdsController : AdsController {
 
     override val adsAreLive: Boolean = false
 
+    override val adFreeUntilMs: StateFlow<Long> = MutableStateFlow(0L).asStateFlow()
+
+    override val canOfferAdFree: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
+
     override fun start(activity: Activity) = Unit
+
+    override fun showAdFreeOffer(activity: Activity) = Unit
 
     override fun showPrivacyOptions(activity: Activity) = Unit
 }
