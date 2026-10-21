@@ -114,3 +114,11 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **The open build must stay clean.** `scripts/check-foss-clean.sh` (also run by CI) fails if the foss release classpath lists an ads or consent library, or the foss merged manifest has an AdMob entry or the advertising-id permission. It first checks the commercial build does have them, so it cannot pass by looking in the wrong place. Run it whenever dependencies change.
 - **Side effects.** Variants are `fossDebug`, `commercialDebug` and so on; CI's `testDebugUnitTest` and `assembleDebug` now cover both flavors. An existing install under the old id is a different app, so it does not update in place.
 
+## Advertising
+
+- **Shape.** `AdsController` (main) is the only thing shared code knows about ads: `canShowAds`, `privacyOptionsRequired`, `adsAreLive`, `start`, `showPrivacyOptions`. `foss` binds a no-op; `commercial` binds `AdMobAdsController` through a per-flavor Koin `adsModule`. The banner composable `AdBanner` has the same signature in both flavors (empty in foss), so screens contain no flavor checks.
+- **Consent first.** Google's consent flow runs before anything is requested; the ads SDK starts (off the main thread) only once the service says ads may be requested. Where required, the Top Repos menu offers a way to reopen the privacy choices.
+- **Safe by default.** Sample ids in every build unless `-PadmobProduction=true`, which fails at Gradle configuration if either real id (`admobAppId`, `admobBannerUnitId`) is missing. So test ads cannot be shipped as live ones by accident, and a live build cannot be made without real ids. Debug always uses sample ids.
+- **Test devices.** Every build that is not a production build registers the emulator and, if set, the developer's own device (`ADMOB_TEST_DEVICE_ID` in `local.properties`) as test devices, so even a live unit shows them test ads. Production builds register none; testers' phones are registered in the AdMob console.
+- **Live marker.** `adsAreLive` puts `LIVE ADS` in the drawer's build label, so a live build is never mistaken for a test one. The foss build has no trace of it in BuildConfig.
+- **Why this much care.** Clicking your own live ads, or inviting others to, counts as invalid traffic and can end an AdMob account. See `docs/ads-testing-rules.md`.

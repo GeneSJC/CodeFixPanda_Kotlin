@@ -88,9 +88,28 @@ One codebase, two published builds, as a `distribution` flavor dimension:
 `foss` is the default, so a fresh checkout builds and runs the open build; pick `commercialDebug`
 in Android Studio's Build Variants to run the other. The two ids differ, so both can be installed on
 one device. The reason for flavors and not a runtime flag is that code only the commercial build may
-contain stays out of the open build at compile time. Today the two flavors are identical; what
-makes them differ (advertising, in the commercial flavor only) comes in a later change. The code
+contain stays out of the open build at compile time. The code
 package is `io.github.genesjc.githubissuefinder` in both.
+
+### Advertising (commercial flavor only)
+
+The `foss` build has no ads, no ads library and no ads permission; CI checks this
+(`scripts/check-foss-clean.sh`). The `commercial` build shows one banner at the bottom of the
+Top Repos and repo issues screens, after Google's consent form where one is required.
+
+- **Replaceable.** All ad software lives in `app/src/commercial` (the controller and the banner).
+  The shared code only sees the small `AdsController` interface, so another ad provider, or none,
+  means replacing those few files.
+- **Test ads by default.** Every build, release included, uses Google's sample ids and shows only
+  test ads. Live ads need a deliberate production build (`-PadmobProduction=true`) with the real
+  ids supplied as Gradle properties; the real ids are never committed. A live build says
+  `LIVE ADS` in its version label.
+- **Rules for anyone testing** are in [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md).
+
+## License
+
+Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK that the commercial build
+links is proprietary, is not covered by this license, and is not part of this repository.
 
 ## Building and testing
 
