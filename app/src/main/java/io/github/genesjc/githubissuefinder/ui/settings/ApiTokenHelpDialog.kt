@@ -15,9 +15,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 
 /** Opens GitHub's "new classic token" form with the description already filled in. */
-private const val NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=GitHub%20Issue%20Finder"
 
 /**
  * A step-by-step walkthrough for someone who has never made a GitHub personal access token,

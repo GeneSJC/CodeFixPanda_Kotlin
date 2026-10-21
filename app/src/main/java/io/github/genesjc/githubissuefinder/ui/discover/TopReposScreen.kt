@@ -189,7 +189,7 @@ fun TopReposScreen(
                             )
                         },
                     )
-                    if (isDemo) DemoBanner(onOpenSettings = onOpenSettings)
+                    if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
                 }
             },
         ) { padding ->
