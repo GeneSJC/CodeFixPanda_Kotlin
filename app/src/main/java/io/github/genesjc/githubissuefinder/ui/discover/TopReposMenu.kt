@@ -38,6 +38,8 @@ internal fun TopReposMenu(
     onClearCache: () -> Unit,
     onOpenSettings: () -> Unit,
     onResetApp: () -> Unit,
+    showPrivacyOptions: Boolean,
+    onPrivacyOptions: () -> Unit,
     onSelectMode: (IssueLabelFilter) -> Unit,
     onReplay: (AnimationReplay) -> Unit,
 ) {
@@ -92,6 +94,16 @@ internal fun TopReposMenu(
                     onOpenSettings()
                 },
             )
+            // Only where privacy rules require a way back to the consent choices (commercial build).
+            if (showPrivacyOptions) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_privacy_options)) },
+                    onClick = {
+                        onDismiss()
+                        onPrivacyOptions()
+                    },
+                )
+            }
             // No confirmation: nothing is destroyed. Clears the mode and returns to the gate screen.
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_reset_app)) },

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Only the commercial build's manifest mentions the ads software. The AdMob SDK refuses to start
+    without its app id here, and the foss build must contain no ads entries at all
+    (scripts/check-foss-clean.sh checks that). The value comes from a placeholder set per build type
+    in app/build.gradle.kts: Google's sample id in debug, the real id from a Gradle property in release.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+    </application>
+
+</manifest>

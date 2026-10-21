@@ -168,5 +168,10 @@
     <string name="language_python" translatable="false">Python</string>
 
     <!-- Demo mode. -->
-    <string name="demo_banner_message">Demo data — add a GitHub token in Settings to see real issues.</string>
+    <string name="demo_banner_message">Demo data. Get a free GitHub token to see real issues; it needs no permissions.</string>
+    <string name="action_get_token">Get a token</string>
+    <string name="action_enter_token">Enter token</string>
+
+    <!-- Advertising (commercial build only). -->
+    <string name="menu_privacy_options">Privacy options</string>
 </resources>

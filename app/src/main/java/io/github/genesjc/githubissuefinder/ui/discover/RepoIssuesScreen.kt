@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +44,7 @@ import io.github.genesjc.githubissuefinder.data.resolveActiveMode
 import io.github.genesjc.githubissuefinder.model.IssueLabelFilter
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
+import io.github.genesjc.githubissuefinder.ui.ads.AdBanner
 import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.ModePill
 import kotlinx.coroutines.launch
@@ -70,6 +72,7 @@ fun RepoIssuesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
+    val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -93,6 +96,7 @@ fun RepoIssuesScreen(
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { if (canShowAds) AdBanner(modifier = Modifier.navigationBarsPadding()) },
         topBar = {
             Column {
                 TopAppBar(
@@ -119,7 +123,7 @@ fun RepoIssuesScreen(
                         }
                     },
                 )
-                if (isDemo) DemoBanner(onOpenSettings = onOpenSettings)
+                if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
             }
         },
     ) { padding ->

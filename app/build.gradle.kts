@@ -42,8 +42,31 @@ val localProperties = Properties().apply {
 // ("I'm still seeing 13.1"). Corrected here to 15 (PR #15, the
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
-val buildLabelA = 33
-val buildLabelB = 2
+val buildLabelA = 34
+val buildLabelB = 9
+// ---- Advertising ids, and the production switch ----
+// Safe by default: every build, release included, uses Google's published sample ids, so it serves only
+// test ads and can never earn or be penalized. Live ads need a deliberate production build:
+//     ./gradlew bundleCommercialRelease -PadmobProduction=true
+// with both real ids supplied as Gradle properties (admobAppId, admobBannerUnitId; gradle.properties or CI,
+// never committed). A production build refuses to configure without both, so test ads cannot be shipped as
+// live ones by mistake. Debug builds ignore all of this and always use the sample ids. The foss build has no ads.
+val admobSampleAppId = "ca-app-pub-3940256099942544~3347511713"
+val admobSampleBannerUnitId = "ca-app-pub-3940256099942544/9214589741"
+val admobProduction = providers.gradleProperty("admobProduction").orNull == "true"
+if (admobProduction) {
+    val missing = listOf("admobAppId", "admobBannerUnitId").filter { providers.gradleProperty(it).orNull.isNullOrBlank() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "-PadmobProduction=true needs both real AdMob ids as Gradle properties; missing: $missing. " +
+                "Leave the flag off to build with Google's test ids.",
+        )
+    }
+}
+val releaseAdmobAppId = if (admobProduction) providers.gradleProperty("admobAppId").get() else admobSampleAppId
+val releaseAdmobBannerUnitId =
+    if (admobProduction) providers.gradleProperty("admobBannerUnitId").get() else admobSampleBannerUnitId
+
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -119,11 +142,29 @@ android {
             dimension = "distribution"
             applicationId = "io.github.genesjc.githubissuefinder.commercial"
             versionNameSuffix = "-commercial"
+            // The banner ad unit for release builds: Google's sample unit unless this is a production build
+            // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
+            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$releaseAdmobBannerUnitId\"")
+            // Your device's test id, which the ads SDK prints in the log, set as ADMOB_TEST_DEVICE_ID in
+            // local.properties. In every build that is not a production build it is registered as a test device,
+            // and in a debug build it also lets the consent form be seen outside the EU. Empty by default.
+            buildConfigField(
+                "String",
+                "ADMOB_TEST_DEVICE_ID",
+                "\"${localProperties.getProperty("ADMOB_TEST_DEVICE_ID", "")}\"",
+            )
         }
     }
 
+    // The AdMob app id the commercial build's manifest needs (src/commercial/AndroidManifest.xml): the sample
+    // id except in a production build (see the advertising block at the top). The foss build ignores it: it has
+    // no ads manifest entries.
     buildTypes {
+        debug {
+            manifestPlaceholders["admobAppId"] = admobSampleAppId
+        }
         release {
+            manifestPlaceholders["admobAppId"] = releaseAdmobAppId
             optimization {
                 enable = false
             }
@@ -159,6 +200,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
+    // Only the commercial build contains the ads software; the foss build never does (see
+    // scripts/check-foss-clean.sh). The string form is used because the typed accessor for a flavor's
+    // configuration is not generated when the flavors are declared in this same script.
+    add("commercialImplementation", libs.play.services.ads)
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)
@@ -189,3 +234,25 @@ val printBuildLabel = tasks.register("printBuildLabel") {
 
 tasks.matching { it.name in setOf("assembleDebug", "assembleRelease", "installDebug", "testDebugUnitTest") }
     .configureEach { finalizedBy(printBuildLabel) }
+
+// Android Studio's Run and Build use the selected variant's own tasks (for example
+// installCommercialDebug), not the aggregate ones above, so each variant gets its own line naming
+// the variant, e.g. "Build 34.2 (commercialDebug)". That is how to confirm which variant just ran.
+for (flavor in listOf("Foss", "Commercial")) {
+    for (type in listOf("Debug", "Release")) {
+        val variant = "${flavor.replaceFirstChar { it.lowercase() }}$type"
+        val line = "Build $buildLabelA.$buildLabelB ($variant)"
+        val printVariantLabel = tasks.register("print${flavor}${type}Label") {
+            doLast {
+                println()
+                println(line)
+            }
+        }
+        val variantTasks = setOf(
+            "assemble$flavor$type", "install$flavor$type", "bundle$flavor$type", "test${flavor}${type}UnitTest",
+            // The task Android Studio's plain Build runs for the selected variant.
+            "create${flavor}${type}ApkListingFile",
+        )
+        tasks.matching { it.name in variantTasks }.configureEach { finalizedBy(printVariantLabel) }
+    }
+}

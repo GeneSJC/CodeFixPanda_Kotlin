@@ -3,6 +3,7 @@ package io.github.genesjc.githubissuefinder.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.github.genesjc.githubissuefinder.BuildConfig
+import io.github.genesjc.githubissuefinder.ads.AdsController
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
 import io.github.genesjc.githubissuefinder.data.AppConfig
 import io.github.genesjc.githubissuefinder.data.BookmarksRepository
@@ -60,7 +61,16 @@ val appModule = module {
     single<StringResolver> { ContextStringResolver(androidContext()) }
 
     // Build-time constants: the one place BuildConfig is read.
-    single { AppConfig(BuildConfig.BUILD_LABEL, BuildConfig.SPLASH_ANIMATION, BuildConfig.SHOW_DETAILED_DRAWER_MENU) }
+    // The label names the flavor too, so the drawer shows which build is running (foss or commercial), and
+    // says LIVE ADS when the build can serve real ads, so a live build is never mistaken for a test one.
+    single {
+        val live = if (get<AdsController>().adsAreLive) ", LIVE ADS" else ""
+        AppConfig(
+            "${BuildConfig.BUILD_LABEL} (${BuildConfig.FLAVOR}$live)",
+            BuildConfig.SPLASH_ANIMATION,
+            BuildConfig.SHOW_DETAILED_DRAWER_MENU,
+        )
+    }
 
     // Repositories over local storage.
     single { ApiTokenRepository(SharedPreferencesApiTokenStorage(androidContext()), BuildConfig.GITHUB_API_TOKEN) }

@@ -1,6 +1,7 @@
 package io.github.genesjc.githubissuefinder
 
 import android.app.Application
+import io.github.genesjc.githubissuefinder.ads.adsModule
 import io.github.genesjc.githubissuefinder.di.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -16,7 +17,8 @@ class GitHubIssueFinderApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@GitHubIssueFinderApplication)
-            modules(appModule)
+            // adsModule is supplied by the build flavor (src/foss or src/commercial).
+            modules(appModule, adsModule)
         }
     }
 }

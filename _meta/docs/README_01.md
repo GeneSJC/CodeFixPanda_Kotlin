@@ -31,10 +31,11 @@ this way, without needing a real or mocked `Application`).
 ### Bash Shell
 
 Local (JVM) unit tests — no emulator or physical device required. The project has two build
-flavors (`foss` and `commercial`); this task runs the unit tests for both:
+flavors (`foss` and `commercial`). The bare name `testDebugUnitTest` is ambiguous to Gradle with two
+flavors, so name the flavors:
 
 ```bash
-./gradlew testDebugUnitTest
+./gradlew testFossDebugUnitTest testCommercialDebugUnitTest
 ```
 
 One flavor only: `./gradlew testFossDebugUnitTest`
@@ -42,7 +43,7 @@ One flavor only: `./gradlew testFossDebugUnitTest`
 Run a single test class:
 
 ```bash
-./gradlew :app:testDebugUnitTest --tests "io.github.genesjc.githubissuefinder.data.RepoIssueGroupingTest"
+./gradlew :app:testFossDebugUnitTest --tests "io.github.genesjc.githubissuefinder.data.RepoIssueGroupingTest"
 ```
 
 Instrumented tests (`app/src/androidTest/java/`) require a device or emulator and aren't
@@ -54,7 +55,7 @@ covered by the command above:
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs `testDebugUnitTest` and `assembleDebug` (both flavors) on every push and
+`.github/workflows/ci.yml` runs the unit tests and the debug build for both flavors on every push and
 pull request against `develop`/`main`, on GitHub's own runners (which have normal internet
 access, unlike the Claude Code sandbox's blocked Gradle toolchain download). It currently
 just reports status on the PR — it is NOT yet a required check in branch protection, so it
