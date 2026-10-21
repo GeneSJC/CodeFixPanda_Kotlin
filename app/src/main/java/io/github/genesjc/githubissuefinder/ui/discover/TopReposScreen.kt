@@ -172,36 +172,39 @@ fun TopReposScreen(
                             }
                         },
                         actions = {
-                            // The rate-limit chip is on the top row, level with the mode pill, and the ad-free offer sits
-                            // below it, level with the repo count. In the open build the line draws nothing. The chip is
-                            // always shown (a placeholder with no data yet) so the title bar does not shift. With a token
+                            // The top row is the rate-limit chip and the info icon, level with the mode pill. The ad-free
+                            // offer sits below them, level with the repo count, with its right edge on the info icon's
+                            // so it stands on its own at the screen edge. In the open build the line draws nothing. The chip
+                            // is always shown (a placeholder with no data yet) so the title bar does not shift. With a token
                             // problem the tap explains it instead of opening the rate-limit dialog.
                             Column(horizontalAlignment = Alignment.End) {
-                                RateLimitChip(
-                                    info = rateLimit,
-                                    onClick = {
-                                        if (hasToken && !uiState.tokenRejected) {
-                                            showRateLimitDialog = true
-                                        } else {
-                                            showTokenProblemDialog = true
-                                        }
-                                    },
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RateLimitChip(
+                                        info = rateLimit,
+                                        onClick = {
+                                            if (hasToken && !uiState.tokenRejected) {
+                                                showRateLimitDialog = true
+                                            } else {
+                                                showTokenProblemDialog = true
+                                            }
+                                        },
+                                    )
+                                    Text(
+                                        "ⓘ",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .clickable { showInfoDialog = true }
+                                            .padding(end = 16.dp),
+                                    )
+                                }
                                 AdFreeOfferLine(
                                     adFreeUntilMs = adFreeUntilMs,
                                     canOffer = canOfferAdFree,
                                     onOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                    modifier = Modifier.padding(end = 12.dp, top = 2.dp),
+                                    modifier = Modifier.padding(end = 16.dp, top = 2.dp),
                                 )
                             }
-                            Text(
-                                "ⓘ",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .clickable { showInfoDialog = true }
-                                    .padding(end = 16.dp),
-                            )
                         },
                     )
                     if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
