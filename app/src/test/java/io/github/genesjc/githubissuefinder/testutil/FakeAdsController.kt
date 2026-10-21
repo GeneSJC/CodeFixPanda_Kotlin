@@ -12,6 +12,8 @@ class FakeAdsController(canShowAds: Boolean = false) : AdsController {
 
     override val privacyOptionsRequired: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
+    override val adsAreLive: Boolean = false
+
     override fun start(activity: Activity) = Unit
 
     override fun showPrivacyOptions(activity: Activity) = Unit

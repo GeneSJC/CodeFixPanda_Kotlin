@@ -18,6 +18,12 @@ interface AdsController {
     /** True when the app must offer a way to reopen the consent choices (privacy rules in some regions). */
     val privacyOptionsRequired: StateFlow<Boolean>
 
+    /**
+     * True only when this build can serve live (real) ads, which needs a production build with real ids.
+     * Shown in the build label so a live build is never mistaken for a test one. Always false in the foss build.
+     */
+    val adsAreLive: Boolean
+
     /** Runs the consent flow, then starts the ads software. Safe to call again: it starts once. */
     fun start(activity: Activity)
 
