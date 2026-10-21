@@ -2,7 +2,9 @@ package io.github.genesjc.githubissuefinder.ads
 
 import android.app.Activity
 import android.content.Context
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
@@ -15,6 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+/** Google's published sample banner unit: shows test ads only. Anything else is treated as a live unit. */
+private const val SAMPLE_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/9214589741"
 
 /**
  * The commercial build's [AdsController]: Google's consent flow first, then the Mobile Ads SDK.
@@ -31,6 +36,10 @@ class AdMobAdsController(private val context: Context) : AdsController {
 
     private val _privacyOptionsRequired = MutableStateFlow(false)
     override val privacyOptionsRequired: StateFlow<Boolean> = _privacyOptionsRequired.asStateFlow()
+
+    /** True only for a production build: a release build whose banner unit is not Google's sample unit. */
+    override val adsAreLive: Boolean =
+        !BuildConfig.DEBUG && BuildConfig.ADMOB_BANNER_UNIT_ID != SAMPLE_BANNER_UNIT_ID
 
     private val started = AtomicBoolean(false)
     private val sdkStarted = AtomicBoolean(false)
@@ -71,11 +80,27 @@ class AdMobAdsController(private val context: Context) : AdsController {
     private fun startSdkOnce() {
         if (!sdkStarted.compareAndSet(false, true)) return
         CoroutineScope(Dispatchers.IO).launch {
+            registerTestDevices()
             MobileAds.initialize(context) {
                 sdkReady = true
                 publish()
             }
         }
+    }
+
+    /**
+     * In every build that is not a production build, registers the emulator and (if set) your own device as
+     * test devices, so even a live ad unit serves them test ads. This is the safeguard against ever clicking a
+     * live ad of your own: a registered device shows a "Test Ad" label and its traffic never reaches your
+     * account. A production build registers none, so register every tester's phone in the AdMob console instead.
+     */
+    private fun registerTestDevices() {
+        if (adsAreLive) return
+        val ids = buildList {
+            add(AdRequest.DEVICE_ID_EMULATOR)
+            if (BuildConfig.ADMOB_TEST_DEVICE_ID.isNotBlank()) add(BuildConfig.ADMOB_TEST_DEVICE_ID)
+        }
+        MobileAds.setRequestConfiguration(RequestConfiguration.Builder().setTestDeviceIds(ids).build())
     }
 
     /**
