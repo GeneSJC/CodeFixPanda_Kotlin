@@ -11,10 +11,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import io.github.genesjc.githubissuefinder.R
 import kotlinx.coroutines.delay
 
 private const val MILLIS_PER_MINUTE = 60_000L
+
+/** The offer line and the countdown are drawn 50% larger than the title-bar label styles they start from. */
+private const val AD_FREE_TEXT_SCALE = 1.5f
 
 /** How often the countdown is redrawn while an ad-free period runs. */
 private const val COUNTDOWN_TICK_MS = 15_000L
@@ -43,18 +47,24 @@ fun AdFreeOfferLine(
     when {
         minutesLeft > 0 -> Text(
             stringResource(R.string.ad_free_remaining, minutesLeft),
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.scaled(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = modifier,
         )
         canOffer -> Text(
             stringResource(R.string.action_hide_ads),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium.scaled(),
             color = MaterialTheme.colorScheme.primary,
             modifier = modifier.clickable(onClick = onOffer),
         )
     }
 }
+
+/** This style with its font size and line height scaled by [AD_FREE_TEXT_SCALE]. */
+private fun TextStyle.scaled(): TextStyle = copy(
+    fontSize = fontSize * AD_FREE_TEXT_SCALE,
+    lineHeight = lineHeight * AD_FREE_TEXT_SCALE,
+)
 
 /** The current time, redrawn every few seconds while [untilMs] is still ahead, and still afterwards. */
 @Composable

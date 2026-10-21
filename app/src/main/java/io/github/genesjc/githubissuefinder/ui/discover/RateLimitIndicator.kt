@@ -40,8 +40,11 @@ import io.github.genesjc.githubissuefinder.ui.resetsInText
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** How much bigger the rate-limit chip is than its original size (50% larger). */
-private const val RATE_LIMIT_CHIP_SCALE = 1.5f
+/** How much bigger the rate-limit chip is than its original size (5% larger; it was 50% larger before being shrunk 30%). */
+private const val RATE_LIMIT_CHIP_SCALE = 1.05f
+
+/** The meter icon's size relative to its full-size drawing, shrunk with the chip's text (30% smaller). */
+private const val RATE_LIMIT_ICON_SCALE = 0.7f
 
 /**
  * Tappable rate-limit indicator: a meter icon and remaining/limit. Always rendered (a
@@ -63,7 +66,7 @@ internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
                 vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
             ),
         ) {
-            RateLimitMeterIcon()
+            RateLimitMeterIcon(scale = RATE_LIMIT_ICON_SCALE)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 // Normally supplied with the first list (a live search, or a /rate_limit lookup after a
@@ -85,16 +88,16 @@ internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
  * Canvas because thick segments stay legible at this size where an emoji does not.
  */
 @Composable
-private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
+private fun RateLimitMeterIcon(modifier: Modifier = Modifier, scale: Float = 1f) {
     val needleColor = MaterialTheme.colorScheme.onSecondaryContainer
     val description = stringResource(R.string.rate_limit_meter_description)
     Canvas(
         modifier = modifier
-            .size(width = 24.dp, height = 15.dp)
+            .size(width = (24 * scale).dp, height = (15 * scale).dp)
             .semantics { contentDescription = description },
     ) {
-        val strokeWidthPx = 4.dp.toPx()
-        val hubRadiusPx = 2.5.dp.toPx()
+        val strokeWidthPx = (4 * scale).dp.toPx()
+        val hubRadiusPx = (2.5f * scale).dp.toPx()
         val radius = size.width / 2f - strokeWidthPx / 2f
         val center = Offset(size.width / 2f, size.height - hubRadiusPx)
         val arcTopLeft = Offset(center.x - radius, center.y - radius)
@@ -117,14 +120,14 @@ private fun RateLimitMeterIcon(modifier: Modifier = Modifier) {
         // A fixed needle, pointing up and a little to the right.
         val needleAngleRad = Math.toRadians(305.0)
         val needleTip = Offset(
-            center.x + (radius - 1.dp.toPx()) * cos(needleAngleRad).toFloat(),
-            center.y + (radius - 1.dp.toPx()) * sin(needleAngleRad).toFloat(),
+            center.x + (radius - (1 * scale).dp.toPx()) * cos(needleAngleRad).toFloat(),
+            center.y + (radius - (1 * scale).dp.toPx()) * sin(needleAngleRad).toFloat(),
         )
         drawLine(
             color = needleColor,
             start = center,
             end = needleTip,
-            strokeWidth = 2.dp.toPx(),
+            strokeWidth = (2 * scale).dp.toPx(),
             cap = StrokeCap.Round,
         )
         drawCircle(color = needleColor, radius = hubRadiusPx, center = center)
