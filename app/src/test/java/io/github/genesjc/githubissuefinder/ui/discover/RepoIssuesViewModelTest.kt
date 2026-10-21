@@ -50,6 +50,20 @@ class RepoIssuesViewModelTest {
     }
 
     @Test
+    fun adFreeStateFollowsTheAdsController() {
+        val f = ViewModelFixtures()
+        val vm = viewModel(f)
+        assertEquals(0L, vm.adFreeUntilMs.value)
+        assertFalse(vm.canOfferAdFree.value)
+
+        f.adsController.adFreeUntilMs.value = 123L
+        f.adsController.canOfferAdFree.value = true
+
+        assertEquals(123L, vm.adFreeUntilMs.value)
+        assertTrue(vm.canOfferAdFree.value)
+    }
+
+    @Test
     fun theDemoBannerIsOnExactlyWhileThereIsNoToken() {
         assertTrue(viewModel(ViewModelFixtures(buildToken = "")).isDemo.value)
         assertFalse(viewModel(ViewModelFixtures()).isDemo.value)

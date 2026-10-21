@@ -2,6 +2,7 @@ package io.github.genesjc.githubissuefinder.ui.discover
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,7 +39,8 @@ import io.github.genesjc.githubissuefinder.data.filterHiddenIssues
 import io.github.genesjc.githubissuefinder.data.resolveActiveMode
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
-import io.github.genesjc.githubissuefinder.ui.ads.AdBanner
+import io.github.genesjc.githubissuefinder.ui.ads.AdBannerSlot
+import io.github.genesjc.githubissuefinder.ui.ads.AdFreeOfferLine
 import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.LabelInfoDialog
 import io.github.genesjc.githubissuefinder.ui.components.LanguageFilterRow
@@ -85,6 +87,8 @@ fun TopReposScreen(
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
     val privacyOptionsRequired by viewModel.privacyOptionsRequired.collectAsStateWithLifecycle()
     val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
+    val adFreeUntilMs by viewModel.adFreeUntilMs.collectAsStateWithLifecycle()
+    val canOfferAdFree by viewModel.canOfferAdFree.collectAsStateWithLifecycle()
     val activity = LocalContext.current.findActivity()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
@@ -125,7 +129,7 @@ fun TopReposScreen(
     Box(modifier = modifier.fillMaxSize()) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = { if (canShowAds) AdBanner(modifier = Modifier.navigationBarsPadding()) },
+            bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
             topBar = {
                 Column {
                     TopAppBar(
@@ -161,6 +165,8 @@ fun TopReposScreen(
                                     onResetApp = onResetApp,
                                     showPrivacyOptions = privacyOptionsRequired,
                                     onPrivacyOptions = { activity?.let(viewModel::onPrivacyOptions) },
+                                    showAdFreeOffer = canOfferAdFree,
+                                    onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
                                     onSelectMode = viewModel::onModeSelected,
                                     onReplay = { replayAnimation = it },
                                 )
@@ -169,16 +175,26 @@ fun TopReposScreen(
                         actions = {
                             // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
                             // problem the tap explains it instead of opening the rate-limit dialog.
-                            RateLimitChip(
-                                info = rateLimit,
-                                onClick = {
-                                    if (hasToken && !uiState.tokenRejected) {
-                                        showRateLimitDialog = true
-                                    } else {
-                                        showTokenProblemDialog = true
-                                    }
-                                },
-                            )
+                            // The ad-free offer sits above the chip, which keeps to the bottom of the bar. In the open
+                            // build the line draws nothing, so the chip is not affected.
+                            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.Bottom) {
+                                AdFreeOfferLine(
+                                    adFreeUntilMs = adFreeUntilMs,
+                                    canOffer = canOfferAdFree,
+                                    onOffer = { activity?.let(viewModel::onAdFreeOffer) },
+                                    modifier = Modifier.padding(end = 12.dp, bottom = 2.dp),
+                                )
+                                RateLimitChip(
+                                    info = rateLimit,
+                                    onClick = {
+                                        if (hasToken && !uiState.tokenRejected) {
+                                            showRateLimitDialog = true
+                                        } else {
+                                            showTokenProblemDialog = true
+                                        }
+                                    },
+                                )
+                            }
                             Text(
                                 "ⓘ",
                                 style = MaterialTheme.typography.titleMedium,

@@ -44,9 +44,11 @@ import io.github.genesjc.githubissuefinder.data.resolveActiveMode
 import io.github.genesjc.githubissuefinder.model.IssueLabelFilter
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
-import io.github.genesjc.githubissuefinder.ui.ads.AdBanner
+import io.github.genesjc.githubissuefinder.ui.ads.AdBannerSlot
+import io.github.genesjc.githubissuefinder.ui.ads.AdFreeOfferLine
 import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.ModePill
+import io.github.genesjc.githubissuefinder.ui.findActivity
 import kotlinx.coroutines.launch
 
 /**
@@ -73,6 +75,8 @@ fun RepoIssuesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
     val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
+    val adFreeUntilMs by viewModel.adFreeUntilMs.collectAsStateWithLifecycle()
+    val canOfferAdFree by viewModel.canOfferAdFree.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -96,12 +100,19 @@ fun RepoIssuesScreen(
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = { if (canShowAds) AdBanner(modifier = Modifier.navigationBarsPadding()) },
+        bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
         topBar = {
             Column {
                 TopAppBar(
                     title = {
-                        Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
+                        Column {
+                            Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
+                            AdFreeOfferLine(
+                                adFreeUntilMs = adFreeUntilMs,
+                                canOffer = canOfferAdFree,
+                                onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
