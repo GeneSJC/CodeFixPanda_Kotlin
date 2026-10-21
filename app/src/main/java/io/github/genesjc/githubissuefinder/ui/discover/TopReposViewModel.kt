@@ -1,5 +1,6 @@
 package io.github.genesjc.githubissuefinder.ui.discover
 
+import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import io.github.genesjc.githubissuefinder.ads.AdsController
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
@@ -56,6 +57,12 @@ class TopReposViewModel : BaseViewModel() {
 
     /** True when an ad may be shown on this screen (always false in the open build). */
     val canShowAds: StateFlow<Boolean> = adsController.canShowAds
+
+    /** True when the menu must offer a way to reopen the privacy choices (never in the open build). */
+    val privacyOptionsRequired: StateFlow<Boolean> = adsController.privacyOptionsRequired
+
+    /** Reopens the privacy choices. The Activity is used for this call only. */
+    fun onPrivacyOptions(activity: Activity) = adsController.showPrivacyOptions(activity)
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
     val rateLimit: StateFlow<RateLimitInfo?> = stateHolder.rateLimit
