@@ -101,9 +101,10 @@ Top Repos and repo issues screens, after Google's consent form where one is requ
   The shared code only sees the small `AdsController` interface, so another ad provider, or none,
   means replacing those few files.
 - **Test ads by default.** Every build, release included, uses Google's sample ids and shows only
-  test ads. Live ads need a deliberate production build (`-PadmobProduction=true`) with the real
-  ids supplied as Gradle properties; the real ids are never committed. A live build says
-  `LIVE ADS` in its version label.
+  test ads. Live ads need a deliberate production build (`-PadmobProduction=true`) with the three real
+  ids kept in `local.properties` (never committed). A live build says `LIVE ADS` in its version label.
+- **Ad-free hour.** The commercial build offers, in the title bar, to hide the banner for one hour in
+  exchange for watching one short rewarded video. It is opt-in and never asks anyone to tap an ad.
 - **Rules for anyone testing** are in [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md).
 
 ## License
