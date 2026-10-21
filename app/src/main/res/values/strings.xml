@@ -169,4 +169,7 @@
 
     <!-- Demo mode. -->
     <string name="demo_banner_message">Demo data — add a GitHub token in Settings to see real issues.</string>
+
+    <!-- Advertising (commercial build only). -->
+    <string name="menu_privacy_options">Privacy options</string>
 </resources>

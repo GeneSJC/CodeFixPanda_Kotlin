@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 34
-val buildLabelB = 3
+val buildLabelB = 4
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
@@ -119,6 +119,14 @@ android {
             dimension = "distribution"
             applicationId = "io.github.genesjc.githubissuefinder.commercial"
             versionNameSuffix = "-commercial"
+            // Optional, for seeing the consent form outside the EU in a debug build: your device's test id,
+            // which the ads SDK prints in the log ("addTestDeviceHashedId"), set as ADMOB_TEST_DEVICE_ID in
+            // local.properties. Empty by default, and release builds ignore it.
+            buildConfigField(
+                "String",
+                "ADMOB_TEST_DEVICE_ID",
+                "\"${localProperties.getProperty("ADMOB_TEST_DEVICE_ID", "")}\"",
+            )
         }
     }
 

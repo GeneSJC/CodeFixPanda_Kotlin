@@ -115,6 +115,17 @@ class TopReposViewModelTest {
     }
 
     @Test
+    fun privacyOptionsRequiredFollowsTheAdsController() {
+        val f = ViewModelFixtures()
+        val vm = viewModel(f)
+        assertFalse(vm.privacyOptionsRequired.value)
+
+        f.adsController.privacyOptionsRequired.value = true
+
+        assertTrue(vm.privacyOptionsRequired.value)
+    }
+
+    @Test
     fun canShowAdsFollowsTheAdsController() {
         val f = ViewModelFixtures()
         val vm = viewModel(f)

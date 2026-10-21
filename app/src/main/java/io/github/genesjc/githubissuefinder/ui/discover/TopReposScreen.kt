@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,6 +41,7 @@ import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.LabelInfoDialog
 import io.github.genesjc.githubissuefinder.ui.components.LanguageFilterRow
 import io.github.genesjc.githubissuefinder.ui.components.ModePill
+import io.github.genesjc.githubissuefinder.ui.findActivity
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -79,6 +81,8 @@ fun TopReposScreen(
     val rateLimit by viewModel.rateLimit.collectAsStateWithLifecycle()
     val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
+    val privacyOptionsRequired by viewModel.privacyOptionsRequired.collectAsStateWithLifecycle()
+    val activity = LocalContext.current.findActivity()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
     // Guaranteed non-null: DiscoverNavHost never renders this screen
@@ -151,6 +155,8 @@ fun TopReposScreen(
                                     onClearCache = { showClearCacheConfirm = true },
                                     onOpenSettings = onOpenSettings,
                                     onResetApp = onResetApp,
+                                    showPrivacyOptions = privacyOptionsRequired,
+                                    onPrivacyOptions = { activity?.let(viewModel::onPrivacyOptions) },
                                     onSelectMode = viewModel::onModeSelected,
                                     onReplay = { replayAnimation = it },
                                 )
