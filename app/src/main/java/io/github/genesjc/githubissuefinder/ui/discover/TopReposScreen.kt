@@ -172,10 +172,10 @@ fun TopReposScreen(
                             }
                         },
                         actions = {
-                            // Always shown (a placeholder with no data yet) so the title bar does not shift. With a token
-                            // problem the tap explains it instead of opening the rate-limit dialog.
                             // The rate-limit chip is on the top row, level with the mode pill, and the ad-free offer sits
-                            // below it, level with the repo count. In the open build the line draws nothing.
+                            // below it, level with the repo count. In the open build the line draws nothing. The chip is
+                            // always shown (a placeholder with no data yet) so the title bar does not shift. With a token
+                            // problem the tap explains it instead of opening the rate-limit dialog.
                             Column(horizontalAlignment = Alignment.End) {
                                 RateLimitChip(
                                     info = rateLimit,
@@ -192,11 +192,6 @@ fun TopReposScreen(
                                     canOffer = canOfferAdFree,
                                     onOffer = { activity?.let(viewModel::onAdFreeOffer) },
                                     modifier = Modifier.padding(end = 12.dp, top = 2.dp),
-                                )
-                            } else {
-                                            showTokenProblemDialog = true
-                                        }
-                                    },
                                 )
                             }
                             Text(
