@@ -54,6 +54,9 @@ private val GradientMid = Color(0xFF1D4ED8)
 private val GradientLight = Color(0xFF2563EB)
 private val SoftWhite = Color(0xCCFFFFFF)
 
+/** How much larger the front door's button and link text is than the standard button text. */
+private const val ACTION_TEXT_SCALE = 1.5f
+
 /**
  * The front door: a blue gradient screen that says the app needs a GitHub token, with the ways to get one
  * and the place to paste it. "Get a token" opens GitHub's token page, "How to get a token" opens the
@@ -71,6 +74,12 @@ fun WelcomeScreen(
     viewModel: WelcomeViewModel = viewModel(),
 ) {
     val uriHandler = LocalUriHandler.current
+    val labelStyle = MaterialTheme.typography.labelLarge
+    // The buttons and links on this screen are drawn 50% larger than the standard button text.
+    val actionTextStyle = labelStyle.copy(
+        fontSize = labelStyle.fontSize * ACTION_TEXT_SCALE,
+        lineHeight = labelStyle.lineHeight * ACTION_TEXT_SCALE,
+    )
     var tokenDraft by rememberSaveable { mutableStateOf("") }
 
     GitHubIssueFinderTheme(issueMode = null) {
@@ -101,13 +110,20 @@ fun WelcomeScreen(
                     contentDescription = null,
                     modifier = Modifier.size(140.dp),
                 )
+                // "Welcome to" is smaller and lighter so the app's name stands out on its own.
                 Text(
-                    stringResource(R.string.welcome_title),
+                    stringResource(R.string.welcome_title_intro),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SoftWhite,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    stringResource(R.string.welcome_title_name),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp),
                 )
                 Text(
                     stringResource(R.string.welcome_message),
@@ -123,11 +139,16 @@ fun WelcomeScreen(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(stringResource(R.string.action_get_token))
+                        Text(stringResource(R.string.action_get_token), style = actionTextStyle)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     TextButton(onClick = onOpenGuide, modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.welcome_how_to_link), color = Color.White, textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(R.string.welcome_how_to_link),
+                            style = actionTextStyle,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -159,7 +180,7 @@ fun WelcomeScreen(
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.action_save))
+                    Text(stringResource(R.string.action_save), style = actionTextStyle)
                 }
                 TextButton(
                     onClick = {
@@ -168,7 +189,7 @@ fun WelcomeScreen(
                     },
                     modifier = Modifier.padding(top = 8.dp),
                 ) {
-                    Text(stringResource(R.string.welcome_try_demo), color = SoftWhite)
+                    Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
                 }
             }
         }
