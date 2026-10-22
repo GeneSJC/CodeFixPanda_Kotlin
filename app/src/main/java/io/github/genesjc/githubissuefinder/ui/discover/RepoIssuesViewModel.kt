@@ -1,5 +1,6 @@
 package io.github.genesjc.githubissuefinder.ui.discover
 
+import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import io.github.genesjc.githubissuefinder.ads.AdsController
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
@@ -46,6 +47,15 @@ class RepoIssuesViewModel : BaseViewModel() {
 
     /** True when an ad may be shown on this screen (always false in the open build). */
     val canShowAds: StateFlow<Boolean> = adsController.canShowAds
+
+    /** When the ad-free period ends (epoch milliseconds), or 0; always 0 in the open build. */
+    val adFreeUntilMs: StateFlow<Long> = adsController.adFreeUntilMs
+
+    /** True when the user can be offered the ad-free period now (never in the open build). */
+    val canOfferAdFree: StateFlow<Boolean> = adsController.canOfferAdFree
+
+    /** Plays the rewarded video behind the ad-free offer. The Activity is used for this call only. */
+    fun onAdFreeOffer(activity: Activity) = adsController.showAdFreeOffer(activity)
 
     /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
     val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode

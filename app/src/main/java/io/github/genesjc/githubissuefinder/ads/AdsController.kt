@@ -24,8 +24,20 @@ interface AdsController {
      */
     val adsAreLive: Boolean
 
+    /**
+     * When the user's ad-free period ends, in epoch milliseconds; 0 or a past time when there is none. A period
+     * is earned by watching one rewarded video, and while it runs [canShowAds] is false. Always 0 in the foss build.
+     */
+    val adFreeUntilMs: StateFlow<Long>
+
+    /** True when the user can be offered the ad-free period now: ads allowed, no period running, a video ready. */
+    val canOfferAdFree: StateFlow<Boolean>
+
     /** Runs the consent flow, then starts the ads software. Safe to call again: it starts once. */
     fun start(activity: Activity)
+
+    /** Plays the rewarded video; finishing it starts the ad-free period. Only meaningful while [canOfferAdFree] is true. */
+    fun showAdFreeOffer(activity: Activity)
 
     /** Reopens the consent choices. Only meaningful while [privacyOptionsRequired] is true. */
     fun showPrivacyOptions(activity: Activity)

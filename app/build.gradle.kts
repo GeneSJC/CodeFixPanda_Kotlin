@@ -43,29 +43,39 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 34
-val buildLabelB = 9
+val buildLabelB = 18
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:
 //     ./gradlew bundleCommercialRelease -PadmobProduction=true
-// with both real ids supplied as Gradle properties (admobAppId, admobBannerUnitId; gradle.properties or CI,
-// never committed). A production build refuses to configure without both, so test ads cannot be shipped as
-// live ones by mistake. Debug builds ignore all of this and always use the sample ids. The foss build has no ads.
+// with all three real ids supplied as private properties (admobAppId, admobBannerUnitId, admobRewardedUnitId):
+// in local.properties, in ~/.gradle/gradle.properties, or as -P options (CI secrets). Never in the repository's
+// own gradle.properties, which is committed. A production build refuses to configure without all three, so
+// test ads cannot be shipped as live ones by mistake. Debug builds ignore all of this and always use the sample ids. The foss build has no ads.
 val admobSampleAppId = "ca-app-pub-3940256099942544~3347511713"
 val admobSampleBannerUnitId = "ca-app-pub-3940256099942544/9214589741"
+val admobSampleRewardedUnitId = "ca-app-pub-3940256099942544/5224354917"
 val admobProduction = providers.gradleProperty("admobProduction").orNull == "true"
+
+/** A private property: a Gradle property (-P or the user-level gradle.properties), else local.properties. */
+fun privateProperty(name: String): String? =
+    providers.gradleProperty(name).orNull?.takeIf { it.isNotBlank() }
+        ?: localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+
 if (admobProduction) {
-    val missing = listOf("admobAppId", "admobBannerUnitId").filter { providers.gradleProperty(it).orNull.isNullOrBlank() }
+    val missing = listOf("admobAppId", "admobBannerUnitId", "admobRewardedUnitId").filter { privateProperty(it) == null }
     if (missing.isNotEmpty()) {
         throw GradleException(
-            "-PadmobProduction=true needs both real AdMob ids as Gradle properties; missing: $missing. " +
+            "-PadmobProduction=true needs all three real AdMob ids as private properties (local.properties or Gradle); missing: $missing. " +
                 "Leave the flag off to build with Google's test ids.",
         )
     }
 }
-val releaseAdmobAppId = if (admobProduction) providers.gradleProperty("admobAppId").get() else admobSampleAppId
+val releaseAdmobAppId = if (admobProduction) privateProperty("admobAppId")!! else admobSampleAppId
 val releaseAdmobBannerUnitId =
-    if (admobProduction) providers.gradleProperty("admobBannerUnitId").get() else admobSampleBannerUnitId
+    if (admobProduction) privateProperty("admobBannerUnitId")!! else admobSampleBannerUnitId
+val releaseAdmobRewardedUnitId =
+    if (admobProduction) privateProperty("admobRewardedUnitId")!! else admobSampleRewardedUnitId
 
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
@@ -145,6 +155,8 @@ android {
             // The banner ad unit for release builds: Google's sample unit unless this is a production build
             // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$releaseAdmobBannerUnitId\"")
+            // The same for the rewarded video behind the ad-free offer.
+            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$releaseAdmobRewardedUnitId\"")
             // Your device's test id, which the ads SDK prints in the log, set as ADMOB_TEST_DEVICE_ID in
             // local.properties. In every build that is not a production build it is registered as a test device,
             // and in a debug build it also lets the consent form be seen outside the EU. Empty by default.

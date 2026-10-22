@@ -40,6 +40,8 @@ internal fun TopReposMenu(
     onResetApp: () -> Unit,
     showPrivacyOptions: Boolean,
     onPrivacyOptions: () -> Unit,
+    showAdFreeOffer: Boolean,
+    onAdFreeOffer: () -> Unit,
     onSelectMode: (IssueLabelFilter) -> Unit,
     onReplay: (AnimationReplay) -> Unit,
 ) {
@@ -94,6 +96,16 @@ internal fun TopReposMenu(
                     onOpenSettings()
                 },
             )
+            // A backup for the title-bar offer, for anyone who looks here: shown only while the offer can be made.
+            if (showAdFreeOffer) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.action_hide_ads)) },
+                    onClick = {
+                        onDismiss()
+                        onAdFreeOffer()
+                    },
+                )
+            }
             // Only where privacy rules require a way back to the consent choices (commercial build).
             if (showPrivacyOptions) {
                 DropdownMenuItem(
