@@ -130,7 +130,6 @@ fun DiscoverNavHost(
                     language = selectedLanguage,
                     onBack = { navController.popBackStackDebounced() },
                     onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
-                    onOpenSettings = { navController.navigate(ROUTE_SETTINGS) },
                 )
             }
         }

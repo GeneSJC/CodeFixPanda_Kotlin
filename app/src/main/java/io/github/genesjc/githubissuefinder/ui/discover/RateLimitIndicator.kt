@@ -83,6 +83,38 @@ internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
 }
 
 /**
+ * The chip that stands where the rate-limit chip would while the demo data is shown: with no token there
+ * are no rate-limit numbers, so it says "Demo data" instead. Same size and shape as [RateLimitChip]. With
+ * an [onClick] it is tappable (Top Repos explains the missing token); without one it is just a label.
+ */
+@Composable
+internal fun DemoChip(onClick: (() -> Unit)? = null) {
+    val base = MaterialTheme.typography.bodySmall
+    val chipModifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp)
+    val label: @Composable () -> Unit = {
+        Text(
+            stringResource(R.string.demo_chip_label),
+            style = base.copy(
+                fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
+                lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
+            ),
+            color = MaterialTheme.colorScheme.onTertiaryContainer,
+            modifier = Modifier.padding(
+                horizontal = (10 * RATE_LIMIT_CHIP_SCALE).dp,
+                vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
+            ),
+        )
+    }
+    val shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp)
+    val color = MaterialTheme.colorScheme.tertiaryContainer
+    if (onClick != null) {
+        Surface(onClick = onClick, shape = shape, color = color, modifier = chipModifier, content = label)
+    } else {
+        Surface(shape = shape, color = color, modifier = chipModifier, content = label)
+    }
+}
+
+/**
  * A small static speedometer glyph: red, amber and green segments, a needle and a hub.
  * It says "meter" and nothing about the value, which the numbers beside it give. Drawn with
  * Canvas because thick segments stay legible at this size where an emoji does not.

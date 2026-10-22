@@ -64,7 +64,7 @@ class RepoIssuesViewModelTest {
     }
 
     @Test
-    fun theDemoBannerIsOnExactlyWhileThereIsNoToken() {
+    fun theDemoMarkerIsOnExactlyWhileThereIsNoToken() {
         assertTrue(viewModel(ViewModelFixtures(buildToken = "")).isDemo.value)
         assertFalse(viewModel(ViewModelFixtures()).isDemo.value)
     }

@@ -40,7 +40,6 @@ import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
 import io.github.genesjc.githubissuefinder.ui.ads.AdBannerSlot
 import io.github.genesjc.githubissuefinder.ui.ads.AdFreeOfferLine
-import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.LabelInfoDialog
 import io.github.genesjc.githubissuefinder.ui.components.LanguageFilterRow
 import io.github.genesjc.githubissuefinder.ui.components.ModePill
@@ -181,16 +180,21 @@ fun TopReposScreen(
                             // problem the tap explains it instead of opening the rate-limit dialog.
                             Column(horizontalAlignment = Alignment.End) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    RateLimitChip(
-                                        info = rateLimit,
-                                        onClick = {
-                                            if (hasToken && !uiState.tokenRejected) {
-                                                showRateLimitDialog = true
-                                            } else {
-                                                showTokenProblemDialog = true
-                                            }
-                                        },
-                                    )
+                                    // With no token there are no rate-limit numbers, so the demo marker takes the chip's place.
+                                    if (isDemo) {
+                                        DemoChip(onClick = { showTokenProblemDialog = true })
+                                    } else {
+                                        RateLimitChip(
+                                            info = rateLimit,
+                                            onClick = {
+                                                if (hasToken && !uiState.tokenRejected) {
+                                                    showRateLimitDialog = true
+                                                } else {
+                                                    showTokenProblemDialog = true
+                                                }
+                                            },
+                                        )
+                                    }
                                     Text(
                                         "ⓘ",
                                         style = MaterialTheme.typography.titleMedium,
@@ -209,7 +213,6 @@ fun TopReposScreen(
                             }
                         },
                     )
-                    if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
                 }
             },
         ) { padding ->
