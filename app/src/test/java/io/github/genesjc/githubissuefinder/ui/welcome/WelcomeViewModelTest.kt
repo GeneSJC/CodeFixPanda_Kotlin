@@ -1,8 +1,6 @@
 package io.github.genesjc.githubissuefinder.ui.welcome
 
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
-import io.github.genesjc.githubissuefinder.data.WelcomeRepository
-import io.github.genesjc.githubissuefinder.data.WelcomeStorage
 import io.github.genesjc.githubissuefinder.testutil.FakeApiTokenStorage
 import io.github.genesjc.githubissuefinder.testutil.StopKoinRule
 import io.github.genesjc.githubissuefinder.testutil.restartKoin
@@ -18,71 +16,51 @@ class WelcomeViewModelTest {
     @get:Rule
     val stopKoin = StopKoinRule()
 
-    private class FakeWelcomeStorage(var seen: Boolean = false) : WelcomeStorage {
-        override fun hasSeenWelcome(): Boolean = seen
-        override fun markWelcomeSeen() {
-            seen = true
-        }
-    }
-
     private val tokenStorage = FakeApiTokenStorage()
-    private val welcomeStorage = FakeWelcomeStorage()
-    private val tokens = ApiTokenRepository(tokenStorage, buildToken = "")
 
-    private fun viewModel(): WelcomeViewModel {
+    private fun viewModel(buildToken: String = ""): WelcomeViewModel {
+        val tokens = ApiTokenRepository(tokenStorage, buildToken)
         restartKoin {
             single { tokens }
-            single { WelcomeRepository(welcomeStorage) }
             single { testAppConfig() }
         }
         return WelcomeViewModel()
     }
 
     @Test
-    fun theWelcomeIsNeededAtStartOnlyWithNoTokenAndNotYetSeen() {
+    fun theWelcomeIsNeededAtStartWhileThereIsNoToken() {
         assertTrue(viewModel().needsWelcomeAtStart())
-
-        welcomeStorage.seen = true
-        assertFalse(viewModel().needsWelcomeAtStart())
     }
 
     @Test
     fun aSavedTokenMeansTheWelcomeIsNotNeededAtStart() {
-        tokens.setUserToken("ghp_abc")
+        tokenStorage.stored = "ghp_abc"
 
         assertFalse(viewModel().needsWelcomeAtStart())
     }
 
     @Test
-    fun savingATokenStoresItAndMarksTheWelcomeSeen() {
+    fun aBuildTokenMeansTheWelcomeIsNotNeededAtStart() {
+        assertFalse(viewModel(buildToken = "build-token").needsWelcomeAtStart())
+    }
+
+    @Test
+    fun savingATokenStoresItAndEndsTheNeedForTheWelcome() {
         val vm = viewModel()
 
         assertTrue(vm.saveToken("  ghp_abc  "))
 
-        assertEquals("ghp_abc", tokens.userToken.value)
         assertEquals("ghp_abc", tokenStorage.stored)
-        assertTrue(welcomeStorage.seen)
-        assertFalse(tokens.isDemo.value)
+        assertFalse(vm.needsWelcomeAtStart())
     }
 
     @Test
-    fun aBlankTokenSavesNothingAndLeavesTheWelcomeOpen() {
+    fun aBlankTokenSavesNothing() {
         val vm = viewModel()
 
         assertFalse(vm.saveToken("   "))
 
-        assertEquals("", tokens.userToken.value)
-        assertFalse(welcomeStorage.seen)
-    }
-
-    @Test
-    fun tryingTheDemoMarksTheWelcomeSeenWithoutAToken() {
-        val vm = viewModel()
-
-        vm.finish()
-
-        assertTrue(welcomeStorage.seen)
-        assertEquals("", tokens.userToken.value)
-        assertTrue(tokens.isDemo.value)
+        assertEquals(null, tokenStorage.stored)
+        assertTrue(vm.needsWelcomeAtStart())
     }
 }

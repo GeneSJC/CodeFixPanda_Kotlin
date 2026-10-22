@@ -12,8 +12,6 @@
     <exclude domain="sharedpref" path="api_token_prefs.xml"/>
     <!-- The ad-free period stays on this device too. Keep in sync with PREFS_NAME in ads/AdFreePeriod.kt. -->
     <exclude domain="sharedpref" path="ad_free_prefs.xml"/>
-    <!-- The welcome screen shows again on a new device. Keep in sync with PREFS_NAME in data/WelcomeRepository.kt. -->
-    <exclude domain="sharedpref" path="welcome_prefs.xml"/>
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

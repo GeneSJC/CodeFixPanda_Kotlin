@@ -50,8 +50,9 @@ private const val ACTION_TEXT_SCALE = 1.5f
  * The front door: a blue gradient screen that says the app needs a GitHub token, with the ways to get one
  * and the place to paste it. "Get a token" opens GitHub's token page, "How to get a token" opens the
  * step-by-step guide, and "Try the demo" leaves with sample data. [onTokenSaved] runs after a token is saved
- * and [onTryDemo] after the demo is chosen, separately because the caller treats them differently: after a
- * saved token there is nothing to come back to, but after the demo Back returns to this screen. Drawn in the
+ * and [onTryDemo] when the demo is chosen, separately because the caller treats them differently: after a
+ * saved token there is nothing to come back to, but after the demo Back returns to this screen. The demo
+ * lasts for the session only: the next launch with no token starts here again. Drawn in the
  * neutral theme, since no Issue Mode is chosen yet.
  */
 @Composable
@@ -161,13 +162,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.action_save), style = actionTextStyle)
                 }
-                TextButton(
-                    onClick = {
-                        viewModel.finish()
-                        onTryDemo()
-                    },
-                    modifier = Modifier.padding(top = 8.dp),
-                ) {
+                TextButton(onClick = onTryDemo, modifier = Modifier.padding(top = 8.dp)) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
                 }
             }
