@@ -16,10 +16,12 @@ import io.github.genesjc.githubissuefinder.data.needsModeGate
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
 import io.github.genesjc.githubissuefinder.ui.settings.SettingsScreen
+import io.github.genesjc.githubissuefinder.ui.welcome.TokenGuideScreen
 import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeScreen
 import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeViewModel
 
 private const val ROUTE_WELCOME = "welcome"
+private const val ROUTE_TOKEN_GUIDE = "tokenGuide"
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
@@ -77,6 +79,7 @@ fun DiscoverNavHost(
     ) {
         composable(ROUTE_WELCOME) {
             WelcomeScreen(
+                onOpenGuide = { navController.navigate(ROUTE_TOKEN_GUIDE) },
                 onDone = {
                     if (navController.previousBackStackEntry != null) {
                         // Reopened from the menu: go back to where the user was.
@@ -88,6 +91,9 @@ fun DiscoverNavHost(
                     }
                 },
             )
+        }
+        composable(ROUTE_TOKEN_GUIDE) {
+            TokenGuideScreen(onBack = { navController.popBackStackDebounced() })
         }
         composable(ROUTE_ISSUE_MODE_GATE) {
             IssueModeGateScreen(
