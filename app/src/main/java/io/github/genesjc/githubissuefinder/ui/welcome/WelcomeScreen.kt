@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -55,12 +57,15 @@ private val SoftWhite = Color(0xCCFFFFFF)
 /**
  * The front door: a blue gradient screen that says the app needs a GitHub token, with the ways to get one
  * and the place to paste it. "Get a token" opens GitHub's token page, "How to get a token" opens the
- * step-by-step guide, and "Try the demo" leaves with sample data. [onDone] runs once the user has left by
- * either route (token saved, or demo). Drawn in the neutral theme, since no Issue Mode is chosen yet.
+ * step-by-step guide, and "Try the demo" leaves with sample data. [onTokenSaved] runs after a token is saved
+ * and [onTryDemo] after the demo is chosen, separately because the caller treats them differently: after a
+ * saved token there is nothing to come back to, but after the demo Back returns to this screen. Drawn in the
+ * neutral theme, since no Issue Mode is chosen yet.
  */
 @Composable
 fun WelcomeScreen(
-    onDone: () -> Unit,
+    onTokenSaved: () -> Unit,
+    onTryDemo: () -> Unit,
     onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: WelcomeViewModel = viewModel(),
@@ -111,13 +116,19 @@ fun WelcomeScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
                 )
-                OutlinedButton(
-                    onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
-                    border = BorderStroke(1.dp, Color.White),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.action_get_token))
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(
+                        onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
+                        border = BorderStroke(1.dp, Color.White),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(R.string.action_get_token))
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    TextButton(onClick = onOpenGuide, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.welcome_how_to_link), color = Color.White, textAlign = TextAlign.Center)
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
@@ -138,7 +149,7 @@ fun WelcomeScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = { if (viewModel.saveToken(tokenDraft)) onDone() },
+                    onClick = { if (viewModel.saveToken(tokenDraft)) onTokenSaved() },
                     enabled = tokenDraft.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
@@ -150,14 +161,12 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.action_save))
                 }
-                TextButton(onClick = onOpenGuide, modifier = Modifier.padding(top = 8.dp)) {
-                    Text(stringResource(R.string.welcome_how_to_link), color = Color.White)
-                }
                 TextButton(
                     onClick = {
                         viewModel.finish()
-                        onDone()
+                        onTryDemo()
                     },
+                    modifier = Modifier.padding(top = 8.dp),
                 ) {
                     Text(stringResource(R.string.welcome_try_demo), color = SoftWhite)
                 }

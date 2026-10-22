@@ -78,18 +78,24 @@ fun DiscoverNavHost(
         modifier = modifier,
     ) {
         composable(ROUTE_WELCOME) {
+            // Where the welcome goes next: back to where the user was if it was reopened from the menu,
+            // otherwise on to the mode gate or Top Repos.
+            val leaveWelcome: (keepWelcomeBelow: Boolean) -> Unit = { keepWelcomeBelow ->
+                if (navController.previousBackStackEntry != null) {
+                    navController.popBackStackDebounced()
+                } else {
+                    val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
+                    navController.navigate(next) {
+                        // After a saved token there is nothing to come back to. After the demo the welcome stays
+                        // at the bottom of the back stack, so Back from the demo returns to it.
+                        if (!keepWelcomeBelow) popUpTo(ROUTE_WELCOME) { inclusive = true }
+                    }
+                }
+            }
             WelcomeScreen(
                 onOpenGuide = { navController.navigate(ROUTE_TOKEN_GUIDE) },
-                onDone = {
-                    if (navController.previousBackStackEntry != null) {
-                        // Reopened from the menu: go back to where the user was.
-                        navController.popBackStackDebounced()
-                    } else {
-                        // Shown at start: move on to the gate or Top Repos, and drop the welcome from the back stack.
-                        val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
-                        navController.navigate(next) { popUpTo(ROUTE_WELCOME) { inclusive = true } }
-                    }
-                },
+                onTokenSaved = { leaveWelcome(false) },
+                onTryDemo = { leaveWelcome(true) },
             )
         }
         composable(ROUTE_TOKEN_GUIDE) {
