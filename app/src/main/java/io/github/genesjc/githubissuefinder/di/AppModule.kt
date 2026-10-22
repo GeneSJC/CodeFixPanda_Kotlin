@@ -23,7 +23,9 @@ import io.github.genesjc.githubissuefinder.data.RepoIssuesStateHolder
 import io.github.genesjc.githubissuefinder.data.SharedPreferencesApiTokenStorage
 import io.github.genesjc.githubissuefinder.data.SharedPreferencesIssueModeStorage
 import io.github.genesjc.githubissuefinder.data.SharedPreferencesStartupSplashStorage
+import io.github.genesjc.githubissuefinder.data.SharedPreferencesWelcomeStorage
 import io.github.genesjc.githubissuefinder.data.StartupSplashRepository
+import io.github.genesjc.githubissuefinder.data.WelcomeRepository
 import io.github.genesjc.githubissuefinder.data.SwitchedIssueSearchApi
 import io.github.genesjc.githubissuefinder.data.SwitchedReadmeApi
 import io.github.genesjc.githubissuefinder.data.SwitchedRepoIssueGroupStorage
@@ -76,6 +78,7 @@ val appModule = module {
     single { ApiTokenRepository(SharedPreferencesApiTokenStorage(androidContext()), BuildConfig.GITHUB_API_TOKEN) }
     single { IssueModeRepository(SharedPreferencesIssueModeStorage(androidContext())) }
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
+    single { WelcomeRepository(SharedPreferencesWelcomeStorage(androidContext())) }
     single { BookmarksRepository(JsonFileBookmarksStorage(androidContext(), moshi = get())) }
     single { HiddenIssuesRepository(JsonFileHiddenIssuesStorage(androidContext(), moshi = get())) }
     // The cache is the real file with a token, an in-memory copy without one (demo data).
