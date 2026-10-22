@@ -1,6 +1,7 @@
 package io.github.genesjc.githubissuefinder.ui.welcome
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,9 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -19,13 +20,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -42,13 +41,19 @@ import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 import kotlinx.coroutines.launch
 
+/** The gap between the panel and the screen edges. */
+private val PANEL_MARGIN = 15.dp
+
+/** How round the panel's corners are. */
+private val PANEL_CORNER_RADIUS = 32.dp
+
 /**
  * The step-by-step guide to getting a GitHub token: four short steps, one per screen, each with a slot for a
- * screenshot of GitHub's own page. Reached from the welcome screen's link and its menu entry. [onBack] runs
- * from the Close button on any step, and from Back on the first one; Back on a later step goes to the
- * previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
+ * screenshot of GitHub's own page. It sits in a rounded, bordered white panel, inset from the screen edges,
+ * on the same blue gradient as the welcome screen. Reached from the welcome screen's link and its menu entry.
+ * [onBack] runs from the Close button on any step, and from Back on the first one; Back on a later step goes
+ * to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState(pageCount = { tokenGuideSteps.size })
@@ -60,31 +65,39 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 
     GitHubIssueFinderTheme(issueMode = null) {
-        Scaffold(
-            modifier = modifier,
-            topBar = { TopAppBar(title = { Text(stringResource(R.string.token_help_title)) }) },
-            bottomBar = {
-                Row(
-                    modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = onBack) { Text(stringResource(R.string.action_close)) }
-                    if (pagerState.currentPage == lastPage) {
-                        Button(onClick = onBack) { Text(stringResource(R.string.guide_done)) }
-                    } else {
-                        Button(onClick = { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }) {
-                            Text(stringResource(R.string.welcome_next))
+        FrontDoorBackground(modifier = modifier) {
+            Surface(
+                modifier = Modifier.fillMaxSize().systemBarsPadding().padding(PANEL_MARGIN),
+                shape = RoundedCornerShape(PANEL_CORNER_RADIUS),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(3.dp, SkyBlue),
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        stringResource(R.string.token_help_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp),
+                    )
+                    HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
+                        TokenGuideStepPage(tokenGuideSteps[page])
+                    }
+                    PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        TextButton(onClick = onBack) { Text(stringResource(R.string.action_close)) }
+                        if (pagerState.currentPage == lastPage) {
+                            Button(onClick = onBack) { Text(stringResource(R.string.guide_done)) }
+                        } else {
+                            Button(onClick = { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }) {
+                                Text(stringResource(R.string.welcome_next))
+                            }
                         }
                     }
                 }
-            },
-        ) { padding ->
-            Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-                HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-                    TokenGuideStepPage(tokenGuideSteps[page])
-                }
-                PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
             }
         }
     }

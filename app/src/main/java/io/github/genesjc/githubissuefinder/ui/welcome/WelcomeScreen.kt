@@ -2,9 +2,7 @@ package io.github.genesjc.githubissuefinder.ui.welcome
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,8 +31,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -46,13 +42,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
 import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
-
-// The launcher icon's blues, so the front door looks like the app's icon. The light end of the icon's
-// gradient is left out because white text must stay readable over every part of the screen.
-private val GradientDark = Color(0xFF0B1736)
-private val GradientMid = Color(0xFF1D4ED8)
-private val GradientLight = Color(0xFF2563EB)
-private val SoftWhite = Color(0xCCFFFFFF)
 
 /** How much larger the front door's button and link text is than the standard button text. */
 private const val ACTION_TEXT_SCALE = 1.5f
@@ -83,17 +72,7 @@ fun WelcomeScreen(
     var tokenDraft by rememberSaveable { mutableStateOf("") }
 
     GitHubIssueFinderTheme(issueMode = null) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(GradientDark, GradientMid, GradientLight),
-                        start = Offset(0f, Float.POSITIVE_INFINITY),
-                        end = Offset(Float.POSITIVE_INFINITY, 0f),
-                    ),
-                ),
-        ) {
+        FrontDoorBackground(modifier = modifier) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
