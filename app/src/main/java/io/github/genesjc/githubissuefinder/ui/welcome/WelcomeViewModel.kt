@@ -2,6 +2,7 @@ package io.github.genesjc.githubissuefinder.ui.welcome
 
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
 import io.github.genesjc.githubissuefinder.data.WelcomeRepository
+import io.github.genesjc.githubissuefinder.data.needsWelcome
 import io.github.genesjc.githubissuefinder.ui.BaseViewModel
 import org.koin.core.component.inject
 
@@ -14,6 +15,10 @@ class WelcomeViewModel : BaseViewModel() {
 
     private val tokenRepository: ApiTokenRepository by inject()
     private val welcomeRepository: WelcomeRepository by inject()
+
+    /** True when the app should start on the welcome: no token yet and the welcome not shown before. */
+    fun needsWelcomeAtStart(): Boolean =
+        needsWelcome(hasToken = !tokenRepository.isDemo.value, welcomeSeen = welcomeRepository.hasSeenWelcome)
 
     /**
      * Saves [token] as the user's own and marks the welcome as done. Returns false, saving nothing and

@@ -37,6 +37,7 @@ internal fun TopReposMenu(
     onCheckForNewRepos: () -> Unit,
     onClearCache: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenWelcome: () -> Unit,
     onResetApp: () -> Unit,
     showPrivacyOptions: Boolean,
     onPrivacyOptions: () -> Unit,
@@ -94,6 +95,14 @@ internal fun TopReposMenu(
                 onClick = {
                     onDismiss()
                     onOpenSettings()
+                },
+            )
+            // Reopens the welcome slideshow: how to get a token, and a place to paste it.
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_welcome)) },
+                onClick = {
+                    onDismiss()
+                    onOpenWelcome()
                 },
             )
             // A backup for the title-bar offer, for anyone who looks here: shown only while the offer can be made.

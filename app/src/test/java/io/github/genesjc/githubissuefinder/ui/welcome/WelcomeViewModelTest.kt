@@ -39,6 +39,21 @@ class WelcomeViewModelTest {
     }
 
     @Test
+    fun theWelcomeIsNeededAtStartOnlyWithNoTokenAndNotYetSeen() {
+        assertTrue(viewModel().needsWelcomeAtStart())
+
+        welcomeStorage.seen = true
+        assertFalse(viewModel().needsWelcomeAtStart())
+    }
+
+    @Test
+    fun aSavedTokenMeansTheWelcomeIsNotNeededAtStart() {
+        tokens.setUserToken("ghp_abc")
+
+        assertFalse(viewModel().needsWelcomeAtStart())
+    }
+
+    @Test
     fun savingATokenStoresItAndMarksTheWelcomeSeen() {
         val vm = viewModel()
 

@@ -43,7 +43,7 @@ val localProperties = Properties().apply {
 // currently-open PR). B continues climbing from its last value (per
 // above, it never resets on an A change) rather than restarting at 1.
 val buildLabelA = 34
-val buildLabelB = 20
+val buildLabelB = 21
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:

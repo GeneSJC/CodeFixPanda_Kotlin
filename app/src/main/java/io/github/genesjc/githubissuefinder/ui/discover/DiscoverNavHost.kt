@@ -16,7 +16,10 @@ import io.github.genesjc.githubissuefinder.data.needsModeGate
 import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
 import io.github.genesjc.githubissuefinder.ui.settings.SettingsScreen
+import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeScreen
+import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeViewModel
 
+private const val ROUTE_WELCOME = "welcome"
 private const val ROUTE_ISSUE_MODE_GATE = "issueModeGate"
 private const val ROUTE_TOP_REPOS = "topRepos"
 private const val ROUTE_REPO_ISSUES = "repoIssues"
@@ -36,7 +39,7 @@ private fun NavController.popBackStackDebounced() {
 }
 
 /**
- * Navigation for the Discover flow: the mode gate, Top Repos, a repo's issues, bookmarks,
+ * Navigation for the Discover flow: the welcome, the mode gate, Top Repos, a repo's issues, bookmarks,
  * hidden issues and settings. It uses Navigation Compose for real system Back support.
  * The gate is a real start destination inside this NavHost, not an early return outside it:
  * outside, Top Repos was the only entry on the back stack and Back closed the app. The start
@@ -49,6 +52,7 @@ private fun NavController.popBackStackDebounced() {
 fun DiscoverNavHost(
     modifier: Modifier = Modifier,
     issueModeViewModel: IssueModeViewModel = viewModel(),
+    welcomeViewModel: WelcomeViewModel = viewModel(),
 ) {
     val navController = rememberNavController()
     var selectedRepoGroup by remember { mutableStateOf<RepoIssueGroup?>(null) }
@@ -56,8 +60,14 @@ fun DiscoverNavHost(
     // entry. Held here, like selectedRepoGroup, rather than passed through the route.
     var selectedLanguage by remember { mutableStateOf(LanguageFilter.KOTLIN) }
 
+    // The welcome comes first for someone with no token who has not seen it; then the gate if no mode is
+    // chosen; otherwise Top Repos.
     val startDestination = remember {
-        if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
+        when {
+            welcomeViewModel.needsWelcomeAtStart() -> ROUTE_WELCOME
+            needsModeGate(issueModeViewModel.mode.value) -> ROUTE_ISSUE_MODE_GATE
+            else -> ROUTE_TOP_REPOS
+        }
     }
 
     NavHost(
@@ -65,6 +75,20 @@ fun DiscoverNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
+        composable(ROUTE_WELCOME) {
+            WelcomeScreen(
+                onDone = {
+                    if (navController.previousBackStackEntry != null) {
+                        // Reopened from the menu: go back to where the user was.
+                        navController.popBackStackDebounced()
+                    } else {
+                        // Shown at start: move on to the gate or Top Repos, and drop the welcome from the back stack.
+                        val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
+                        navController.navigate(next) { popUpTo(ROUTE_WELCOME) { inclusive = true } }
+                    }
+                },
+            )
+        }
         composable(ROUTE_ISSUE_MODE_GATE) {
             IssueModeGateScreen(
                 onModeSelected = { mode ->
@@ -83,6 +107,7 @@ fun DiscoverNavHost(
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
                 onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
                 onOpenSettings = { navController.navigate(ROUTE_SETTINGS) },
+                onOpenWelcome = { navController.navigate(ROUTE_WELCOME) },
                 onResetApp = {
                     issueModeViewModel.clearMode()
                     navController.navigate(ROUTE_ISSUE_MODE_GATE) {

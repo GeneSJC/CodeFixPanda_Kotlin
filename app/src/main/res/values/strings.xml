@@ -53,6 +53,7 @@
     <string name="menu_check_new_repos">Check for New Repos</string>
     <string name="action_clear_cache">Clear Cache</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
     <string name="menu_find_good_first_issues">Find Good First Issues</string>
