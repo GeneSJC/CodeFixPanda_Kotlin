@@ -47,7 +47,29 @@ class DemoIssueSearchApiTest {
     fun theLanguageNarrowsTheSearchToThatLanguagesRepos() {
         val items = search(topReposQuery(helpWanted, LanguageFilter.PYTHON)).body!!.items
 
-        assertEquals(listOf("demo-data-tools"), items.map { it.repositoryUrl.substringAfterLast('/') }.distinct())
+        val pythonRepos = DemoData.repos.filter { it.language == "python" }.map { it.name }.toSet()
+        val found = items.map { it.repositoryUrl.substringAfterLast('/') }.toSet()
+        assertTrue(found.isNotEmpty())
+        assertTrue(pythonRepos.containsAll(found))
+    }
+
+    @Test
+    fun everyLanguageHasSeveralReposAndIssuesInBothModes() {
+        LanguageFilter.entries.filter { it != LanguageFilter.ANY }.forEach { language ->
+            assertTrue(language.name, DemoData.repos.count { it.language == language.queryValue } >= 3)
+            listOf(gfi, helpWanted).forEach { mode ->
+                val items = search(topReposQuery(mode, language)).body!!.items
+                assertTrue("${language.name} / ${mode.name}", items.map { it.repositoryUrl }.distinct().size >= 2)
+            }
+        }
+    }
+
+    @Test
+    fun everyIssueBelongsToADeclaredRepoAndNumbersAreUniquePerRepo() {
+        val repoNames = DemoData.repos.map { "demo-org/${it.name}" }.toSet()
+        assertTrue(DemoData.issues.all { it.repoFullName in repoNames })
+        assertEquals(DemoData.issues.size, DemoData.issues.map { it.repoFullName to it.dto.number }.toSet().size)
+        assertTrue(DemoData.repos.all { repo -> DemoData.issues.any { it.repoFullName == "demo-org/${repo.name}" } })
     }
 
     @Test
@@ -100,5 +122,6 @@ class DemoIssueSearchApiTest {
 
         val markdown = (result as ReadmeResult.Found).markdown
         assertTrue(markdown, markdown.startsWith("# demo-tasks-app"))
+        assertTrue(markdown, markdown.contains(DemoData.repos.first { it.name == "demo-tasks-app" }.description))
     }
 }

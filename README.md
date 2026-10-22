@@ -62,7 +62,7 @@ View (Compose screen)
   `BaseViewModel.string`, and the data and model layers hold facts (timestamps, seconds, query
   values), never wording. Tests use a fake resolver that echoes the resource id and arguments.
 - **No token means demo data.** The app runs without a GitHub token: the search, README and cache
-  data sources are switched on every call between the real ones and demo ones (three fake repos,
+  data sources are switched on every call between the real ones and demo ones (sixteen invented repos across the five languages,
   every title marked "[Demo]", a "Demo data" chip on the list screens), so the repositories and state holders
   above them never know which answered. Entering a token switches to real data at once. Saved
   bookmarks and hidden issues carry a tag (`Issue.tag`, null for real data), and each mode lists only

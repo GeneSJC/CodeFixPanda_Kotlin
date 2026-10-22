@@ -45,12 +45,16 @@ class DemoIssueSearchApi : IssueSearchApi {
     override suspend fun fetchRateLimit(): RateLimitInfo? = null
 }
 
-/** A short README for any demo repo, encoded the way GitHub's Contents API returns one. */
+/**
+ * A short README for a demo repo, encoded the way GitHub's Contents API returns one. It opens with the repo's
+ * one-line description, so each card's README preview reads differently.
+ */
 @OptIn(ExperimentalEncodingApi::class)
 class DemoReadmeApi : ReadmeApi {
 
     override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
-        val markdown = "# $repoName\n\nThis README is demo data, shown because no GitHub token is set. " +
+        val description = DemoData.repos.firstOrNull { it.name == repoName }?.description.orEmpty()
+        val markdown = "# $repoName\n\n$description\n\nThis README is demo data, shown because no GitHub token is set. " +
             "Add a token in Settings to see real repositories and their READMEs.\n"
         val dto = ReadmeDto(
             name = "README.md",
