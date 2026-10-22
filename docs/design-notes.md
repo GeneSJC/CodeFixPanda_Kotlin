@@ -33,10 +33,11 @@ Decisions that are worth remembering but too long for a code comment. Code point
 
 ## Navigation
 
+- **The welcome comes first.** With no token the start destination is the welcome, then the mode gate, then Top Repos. "Try the demo" keeps the welcome at the bottom of the back stack, so Back from the demo returns to it; a saved token drops it, since there is nothing to come back to. Reopened from the menu ("Welcome and token help") it is pushed on top, and leaving it pops back to where the user was.
 - **The gate is a real destination.** An earlier version returned early outside the NavHost; Top Repos was then the only back-stack entry and pressing Back closed the app. That was found by pressing Back on a device.
 - **Reset App** is the only way back to the gate once a mode is chosen. It clears the mode and navigates with `popUpTo(graph.id) { inclusive = true }`, wiping the whole back stack; a plain `navigate()` would add a second gate on top of the open screens. Bookmarks, hidden issues and the cache are untouched.
 - **Selected repo group and language** are plain Compose state in the nav host, not passed through the route, to avoid serializing the model just to pass it along.
-- **Typed navigation: considered, not adopted.** Type-safe routes need the Kotlin serialization plugin (a build change) and a second serialization library next to Moshi. The six routes are named constants with no arguments, so the compiler already rejects a mistyped route and there are no hand-built arguments to protect. The host's copy of the selection is acceptable for the reason above. Revisit if a route ever needs arguments.
+- **Typed navigation: considered, not adopted.** Type-safe routes need the Kotlin serialization plugin (a build change) and a second serialization library next to Moshi. The eight routes (welcome, token guide, mode gate, Top Repos, repo issues, bookmarks, hidden issues, settings) are named constants with no arguments, so the compiler already rejects a mistyped route and there are no hand-built arguments to protect. The host's copy of the selection is acceptable for the reason above. Revisit if a route ever needs arguments.
 - **Hidden Issues** is reachable from the Top Repos menu and from the repo screen's "all hidden" state; both push it on top, so Back returns to where it was opened. A separate full-screen README destination was removed when the inline README widget replaced it.
 
 ## Top Repos state
@@ -104,6 +105,14 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Marker.** A small "Demo data" chip (`DemoChip`) shows while there is no token. On Top Repos it takes the place of the rate-limit chip (there are no rate-limit numbers in demo mode) and a tap explains the missing token, with a way to Settings and to the token guide. On the repo issues screen it sits in the title bar beside the open-in-browser icon. There is no banner: getting a token is the front door's job (see "Front door").
 - **Switching reloads.** `TopReposStateHolder` reloads the list when the tag flips, from the cache of the data now in use.
 - **Known loose ends.** A demo issue's link points at a github.com address that does not exist. Demo bookmarks and hidden entries live in the real bookmarks and hidden files, hidden by the filter rather than stored elsewhere.
+
+## Front door
+
+- **Purpose.** The app needs a GitHub token to show real data, so the front door is a token gate, not a tour of the app: a blue gradient welcome screen (the launcher icon's blues) that says so, with the ways to get a token and the place to paste it. It shows at every launch while there is no token. "Try the demo" is a way to look around for one session, not a way past the gate; the next launch with no token starts on the welcome again. A token from the user or from the build's local properties skips it.
+- **The welcome screen.** Title, one-line message, a "Get a token" button (GitHub's token page with the name filled in; GitHub asks the user to sign in first), a link "How does it work?" beside it, the paste field with Save, and "Try the demo". Saving a token leaves the welcome. The button and link text are larger than the standard button text on purpose, for legibility on the gradient.
+- **The token guide.** Four steps, one per screen, in a rounded white panel with a sky-blue border inset 15dp from the screen edges on the same gradient: sign in, make a token with every permission box unticked, copy it (GitHub shows it only once), paste it into the app. Each step has a screenshot slot that shows a text caption until a real screenshot of GitHub's page replaces it. It is reached from the welcome's link and from the menu entry "Welcome and token help".
+- **Decisions.** The welcome shows on every launch without a token (an earlier design showed it once; that let a demo user skip the gate for good). The demo link stays in every build, the commercial one included, for now; removing it from the commercial build is a later, one-line change. The five-slide app tour was dropped: the screenshots that matter are GitHub's, not the app's.
+- **Screenshots, when they arrive.** Only of GitHub's own pages, with nothing personal in them and no real token (make a throwaway one and revoke it). Check GitHub's current rules for showing its interface before shipping them.
 
 ## Build flavors
 
