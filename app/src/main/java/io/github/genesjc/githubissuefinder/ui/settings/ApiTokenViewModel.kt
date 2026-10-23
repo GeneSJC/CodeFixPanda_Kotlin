@@ -19,6 +19,9 @@ class ApiTokenViewModel : BaseViewModel() {
     /** The token the user saved, or empty if none. */
     val userToken: StateFlow<String> = repository.userToken
 
+    /** The token in effect: the user's if they saved one, else the build-time one, else empty. Shown masked in Settings. */
+    val currentToken: StateFlow<String> = repository.effectiveToken
+
     /** Which token is actually in use right now: the user's, the build-time one, or none. */
     val tokenSource: StateFlow<TokenSource> = repository.tokenSource
 

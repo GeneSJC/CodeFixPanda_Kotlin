@@ -48,8 +48,10 @@ fun SettingsScreen(
     viewModel: ApiTokenViewModel = viewModel(),
 ) {
     val savedToken by viewModel.userToken.collectAsStateWithLifecycle()
+    val currentToken by viewModel.currentToken.collectAsStateWithLifecycle()
     val source by viewModel.tokenSource.collectAsStateWithLifecycle()
-    var draft by rememberSaveable(savedToken) { mutableStateOf(savedToken) }
+    // The field starts with the token in use (masked), whether the user saved it or the build supplied it.
+    var draft by rememberSaveable(currentToken) { mutableStateOf(currentToken) }
     var showHelp by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -92,7 +94,7 @@ fun SettingsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = { viewModel.saveToken(draft) },
-                    enabled = draft.trim() != savedToken,
+                    enabled = draft.trim() != currentToken,
                 ) {
                     Text(stringResource(R.string.action_save))
                 }
