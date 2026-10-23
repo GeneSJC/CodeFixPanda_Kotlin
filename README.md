@@ -105,6 +105,7 @@ Top Repos and repo issues screens, after Google's consent form where one is requ
   ids kept in `local.properties` (never committed). A live build says `LIVE ADS` in its version label.
 - **Ad-free hour.** The commercial build offers, in the title bar, to hide the banner for one hour in
   exchange for watching one short rewarded video. It is opt-in and never asks anyone to tap an ad.
+- **Ads kit.** `scripts/export-ads-kit.sh` packages the ads code, its Gradle snippets, docs and an installer as a kit another project can drop in or use as a reference.
 - **Rules for anyone testing** are in [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md).
 
 ## License

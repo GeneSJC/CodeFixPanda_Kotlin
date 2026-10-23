@@ -10,12 +10,14 @@ plugins {
 // same name (which scripts/check-release-has-no-token.sh uses), and exposes it as a BuildConfig field in
 // DEBUG builds only, so a developer can run without typing a token. Release builds always get an
 // empty string: a published APK can be unpacked by anyone, and every user would otherwise share that token.
+// ads-kit:begin local-properties
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         load(FileInputStream(localPropertiesFile))
     }
 }
+// ads-kit:end local-properties
 
 // Actual config values live here, as plain vals — the buildConfigField calls
 // below just reference these via string interpolation, instead of each
@@ -26,8 +28,9 @@ val localProperties = Properties().apply {
 // pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
-val buildLabelA = 35
-val buildLabelB = 11
+val buildLabelA = 36
+val buildLabelB = 1
+// ads-kit:begin advertising
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:
@@ -60,6 +63,7 @@ val releaseAdmobBannerUnitId =
     if (admobProduction) privateProperty("admobBannerUnitId")!! else admobSampleBannerUnitId
 val releaseAdmobRewardedUnitId =
     if (admobProduction) privateProperty("admobRewardedUnitId")!! else admobSampleRewardedUnitId
+// ads-kit:end advertising
 
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
@@ -118,6 +122,7 @@ android {
     // that only the commercial build may contain out of the open one at
     // compile time. The two ids are written out in full, not derived, because
     // a published Play id can never change. Both can be installed on one device.
+    // ads-kit:begin flavors
     flavorDimensions += "distribution"
     productFlavors {
         create("foss") {
@@ -145,6 +150,7 @@ android {
             )
         }
     }
+    // ads-kit:end flavors
 
     // The AdMob app id the commercial build's manifest needs (src/commercial/AndroidManifest.xml): the sample
     // id except in a production build (see the advertising block at the top). The foss build ignores it: it has
