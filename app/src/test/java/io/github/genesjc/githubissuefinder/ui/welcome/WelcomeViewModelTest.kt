@@ -1,6 +1,7 @@
 package io.github.genesjc.githubissuefinder.ui.welcome
 
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
+import io.github.genesjc.githubissuefinder.data.TokenSource
 import io.github.genesjc.githubissuefinder.testutil.FakeApiTokenStorage
 import io.github.genesjc.githubissuefinder.testutil.StopKoinRule
 import io.github.genesjc.githubissuefinder.testutil.restartKoin
@@ -85,6 +86,15 @@ class WelcomeViewModelTest {
 
         assertEquals(null, tokenStorage.stored)
         assertTrue(vm.needsWelcomeAtStart())
+    }
+
+    @Test
+    fun theTokenSourceSaysWhereTheTokenInUseCameFrom() {
+        assertEquals(TokenSource.NONE, viewModel().tokenSource.value)
+        assertEquals(TokenSource.BUILD, viewModel(buildToken = "build-token").tokenSource.value)
+
+        tokenStorage.stored = "ghp_abc"
+        assertEquals(TokenSource.USER, viewModel(buildToken = "build-token").tokenSource.value)
     }
 
     @Test

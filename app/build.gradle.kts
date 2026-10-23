@@ -27,7 +27,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 35
-val buildLabelB = 9
+val buildLabelB = 10
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:

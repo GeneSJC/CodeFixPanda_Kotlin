@@ -31,6 +31,7 @@
     <string name="token_hide">Hide</string>
     <string name="action_save">Save</string>
     <string name="settings_remove_token">Remove my token</string>
+    <string name="token_remove_unavailable_build">This token is built into this debug build, so it cannot be removed here.</string>
     <string name="settings_how_to_get_token">How do I get a token?</string>
     <string name="token_help_title">How to get a GitHub token</string>
     <string name="token_help_intro">GitHub Issue Finder needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>

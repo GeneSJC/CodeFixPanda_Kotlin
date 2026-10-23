@@ -98,11 +98,17 @@ fun SettingsScreen(
                 ) {
                     Text(stringResource(R.string.action_save))
                 }
-                if (savedToken.isNotEmpty()) {
-                    OutlinedButton(onClick = { viewModel.clearToken() }) {
-                        Text(stringResource(R.string.settings_remove_token), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
+                // Always shown, greyed out while there is no saved token to remove.
+                OutlinedButton(onClick = { viewModel.clearToken() }, enabled = savedToken.isNotEmpty()) {
+                    Text(stringResource(R.string.settings_remove_token), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+            }
+            if (source == TokenSource.BUILD) {
+                Text(
+                    stringResource(R.string.token_remove_unavailable_build),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             TextButton(onClick = { showHelp = true }) {
                 Text(stringResource(R.string.settings_how_to_get_token))
