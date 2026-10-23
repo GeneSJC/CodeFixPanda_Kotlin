@@ -53,6 +53,7 @@
     <string name="menu_check_new_repos">Check for New Repos</string>
     <string name="action_clear_cache">Clear Cache</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
     <string name="menu_find_good_first_issues">Find Good First Issues</string>
@@ -167,10 +168,31 @@
     <string name="language_javascript" translatable="false">JavaScript</string>
     <string name="language_python" translatable="false">Python</string>
 
+    <!-- Welcome screen (the front door) and the token guide. The screenshot captions are text placeholders until real screenshots of GitHub's pages exist. -->
+    <string name="welcome_title_intro">Welcome to</string>
+    <string name="welcome_title_name">GitHub\nIssue Finder</string>
+    <string name="welcome_message">To use this app you need to set your GitHub token. It is free, takes about a minute, and needs no permissions.</string>
+    <string name="welcome_how_to_link">How does it work?</string>
+    <string name="welcome_try_demo">Try the demo</string>
+    <string name="welcome_next">Next</string>
+    <string name="welcome_page_description">Page %1$d of %2$d</string>
+    <string name="guide_done">Done</string>
+    <string name="guide_step_1_title">Sign in to GitHub</string>
+    <string name="guide_step_1_body">Sign in at github.com, or create a free account. The button below opens GitHub\'s token page, and GitHub asks you to sign in first if you are not.</string>
+    <string name="guide_step_1_screenshot">Screenshot: the GitHub sign-in page</string>
+    <string name="guide_step_2_title">Make a token with no permissions</string>
+    <string name="guide_step_2_body">The token\'s name is already filled in. Choose an expiration, and leave every permission box unticked. The app only reads public information, so the token can do almost nothing.</string>
+    <string name="guide_step_2_screenshot">Screenshot: the token form with every box unticked</string>
+    <string name="guide_step_3_title">Copy the token</string>
+    <string name="guide_step_3_body">Tap Generate token, then copy the token. GitHub shows it only once, so copy it before you leave the page.</string>
+    <string name="guide_step_3_screenshot">Screenshot: the new token on GitHub, with its copy button</string>
+    <string name="guide_step_4_title">Paste it into the app</string>
+    <string name="guide_step_4_body">Come back to the welcome screen, paste the token into the box, and tap Save. It stays on this device and is sent only to GitHub.</string>
+    <string name="guide_step_4_screenshot">Screenshot: pasting the token into the app</string>
+
     <!-- Demo mode. -->
-    <string name="demo_banner_message">Demo data. Get a free GitHub token to see real issues; it needs no permissions.</string>
+    <string name="demo_chip_label">Demo data</string>
     <string name="action_get_token">Get a token</string>
-    <string name="action_enter_token">Enter token</string>
 
     <!-- Advertising (commercial build only). -->
     <string name="menu_privacy_options">Privacy options</string>

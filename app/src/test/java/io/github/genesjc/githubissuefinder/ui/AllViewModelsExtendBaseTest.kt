@@ -9,6 +9,7 @@ import io.github.genesjc.githubissuefinder.ui.discover.RepoReadmeViewModel
 import io.github.genesjc.githubissuefinder.ui.discover.TopReposViewModel
 import io.github.genesjc.githubissuefinder.ui.settings.ApiTokenViewModel
 import io.github.genesjc.githubissuefinder.ui.splash.StartupSplashViewModel
+import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeViewModel
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -34,6 +35,7 @@ class AllViewModelsExtendBaseTest {
             ApiTokenViewModel::class.java,
             StartupSplashViewModel::class.java,
             AdsViewModel::class.java,
+            WelcomeViewModel::class.java,
         )
 
         viewModels.forEach { viewModel ->

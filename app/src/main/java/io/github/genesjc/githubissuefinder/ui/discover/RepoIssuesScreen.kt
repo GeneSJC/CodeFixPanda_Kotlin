@@ -46,7 +46,6 @@ import io.github.genesjc.githubissuefinder.model.LanguageFilter
 import io.github.genesjc.githubissuefinder.model.RepoIssueGroup
 import io.github.genesjc.githubissuefinder.ui.ads.AdBannerSlot
 import io.github.genesjc.githubissuefinder.ui.ads.AdFreeOfferLine
-import io.github.genesjc.githubissuefinder.ui.components.DemoBanner
 import io.github.genesjc.githubissuefinder.ui.components.ModePill
 import io.github.genesjc.githubissuefinder.ui.findActivity
 import kotlinx.coroutines.launch
@@ -68,7 +67,6 @@ fun RepoIssuesScreen(
     language: LanguageFilter,
     onBack: () -> Unit,
     onOpenHidden: () -> Unit,
-    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RepoIssuesViewModel = viewModel(),
 ) {
@@ -102,40 +100,38 @@ fun RepoIssuesScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
         topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
-                            AdFreeOfferLine(
-                                adFreeUntilMs = adFreeUntilMs,
-                                canOffer = canOfferAdFree,
-                                onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
+                        AdFreeOfferLine(
+                            adFreeUntilMs = adFreeUntilMs,
+                            canOffer = canOfferAdFree,
+                            onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Text("←", style = MaterialTheme.typography.titleLarge)
+                    }
+                },
+                actions = {
+                    if (isDemo) DemoChip()
+                    IconButton(
+                        onClick = {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/${repoGroup.repoFullName}"),
+                                ),
                             )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Text("←", style = MaterialTheme.typography.titleLarge)
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                context.startActivity(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse("https://github.com/${repoGroup.repoFullName}"),
-                                    ),
-                                )
-                            },
-                        ) {
-                            Text("↗", style = MaterialTheme.typography.titleLarge)
-                        }
-                    },
-                )
-                if (isDemo) DemoBanner(onEnterToken = onOpenSettings)
-            }
+                        },
+                    ) {
+                        Text("↗", style = MaterialTheme.typography.titleLarge)
+                    }
+                },
+            )
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {

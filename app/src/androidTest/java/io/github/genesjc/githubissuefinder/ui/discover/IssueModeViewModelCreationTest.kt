@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.genesjc.githubissuefinder.ui.ads.AdsViewModel
+import io.github.genesjc.githubissuefinder.ui.welcome.WelcomeViewModel
 import io.github.genesjc.githubissuefinder.ui.settings.ApiTokenViewModel
 import io.github.genesjc.githubissuefinder.ui.splash.StartupSplashViewModel
 import org.junit.After
@@ -76,6 +77,11 @@ class IssueModeViewModelCreationTest {
     @Test
     fun adsViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[AdsViewModel::class.java])
+    }
+
+    @Test
+    fun welcomeViewModelIsCreatedByTheDefaultFactory() {
+        assertNotNull(provider()[WelcomeViewModel::class.java])
     }
 
     @Test

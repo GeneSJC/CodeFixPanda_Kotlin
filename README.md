@@ -62,12 +62,12 @@ View (Compose screen)
   `BaseViewModel.string`, and the data and model layers hold facts (timestamps, seconds, query
   values), never wording. Tests use a fake resolver that echoes the resource id and arguments.
 - **No token means demo data.** The app runs without a GitHub token: the search, README and cache
-  data sources are switched on every call between the real ones and demo ones (three fake repos,
-  every title marked "[Demo]", a banner on the list screens), so the repositories and state holders
+  data sources are switched on every call between the real ones and demo ones (sixteen invented repos across the five languages,
+  every title marked "[Demo]", a "Demo data" chip on the list screens), so the repositories and state holders
   above them never know which answered. Entering a token switches to real data at once. Saved
   bookmarks and hidden issues carry a tag (`Issue.tag`, null for real data), and each mode lists only
   the entries whose tag matches the data in use.
-- **Navigation stays on string routes, by decision.** There are six routes, each a named
+- **Navigation stays on string routes, by decision.** There are eight routes, each a named
   constant, and none takes an argument; the selected repo is passed as host state, not through
   the route. Type-safe routes (Navigation Compose 2.8+) would need the Kotlin serialization
   plugin and a second serialization library, and would add nothing here, because the usual
@@ -111,6 +111,13 @@ Top Repos and repo issues screens, after Google's consent form where one is requ
 
 Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK that the commercial build
 links is proprietary, is not covered by this license, and is not part of this repository.
+
+## Front door
+
+The app needs a free GitHub token to show real issues. With no token it starts on a blue welcome
+screen that links to GitHub's token page, explains the four steps in a short guide, and has a box to
+paste the token. "Try the demo" opens sample data for that session; the next launch without a token
+starts on the welcome again. More in `docs/design-notes.md`, "Front door".
 
 ## Building and testing
 
