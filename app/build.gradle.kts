@@ -6,8 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// Reads GITHUB_API_TOKEN from local.properties (gitignored, never committed) and exposes it as a BuildConfig
-// field in DEBUG builds only, so a developer can run without typing a token. Release builds always get an
+// Reads GITHUB_API_TOKEN from local.properties (gitignored, never committed), or from a Gradle property of the
+// same name (which scripts/check-release-has-no-token.sh uses), and exposes it as a BuildConfig field in
+// DEBUG builds only, so a developer can run without typing a token. Release builds always get an
 // empty string: a published APK can be unpacked by anyone, and every user would otherwise share that token.
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
@@ -26,7 +27,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 35
-val buildLabelB = 6
+val buildLabelB = 7
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:
@@ -152,7 +153,7 @@ android {
         debug {
             manifestPlaceholders["admobAppId"] = admobSampleAppId
             // A developer's own token from local.properties, for debug builds only (see the note at the top).
-            buildConfigField("String", "GITHUB_API_TOKEN", "\"${localProperties.getProperty("GITHUB_API_TOKEN", "")}\"")
+            buildConfigField("String", "GITHUB_API_TOKEN", "\"${privateProperty("GITHUB_API_TOKEN") ?: ""}\"")
         }
         release {
             manifestPlaceholders["admobAppId"] = releaseAdmobAppId
