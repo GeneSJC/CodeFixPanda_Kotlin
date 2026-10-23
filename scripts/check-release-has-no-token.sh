@@ -14,23 +14,28 @@ echo "== Generating BuildConfig for all four variants"
   :app:generateFossDebugBuildConfig :app:generateCommercialDebugBuildConfig \
   :app:generateFossReleaseBuildConfig :app:generateCommercialReleaseBuildConfig
 
+# Newer Android Gradle plugins write a flavored variant to buildConfig/<flavor>/<buildType>, older ones to
+# buildConfig/<flavor><BuildType>; look in both. Arguments: flavor, build type, variant name.
 config_of() {
-  find app/build/generated/source/buildConfig -path "*$1/*" -name BuildConfig.java | head -1
+  find app/build/generated/source/buildConfig -name BuildConfig.java \
+    | grep -E "/buildConfig/($1/$2|$3)/" | head -1 || true
 }
 
 echo "== Debug builds carry the token (so this check can be trusted)"
-for variant in fossDebug commercialDebug; do
-  file=$(config_of "$variant")
-  [ -n "$file" ] || fail "no BuildConfig found for $variant"
-  grep -q "$SENTINEL" "$file" || fail "$variant does not carry the token, so this check cannot be trusted"
+for entry in "foss debug fossDebug" "commercial debug commercialDebug"; do
+  set -- $entry
+  file=$(config_of "$1" "$2" "$3")
+  [ -n "$file" ] || fail "no BuildConfig found for $3"
+  grep -q "$SENTINEL" "$file" || fail "$3 does not carry the token, so this check cannot be trusted"
 done
 
 echo "== Release builds do not"
-for variant in fossRelease commercialRelease; do
-  file=$(config_of "$variant")
-  [ -n "$file" ] || fail "no BuildConfig found for $variant"
+for entry in "foss release fossRelease" "commercial release commercialRelease"; do
+  set -- $entry
+  file=$(config_of "$1" "$2" "$3")
+  [ -n "$file" ] || fail "no BuildConfig found for $3"
   if grep -q "$SENTINEL" "$file"; then
-    fail "$variant contains the developer token"
+    fail "$3 contains the developer token"
   fi
 done
 
