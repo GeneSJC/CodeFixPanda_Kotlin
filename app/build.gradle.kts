@@ -6,10 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// Reads GITHUB_API_TOKEN from local.properties (gitignored by default, never
-// committed) and exposes it as a BuildConfig field. If the key is absent,
-// this resolves to an empty string — GitHub's API still works unauthenticated,
-// just at a much lower rate limit.
+// Reads GITHUB_API_TOKEN from local.properties (gitignored, never committed) and exposes it as a BuildConfig
+// field in DEBUG builds only, so a developer can run without typing a token. Release builds always get an
+// empty string: a published APK can be unpacked by anyone, and every user would otherwise share that token.
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
@@ -27,7 +26,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 35
-val buildLabelB = 2
+val buildLabelB = 3
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:
@@ -77,12 +76,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField(
-            "String",
-            "GITHUB_API_TOKEN",
-            "\"${localProperties.getProperty("GITHUB_API_TOKEN", "")}\"",
-        )
 
         // Single source of truth for the on-device build label (see
         // ui/components/VersionLabel.kt and TopReposScreen's drawer
@@ -158,9 +151,13 @@ android {
     buildTypes {
         debug {
             manifestPlaceholders["admobAppId"] = admobSampleAppId
+            // A developer's own token from local.properties, for debug builds only (see the note at the top).
+            buildConfigField("String", "GITHUB_API_TOKEN", "\"${localProperties.getProperty("GITHUB_API_TOKEN", "")}\"")
         }
         release {
             manifestPlaceholders["admobAppId"] = releaseAdmobAppId
+            // Never the developer's token: a release build is published, and anything in it can be read by anyone.
+            buildConfigField("String", "GITHUB_API_TOKEN", "\"\"")
             optimization {
                 enable = false
             }
