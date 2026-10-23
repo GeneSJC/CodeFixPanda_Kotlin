@@ -40,6 +40,16 @@ class ApiTokenViewModelTest {
     }
 
     @Test
+    fun theCurrentTokenIsTheBuildTokenUntilTheUserSavesOne() {
+        val vm = viewModel(buildToken = "build")
+        assertEquals("build", vm.currentToken.value)
+
+        vm.saveToken("mine")
+
+        assertEquals("mine", vm.currentToken.value)
+    }
+
+    @Test
     fun reportsTheBuildTokenAsTheSourceWhenOnlyThatExists() {
         assertEquals(TokenSource.BUILD, viewModel(buildToken = "build").tokenSource.value)
     }

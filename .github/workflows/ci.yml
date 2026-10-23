@@ -46,6 +46,11 @@ jobs:
       - name: Open build contains no ads software
         run: ./scripts/check-foss-clean.sh
 
+      # Proves no release build contains a developer's GitHub token, and that the check can tell (the debug
+      # builds must contain it). See scripts/check-release-has-no-token.sh.
+      - name: Release builds contain no developer token
+        run: ./scripts/check-release-has-no-token.sh
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

@@ -11,7 +11,9 @@ import io.github.genesjc.githubissuefinder.data.GitHubIssueSearchApi
 import io.github.genesjc.githubissuefinder.data.GitHubReadmeApi
 import io.github.genesjc.githubissuefinder.data.GitHubReadmeSource
 import io.github.genesjc.githubissuefinder.data.HiddenIssuesRepository
+import io.github.genesjc.githubissuefinder.data.EncryptingApiTokenStorage
 import io.github.genesjc.githubissuefinder.data.IssueModeRepository
+import io.github.genesjc.githubissuefinder.data.KeystoreTokenCipher
 import io.github.genesjc.githubissuefinder.data.IssueSearchRepository
 import io.github.genesjc.githubissuefinder.data.JsonFileBookmarksStorage
 import io.github.genesjc.githubissuefinder.data.JsonFileHiddenIssuesStorage
@@ -73,7 +75,12 @@ val appModule = module {
     }
 
     // Repositories over local storage.
-    single { ApiTokenRepository(SharedPreferencesApiTokenStorage(androidContext()), BuildConfig.GITHUB_API_TOKEN) }
+    single {
+        ApiTokenRepository(
+            EncryptingApiTokenStorage(SharedPreferencesApiTokenStorage(androidContext()), KeystoreTokenCipher()),
+            BuildConfig.GITHUB_API_TOKEN,
+        )
+    }
     single { IssueModeRepository(SharedPreferencesIssueModeStorage(androidContext())) }
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
     single { BookmarksRepository(JsonFileBookmarksStorage(androidContext(), moshi = get())) }

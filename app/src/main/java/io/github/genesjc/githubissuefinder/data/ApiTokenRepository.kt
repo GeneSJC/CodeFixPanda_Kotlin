@@ -54,11 +54,10 @@ interface ApiTokenStorage {
 }
 
 /**
- * Plain SharedPreferences, deliberately not encrypted: the file is in the app's private storage,
- * and the token needs no permissions (it only reads public data), so the worst a leak could do is
- * spend the user's rate limit. Backup and device-transfer copies are the remaining exposure, which
- * is why res/xml/backup_rules.xml and data_extraction_rules.xml exclude this file by name
- * ([PREFS_NAME]); keep them in sync if it changes.
+ * Plain SharedPreferences in the app's private storage; the app wraps it in [EncryptingApiTokenStorage],
+ * so the value in the file is ciphertext. Backup and device-transfer copies are also kept out, which is
+ * why res/xml/backup_rules.xml and data_extraction_rules.xml exclude this file by name ([PREFS_NAME]);
+ * keep them in sync if it changes. More in docs/design-notes.md, "Token storage".
  */
 class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
 
@@ -121,11 +120,31 @@ class ApiTokenRepository(
     fun setUserToken(raw: String) {
         val trimmed = raw.trim()
         _userToken.value = trimmed
-        _effectiveToken.value = resolveEffectiveToken(trimmed, buildToken)
-        _activeTag.value = activeTagFor(_effectiveToken.value)
-        _isDemo.value = _activeTag.value == DEMO_TAG
-        _tokenSource.value = tokenSourceOf(trimmed, buildToken)
+        // Saving or removing a token is the user choosing, so a demo started this session ends.
+        demoOnly = false
+        publish()
         storage.save(trimmed.ifEmpty { null })
+    }
+
+    /** True from [startDemo] until the user saves or removes a token, or the app is closed. Never stored. */
+    private var demoOnly = false
+
+    /**
+     * Shows the demo data for the rest of this session even if a token is set (a saved one or a build one).
+     * Nothing is deleted or stored: the token is simply not used, so the next launch is back to normal.
+     */
+    fun startDemo() {
+        demoOnly = true
+        publish()
+    }
+
+    /** Recomputes everything that follows from the saved token, the build token and whether a demo is on. */
+    private fun publish() {
+        val effective = if (demoOnly) "" else resolveEffectiveToken(_userToken.value, buildToken)
+        _effectiveToken.value = effective
+        _activeTag.value = activeTagFor(effective)
+        _isDemo.value = _activeTag.value == DEMO_TAG
+        _tokenSource.value = if (demoOnly) TokenSource.NONE else tokenSourceOf(_userToken.value, buildToken)
     }
 }
 

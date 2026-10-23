@@ -1,6 +1,7 @@
 package io.github.genesjc.githubissuefinder.ui.welcome
 
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
+import io.github.genesjc.githubissuefinder.data.TokenSource
 import io.github.genesjc.githubissuefinder.testutil.FakeApiTokenStorage
 import io.github.genesjc.githubissuefinder.testutil.StopKoinRule
 import io.github.genesjc.githubissuefinder.testutil.restartKoin
@@ -52,6 +53,59 @@ class WelcomeViewModelTest {
 
         assertEquals("ghp_abc", tokenStorage.stored)
         assertFalse(vm.needsWelcomeAtStart())
+    }
+
+    @Test
+    fun theCurrentTokenIsTheSavedOrBuildTokenOrEmpty() {
+        assertEquals("", viewModel().currentToken)
+        assertEquals("build-token", viewModel(buildToken = "build-token").currentToken)
+
+        tokenStorage.stored = "ghp_abc"
+        assertEquals("ghp_abc", viewModel(buildToken = "build-token").currentToken)
+    }
+
+    @Test
+    fun clearingRemovesTheSavedTokenFromStorageAndFallsBackToTheBuildToken() {
+        tokenStorage.stored = "ghp_abc"
+        val vm = viewModel(buildToken = "build-token")
+        assertEquals("ghp_abc", vm.userToken.value)
+
+        vm.clearToken()
+
+        assertEquals("", vm.userToken.value)
+        assertEquals(null, tokenStorage.stored)
+        assertEquals("build-token", vm.currentToken)
+    }
+
+    @Test
+    fun clearingWithNoBuildTokenLeavesNoToken() {
+        tokenStorage.stored = "ghp_abc"
+        val vm = viewModel()
+
+        vm.clearToken()
+
+        assertEquals(null, tokenStorage.stored)
+        assertTrue(vm.needsWelcomeAtStart())
+    }
+
+    @Test
+    fun theTokenSourceSaysWhereTheTokenInUseCameFrom() {
+        assertEquals(TokenSource.NONE, viewModel().tokenSource.value)
+        assertEquals(TokenSource.BUILD, viewModel(buildToken = "build-token").tokenSource.value)
+
+        tokenStorage.stored = "ghp_abc"
+        assertEquals(TokenSource.USER, viewModel(buildToken = "build-token").tokenSource.value)
+    }
+
+    @Test
+    fun tryingTheDemoShowsDemoDataEvenWithABuildToken() {
+        val vm = viewModel(buildToken = "build-token")
+        assertEquals(TokenSource.BUILD, vm.tokenSource.value)
+
+        vm.tryDemo()
+
+        assertEquals(TokenSource.NONE, vm.tokenSource.value)
+        assertEquals("", vm.currentToken)
     }
 
     @Test

@@ -117,7 +117,8 @@ links is proprietary, is not covered by this license, and is not part of this re
 The app needs a free GitHub token to show real issues. With no token it starts on a blue welcome
 screen that links to GitHub's token page, explains the four steps in a short guide, and has a box to
 paste the token. "Try the demo" opens sample data for that session; the next launch without a token
-starts on the welcome again. More in `docs/design-notes.md`, "Front door".
+starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to
+GitHub. More in `docs/design-notes.md`, "Front door" and "Token storage".
 
 ## Building and testing
 

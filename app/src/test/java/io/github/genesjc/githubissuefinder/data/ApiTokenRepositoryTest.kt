@@ -178,4 +178,43 @@ class ApiTokenRepositoryTest {
         repository.setUserToken("")
         assertEquals(DEMO_TAG, repository.activeTag.value)
     }
+
+    // ---- a demo started for the session ----
+
+    @Test
+    fun startingTheDemoShowsDemoDataEvenWithATokenAndChangesNothingStored() {
+        val storage = FakeStorage("ghp_saved")
+        val repository = ApiTokenRepository(storage, buildToken = "build")
+
+        repository.startDemo()
+
+        assertTrue(repository.isDemo.value)
+        assertEquals("", repository.effectiveToken.value)
+        assertEquals(TokenSource.NONE, repository.tokenSource.value)
+        assertEquals("ghp_saved", repository.userToken.value)
+        assertEquals("ghp_saved", storage.stored)
+    }
+
+    @Test
+    fun savingATokenEndsTheDemo() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        repository.startDemo()
+
+        repository.setUserToken("ghp_new")
+
+        assertFalse(repository.isDemo.value)
+        assertEquals("ghp_new", repository.effectiveToken.value)
+        assertEquals(TokenSource.USER, repository.tokenSource.value)
+    }
+
+    @Test
+    fun theDemoLastsOnlyForTheSession() {
+        val storage = FakeStorage("ghp_saved")
+        ApiTokenRepository(storage, buildToken = "").startDemo()
+
+        val nextLaunch = ApiTokenRepository(storage, buildToken = "")
+
+        assertFalse(nextLaunch.isDemo.value)
+        assertEquals("ghp_saved", nextLaunch.effectiveToken.value)
+    }
 }

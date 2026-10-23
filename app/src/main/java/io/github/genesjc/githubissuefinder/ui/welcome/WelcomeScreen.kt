@@ -20,13 +20,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,8 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.data.TokenSource
+import io.github.genesjc.githubissuefinder.ui.components.TokenField
 import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
@@ -70,7 +73,11 @@ fun WelcomeScreen(
         fontSize = labelStyle.fontSize * ACTION_TEXT_SCALE,
         lineHeight = labelStyle.lineHeight * ACTION_TEXT_SCALE,
     )
-    var tokenDraft by rememberSaveable { mutableStateOf("") }
+    // Empty on a first visit; when the welcome is reopened with a token already set, the field starts with it (masked).
+    var startingToken by remember { mutableStateOf(viewModel.currentToken) }
+    val savedToken by viewModel.userToken.collectAsStateWithLifecycle()
+    val tokenSource by viewModel.tokenSource.collectAsStateWithLifecycle()
+    var tokenDraft by rememberSaveable { mutableStateOf(startingToken) }
 
     GitHubIssueFinderTheme(issueMode = null) {
         FrontDoorBackground(modifier = modifier) {
@@ -132,11 +139,9 @@ fun WelcomeScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
+                TokenField(
                     value = tokenDraft,
                     onValueChange = { tokenDraft = it },
-                    label = { Text(stringResource(R.string.settings_token_label)) },
-                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -146,12 +151,13 @@ fun WelcomeScreen(
                         unfocusedLabelColor = SoftWhite,
                         cursorColor = Color.White,
                     ),
+                    toggleColor = Color.White,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = { if (viewModel.saveToken(tokenDraft)) onTokenSaved() },
-                    enabled = tokenDraft.isNotBlank(),
+                    enabled = tokenDraft.isNotBlank() && tokenDraft.trim() != startingToken,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = GradientDark,
@@ -162,7 +168,37 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.action_save), style = actionTextStyle)
                 }
-                TextButton(onClick = onTryDemo, modifier = Modifier.padding(top = 8.dp)) {
+                // Always shown, greyed out while the user has no saved token to remove. A token built into a debug
+                // build is not stored by the app and cannot be removed here, which the note below says.
+                TextButton(
+                    onClick = {
+                        viewModel.clearToken()
+                        startingToken = viewModel.currentToken
+                        tokenDraft = startingToken
+                    },
+                    enabled = savedToken.isNotEmpty(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.White,
+                        disabledContentColor = SoftWhite.copy(alpha = 0.4f),
+                    ),
+                ) {
+                    Text(stringResource(R.string.settings_remove_token), style = actionTextStyle)
+                }
+                if (tokenSource == TokenSource.BUILD) {
+                    Text(
+                        stringResource(R.string.token_remove_unavailable_build),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SoftWhite,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        viewModel.tryDemo()
+                        onTryDemo()
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
                 }
             }

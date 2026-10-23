@@ -78,24 +78,20 @@ fun DiscoverNavHost(
         modifier = modifier,
     ) {
         composable(ROUTE_WELCOME) {
-            // Where the welcome goes next: back to where the user was if it was reopened from the menu,
-            // otherwise on to the mode gate or Top Repos.
-            val leaveWelcome: (keepWelcomeBelow: Boolean) -> Unit = { keepWelcomeBelow ->
-                if (navController.previousBackStackEntry != null) {
-                    navController.popBackStackDebounced()
-                } else {
-                    val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
-                    navController.navigate(next) {
-                        // After a saved token there is nothing to come back to. After the demo the welcome stays
-                        // at the bottom of the back stack, so Back from the demo returns to it.
-                        if (!keepWelcomeBelow) popUpTo(ROUTE_WELCOME) { inclusive = true }
-                    }
-                }
-            }
+            val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
             WelcomeScreen(
                 onOpenGuide = { navController.navigate(ROUTE_TOKEN_GUIDE) },
-                onTokenSaved = { leaveWelcome(false) },
-                onTryDemo = { leaveWelcome(true) },
+                onTokenSaved = {
+                    if (navController.previousBackStackEntry != null) {
+                        // Reopened from the menu: back to where the user was, which now shows the new token's data.
+                        navController.popBackStackDebounced()
+                    } else {
+                        // Shown at start: on to the gate or Top Repos, with nothing to come back to.
+                        navController.navigate(next) { popUpTo(ROUTE_WELCOME) { inclusive = true } }
+                    }
+                },
+                // The demo is always a step forward, whichever way the welcome was reached, so Back returns to it.
+                onTryDemo = { navController.navigate(next) { launchSingleTop = true } },
             )
         }
         composable(ROUTE_TOKEN_GUIDE) {
