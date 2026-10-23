@@ -2,6 +2,7 @@ package io.github.genesjc.githubissuefinder.ui.welcome
 
 import io.github.genesjc.githubissuefinder.data.ApiTokenRepository
 import io.github.genesjc.githubissuefinder.ui.BaseViewModel
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
 
 /**
@@ -19,6 +20,14 @@ class WelcomeViewModel : BaseViewModel() {
     /** The token in effect (the user's, else the build's), or empty. The welcome starts its field with it when reopened. */
     val currentToken: String
         get() = tokenRepository.effectiveToken.value
+
+    /** The token the user saved, or empty. The welcome offers to remove it while there is one. */
+    val userToken: StateFlow<String> = tokenRepository.userToken
+
+    /** Removes the user's saved token from storage, falling back to the build token if there is one. */
+    fun clearToken() {
+        tokenRepository.setUserToken("")
+    }
 
     /** Saves [token] as the user's own. Returns false, saving nothing, when [token] is blank. */
     fun saveToken(token: String): Boolean {

@@ -64,6 +64,30 @@ class WelcomeViewModelTest {
     }
 
     @Test
+    fun clearingRemovesTheSavedTokenFromStorageAndFallsBackToTheBuildToken() {
+        tokenStorage.stored = "ghp_abc"
+        val vm = viewModel(buildToken = "build-token")
+        assertEquals("ghp_abc", vm.userToken.value)
+
+        vm.clearToken()
+
+        assertEquals("", vm.userToken.value)
+        assertEquals(null, tokenStorage.stored)
+        assertEquals("build-token", vm.currentToken)
+    }
+
+    @Test
+    fun clearingWithNoBuildTokenLeavesNoToken() {
+        tokenStorage.stored = "ghp_abc"
+        val vm = viewModel()
+
+        vm.clearToken()
+
+        assertEquals(null, tokenStorage.stored)
+        assertTrue(vm.needsWelcomeAtStart())
+    }
+
+    @Test
     fun aBlankTokenSavesNothing() {
         val vm = viewModel()
 

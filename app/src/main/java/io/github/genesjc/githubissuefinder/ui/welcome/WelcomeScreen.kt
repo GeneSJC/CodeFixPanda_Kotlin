@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
 import io.github.genesjc.githubissuefinder.ui.components.TokenField
@@ -72,7 +73,8 @@ fun WelcomeScreen(
         lineHeight = labelStyle.lineHeight * ACTION_TEXT_SCALE,
     )
     // Empty on a first visit; when the welcome is reopened with a token already set, the field starts with it (masked).
-    val startingToken = remember { viewModel.currentToken }
+    var startingToken by remember { mutableStateOf(viewModel.currentToken) }
+    val savedToken by viewModel.userToken.collectAsStateWithLifecycle()
     var tokenDraft by rememberSaveable { mutableStateOf(startingToken) }
 
     GitHubIssueFinderTheme(issueMode = null) {
@@ -163,6 +165,19 @@ fun WelcomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.action_save), style = actionTextStyle)
+                }
+                // Only while the user has saved a token of their own. A token built into a debug build is not stored
+                // by the app and cannot be removed here.
+                if (savedToken.isNotEmpty()) {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearToken()
+                            startingToken = viewModel.currentToken
+                            tokenDraft = startingToken
+                        },
+                    ) {
+                        Text(stringResource(R.string.settings_remove_token), style = actionTextStyle, color = Color.White)
+                    }
                 }
                 TextButton(onClick = onTryDemo, modifier = Modifier.padding(top = 8.dp)) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
