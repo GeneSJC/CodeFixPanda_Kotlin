@@ -192,7 +192,13 @@ fun WelcomeScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
-                TextButton(onClick = onTryDemo, modifier = Modifier.padding(top = 8.dp)) {
+                TextButton(
+                    onClick = {
+                        viewModel.tryDemo()
+                        onTryDemo()
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
                 }
             }

@@ -33,6 +33,14 @@ class WelcomeViewModel : BaseViewModel() {
         tokenRepository.setUserToken("")
     }
 
+    /**
+     * Shows the demo data for this session, even if a token is set, so "Try the demo" does what it says. The
+     * token is not touched; the next launch is back to normal.
+     */
+    fun tryDemo() {
+        tokenRepository.startDemo()
+    }
+
     /** Saves [token] as the user's own. Returns false, saving nothing, when [token] is blank. */
     fun saveToken(token: String): Boolean {
         if (token.isBlank()) return false

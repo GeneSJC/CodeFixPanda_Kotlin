@@ -98,6 +98,17 @@ class WelcomeViewModelTest {
     }
 
     @Test
+    fun tryingTheDemoShowsDemoDataEvenWithABuildToken() {
+        val vm = viewModel(buildToken = "build-token")
+        assertEquals(TokenSource.BUILD, vm.tokenSource.value)
+
+        vm.tryDemo()
+
+        assertEquals(TokenSource.NONE, vm.tokenSource.value)
+        assertEquals("", vm.currentToken)
+    }
+
+    @Test
     fun aBlankTokenSavesNothing() {
         val vm = viewModel()
 

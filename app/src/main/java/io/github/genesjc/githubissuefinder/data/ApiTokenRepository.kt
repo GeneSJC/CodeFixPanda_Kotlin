@@ -120,11 +120,31 @@ class ApiTokenRepository(
     fun setUserToken(raw: String) {
         val trimmed = raw.trim()
         _userToken.value = trimmed
-        _effectiveToken.value = resolveEffectiveToken(trimmed, buildToken)
-        _activeTag.value = activeTagFor(_effectiveToken.value)
-        _isDemo.value = _activeTag.value == DEMO_TAG
-        _tokenSource.value = tokenSourceOf(trimmed, buildToken)
+        // Saving or removing a token is the user choosing, so a demo started this session ends.
+        demoOnly = false
+        publish()
         storage.save(trimmed.ifEmpty { null })
+    }
+
+    /** True from [startDemo] until the user saves or removes a token, or the app is closed. Never stored. */
+    private var demoOnly = false
+
+    /**
+     * Shows the demo data for the rest of this session even if a token is set (a saved one or a build one).
+     * Nothing is deleted or stored: the token is simply not used, so the next launch is back to normal.
+     */
+    fun startDemo() {
+        demoOnly = true
+        publish()
+    }
+
+    /** Recomputes everything that follows from the saved token, the build token and whether a demo is on. */
+    private fun publish() {
+        val effective = if (demoOnly) "" else resolveEffectiveToken(_userToken.value, buildToken)
+        _effectiveToken.value = effective
+        _activeTag.value = activeTagFor(effective)
+        _isDemo.value = _activeTag.value == DEMO_TAG
+        _tokenSource.value = if (demoOnly) TokenSource.NONE else tokenSourceOf(_userToken.value, buildToken)
     }
 }
 
