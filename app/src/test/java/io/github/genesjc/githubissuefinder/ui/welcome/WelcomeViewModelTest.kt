@@ -55,6 +55,15 @@ class WelcomeViewModelTest {
     }
 
     @Test
+    fun theCurrentTokenIsTheSavedOrBuildTokenOrEmpty() {
+        assertEquals("", viewModel().currentToken)
+        assertEquals("build-token", viewModel(buildToken = "build-token").currentToken)
+
+        tokenStorage.stored = "ghp_abc"
+        assertEquals("ghp_abc", viewModel(buildToken = "build-token").currentToken)
+    }
+
+    @Test
     fun aBlankTokenSavesNothing() {
         val vm = viewModel()
 

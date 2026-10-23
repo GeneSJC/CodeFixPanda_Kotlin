@@ -16,6 +16,10 @@ class WelcomeViewModel : BaseViewModel() {
     /** True when the app should start on the welcome: no token is set, from the user or from the build. */
     fun needsWelcomeAtStart(): Boolean = tokenRepository.isDemo.value
 
+    /** The token in effect (the user's, else the build's), or empty. The welcome starts its field with it when reopened. */
+    val currentToken: String
+        get() = tokenRepository.effectiveToken.value
+
     /** Saves [token] as the user's own. Returns false, saving nothing, when [token] is blank. */
     fun saveToken(token: String): Boolean {
         if (token.isBlank()) return false

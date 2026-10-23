@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,7 +71,9 @@ fun WelcomeScreen(
         fontSize = labelStyle.fontSize * ACTION_TEXT_SCALE,
         lineHeight = labelStyle.lineHeight * ACTION_TEXT_SCALE,
     )
-    var tokenDraft by rememberSaveable { mutableStateOf("") }
+    // Empty on a first visit; when the welcome is reopened with a token already set, the field starts with it (masked).
+    val startingToken = remember { viewModel.currentToken }
+    var tokenDraft by rememberSaveable { mutableStateOf(startingToken) }
 
     GitHubIssueFinderTheme(issueMode = null) {
         FrontDoorBackground(modifier = modifier) {
@@ -150,7 +153,7 @@ fun WelcomeScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = { if (viewModel.saveToken(tokenDraft)) onTokenSaved() },
-                    enabled = tokenDraft.isNotBlank(),
+                    enabled = tokenDraft.isNotBlank() && tokenDraft.trim() != startingToken,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = GradientDark,
