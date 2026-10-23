@@ -20,7 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.TokenField
 import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 
@@ -132,11 +132,9 @@ fun WelcomeScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
+                TokenField(
                     value = tokenDraft,
                     onValueChange = { tokenDraft = it },
-                    label = { Text(stringResource(R.string.settings_token_label)) },
-                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -146,6 +144,7 @@ fun WelcomeScreen(
                         unfocusedLabelColor = SoftWhite,
                         cursorColor = Color.White,
                     ),
+                    toggleColor = Color.White,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))

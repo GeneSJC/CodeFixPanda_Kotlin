@@ -27,6 +27,8 @@
     <string name="settings_token_heading">GitHub token</string>
     <string name="settings_token_explainer">GitHub Issue Finder needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
     <string name="settings_token_label">Your GitHub token</string>
+    <string name="token_show">Show</string>
+    <string name="token_hide">Hide</string>
     <string name="action_save">Save</string>
     <string name="settings_remove_token">Remove my token</string>
     <string name="settings_how_to_get_token">How do I get a token?</string>

@@ -22,28 +22,12 @@ val localProperties = Properties().apply {
 // value being buried inline inside an escaped-quote string. Edit a value
 // here; nothing else needs to change to pick it up.
 //
-// Build label (Project Conventions doc, section 6): "A.B" — A is the
-// number of the pull request this work will land in; B is a running
-// push counter that goes up by one on every push that changes this
-// label and is NEVER reset when A changes (B alone orders any two
-// builds; A just says which PR each belongs to). Bump this in the SAME
-// commit as the work it labels, and read the value back before
-// committing — a scripted edit can silently fail. Supersedes the old
-// "cmVersion"/CM_VERSION stamp (last value "v0.48", already stale and
-// never actually wired into any screen) with the scheme in that
-// convention doc. Started fresh at 13.1 (PR #13, the open PR this
-// convention was adopted on) — there is no prior A.B history to
-// continue from.
-//
-// A went stale for several pushes (stayed at 13 through PR #14's merge
-// and five commits into PR #15, which is what's actually open now) —
-// a real lapse in the per-push bump this comment calls the ONLY
-// required maintenance, caught directly by on-device observation
-// ("I'm still seeing 13.1"). Corrected here to 15 (PR #15, the
-// currently-open PR). B continues climbing from its last value (per
-// above, it never resets on an A change) rather than restarting at 1.
-val buildLabelA = 34
-val buildLabelB = 31
+// Build label "A.B": A counts feature sets and goes up by one when a new feature set starts; B counts the
+// pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
+// SAME commit as the work it labels, and read the value back before committing: a scripted edit can
+// silently fail.
+val buildLabelA = 35
+val buildLabelB = 2
 // ---- Advertising ids, and the production switch ----
 // Safe by default: every build, release included, uses Google's published sample ids, so it serves only
 // test ads and can never earn or be penalized. Live ads need a deliberate production build:
