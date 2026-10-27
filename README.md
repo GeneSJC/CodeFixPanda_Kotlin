@@ -91,26 +91,28 @@ one device. The reason for flavors and not a runtime flag is that code only the 
 contain stays out of the open build at compile time. The code
 package is `io.github.genesjc.githubissuefinder` in both.
 
-### Advertising (commercial flavor only)
+### Ads are parked
 
-The `foss` build has no ads, no ads library and no ads permission; CI checks this
-(`scripts/check-foss-clean.sh`). The `commercial` build shows one banner at the bottom of the
-Top Repos and repo issues screens, after Google's consent form where one is required.
+No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
+flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then
+taken out of the build because the ad account, privacy and consent work behind it is not finished.
 
-- **Replaceable.** All ad software lives in `app/src/commercial` (the controller and the banner).
-  The shared code only sees the small `AdsController` interface, so another ad provider, or none,
-  means replacing those few files.
-- **Test ads by default.** Every build, release included, uses Google's sample ids and shows only
-  test ads. Live ads need a deliberate production build (`-PadmobProduction=true`) with the three real
-  ids kept in `local.properties` (never committed). A live build says `LIVE ADS` in its version label.
-- **Ad-free hour.** The commercial build offers, in the title bar, to hide the banner for one hour in
-  exchange for watching one short rewarded video. It is opt-in and never asks anyone to tap an ad.
-- **Rules for anyone testing** are in [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md).
+- **Where the working code is.** In `develop`'s history at commit `9d61e0f` (the merge of PR #37), and, with
+  two extras built afterwards, in the tag `ads-parked-2026-10-27`.
+- **How to bring it back.** [`docs/ads-restore.md`](docs/ads-restore.md) is the step-by-step restore guide, with
+  every removed build block written out in full. [`docs/ads-architecture.md`](docs/ads-architecture.md) explains
+  how the layer works, and [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) holds the rules for when it is
+  live. Restoring is a copy of self-contained files, not a merge.
+- **What stays in the code.** The small SDK-free hooks: the `AdsController` interface and the do-nothing
+  `NoAdsController`, the banner slot, the ad-free offer line and the ViewModel flows. They never show anything while
+  ads are parked.
+- **Checked by CI.** `scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
+  its merged manifest.
 
 ## License
 
-Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK that the commercial build
-links is proprietary, is not covered by this license, and is not part of this repository.
+Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK, which the parked ads
+layer uses, is proprietary, is not covered by this license, and is not part of this repository.
 
 ## Front door
 
