@@ -26,40 +26,15 @@ val localProperties = Properties().apply {
 // pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
-val buildLabelA = 35
-val buildLabelB = 11
-// ---- Advertising ids, and the production switch ----
-// Safe by default: every build, release included, uses Google's published sample ids, so it serves only
-// test ads and can never earn or be penalized. Live ads need a deliberate production build:
-//     ./gradlew bundleCommercialRelease -PadmobProduction=true
-// with all three real ids supplied as private properties (admobAppId, admobBannerUnitId, admobRewardedUnitId):
-// in local.properties, in ~/.gradle/gradle.properties, or as -P options (CI secrets). Never in the repository's
-// own gradle.properties, which is committed. A production build refuses to configure without all three, so
-// test ads cannot be shipped as live ones by mistake. Debug builds ignore all of this and always use the sample ids. The foss build has no ads.
-val admobSampleAppId = "ca-app-pub-3940256099942544~3347511713"
-val admobSampleBannerUnitId = "ca-app-pub-3940256099942544/9214589741"
-val admobSampleRewardedUnitId = "ca-app-pub-3940256099942544/5224354917"
-val admobProduction = providers.gradleProperty("admobProduction").orNull == "true"
+val buildLabelA = 38
+val buildLabelB = 1
+// Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
+// docs/ads-restore.md, and the tag ads-parked-2026-10-27 that holds the working implementation).
 
 /** A private property: a Gradle property (-P or the user-level gradle.properties), else local.properties. */
 fun privateProperty(name: String): String? =
     providers.gradleProperty(name).orNull?.takeIf { it.isNotBlank() }
         ?: localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
-
-if (admobProduction) {
-    val missing = listOf("admobAppId", "admobBannerUnitId", "admobRewardedUnitId").filter { privateProperty(it) == null }
-    if (missing.isNotEmpty()) {
-        throw GradleException(
-            "-PadmobProduction=true needs all three real AdMob ids as private properties (local.properties or Gradle); missing: $missing. " +
-                "Leave the flag off to build with Google's test ids.",
-        )
-    }
-}
-val releaseAdmobAppId = if (admobProduction) privateProperty("admobAppId")!! else admobSampleAppId
-val releaseAdmobBannerUnitId =
-    if (admobProduction) privateProperty("admobBannerUnitId")!! else admobSampleBannerUnitId
-val releaseAdmobRewardedUnitId =
-    if (admobProduction) privateProperty("admobRewardedUnitId")!! else admobSampleRewardedUnitId
 
 val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titleReveal"
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
@@ -130,33 +105,15 @@ android {
             dimension = "distribution"
             applicationId = "io.github.genesjc.githubissuefinder.commercial"
             versionNameSuffix = "-commercial"
-            // The banner ad unit for release builds: Google's sample unit unless this is a production build
-            // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
-            buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$releaseAdmobBannerUnitId\"")
-            // The same for the rewarded video behind the ad-free offer.
-            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$releaseAdmobRewardedUnitId\"")
-            // Your device's test id, which the ads SDK prints in the log, set as ADMOB_TEST_DEVICE_ID in
-            // local.properties. In every build that is not a production build it is registered as a test device,
-            // and in a debug build it also lets the consent form be seen outside the EU. Empty by default.
-            buildConfigField(
-                "String",
-                "ADMOB_TEST_DEVICE_ID",
-                "\"${localProperties.getProperty("ADMOB_TEST_DEVICE_ID", "")}\"",
-            )
         }
     }
 
-    // The AdMob app id the commercial build's manifest needs (src/commercial/AndroidManifest.xml): the sample
-    // id except in a production build (see the advertising block at the top). The foss build ignores it: it has
-    // no ads manifest entries.
     buildTypes {
         debug {
-            manifestPlaceholders["admobAppId"] = admobSampleAppId
             // A developer's own token from local.properties, for debug builds only (see the note at the top).
             buildConfigField("String", "GITHUB_API_TOKEN", "\"${privateProperty("GITHUB_API_TOKEN") ?: ""}\"")
         }
         release {
-            manifestPlaceholders["admobAppId"] = releaseAdmobAppId
             // Never the developer's token: a release build is published, and anything in it can be read by anyone.
             buildConfigField("String", "GITHUB_API_TOKEN", "\"\"")
             optimization {
@@ -194,10 +151,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
-    // Only the commercial build contains the ads software; the foss build never does (see
-    // scripts/check-foss-clean.sh). The string form is used because the typed accessor for a flavor's
-    // configuration is not generated when the flavors are declared in this same script.
-    add("commercialImplementation", libs.play.services.ads)
+    // The ads SDK is parked (docs/ads-restore.md): no build contains it. scripts/check-no-ads-sdk.sh checks that.
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)

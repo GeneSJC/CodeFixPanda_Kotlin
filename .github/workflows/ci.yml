@@ -41,10 +41,10 @@ jobs:
       - name: Compile (debug)
         run: ./gradlew assembleFossDebug assembleCommercialDebug --stacktrace
 
-      # Proves the open (foss) build has no ads libraries or manifest entries, and that the check can
-      # tell (the commercial build must have them). See scripts/check-foss-clean.sh.
-      - name: Open build contains no ads software
-        run: ./scripts/check-foss-clean.sh
+      # Proves neither flavor contains advertising software (ads are parked; see docs/ads-restore.md).
+      # See scripts/check-no-ads-sdk.sh.
+      - name: Builds contain no ads software
+        run: ./scripts/check-no-ads-sdk.sh
 
       # Proves no release build contains a developer's GitHub token, and that the check can tell (the debug
       # builds must contain it). See scripts/check-release-has-no-token.sh.
