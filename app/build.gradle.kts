@@ -27,7 +27,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 40
-val buildLabelB = 2
+val buildLabelB = 3
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // docs/ads-restore.md, and the tag ads-parked-2026-10-27 that holds the working implementation).
 
@@ -98,12 +98,12 @@ android {
         create("foss") {
             dimension = "distribution"
             isDefault = true // a fresh checkout builds and runs the open build
-            applicationId = "io.github.genesjc.githubissuefinder"
+            applicationId = "io.github.genesjc.opensourcecontributor"
             versionNameSuffix = "-foss"
         }
         create("commercial") {
             dimension = "distribution"
-            applicationId = "io.github.genesjc.githubissuefinder.commercial"
+            applicationId = "io.github.genesjc.opensourcecontributor.commercial"
             versionNameSuffix = "-commercial"
         }
     }

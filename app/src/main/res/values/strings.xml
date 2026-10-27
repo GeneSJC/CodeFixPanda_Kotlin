@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Open Source Contributor</string>
+    <!-- The name under the launcher icon, short enough not to be cut off. -->
+    <string name="launcher_label">Contributor</string>
 
     <!-- Wording the ViewModels build from the data layer's facts. -->
     <string name="error_unknown">unknown error</string>
