@@ -4,7 +4,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
 
-/** The open build never allows an ad, never asks for privacy options and never offers an ad-free period. */
+/**
+ * The do-nothing controller (the open build's, and the commercial build's while the ads switch is off) never
+ * allows an ad, never asks for privacy options and never offers an ad-free period.
+ */
 class NoAdsControllerTest {
 
     private val controller = NoAdsController()

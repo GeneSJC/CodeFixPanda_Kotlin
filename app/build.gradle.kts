@@ -28,7 +28,7 @@ val localProperties = Properties().apply {
 // pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
-val buildLabelA = 36
+val buildLabelA = 37
 val buildLabelB = 1
 // ads-kit:begin advertising
 // ---- Advertising ids, and the production switch ----
@@ -42,12 +42,24 @@ val buildLabelB = 1
 val admobSampleAppId = "ca-app-pub-3940256099942544~3347511713"
 val admobSampleBannerUnitId = "ca-app-pub-3940256099942544/9214589741"
 val admobSampleRewardedUnitId = "ca-app-pub-3940256099942544/5224354917"
-val admobProduction = providers.gradleProperty("admobProduction").orNull == "true"
-
 /** A private property: a Gradle property (-P or the user-level gradle.properties), else local.properties. */
 fun privateProperty(name: String): String? =
     providers.gradleProperty(name).orNull?.takeIf { it.isNotBlank() }
         ?: localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+
+/**
+ * The ads switch. Off by default: the commercial build then keeps all its ads code but binds the do-nothing
+ * controller, so there is no consent form, no ads software started, no banner and no offer. It is a plain
+ * build setting and not a flavor, so it adds nothing to the variant matrix. Turn ads on with adsEnabled=true
+ * in local.properties, in ~/.gradle/gradle.properties, or as -PadsEnabled=true. The foss build has no ads either way.
+ */
+val adsEnabled = privateProperty("adsEnabled") == "true"
+if (!adsEnabled) {
+    logger.lifecycle("Ads are switched off (adsEnabled is not true): the commercial build runs without ads.")
+}
+
+// A production build only means something with ads on; with them off no ad ids are needed or checked.
+val admobProduction = adsEnabled && providers.gradleProperty("admobProduction").orNull == "true"
 
 if (admobProduction) {
     val missing = listOf("admobAppId", "admobBannerUnitId", "admobRewardedUnitId").filter { privateProperty(it) == null }
@@ -135,6 +147,8 @@ android {
             dimension = "distribution"
             applicationId = "io.github.genesjc.githubissuefinder.commercial"
             versionNameSuffix = "-commercial"
+            // The ads switch (see the advertising block at the top), read by the commercial Koin module.
+            buildConfigField("boolean", "ADS_ENABLED", "$adsEnabled")
             // The banner ad unit for release builds: Google's sample unit unless this is a production build
             // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$releaseAdmobBannerUnitId\"")

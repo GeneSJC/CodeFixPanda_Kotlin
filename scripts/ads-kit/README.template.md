@@ -13,6 +13,10 @@ SDK version you use.
 - A **foss** flavor with none of it: no ads library, no manifest entry, no advertising-id permission.
 - Test ads in every build unless you deliberately build for production with three real ids.
 - Shared code that knows only a small interface, `AdsController`, and nothing about AdMob.
+- An **ads switch** (`adsEnabled`, off by default) that keeps all the ads code in the build but binds a
+  do-nothing controller: no consent form, no SDK start, no banner, no offer. It is a plain build setting, not a
+  flavor, so it adds nothing to the variant matrix. Turn ads on with `adsEnabled=true` in `local.properties`,
+  in `~/.gradle/gradle.properties`, or as `-PadsEnabled=true`.
 
 Read `docs/ADS_DESIGN_NOTES.md` for the design and `docs/ads-testing-rules.md` for the rules before any
 live ad. The architecture and safety guides, if you were sent them, hold the same in more depth.
@@ -39,7 +43,8 @@ live ad. The architecture and safety guides, if you were sent them, hold the sam
 3. **Strings and backup rules.** Add the strings from `snippets/strings.xml.txt`, and the backup exclusion
    from `snippets/backup-rules.txt` so a restored backup cannot hand out an ad-free hour.
 4. **Koin.** Start Koin with `adsModule` (each flavor defines its own, same name and package) next to your
-   other modules.
+   other modules. The commercial one reads the ads switch (`BuildConfig.ADS_ENABLED`, defined in the flavors
+   snippet) and binds either the real controller or the shared `NoAdsController`.
 5. **Start it once.** In your launcher Activity: `private val adsViewModel: AdsViewModel by viewModels()` and
    `adsViewModel.start(this)` in `onCreate`. It runs the consent flow, then starts the SDK.
 6. **Show the banner.** In each screen that should carry it, expose `canShowAds` from your ViewModel
@@ -58,7 +63,7 @@ live ad. The architecture and safety guides, if you were sent them, hold the sam
 
 ## Going live
 
-Never use real ids in a debug build. Put the three real ids (`admobAppId`, `admobBannerUnitId`,
+Turn the switch on first (`adsEnabled=true`). Never use real ids in a debug build. Put the three real ids (`admobAppId`, `admobBannerUnitId`,
 `admobRewardedUnitId`) in `local.properties` or `~/.gradle/gradle.properties`, never in a committed file, and build
 with `-PadmobProduction=true`. Check your AdMob account standing first, and follow `docs/ads-testing-rules.md`:
 never tap your own live ads and never ask anyone to.

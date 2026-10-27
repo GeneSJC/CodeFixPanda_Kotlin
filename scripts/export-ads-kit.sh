@@ -29,6 +29,7 @@ copy() {
 P="app/src"
 for f in \
   "$P/main/java/$PKG_PATH/ads/AdsController.kt" \
+  "$P/main/java/$PKG_PATH/ads/NoAdsController.kt" \
   "$P/main/java/$PKG_PATH/ui/ads/AdsViewModel.kt" \
   "$P/main/java/$PKG_PATH/ui/ads/AdBannerSlot.kt" \
   "$P/main/java/$PKG_PATH/ui/ads/AdFreeOffer.kt" \
@@ -43,7 +44,7 @@ for f in \
   "$P/test/java/$PKG_PATH/testutil/FakeAdsController.kt" \
   "$P/test/java/$PKG_PATH/ui/ads/AdFreeMinutesLeftTest.kt" \
   "$P/testCommercial/java/$PKG_PATH/ads/AdFreePeriodTest.kt" \
-  "$P/testFoss/java/$PKG_PATH/ads/NoAdsControllerTest.kt"; do
+  "$P/test/java/$PKG_PATH/ads/NoAdsControllerTest.kt"; do
   copy "$f"
 done
 
