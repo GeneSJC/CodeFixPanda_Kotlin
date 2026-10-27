@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.model.IssueLabelFilter
 import io.github.genesjc.githubissuefinder.ui.buttonLabelRes
 import io.github.genesjc.githubissuefinder.ui.descriptionRes
@@ -98,6 +99,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                             ModeCard(mode = mode, slots = slots, onSelect = { onModeSelected(mode) })
                         }
                     }
+                    IndependentNotice(modifier = Modifier.padding(top = 32.dp))
                 }
             }
         }

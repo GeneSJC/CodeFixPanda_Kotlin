@@ -13,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.model.IssueLabelFilter
 import io.github.genesjc.githubissuefinder.ui.components.VersionLabel
 import io.github.genesjc.githubissuefinder.ui.theme.DrawerSectionFindIssues
@@ -59,6 +61,7 @@ internal fun TopReposMenu(
                 fontWeight = FontWeight.Bold,
             )
             VersionLabel(label = buildLabel)
+            IndependentNotice(textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
         }
         HorizontalDivider()
         DrawerMenuSection(header = stringResource(R.string.menu_section_repo_management), background = DrawerSectionRepoManagement) {
