@@ -10,14 +10,14 @@ import io.github.genesjc.githubissuefinder.model.LanguageFilter
  * mode or a language will not compile until its text is added here.
  */
 
-/** The mode's name as used in a sentence or a pill: "good first issue". */
+/** The mode's name as used in a sentence or a pill: "beginner-friendly issues". */
 @StringRes
 fun IssueLabelFilter.nameRes(): Int = when (this) {
     IssueLabelFilter.GOOD_FIRST_ISSUE -> R.string.mode_good_first_issue_name
     IssueLabelFilter.HELP_WANTED -> R.string.mode_help_wanted_name
 }
 
-/** The mode's name as a button caption: "Good First Issue". */
+/** The mode's name as a button caption: "Beginner-Friendly Issues". */
 @StringRes
 fun IssueLabelFilter.buttonLabelRes(): Int = when (this) {
     IssueLabelFilter.GOOD_FIRST_ISSUE -> R.string.mode_good_first_issue_button

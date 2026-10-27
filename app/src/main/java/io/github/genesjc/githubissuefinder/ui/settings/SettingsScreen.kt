@@ -25,11 +25,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.ui.components.TokenField
 import io.github.genesjc.githubissuefinder.data.TokenSource
 
@@ -113,6 +115,7 @@ fun SettingsScreen(
             TextButton(onClick = { showHelp = true }) {
                 Text(stringResource(R.string.settings_how_to_get_token))
             }
+            IndependentNotice(textAlign = TextAlign.Start)
         }
     }
 

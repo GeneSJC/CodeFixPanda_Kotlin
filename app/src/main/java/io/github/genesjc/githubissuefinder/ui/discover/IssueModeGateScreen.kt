@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.model.IssueLabelFilter
 import io.github.genesjc.githubissuefinder.ui.buttonLabelRes
 import io.github.genesjc.githubissuefinder.ui.descriptionRes
@@ -98,6 +99,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                             ModeCard(mode = mode, slots = slots, onSelect = { onModeSelected(mode) })
                         }
                     }
+                    IndependentNotice(modifier = Modifier.padding(top = 32.dp))
                 }
             }
         }
@@ -119,15 +121,17 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                // One button, centered in the card: the icon and the name each sit in a slot as wide
-                // as the widest of any mode, so both buttons are the same width and symmetric.
+                // One button, centered in the card with room kept free on both sides for the arrow,
+                // so the button never runs under it. Every button fills that same width, so they match;
+                // a long name wraps onto a second line.
                 Surface(
                     onClick = onSelect,
                     shape = RoundedCornerShape(8.dp),
                     color = accent,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = CHEVRON_RESERVED_WIDTH),
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = MODE_BUTTON_SIDE_PADDING, vertical = 10.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = MODE_BUTTON_SIDE_PADDING, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(modifier = Modifier.width(slots.icon), contentAlignment = Alignment.Center) {
@@ -141,7 +145,7 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
                         }
                         Spacer(modifier = Modifier.width(MODE_ICON_TEXT_GAP))
                         // Start-aligned, so the first letters of the names line up.
-                        Box(modifier = Modifier.width(slots.text), contentAlignment = Alignment.CenterStart) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                             Text(
                                 stringResource(mode.buttonLabelRes()),
                                 style = modeButtonTextStyle(),
@@ -185,28 +189,27 @@ private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
     it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
 }
 
-/** The widths of the icon slot and the name slot: the widest of any mode, shared by every button. */
-private class ModeButtonSlots(val icon: Dp, val text: Dp)
+/** The width of the icon slot: the widest icon of any mode, shared by every button. */
+private class ModeButtonSlots(val icon: Dp)
 
 @Composable
 private fun rememberModeButtonSlots(): ModeButtonSlots {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val style = modeButtonTextStyle()
-    val labels = IssueLabelFilter.entries.associateWith { stringResource(it.buttonLabelRes()) }
-    return remember(style, density, labels) {
+    return remember(style, density) {
         fun widestPx(text: (IssueLabelFilter) -> String) =
             IssueLabelFilter.entries.maxOf { textMeasurer.measure(text(it), style).size.width }
         with(density) {
-            ModeButtonSlots(
-                icon = widestPx { it.glyph + TEXT_PRESENTATION_SELECTOR }.toDp(),
-                text = widestPx { labels.getValue(it) }.toDp(),
-            )
+            ModeButtonSlots(icon = widestPx { it.glyph + TEXT_PRESENTATION_SELECTOR }.toDp())
         }
     }
 }
 
 private val MODE_BUTTON_SIDE_PADDING = 14.dp
+
+/** Space kept free at each end of the button row, the width the expand arrow needs. */
+private val CHEVRON_RESERVED_WIDTH = 36.dp
 
 // Half the 24dp this started at.
 private val MODE_ICON_TEXT_GAP = 12.dp

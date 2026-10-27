@@ -1,30 +1,192 @@
-# GitHubIssueFinder
+<div align="center">
 
-An Android app (Kotlin, Jetpack Compose) for finding GitHub issues worth working on:
-the top repositories with open "good first issue" or "help wanted" issues, by language,
-with the issues of each repository one tap away.
+<img src="docs/images/banner.png" alt="Open Source Panda: find the open-source issue worth your next hour" width="100%">
 
-## Architecture
+<br>
 
-The standard Android stack, one direction only:
+**An Android app for finding open-source issues on GitHub that are actually worth working on.**<br>
+The top projects with open issues that suit beginners, or that are asking for help, by language, one tap from the issues themselves.
 
+<br>
+
+[![CI](https://github.com/GeneSJC/GitHubIssueFinder_Android/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/GitHubIssueFinder_Android/actions/workflows/ci.yml)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-MVVM-1D4ED8?style=flat-square)
+![Koin](https://img.shields.io/badge/DI-Koin-F2A50F?style=flat-square)
+![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
+[![License](https://img.shields.io/badge/License-Apache_2.0-0B1736?style=flat-square)](LICENSE)
+
+[**What it does**](#-what-it-does) &nbsp;·&nbsp; [**Screens**](#-screens) &nbsp;·&nbsp; [**Run it**](#-run-it) &nbsp;·&nbsp; [**Architecture**](#-architecture) &nbsp;·&nbsp; [**Tech stack**](#-tech-stack) &nbsp;·&nbsp; [**Docs**](#-docs) &nbsp;·&nbsp; [**Status**](#-status)
+
+<img src="docs/images/divider.png" alt="" width="100%">
+
+</div>
+
+## ✨ What it does
+
+Open source runs on people picking up the first issue they can handle. Open Source Panda does the searching for you: pick
+a kind of issue and a language, and it lists the repositories with the most open matches, each with its issues one tap away.
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h4>🎯 Two kinds of issue</h4>
+      <b>Beginner-friendly issues</b> for getting started, <b>projects asking for help</b> for more experience. (On GitHub these are the "good first issue" and "help wanted" labels.) Each mode tints the whole app in its own colors.
+    </td>
+    <td width="33%" valign="top">
+      <h4>🌐 By language</h4>
+      Any, Kotlin, Java, Swift, JavaScript or Python, with the repositories ranked by how many open issues match.
+    </td>
+    <td width="33%" valign="top">
+      <h4>📖 README previews</h4>
+      Each repo card shows the start of its README, and expands to read more, so you know what a project is before you open it.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🔖 Bookmark and hide</h4>
+      Save issues for later, or hide the ones you do not want, with an Undo. Real and demo data keep their own lists.
+    </td>
+    <td valign="top">
+      <h4>📊 A rate-limit meter</h4>
+      GitHub limits its search API. A small dial shows how much is left, and the app spends the allowance carefully.
+    </td>
+    <td valign="top">
+      <h4>🧪 A demo mode</h4>
+      No token yet? <b>Try the demo</b>: sixteen invented repositories across all five languages, so every screen has something to show.
+    </td>
+  </tr>
+</table>
+
+> [!TIP]
+> To see **real** issues the app needs a free GitHub token with **no permissions at all** (it only reads public data). The
+> first screen walks you through making one in about a minute. The token is stored encrypted on your device, shown masked,
+> and sent only to GitHub.
+
+## 📱 Screens
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/placeholder-welcome.png" alt="Welcome screen" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
+    <td align="center"><img src="docs/images/placeholder-top-repos.png" alt="Top Repos" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
+    <td align="center"><img src="docs/images/placeholder-repo-issues.png" alt="Repo issues" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
+  </tr>
+</table>
+
+<br>
+
+<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+
+</div>
+
+<sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
+
+## 🚀 Run it
+
+**You need** Android Studio (current stable) and a JDK to launch Gradle (CI uses 21; Gradle downloads the compile toolchain
+itself). The app runs on Android 7.0 (API 24) and newer.
+
+```bash
+git clone https://github.com/GeneSJC/GitHubIssueFinder_Android.git
+cd GitHubIssueFinder_Android
 ```
-View (Compose screen)
-  └─ ViewModel
-       └─ StateHolder          (only where a feature has real state to manage)
-            └─ Repository
-                 └─ Data source (GitHub client, or local storage)
+
+1. Open the folder in Android Studio and let Gradle sync.
+2. Pick a build variant (**Build Variants** panel): `fossDebug` is the default, `commercialDebug` is the Google Play build.
+3. Run it on a device or emulator.
+4. On the first screen, tap **How does it work?** for the token steps, or **Try the demo** to look around right away.
+
+<details>
+<summary><b>Command line, tests and checks</b></summary>
+
+```bash
+# build a debug APK for each flavor
+./gradlew assembleFossDebug assembleCommercialDebug
+
+# unit tests (name both flavors: the bare task names are ambiguous with two flavors)
+./gradlew testFossDebugUnitTest testCommercialDebugUnitTest
+
+# the same checks CI runs
+./scripts/check-no-ads-sdk.sh           # neither flavor contains an ads library
+./scripts/check-release-has-no-token.sh # no release build contains a developer token
+```
+
+**A token for your own debug builds.** Put `GITHUB_API_TOKEN=ghp_yourtoken` in `local.properties` (it is git-ignored) and
+debug builds start with it, skipping the welcome screen. Release builds never include it. More about running the tests and the CI
+setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
+
+</details>
+
+## 🏗️ Architecture
+
+One direction only, with every layer doing one job. The standard Android stack:
+
+```mermaid
+flowchart TB
+    subgraph UI["🖼️ UI layer"]
+        V["<b>View</b><br/>Compose screen"] --> VM["<b>ViewModel</b><br/>screen state + wording"]
+    end
+    subgraph DATA["🧠 Data layer"]
+        VM --> SH["<b>StateHolder</b><br/>feature state + logic"]
+        SH --> R["<b>Repository</b><br/>single source of truth"]
+        R --> DS["<b>Data source</b><br/>one external thing"]
+    end
+    DS --> GH(["🐙 GitHub API"])
+    DS --> F[("📁 JSON cache files")]
+    K{{"💉 Koin<br/>supplies every dependency"}} -.-> VM
+    K -.-> SH
+    K -.-> R
+    classDef ui fill:#1D4ED8,stroke:#0B1736,color:#ffffff;
+    classDef data fill:#0B1736,stroke:#38BDF8,color:#ffffff;
+    classDef edge fill:#F59E0B,stroke:#0B1736,color:#0B1736;
+    classDef di fill:#7057FF,stroke:#0B1736,color:#ffffff;
+    class V,VM ui;
+    class SH,R,DS data;
+    class GH,F edge;
+    class K di;
 ```
 
 | Layer | Owns | Must not |
 |---|---|---|
-| View | Layout, local UI state (animations, dialogs, expanded flags) | Hold data state or call a repository |
-| ViewModel | The state the screen shows, the wording, one-off events | Hold the feature's data logic, or know about files and network |
-| StateHolder | A feature's data state and the logic that changes it | Contain user-facing wording, or call the network or disk directly |
-| Repository | The source of truth for one kind of data (what is fetched, stored, cached) | Know about screens or wording |
-| Data source | One external thing: the GitHub API, or a file | Decide what the app does with the data |
+| **View** | Layout, local UI state (animations, dialogs, expanded flags) | Hold data state or call a repository |
+| **ViewModel** | The state the screen shows, the wording, one-off events | Hold the feature's data logic, or know about files and network |
+| **StateHolder** | A feature's data state and the logic that changes it | Contain user-facing wording, or call the network or disk directly |
+| **Repository** | The source of truth for one kind of data (fetched, stored, cached) | Know about screens or wording |
+| **Data source** | One external thing: the GitHub API, or a file | Decide what the app does with the data |
 
-### Decisions and the terms used
+**One switch decides which data you see**, and nothing above it ever knows:
+
+```mermaid
+flowchart LR
+    T{"GitHub token<br/>set?"} -- yes --> REAL["🌍 Real GitHub data<br/>cached on disk"]
+    T -- no --> DEMO["🧪 Demo data<br/>16 invented repos, in memory"]
+    REAL --> SAME["Same repositories,<br/>same state holders,<br/>same screens"]
+    DEMO --> SAME
+    classDef a fill:#1D4ED8,stroke:#0B1736,color:#ffffff;
+    classDef b fill:#0B1736,stroke:#38BDF8,color:#ffffff;
+    classDef c fill:#F59E0B,stroke:#0B1736,color:#0B1736;
+    class T c;
+    class REAL a;
+    class DEMO b;
+    class SAME a;
+```
+
+### Principles at a glance
+
+- 🧱 **Dependencies point one way.** Views never reach a repository; data layers never know about screens.
+- 💉 **Koin builds everything in one place** (`di/AppModule.kt`). ViewModels declare what they need as plain members and keep a no-argument constructor.
+- 🔤 **Every user-facing word is a string resource.** Data layers report facts; the ViewModels turn them into wording.
+- 🧪 **Everything is testable without a device.** Data sources sit behind interfaces; tests register fakes with `restartKoin { single { fake } }`.
+- 🔐 **The token is encrypted at rest** (Android Keystore), masked on screen, and never leaves for anywhere but GitHub.
+- 🧭 **Navigation on named routes,** with the selected repo held as host state: no arguments to hand-build.
+
+<details>
+<summary><b>The full architecture notes: terms and decisions</b> (click to expand)</summary>
+
+<br>
 
 - **Repository.** The Android term for the class that is the single source of truth for one
   kind of data, hiding where it comes from. Developers coming from Flutter will know this role
@@ -76,26 +238,33 @@ View (Compose screen)
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.
 
-## Build flavors
+More decisions, with their reasons, are in [`docs/design-notes.md`](docs/design-notes.md).
 
-One codebase, two published builds, as a `distribution` flavor dimension:
+</details>
+
+### Two builds from one codebase
 
 | Flavor | Published to | Application id | Version suffix |
 |---|---|---|---|
-| `foss` | GitHub, as the open-source build | `io.github.genesjc.githubissuefinder` | `-foss` |
-| `commercial` | Google Play | `io.github.genesjc.githubissuefinder.commercial` | `-commercial` |
+| `foss` | GitHub, as the open-source build | `io.github.genesjc.opensourcepanda` | `-foss` |
+| `commercial` | Google Play | `io.github.genesjc.opensourcepanda.commercial` | `-commercial` |
 
-`foss` is the default, so a fresh checkout builds and runs the open build; pick `commercialDebug`
-in Android Studio's Build Variants to run the other. The two ids differ, so both can be installed on
-one device. The reason for flavors and not a runtime flag is that code only the commercial build may
-contain stays out of the open build at compile time. The code
-package is `io.github.genesjc.githubissuefinder` in both.
+`foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side.
+Flavors, and not a runtime flag, keep code that only one build may contain out of the other at compile time.
 
-### Ads are parked
+<details>
+<summary><b>The front door, and where the ads went</b></summary>
 
-No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
-flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then
-taken out of the build because the ad account, privacy and consent work behind it is not finished.
+<br>
+
+**The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
+steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
+without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
+More in `docs/design-notes.md`, "Front door" and "Token storage".
+
+**Ads are parked.** No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
+flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then taken out of the
+build because the ad account, privacy and consent work behind it is not finished.
 
 - **Where the working code is.** In `develop`'s history at commit `9d61e0f` (the merge of PR #37), and, with
   two extras built afterwards, in the tag `ads-parked-2026-10-27`.
@@ -109,23 +278,79 @@ taken out of the build because the ad account, privacy and consent work behind i
 - **Checked by CI.** `scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
   its merged manifest.
 
-## License
+</details>
 
-Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK, which the parked ads
-layer uses, is proprietary, is not covered by this license, and is not part of this repository.
+### Where things live
 
-## Front door
+```text
+app/src/main/java/io/github/genesjc/githubissuefinder/
+├── ads/          the SDK-free ads contract (ads are parked)
+├── data/         repositories, state holders, storage, rate limit, and demo/ (the invented data)
+├── di/           AppModule: the one place Koin is told how things are built
+├── model/        Issue, RepoIssueGroup, the mode and language filters
+├── network/      the GitHub client and its DTOs
+└── ui/
+    ├── components/   issue cards, label chips, the mode pill
+    ├── discover/     Top Repos, repo issues, bookmarks, hidden issues, navigation
+    ├── settings/     the token screen
+    ├── splash/       the animated start screens
+    ├── theme/        colors, including one scheme per issue mode
+    ├── welcome/      the token gate and its guide
+    └── ads/          the SDK-free hooks
 
-The app needs a free GitHub token to show real issues. With no token it starts on a blue welcome
-screen that links to GitHub's token page, explains the four steps in a short guide, and has a box to
-paste the token. "Try the demo" opens sample data for that session; the next launch without a token
-starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to
-GitHub. More in `docs/design-notes.md`, "Front door" and "Token storage".
+app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
+docs/          design notes, ads restore guide              _meta/     setup docs
+```
 
-## Building and testing
+## 🧰 Tech stack
 
-See `_meta/docs/README_01.md` for running the tests and the CI setup.
+| | |
+|---|---|
+| **Language** | Kotlin 2.2 |
+| **UI** | Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose 2.8 |
+| **Architecture** | MVVM with state holders and repositories; Koin 4.2 for dependency injection |
+| **Networking** | Retrofit 2.11, OkHttp 4.12, Moshi 1.15 |
+| **Async** | Kotlin Coroutines and Flow |
+| **Markdown** | Markwon 4.6 (README previews) |
+| **Security** | Android Keystore (AES-GCM) for the saved token |
+| **Build** | Android Gradle Plugin 9.4, two product flavors, minSdk 24, targetSdk 37 |
+| **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
+| **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
-## Design notes
+## 📚 Docs
 
-Decisions that are too long for a code comment are in [`docs/design-notes.md`](docs/design-notes.md).
+| Read | To learn |
+|---|---|
+| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, the front door, token storage, flavors |
+| [`docs/ads-restore.md`](docs/ads-restore.md) | How to bring the parked ads layer back, step by step |
+| [`docs/ads-architecture.md`](docs/ads-architecture.md) | How the ads layer works, including the ad-free hour |
+| [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
+| [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
+
+## 🗺️ Status
+
+| | |
+|---|---|
+| ✅ **Done** | Layered MVVM with Koin, string resources, demo data, two flavors, the front door and token guide, encrypted and masked token storage |
+| ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
+| 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
+| 💡 **Later** | Sign in with GitHub instead of pasting a token |
+
+## 📄 License
+
+Apache License 2.0; see [`LICENSE`](LICENSE). The Google Mobile Ads SDK, which the parked ads layer uses, is proprietary, is not
+covered by this license, and is not part of this repository.
+
+<div align="center">
+
+<img src="docs/images/divider.png" alt="" width="100%">
+
+<br>
+
+<img src="docs/images/panda.png" alt="The Open Source Panda mascot" width="90">
+
+<sub>Built with Kotlin, Compose, a lot of small commits, and a panda.</sub>
+
+<sub>Open Source Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
+
+</div>

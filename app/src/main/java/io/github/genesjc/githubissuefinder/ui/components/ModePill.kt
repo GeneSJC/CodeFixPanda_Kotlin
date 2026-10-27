@@ -19,8 +19,8 @@ import io.github.genesjc.githubissuefinder.ui.nameRes
 import io.github.genesjc.githubissuefinder.ui.theme.colorScheme
 
 /**
- * The active mode's name on its own color. With [onInfoClick], "good first issue" also gets an
- * info icon, since it reads less clearly than "help wanted".
+ * The active mode's name on its own color. With [onInfoClick], the beginner-friendly mode also gets an
+ * info icon, so a newcomer can see what the mode means.
  */
 @Composable
 fun ModePill(

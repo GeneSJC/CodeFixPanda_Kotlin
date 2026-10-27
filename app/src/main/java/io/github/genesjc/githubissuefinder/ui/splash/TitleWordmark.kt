@@ -1,6 +1,5 @@
 package io.github.genesjc.githubissuefinder.ui.splash
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,14 +28,17 @@ import androidx.compose.ui.unit.sp
  */
 internal const val SPLASH_TEXT_SCALE = 1.7f
 
-private const val ISSUE_BASE_FONT_SP = 16f
-private const val ISSUE_BASE_LETTER_SPACING_SP = 2f
+private const val PANDA_BASE_FONT_SP = 20f
+private const val PANDA_BASE_LETTER_SPACING_SP = 4f
+
+/** "Open Source" is longer than the old two-word headline, so it is set smaller to fit a phone's width. */
+private const val HEADLINE_FIT_FACTOR = 0.62f
 
 /** Scales a text unit, leaving an unspecified one alone (multiplying one would throw). */
 private fun TextUnit.scaledBy(factor: Float): TextUnit = if (isSpecified) this * factor else this
 
 /**
- * The app name laid out as "Git|Hub" over "ISSUE Finder", centered —
+ * The app name laid out as "Open|Source" over "PANDA", centered —
  * shared by the full title-reveal animation (which passes motion
  * modifiers for each word) and the short splash (which passes
  * none), so the short version starts on the animation's final frame
@@ -45,19 +47,18 @@ private fun TextUnit.scaledBy(factor: Float): TextUnit = if (isSpecified) this *
 @Composable
 internal fun TitleWordmark(
     modifier: Modifier = Modifier,
-    gitModifier: Modifier = Modifier,
-    hubModifier: Modifier = Modifier,
-    issueModifier: Modifier = Modifier,
-    finderModifier: Modifier = Modifier,
+    openModifier: Modifier = Modifier,
+    sourceModifier: Modifier = Modifier,
+    pandaModifier: Modifier = Modifier,
 ) {
-    // Shared by both "Git" and "Hub": a soft colored glow beneath the
+    // Shared by both "Open" and "Source": a soft colored glow beneath the
     // wordmark, matching the reference's own drop-shadowed look — plain
     // Bold alone read flatter on-device than the reference's heavier
     // weight + shadow combination.
     val display = MaterialTheme.typography.displayMedium
     val wordmarkStyle = display.copy(
-        fontSize = display.fontSize.scaledBy(SPLASH_TEXT_SCALE),
-        lineHeight = display.lineHeight.scaledBy(SPLASH_TEXT_SCALE),
+        fontSize = display.fontSize.scaledBy(SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR),
+        lineHeight = display.lineHeight.scaledBy(SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR),
         shadow = Shadow(
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
             offset = Offset(0f, 8f),
@@ -65,55 +66,38 @@ internal fun TitleWordmark(
         ),
     )
     val title = MaterialTheme.typography.titleMedium
-    val issueStyle = title.copy(
-        fontSize = (ISSUE_BASE_FONT_SP * SPLASH_TEXT_SCALE).sp,
+    val pandaStyle = title.copy(
+        fontSize = (PANDA_BASE_FONT_SP * SPLASH_TEXT_SCALE).sp,
         lineHeight = title.lineHeight.scaledBy(SPLASH_TEXT_SCALE),
-        letterSpacing = (ISSUE_BASE_LETTER_SPACING_SP * SPLASH_TEXT_SCALE).sp,
-    )
-    val finderStyle = title.copy(
-        fontSize = title.fontSize.scaledBy(SPLASH_TEXT_SCALE),
-        lineHeight = title.lineHeight.scaledBy(SPLASH_TEXT_SCALE),
-        letterSpacing = title.letterSpacing.scaledBy(SPLASH_TEXT_SCALE),
+        letterSpacing = (PANDA_BASE_LETTER_SPACING_SP * SPLASH_TEXT_SCALE).sp,
     )
 
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Row {
             Text(
-                "Git",
+                "Open",
                 style = wordmarkStyle,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = gitModifier,
+                modifier = openModifier,
             )
+            Spacer(modifier = Modifier.width((8 * SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR).dp))
             Text(
-                "Hub",
+                "Source",
                 style = wordmarkStyle,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = hubModifier,
+                modifier = sourceModifier,
             )
         }
         Spacer(modifier = Modifier.height((8 * SPLASH_TEXT_SCALE).dp))
-        Row {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    "ISSUE",
-                    style = issueStyle,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = issueModifier,
-                )
-            }
-            Spacer(modifier = Modifier.width((6 * SPLASH_TEXT_SCALE).dp))
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    "Finder",
-                    style = finderStyle,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = finderModifier,
-                )
-            }
-        }
+        Text(
+            "PANDA",
+            style = pandaStyle,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = pandaModifier,
+        )
     }
 }

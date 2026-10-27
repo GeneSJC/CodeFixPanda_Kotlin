@@ -193,7 +193,7 @@ val releaseAdmobRewardedUnitId =
 ```kotlin
         create("commercial") {
             dimension = "distribution"
-            applicationId = "io.github.genesjc.githubissuefinder.commercial"
+            applicationId = "io.github.genesjc.opensourcepanda.commercial"
             versionNameSuffix = "-commercial"
             // The banner ad unit for release builds: Google's sample unit unless this is a production build
             // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
