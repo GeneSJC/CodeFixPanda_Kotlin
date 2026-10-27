@@ -99,7 +99,7 @@ class TopReposViewModel : BaseViewModel() {
 
     /**
      * Handler for the two hamburger-menu items TopReposScreen offers
-     * ("Find Good First Issues" / "Find Help Wanted Issues"): a direct,
+     * ("Find Beginner-Friendly Issues" / "Find Projects Asking for Help"): a direct,
      * in-place switch rather than navigating anywhere. See
      * TopReposScreen's doc comment for the full reasoning, including why
      * this is not a return to IssueModeGateScreen.

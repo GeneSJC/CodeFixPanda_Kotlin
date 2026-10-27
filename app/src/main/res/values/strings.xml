@@ -59,8 +59,8 @@
     <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
-    <string name="menu_find_good_first_issues">Find Good First Issues</string>
-    <string name="menu_find_help_wanted_issues">Find Help Wanted Issues</string>
+    <string name="menu_find_good_first_issues">Find Beginner-Friendly Issues</string>
+    <string name="menu_find_help_wanted_issues">Find Projects Asking for Help</string>
     <string name="menu_section_sandbox">Sandbox</string>
     <string name="menu_play_origami">Play Origami Animation</string>
     <string name="menu_play_shape_stack">Play Shape Stack Animation</string>
@@ -95,7 +95,7 @@
 
     <!-- Lists, hidden issues, bookmarks, label info and the issue card. -->
     <string name="action_retry">Retry</string>
-    <string name="repo_list_empty">No repos with an open %1$s issue found for this language right now.</string>
+    <string name="repo_list_empty">No repos found for \"%1$s\" in this language right now.</string>
     <string name="repo_card_all_hidden">All hidden</string>
     <string name="action_load_more">Load More</string>
     <string name="load_more_end">That\'s everything GitHub has for this search.</string>
@@ -115,8 +115,8 @@
     <string name="hidden_unhide_all_message">They\'ll reappear wherever they\'re still cached — Top Repos and repo lists alike.</string>
     <string name="bookmarks_title">Bookmarks</string>
     <string name="bookmarks_empty">No bookmarks yet — tap the ★ on any issue to save it here.</string>
-    <string name="label_info_title">What do these tags mean?</string>
-    <string name="label_info_footer">Both are GitHub-wide conventions applied by each repo\'s own maintainers, not enforced or verified by GitHub itself — actual difficulty and quality can vary a lot from repo to repo.</string>
+    <string name="label_info_title">What do these two choices mean?</string>
+    <string name="label_info_footer">Maintainers choose these labels themselves; GitHub does not check them, so difficulty and quality vary from project to project.</string>
     <string name="share_issue_chooser">Share issue</string>
     <string name="link_copied">Link copied</string>
     <string name="comments_and_updated">%1$s · %2$s</string>
@@ -158,12 +158,12 @@
     <string name="resets_in_minutes_seconds">%1$dm %2$ds</string>
 
     <!-- Issue modes and languages. -->
-    <string name="mode_good_first_issue_name">good first issue</string>
-    <string name="mode_help_wanted_name">help wanted</string>
-    <string name="mode_good_first_issue_button">Good First Issue</string>
-    <string name="mode_help_wanted_button">Help Wanted</string>
-    <string name="mode_good_first_issue_description">A label maintainers apply to issues they consider good starting points for new contributors — usually well-scoped and not requiring deep familiarity with the codebase. A good place for a newer or beginner developer to start.</string>
-    <string name="mode_help_wanted_description">A broader label signaling that maintainers welcome outside help on this particular issue — maintainers raising a flag that they could use a hand. Can range from simple to fairly involved — less beginner-specific than \"good first issue.\"</string>
+    <string name="mode_good_first_issue_name">beginner-friendly issues</string>
+    <string name="mode_help_wanted_name">projects asking for help</string>
+    <string name="mode_good_first_issue_button">Beginner-Friendly Issues</string>
+    <string name="mode_help_wanted_button">Projects Asking for Help</string>
+    <string name="mode_good_first_issue_description">Issues the project\'s maintainers marked as a good place for newcomers to start — usually small, clearly explained, and not needing deep knowledge of the code. A good fit if you are new to contributing. (GitHub\'s label for these is \"good first issue.\")</string>
+    <string name="mode_help_wanted_description">Issues where the maintainers say they would welcome outside help. They can be simple or quite involved, so they are less aimed at beginners. (GitHub\'s label for these is \"help wanted.\")</string>
     <string name="language_any">Any</string>
     <string name="language_kotlin" translatable="false">Kotlin</string>
     <string name="language_java" translatable="false">Java</string>
