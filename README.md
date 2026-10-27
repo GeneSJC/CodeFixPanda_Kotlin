@@ -17,11 +17,13 @@ The top projects with open issues that suit beginners, or that are asking for he
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0B1736?style=flat-square)](LICENSE)
 
-[**What it does**](#-what-it-does) &nbsp;·&nbsp; [**Screens**](#-screens) &nbsp;·&nbsp; [**Run it**](#-run-it) &nbsp;·&nbsp; [**Architecture**](#-architecture) &nbsp;·&nbsp; [**Tech stack**](#-tech-stack) &nbsp;·&nbsp; [**Docs**](#-docs) &nbsp;·&nbsp; [**Status**](#-status)
+[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
 <img src="docs/images/divider.png" alt="" width="100%">
 
 </div>
+
+<a id="what-it-does"></a>
 
 ## ✨ What it does
 
@@ -64,6 +66,8 @@ a kind of issue and a language, and it lists the repositories with the most open
 > first screen walks you through making one in about a minute. The token is stored encrypted on your device, shown masked,
 > and sent only to GitHub.
 
+<a id="screens"></a>
+
 ## 📱 Screens
 
 <div align="center">
@@ -83,6 +87,8 @@ a kind of issue and a language, and it lists the repositories with the most open
 </div>
 
 <sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
+
+<a id="run-it"></a>
 
 ## 🚀 Run it
 
@@ -119,6 +125,8 @@ debug builds start with it, skipping the welcome screen. Release builds never in
 setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 </details>
+
+<a id="architecture"></a>
 
 ## 🏗️ Architecture
 
@@ -302,6 +310,8 @@ app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
 docs/          design notes, ads restore guide              _meta/     setup docs
 ```
 
+<a id="tech-stack"></a>
+
 ## 🧰 Tech stack
 
 | | |
@@ -317,6 +327,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
 | **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
+<a id="docs"></a>
+
 ## 📚 Docs
 
 | Read | To learn |
@@ -327,6 +339,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
 
+<a id="status"></a>
+
 ## 🗺️ Status
 
 | | |
@@ -335,6 +349,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
 | 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
 | 💡 **Later** | Sign in with GitHub instead of pasting a token |
+
+<a id="license"></a>
 
 ## 📄 License
 
