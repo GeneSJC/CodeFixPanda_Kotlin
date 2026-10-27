@@ -199,8 +199,7 @@
 
     <!-- Advertising (commercial build only). -->
     <string name="menu_privacy_options">Privacy options</string>
-    <!-- The reward is one hour; keep it in step with AD_FREE_DURATION_MS in the commercial AdFreePeriod. -->
+    <!-- The reward is one hour; keep it in step with AD_FREE_DURATION_MS in the parked AdFreePeriod (docs/ads-restore.md). -->
     <string name="action_hide_ads">Hide ads for 1 hour</string>
     <string name="ad_free_remaining">Ad-free: %1$d min</string>
-    <string name="ad_banner_offline">You\'re offline</string>
 </resources>

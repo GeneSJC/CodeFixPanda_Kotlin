@@ -6,9 +6,10 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * What the shared code knows about advertising: whether an ad may be shown now, whether the user
  * must be offered a way to reopen their privacy choices, and the two calls that need an Activity.
- * There is one implementation per build flavor, supplied by that flavor's Koin module: the open
- * (foss) build has one that never allows ads, so no advertising software is compiled into it, and
- * the commercial build has the real one. Nothing outside the flavor folders knows which is in use.
+ * There is one implementation per build flavor, supplied by that flavor's Koin module. While ads are
+ * parked (docs/ads-restore.md) both flavors bind the do-nothing [NoAdsController], so no advertising
+ * software is compiled into either; the commercial flavor's real implementation is in the tag
+ * ads-parked-2026-10-27. Nothing outside the flavor folders knows which is in use.
  */
 interface AdsController {
 

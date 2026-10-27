@@ -1,13 +1,12 @@
 package io.github.genesjc.githubissuefinder.ads
 
-import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
- * The commercial build's ads. The open (foss) flavor has a file with the same name and package that
- * supplies a controller that never shows ads.
+ * PARKED: ads are not part of this build, so the commercial flavor binds the do-nothing controller. The real
+ * module (the AdMob controller and its ad-free period) is in the tag ads-parked-2026-10-27; docs/ads-restore.md
+ * says how to bring it back. Restoring overwrites this file.
  */
 val adsModule = module {
-    single { AdFreePeriod(SharedPreferencesAdFreeStorage(androidContext())) }
-    single<AdsController> { AdMobAdsController(androidContext(), get()) }
+    single<AdsController> { NoAdsController() }
 }
