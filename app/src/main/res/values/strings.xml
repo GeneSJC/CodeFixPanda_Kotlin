@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Open Source Contributor</string>
-    <!-- The name under the launcher icon, short enough not to be cut off. -->
-    <string name="launcher_label">Contributor</string>
+    <!-- The name under the launcher icon. Some launchers cut a long name short; shorten this one string if that looks bad. -->
+    <string name="launcher_label">Open Source Contributor</string>
     <!-- Shown on every screen that names GitHub. -->
     <string name="independent_notice">Independent app. Not affiliated with or endorsed by GitHub.</string>
 
