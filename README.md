@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/banner.png" alt="Open Source Contributor: find the open-source issue worth your next hour" width="100%">
+<img src="docs/images/banner.png" alt="Open Source Panda: find the open-source issue worth your next hour" width="100%">
 
 <br>
 
@@ -25,7 +25,7 @@ The top projects with open issues that suit beginners, or that are asking for he
 
 ## ✨ What it does
 
-Open source runs on people picking up the first issue they can handle. Open Source Contributor does the searching for you: pick
+Open source runs on people picking up the first issue they can handle. Open Source Panda does the searching for you: pick
 a kind of issue and a language, and it lists the repositories with the most open matches, each with its issues one tap away.
 
 <table>
@@ -246,8 +246,8 @@ More decisions, with their reasons, are in [`docs/design-notes.md`](docs/design-
 
 | Flavor | Published to | Application id | Version suffix |
 |---|---|---|---|
-| `foss` | GitHub, as the open-source build | `io.github.genesjc.opensourcecontributor` | `-foss` |
-| `commercial` | Google Play | `io.github.genesjc.opensourcecontributor.commercial` | `-commercial` |
+| `foss` | GitHub, as the open-source build | `io.github.genesjc.opensourcepanda` | `-foss` |
+| `commercial` | Google Play | `io.github.genesjc.opensourcepanda.commercial` | `-commercial` |
 
 `foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side.
 Flavors, and not a runtime flag, keep code that only one build may contain out of the other at compile time.
@@ -347,10 +347,10 @@ covered by this license, and is not part of this repository.
 
 <br>
 
-<img src="docs/images/panda.png" alt="The Open Source Contributor panda" width="90">
+<img src="docs/images/panda.png" alt="The Open Source Panda mascot" width="90">
 
 <sub>Built with Kotlin, Compose, a lot of small commits, and a panda.</sub>
 
-<sub>Open Source Contributor is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
+<sub>Open Source Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
 
 </div>

@@ -94,7 +94,7 @@ def banner():
     # title
     x0 = 470 * S
     d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
-    d.text((x0, 182 * S), "Contributor", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
+    d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=AMBER)
     d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=SOFT)
     d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=SOFT)
