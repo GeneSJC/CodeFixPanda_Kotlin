@@ -93,20 +93,20 @@ def banner():
     shadowed(img, p, (64 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
     # title
     x0 = 470 * S
-    d.text((x0, 96 * S), "GitHub", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
-    d.text((x0, 182 * S), "Issue Finder", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
+    d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
+    d.text((x0, 182 * S), "Contributor", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=AMBER)
     d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=SOFT)
     d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=SOFT)
     cx = x0
-    for text, fill in (("good first issue", PURPLE), ("help wanted", GREEN), ("kotlin", (14, 165, 233))):
+    for text, fill in (("beginner-friendly", PURPLE), ("asking for help", GREEN), ("kotlin", (14, 165, 233))):
         c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S))
         img.alpha_composite(c, (cx, 432 * S))
         cx += c.width + 14 * S
     # floating issue cards on the right
-    specs = [((1190, 44), 300, 160, 190, ("good first issue",), 3, PURPLE, 3),
-             ((1262, 190), 300, 160, 160, ("help wanted",), 7, GREEN, -2),
-             ((1160, 330), 300, 160, 210, ("good first issue", "kotlin"), 2, PURPLE, 2)]
+    specs = [((1190, 44), 300, 160, 190, ("beginner-friendly",), 3, PURPLE, 3),
+             ((1262, 190), 300, 160, 160, ("asking for help",), 7, GREEN, -2),
+             ((1160, 330), 300, 160, 210, ("beginner-friendly", "kotlin"), 2, PURPLE, 2)]
     for (x, y), cw, ch, tw, labels, comments, _c, rot in specs:
         chips = [chip(l, PURPLE if "good" in l else (GREEN if "help" in l else (14, 165, 233)), size=17 * S, pad=(12 * S, 6 * S)) for l in labels]
         card = issue_card(cw * S, ch * S, tw * S, chips, comments).rotate(rot, expand=True, resample=Image.BICUBIC)
