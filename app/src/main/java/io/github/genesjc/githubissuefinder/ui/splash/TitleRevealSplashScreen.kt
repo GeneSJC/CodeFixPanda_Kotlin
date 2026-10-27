@@ -36,8 +36,7 @@ import kotlinx.coroutines.launch
 // speedMultiplier param scales them at call time — see that doc comment.
 private const val GIT_BASE_DURATION_MS = 896
 private const val HUB_BASE_DURATION_MS = 320
-private const val ISSUE_BASE_DURATION_MS = 384
-private const val FINDER_BASE_DURATION_MS = 384
+private const val CONTRIBUTOR_BASE_DURATION_MS = 384
 private const val HOLD_BASE_MS = 900
 private const val BURST_BASE_DURATION_MS = 500
 
@@ -65,9 +64,9 @@ private const val BURST_START_ALPHA = 0.85f
 private const val BURST_HOLD_FRACTION = 0.45
 
 /**
- * A kinetic title-reveal splash: "Git" slides in from the left and overshoots before settling, "Hub"
- * slides in from the right and shudders on impact, then "Issue" and "Finder" rise into place beneath
- * them, spelling the app's own name (see SplashBrandMark.kt on why it does not use GitHub's brand).
+ * A kinetic title-reveal splash: "Open" slides in from the left and overshoots before settling, "Source"
+ * slides in from the right and shudders on impact, then "Contributor" rises into place beneath them,
+ * spelling the app's own name (see SplashBrandMark.kt on why it does not use GitHub's brand).
  * [speedMultiplier] scales every stage duration (0.5 means twice as slow), so one composable serves
  * the standard and half-speed replays. Each word has its own Animatable(s), launched in a coroutine
  * with a delay to its stage start, which keeps each word's motion readable. The text is drawn by
@@ -84,10 +83,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val gitDurationMs = (GIT_BASE_DURATION_MS / speedMultiplier).toInt()
     val hubStartMs = gitDurationMs
     val hubDurationMs = (HUB_BASE_DURATION_MS / speedMultiplier).toInt()
-    val issueStartMs = hubStartMs + hubDurationMs
-    val issueDurationMs = (ISSUE_BASE_DURATION_MS / speedMultiplier).toInt()
-    val finderStartMs = issueStartMs + issueDurationMs
-    val finderDurationMs = (FINDER_BASE_DURATION_MS / speedMultiplier).toInt()
+    val contributorStartMs = hubStartMs + hubDurationMs
+    val contributorDurationMs = (CONTRIBUTOR_BASE_DURATION_MS / speedMultiplier).toInt()
     val holdMs = (HOLD_BASE_MS / speedMultiplier).toInt()
     val burstDurationMs = (BURST_BASE_DURATION_MS / speedMultiplier).toInt()
     // Exactly when, within Hub's own entrance, the collision itself
@@ -109,10 +106,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val gitOffsetX = remember { Animatable(-offscreenPx) }
     val gitRotation = remember { Animatable(0f) }
     val hubOffsetX = remember { Animatable(offscreenPx) }
-    val issueOffsetY = remember { Animatable(riseOffsetPx) }
-    val issueAlpha = remember { Animatable(0f) }
-    val finderOffsetY = remember { Animatable(riseOffsetPx) }
-    val finderAlpha = remember { Animatable(0f) }
+    val contributorOffsetY = remember { Animatable(riseOffsetPx) }
+    val contributorAlpha = remember { Animatable(0f) }
     val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
@@ -189,7 +184,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and scaling from
         // the start left the circle nearly transparent by the time it was big enough to see.
         launch {
-            delay((finderStartMs + finderDurationMs).toLong())
+            delay((contributorStartMs + contributorDurationMs).toLong())
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
             }
@@ -204,28 +199,18 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // "Issue": a straight rise from below into place under "Git",
-        // fading in as it goes.
+        // "Contributor": a straight rise from below into place under
+        // "Open Source", fading in as it goes.
         launch {
-            delay(issueStartMs.toLong())
-            issueOffsetY.snapTo(riseOffsetPx)
+            delay(contributorStartMs.toLong())
+            contributorOffsetY.snapTo(riseOffsetPx)
             launch {
-                issueOffsetY.animateTo(0f, tween(issueDurationMs, easing = FastOutSlowInEasing))
+                contributorOffsetY.animateTo(0f, tween(contributorDurationMs, easing = FastOutSlowInEasing))
             }
-            issueAlpha.animateTo(1f, tween(issueDurationMs))
+            contributorAlpha.animateTo(1f, tween(contributorDurationMs))
         }
 
-        // "Finder": the same straight rise and fade-in, under "Hub".
-        launch {
-            delay(finderStartMs.toLong())
-            finderOffsetY.snapTo(riseOffsetPx)
-            launch {
-                finderOffsetY.animateTo(0f, tween(finderDurationMs, easing = FastOutSlowInEasing))
-            }
-            finderAlpha.animateTo(1f, tween(finderDurationMs))
-        }
-
-        delay((finderStartMs + finderDurationMs + holdMs).toLong())
+        delay((contributorStartMs + contributorDurationMs + holdMs).toLong())
         onFinished()
     }
 
@@ -265,18 +250,14 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
 
         TitleWordmark(
             modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
-            gitModifier = Modifier.graphicsLayer {
+            openModifier = Modifier.graphicsLayer {
                 translationX = gitOffsetX.value
                 rotationZ = gitRotation.value
             },
-            hubModifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
-            issueModifier = Modifier.graphicsLayer {
-                translationY = issueOffsetY.value
-                alpha = issueAlpha.value
-            },
-            finderModifier = Modifier.graphicsLayer {
-                translationY = finderOffsetY.value
-                alpha = finderAlpha.value
+            sourceModifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
+            contributorModifier = Modifier.graphicsLayer {
+                translationY = contributorOffsetY.value
+                alpha = contributorAlpha.value
             },
         )
     }
