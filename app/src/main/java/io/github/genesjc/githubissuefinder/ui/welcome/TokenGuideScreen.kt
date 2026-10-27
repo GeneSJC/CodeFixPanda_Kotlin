@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
 import io.github.genesjc.githubissuefinder.ui.theme.GitHubIssueFinderTheme
 import kotlinx.coroutines.launch
@@ -83,6 +84,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         TokenGuideStepPage(tokenGuideSteps[page])
                     }
                     PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
+                    IndependentNotice(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,

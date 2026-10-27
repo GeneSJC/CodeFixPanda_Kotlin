@@ -18,7 +18,7 @@ import io.github.genesjc.githubissuefinder.ui.descriptionRes
 import io.github.genesjc.githubissuefinder.ui.nameRes
 
 /**
- * The "what do these tags mean?" dialog for "good first issue" and "help wanted". The wording comes
+ * The "what do these two choices mean?" dialog for the beginner-friendly and asking-for-help modes. The wording comes
  * from IssueLabelFilter.descriptionRes(), shared with the gate screen's cards so they cannot drift apart.
  */
 @OptIn(ExperimentalMaterial3Api::class)

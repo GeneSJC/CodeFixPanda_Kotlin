@@ -1,5 +1,9 @@
 <resources>
-    <string name="app_name">GitHub Issue Finder</string>
+    <string name="app_name">Open Source Contributor</string>
+    <!-- The name under the launcher icon. Some launchers cut a long name short; shorten this one string if that looks bad. -->
+    <string name="launcher_label">Open Source Contributor</string>
+    <!-- Shown on every screen that names GitHub. -->
+    <string name="independent_notice">Independent app. Not affiliated with or endorsed by GitHub.</string>
 
     <!-- Wording the ViewModels build from the data layer's facts. -->
     <string name="error_unknown">unknown error</string>
@@ -25,7 +29,7 @@
     <!-- Settings, the token help dialog and the mode gate. -->
     <string name="settings_title">Settings</string>
     <string name="settings_token_heading">GitHub token</string>
-    <string name="settings_token_explainer">GitHub Issue Finder needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
+    <string name="settings_token_explainer">Open Source Contributor needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
     <string name="settings_token_label">Your GitHub token</string>
     <string name="token_show">Show</string>
     <string name="token_hide">Hide</string>
@@ -34,10 +38,10 @@
     <string name="token_remove_unavailable_build">This token is built into this debug build, so it cannot be removed here.</string>
     <string name="settings_how_to_get_token">How do I get a token?</string>
     <string name="token_help_title">How to get a GitHub token</string>
-    <string name="token_help_intro">GitHub Issue Finder needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>
+    <string name="token_help_intro">Open Source Contributor needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>
     <string name="token_help_step1">Sign in at github.com. You can create a free account if you don\'t have one.</string>
     <string name="token_help_step2">Open Settings → Developer settings → Personal access tokens → Tokens (classic), then choose Generate new token (classic). The button below takes you straight there.</string>
-    <string name="token_help_step3">Name it \"GitHub Issue Finder\" and pick an expiration. Leave every permission (scope) unchecked.</string>
+    <string name="token_help_step3">Name it \"Open Source Contributor\" and pick an expiration. Leave every permission (scope) unchecked.</string>
     <string name="token_help_step4">Tap Generate token, then copy the token. GitHub shows it only once, so copy it before leaving the page.</string>
     <string name="token_help_step5">Come back here, paste it into the token box, and tap Save.</string>
     <string name="token_help_footer">Your token stays on this device and is sent only to GitHub. A token saved here replaces any token built into the app.</string>
@@ -59,8 +63,8 @@
     <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
-    <string name="menu_find_good_first_issues">Find Good First Issues</string>
-    <string name="menu_find_help_wanted_issues">Find Help Wanted Issues</string>
+    <string name="menu_find_good_first_issues">Find Beginner-Friendly Issues</string>
+    <string name="menu_find_help_wanted_issues">Find Projects Asking for Help</string>
     <string name="menu_section_sandbox">Sandbox</string>
     <string name="menu_play_origami">Play Origami Animation</string>
     <string name="menu_play_shape_stack">Play Shape Stack Animation</string>
@@ -95,7 +99,7 @@
 
     <!-- Lists, hidden issues, bookmarks, label info and the issue card. -->
     <string name="action_retry">Retry</string>
-    <string name="repo_list_empty">No repos with an open %1$s issue found for this language right now.</string>
+    <string name="repo_list_empty">No repos found for \"%1$s\" in this language right now.</string>
     <string name="repo_card_all_hidden">All hidden</string>
     <string name="action_load_more">Load More</string>
     <string name="load_more_end">That\'s everything GitHub has for this search.</string>
@@ -115,8 +119,8 @@
     <string name="hidden_unhide_all_message">They\'ll reappear wherever they\'re still cached — Top Repos and repo lists alike.</string>
     <string name="bookmarks_title">Bookmarks</string>
     <string name="bookmarks_empty">No bookmarks yet — tap the ★ on any issue to save it here.</string>
-    <string name="label_info_title">What do these tags mean?</string>
-    <string name="label_info_footer">Both are GitHub-wide conventions applied by each repo\'s own maintainers, not enforced or verified by GitHub itself — actual difficulty and quality can vary a lot from repo to repo.</string>
+    <string name="label_info_title">What do these two choices mean?</string>
+    <string name="label_info_footer">Maintainers choose these labels themselves; GitHub does not check them, so difficulty and quality vary from project to project.</string>
     <string name="share_issue_chooser">Share issue</string>
     <string name="link_copied">Link copied</string>
     <string name="comments_and_updated">%1$s · %2$s</string>
@@ -158,12 +162,12 @@
     <string name="resets_in_minutes_seconds">%1$dm %2$ds</string>
 
     <!-- Issue modes and languages. -->
-    <string name="mode_good_first_issue_name">good first issue</string>
-    <string name="mode_help_wanted_name">help wanted</string>
-    <string name="mode_good_first_issue_button">Good First Issue</string>
-    <string name="mode_help_wanted_button">Help Wanted</string>
-    <string name="mode_good_first_issue_description">A label maintainers apply to issues they consider good starting points for new contributors — usually well-scoped and not requiring deep familiarity with the codebase. A good place for a newer or beginner developer to start.</string>
-    <string name="mode_help_wanted_description">A broader label signaling that maintainers welcome outside help on this particular issue — maintainers raising a flag that they could use a hand. Can range from simple to fairly involved — less beginner-specific than \"good first issue.\"</string>
+    <string name="mode_good_first_issue_name">beginner-friendly issues</string>
+    <string name="mode_help_wanted_name">projects asking for help</string>
+    <string name="mode_good_first_issue_button">Beginner-Friendly Issues</string>
+    <string name="mode_help_wanted_button">Projects Asking for Help</string>
+    <string name="mode_good_first_issue_description">Issues the project\'s maintainers marked as a good place for newcomers to start — usually small, clearly explained, and not needing deep knowledge of the code. A good fit if you are new to contributing. (GitHub\'s label for these is \"good first issue.\")</string>
+    <string name="mode_help_wanted_description">Issues where the maintainers say they would welcome outside help. They can be simple or quite involved, so they are less aimed at beginners. (GitHub\'s label for these is \"help wanted.\")</string>
     <string name="language_any">Any</string>
     <string name="language_kotlin" translatable="false">Kotlin</string>
     <string name="language_java" translatable="false">Java</string>
@@ -173,7 +177,7 @@
 
     <!-- Welcome screen (the front door) and the token guide. The screenshot captions are text placeholders until real screenshots of GitHub's pages exist. -->
     <string name="welcome_title_intro">Welcome to</string>
-    <string name="welcome_title_name">GitHub\nIssue Finder</string>
+    <string name="welcome_title_name">Open Source\nContributor</string>
     <string name="welcome_message">To use this app you need to set your GitHub token. It is free, takes about a minute, and needs no permissions.</string>
     <string name="welcome_how_to_link">How does it work?</string>
     <string name="welcome_try_demo">Try the demo</string>

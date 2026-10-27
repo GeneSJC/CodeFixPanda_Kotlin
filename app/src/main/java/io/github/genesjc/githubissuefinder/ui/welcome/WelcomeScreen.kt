@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.githubissuefinder.R
+import io.github.genesjc.githubissuefinder.ui.components.IndependentNotice
 import io.github.genesjc.githubissuefinder.data.TokenSource
 import io.github.genesjc.githubissuefinder.ui.components.TokenField
 import io.github.genesjc.githubissuefinder.ui.NEW_TOKEN_URL
@@ -201,6 +202,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
                 }
+                IndependentNotice(color = SoftWhite, modifier = Modifier.padding(top = 16.dp))
             }
         }
     }
