@@ -20,9 +20,13 @@ fun IndependentNotice(
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     textAlign: TextAlign = TextAlign.Center,
 ) {
+    // labelSmall made 50% larger so the notice is easy to read.
+    val noticeStyle = MaterialTheme.typography.labelSmall.let {
+        it.copy(fontSize = it.fontSize * 1.5f, lineHeight = it.lineHeight * 1.5f)
+    }
     Text(
         stringResource(R.string.independent_notice),
-        style = MaterialTheme.typography.labelSmall,
+        style = noticeStyle,
         color = color,
         textAlign = textAlign,
         modifier = modifier,
