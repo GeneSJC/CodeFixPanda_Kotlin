@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.sp
  */
 internal const val SPLASH_TEXT_SCALE = 1.7f
 
-private const val CONTRIBUTOR_BASE_FONT_SP = 20f
-private const val CONTRIBUTOR_BASE_LETTER_SPACING_SP = 4f
+private const val PANDA_BASE_FONT_SP = 20f
+private const val PANDA_BASE_LETTER_SPACING_SP = 4f
 
 /** "Open Source" is longer than the old two-word headline, so it is set smaller to fit a phone's width. */
 private const val HEADLINE_FIT_FACTOR = 0.62f
@@ -38,7 +38,7 @@ private const val HEADLINE_FIT_FACTOR = 0.62f
 private fun TextUnit.scaledBy(factor: Float): TextUnit = if (isSpecified) this * factor else this
 
 /**
- * The app name laid out as "Open|Source" over "CONTRIBUTOR", centered —
+ * The app name laid out as "Open|Source" over "PANDA", centered —
  * shared by the full title-reveal animation (which passes motion
  * modifiers for each word) and the short splash (which passes
  * none), so the short version starts on the animation's final frame
@@ -49,7 +49,7 @@ internal fun TitleWordmark(
     modifier: Modifier = Modifier,
     openModifier: Modifier = Modifier,
     sourceModifier: Modifier = Modifier,
-    contributorModifier: Modifier = Modifier,
+    pandaModifier: Modifier = Modifier,
 ) {
     // Shared by both "Open" and "Source": a soft colored glow beneath the
     // wordmark, matching the reference's own drop-shadowed look — plain
@@ -66,10 +66,10 @@ internal fun TitleWordmark(
         ),
     )
     val title = MaterialTheme.typography.titleMedium
-    val contributorStyle = title.copy(
-        fontSize = (CONTRIBUTOR_BASE_FONT_SP * SPLASH_TEXT_SCALE).sp,
+    val pandaStyle = title.copy(
+        fontSize = (PANDA_BASE_FONT_SP * SPLASH_TEXT_SCALE).sp,
         lineHeight = title.lineHeight.scaledBy(SPLASH_TEXT_SCALE),
-        letterSpacing = (CONTRIBUTOR_BASE_LETTER_SPACING_SP * SPLASH_TEXT_SCALE).sp,
+        letterSpacing = (PANDA_BASE_LETTER_SPACING_SP * SPLASH_TEXT_SCALE).sp,
     )
 
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -92,12 +92,12 @@ internal fun TitleWordmark(
         }
         Spacer(modifier = Modifier.height((8 * SPLASH_TEXT_SCALE).dp))
         Text(
-            "CONTRIBUTOR",
-            style = contributorStyle,
+            "PANDA",
+            style = pandaStyle,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = contributorModifier,
+            modifier = pandaModifier,
         )
     }
 }

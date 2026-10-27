@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 // speedMultiplier param scales them at call time — see that doc comment.
 private const val GIT_BASE_DURATION_MS = 896
 private const val HUB_BASE_DURATION_MS = 320
-private const val CONTRIBUTOR_BASE_DURATION_MS = 384
+private const val PANDA_BASE_DURATION_MS = 384
 private const val HOLD_BASE_MS = 900
 private const val BURST_BASE_DURATION_MS = 500
 
@@ -65,7 +65,7 @@ private const val BURST_HOLD_FRACTION = 0.45
 
 /**
  * A kinetic title-reveal splash: "Open" slides in from the left and overshoots before settling, "Source"
- * slides in from the right and shudders on impact, then "Contributor" rises into place beneath them,
+ * slides in from the right and shudders on impact, then "Panda" rises into place beneath them,
  * spelling the app's own name (see SplashBrandMark.kt on why it does not use GitHub's brand).
  * [speedMultiplier] scales every stage duration (0.5 means twice as slow), so one composable serves
  * the standard and half-speed replays. Each word has its own Animatable(s), launched in a coroutine
@@ -83,8 +83,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val gitDurationMs = (GIT_BASE_DURATION_MS / speedMultiplier).toInt()
     val hubStartMs = gitDurationMs
     val hubDurationMs = (HUB_BASE_DURATION_MS / speedMultiplier).toInt()
-    val contributorStartMs = hubStartMs + hubDurationMs
-    val contributorDurationMs = (CONTRIBUTOR_BASE_DURATION_MS / speedMultiplier).toInt()
+    val pandaStartMs = hubStartMs + hubDurationMs
+    val pandaDurationMs = (PANDA_BASE_DURATION_MS / speedMultiplier).toInt()
     val holdMs = (HOLD_BASE_MS / speedMultiplier).toInt()
     val burstDurationMs = (BURST_BASE_DURATION_MS / speedMultiplier).toInt()
     // Exactly when, within Hub's own entrance, the collision itself
@@ -106,8 +106,8 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val gitOffsetX = remember { Animatable(-offscreenPx) }
     val gitRotation = remember { Animatable(0f) }
     val hubOffsetX = remember { Animatable(offscreenPx) }
-    val contributorOffsetY = remember { Animatable(riseOffsetPx) }
-    val contributorAlpha = remember { Animatable(0f) }
+    val pandaOffsetY = remember { Animatable(riseOffsetPx) }
+    val pandaAlpha = remember { Animatable(0f) }
     val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
@@ -184,7 +184,7 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and scaling from
         // the start left the circle nearly transparent by the time it was big enough to see.
         launch {
-            delay((contributorStartMs + contributorDurationMs).toLong())
+            delay((pandaStartMs + pandaDurationMs).toLong())
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
             }
@@ -199,18 +199,18 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // "Contributor": a straight rise from below into place under
+        // "Panda": a straight rise from below into place under
         // "Open Source", fading in as it goes.
         launch {
-            delay(contributorStartMs.toLong())
-            contributorOffsetY.snapTo(riseOffsetPx)
+            delay(pandaStartMs.toLong())
+            pandaOffsetY.snapTo(riseOffsetPx)
             launch {
-                contributorOffsetY.animateTo(0f, tween(contributorDurationMs, easing = FastOutSlowInEasing))
+                pandaOffsetY.animateTo(0f, tween(pandaDurationMs, easing = FastOutSlowInEasing))
             }
-            contributorAlpha.animateTo(1f, tween(contributorDurationMs))
+            pandaAlpha.animateTo(1f, tween(pandaDurationMs))
         }
 
-        delay((contributorStartMs + contributorDurationMs + holdMs).toLong())
+        delay((pandaStartMs + pandaDurationMs + holdMs).toLong())
         onFinished()
     }
 
@@ -255,9 +255,9 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
                 rotationZ = gitRotation.value
             },
             sourceModifier = Modifier.graphicsLayer { translationX = hubOffsetX.value },
-            contributorModifier = Modifier.graphicsLayer {
-                translationY = contributorOffsetY.value
-                alpha = contributorAlpha.value
+            pandaModifier = Modifier.graphicsLayer {
+                translationY = pandaOffsetY.value
+                alpha = pandaAlpha.value
             },
         )
     }
