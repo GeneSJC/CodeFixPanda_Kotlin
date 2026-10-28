@@ -8,8 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -47,8 +44,8 @@ private const val BURST_START_ALPHA = 0.85f
 private const val BURST_HOLD_FRACTION = 0.45
 
 /**
- * The short splash for every launch after the first: the title screen as the full animation leaves
- * it once settled, fading in until the burst ends, and on its own for [TITLE_ONLY_MS] before the burst, then the same "sonic boom" burst and hold
+ * The short splash for every launch after the first: the title screen, panda included, as the full
+ * animation leaves it once settled, fading in until the burst ends, and on its own for [TITLE_ONLY_MS] before the burst, then the same "sonic boom" burst and hold
  * that animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
  * that ending, not shared code, so the first-launch animation is never at risk from changes here.
  * Like the original it lets two frames go by before starting, since the first frame of a cold start
@@ -100,26 +97,18 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
             modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center,
         ) {
-            // Drawn first so it sits behind the wordmark below.
-            Box(
-                modifier = Modifier
-                    .size(BURST_SIZE)
-                    .graphicsLayer {
-                        scaleX = burstScale.value
-                        scaleY = burstScale.value
-                        alpha = burstAlpha.value
-                    }
-                    .background(
-                        Brush.radialGradient(
-                            0f to MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            0.6f to MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                            1f to MaterialTheme.colorScheme.primary.copy(alpha = 0f),
-                        ),
-                        CircleShape,
-                    ),
+            // The title fades in piece by piece (not as one layer), so the burst behind the panda is not
+            // dimmed by the fade.
+            val fade = Modifier.graphicsLayer { alpha = titleAlpha.value }
+            TitleWordmark(
+                openModifier = fade,
+                sourceModifier = fade,
+                pandaModifier = fade,
+                mascotModifier = fade,
+                mascotBackdrop = {
+                    SplashBurst(BURST_SIZE / 2, burstScale = { burstScale.value }, burstAlpha = { burstAlpha.value })
+                },
             )
-
-            TitleWordmark(modifier = Modifier.graphicsLayer { alpha = titleAlpha.value })
         }
     }
 }
