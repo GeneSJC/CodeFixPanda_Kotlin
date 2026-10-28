@@ -17,7 +17,7 @@ The top projects with open issues that suit beginners, or that are asking for he
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0B1736?style=flat-square)](LICENSE)
 
-[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
+[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
 <img src="docs/images/divider.png" alt="" width="100%">
 
@@ -128,6 +128,22 @@ debug builds start with it, skipping the welcome screen. Release builds never in
 setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 </details>
+
+<a id="developer-tools"></a>
+
+## 🛠️ Developer tools
+
+Small command-line tools keep verification fast and repeatable, and CI runs the same ones, so a green run on your machine means a green run there.
+
+| Tool | What it does | When to run it |
+|---|---|---|
+| `./scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
+| `./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug` | Unit tests and debug builds for both flavors. Both are named because the bare task names are ambiguous with two flavors | After any code change; a `foss`-only run can miss a break in the `commercial` source folder |
+| `./scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
+| `./scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
+| `python3 docs/images/make_art.py` | Regenerates the README banner, divider, mascot and placeholder screens | After a rename or a color change |
+| `python3 docs/images/make_launcher_icons.py` | Regenerates the launcher icon backgrounds and the pre-Android-8 icons | After changing the icon colors |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
 
 <a id="architecture"></a>
 
