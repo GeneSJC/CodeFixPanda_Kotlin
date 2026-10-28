@@ -1,4 +1,4 @@
-# GitHubIssueFinder — Setup Docs (Draft)
+# Open Source Panda — Setup Docs (Draft)
 
 > **Status: TBD / iterative.** This is a first-pass doc living under `/_meta` while it takes
 > shape — not yet promoted into the top-level `README.md`. Content and structure here can
@@ -22,7 +22,7 @@ this way, without needing a real or mocked `Application`).
   annotation (method) or the class declaration (whole class), or right-click the file in the
   Project view → **Run 'RepoIssueGroupingTest'**.
 - **Whole package**: right-click a package under `app/src/test/java/` (e.g.
-  `io.github.genesjc.githubissuefinder.data`) → **Run Tests in '...'**.
+  `io.github.genesjc.opensourcepanda.data`) → **Run Tests in '...'**.
 - **Whole module**: right-click `app` (or `app/src/test/java`) → **Run All Tests**, or use
   the pre-configured **app** run configuration's dropdown if one exists.
 - Results show in the **Run** panel with per-test pass/fail and a re-run-failed option — no
@@ -43,7 +43,7 @@ One flavor only: `./gradlew testFossDebugUnitTest`
 Run a single test class:
 
 ```bash
-./gradlew :app:testFossDebugUnitTest --tests "io.github.genesjc.githubissuefinder.data.RepoIssueGroupingTest"
+./gradlew :app:testFossDebugUnitTest --tests "io.github.genesjc.opensourcepanda.data.RepoIssueGroupingTest"
 ```
 
 Instrumented tests (`app/src/androidTest/java/`) require a device or emulator and aren't

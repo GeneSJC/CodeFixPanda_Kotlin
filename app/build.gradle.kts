@@ -27,7 +27,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 41
-val buildLabelB = 10
+val buildLabelB = 11
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // docs/ads-restore.md, and the tag ads-parked-2026-10-27 that holds the working implementation).
 
@@ -40,7 +40,7 @@ val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titl
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
 android {
-    namespace = "io.github.genesjc.githubissuefinder"
+    namespace = "io.github.genesjc.opensourcepanda"
     compileSdk {
         version = release(37)
     }

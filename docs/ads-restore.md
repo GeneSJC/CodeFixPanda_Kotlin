@@ -20,9 +20,9 @@ integration points (section 4).
 
 ## 1. What was parked, and what stayed
 
-**Removed from every build (restore these):**
+**Removed from every build (restore these).** The paths below are as they are in the archive, which predates the package rename (the code package was `io.github.genesjc.githubissuefinder` then and is `io.github.genesjc.opensourcepanda` now). Step 3.2 moves the files into the current package.
 
-| Piece | Path | Role |
+| Piece | Path in the archive | Role |
 |---|---|---|
 | Real controller | `app/src/commercial/java/io/github/genesjc/githubissuefinder/ads/AdMobAdsController.kt` | Consent (UMP), SDK start, test devices, rewarded video, the flags |
 | Ad-free period | `app/src/commercial/java/io/github/genesjc/githubissuefinder/ads/AdFreePeriod.kt` | The earned hour: start, expiry as a Flow, saved end time, clock clamp |
@@ -72,6 +72,21 @@ git checkout 9d61e0f1fd0814f68d8061cd24698bb069d6e70d -- \
   app/src/commercial/java/io/github/genesjc/githubissuefinder/ads/AdsModule.kt \
   app/src/commercial/java/io/github/genesjc/githubissuefinder/ui/ads/AdBanner.kt \
   app/src/testCommercial/java/io/github/genesjc/githubissuefinder/ads/AdFreePeriodTest.kt
+```
+   Then move the copied files into the current package (the archive uses the old package name, so the paths and the
+   `package` and `import` lines all change). The current stubs sit in the new folders, and this overwrites them:
+```
+OLD=io/github/genesjc/githubissuefinder; NEW=io/github/genesjc/opensourcepanda
+for set in commercial testCommercial; do
+  if [ -d app/src/$set/java/$OLD ]; then
+    mkdir -p app/src/$set/java/$NEW
+    cp -R app/src/$set/java/$OLD/. app/src/$set/java/$NEW/
+    git rm -r -q --cached app/src/$set/java/$OLD && rm -rf app/src/$set/java/$OLD
+  fi
+done
+grep -rl "io.github.genesjc.githubissuefinder" app/src/commercial app/src/testCommercial \
+  | xargs sed -i 's/io\.github\.genesjc\.githubissuefinder/io.github.genesjc.opensourcepanda/g'
+git add -A app/src/commercial app/src/testCommercial
 ```
 3. **Gradle: the advertising block.** Paste appendix A1 into `app/build.gradle.kts` below the build-label values and above
    `splashAnimation`. It defines Google's sample ids, the `admobProduction` flag, its guard and the release ids. (The

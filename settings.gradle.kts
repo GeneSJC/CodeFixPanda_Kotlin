@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GitHubIssueFinder"
+rootProject.name = "OpenSourcePanda"
 include(":app")

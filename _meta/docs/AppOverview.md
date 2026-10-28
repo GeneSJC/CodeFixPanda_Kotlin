@@ -1,10 +1,10 @@
-# GitHubIssueFinder - App Overview
+# Open Source Panda - App Overview
 
 Feature and value report - prepared September 28, 2026 | Android project (Jetpack Compose, MVVM, Coroutines/Flow)
 
 ## What the App Is
 
-GitHubIssueFinder is an Android app that helps developers discover real, currently-open GitHub issues labeled "good first issue" or "help wanted" - browse them, track them, and act on them, without leaving the app. It runs against a live connection to GitHub's Search API (via a personal access token), not sample or static data, so everything shown reflects the real, current state of GitHub.
+Open Source Panda is an Android app that helps developers discover real, currently-open GitHub issues labeled "good first issue" or "help wanted" - browse them, track them, and act on them, without leaving the app. It runs against a live connection to GitHub's Search API (via a personal access token), not sample or static data, so everything shown reflects the real, current state of GitHub.
 
 The app runs a single, focused flow: pick a contribution mode, discover repos with matching open issues, drill into a repo's issues, and act on them - bookmark, hide, share, or open directly on GitHub.
 
@@ -55,7 +55,7 @@ Built to demonstrate real Android engineering practice, not just a working demo:
 
 ## Value to Developers Looking to Contribute
 
-The app is aimed squarely at a real, common problem: finding a genuinely good first open-source issue to work on is harder than it should be. GitHub's own search is powerful but generic - it doesn't group results by repo, doesn't remember what you've already looked at, and gives no sense of how close you are to hitting its rate limit. GitHubIssueFinder closes those specific gaps:
+The app is aimed squarely at a real, common problem: finding a genuinely good first open-source issue to work on is harder than it should be. GitHub's own search is powerful but generic - it doesn't group results by repo, doesn't remember what you've already looked at, and gives no sense of how close you are to hitting its rate limit. Open Source Panda closes those specific gaps:
 
 - **Faster discovery** - results are grouped by repo and ranked by match count, so a developer sees which projects actually have multiple approachable issues right now, instead of scrolling a flat, unranked issue list.
 - **Language-first browsing** - filtering by the language you actually know turns a generic "good first issue" search into a genuinely relevant shortlist.

@@ -294,7 +294,7 @@ build because the ad account, privacy and consent work behind it is not finished
 ### Where things live
 
 ```text
-app/src/main/java/io/github/genesjc/githubissuefinder/
+app/src/main/java/io/github/genesjc/opensourcepanda/
 ├── ads/          the SDK-free ads contract (ads are parked)
 ├── data/         repositories, state holders, storage, rate limit, and demo/ (the invented data)
 ├── di/           AppModule: the one place Koin is told how things are built
