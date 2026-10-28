@@ -271,7 +271,7 @@ Flavors, and not a runtime flag, keep code that only one build may contain out o
 **The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
 steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
-More in `docs/design-notes.md`, "Front door" and "Token storage".
+More in `docs/design-notes.md`, "Token storage".
 
 **Ads are parked.** No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
 flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then taken out of the
@@ -336,7 +336,7 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 
 | Read | To learn |
 |---|---|
-| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, the front door, token storage, flavors |
+| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
 | [`docs/ads-restore.md`](docs/ads-restore.md) | How to bring the parked ads layer back, step by step |
 | [`docs/ads-architecture.md`](docs/ads-architecture.md) | How the ads layer works, including the ad-free hour |
 | [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
