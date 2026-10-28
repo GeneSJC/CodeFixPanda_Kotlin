@@ -5,8 +5,10 @@ Run from the repository root: python3 docs/images/make_launcher_icons.py
 The icon is the panda on a diagonal gradient (blue for the commercial build, green for foss). The
 adaptive foreground and monochrome layers are not touched; this script only rebuilds the gradient
 backgrounds (the same stops as ic_launcher_background.xml) and the flat legacy icons that stack the
-foreground on top of them.
+foreground on top of them. It also writes res/drawable-nodpi/panda_mark.png, the panda cropped out of
+the foreground with a small margin, which the splash screen draws.
 """
+import os
 from PIL import Image, ImageDraw
 
 RES = "app/src"
@@ -65,4 +67,9 @@ for variant, source_set in (("main", "main"), ("foss", "foss")):
     for density, size in DENSITY_LEGACY.items():
         legacy(master, foreground, size, False).save(f"{RES}/{source_set}/res/mipmap-{density}/ic_launcher.png")
         legacy(master, foreground, size, True).save(f"{RES}/{source_set}/res/mipmap-{density}/ic_launcher_round.png")
+box = foreground.getbbox()
+margin = 8
+panda_mark = foreground.crop((box[0] - margin, box[1] - margin, box[2] + margin, box[3] + margin))
+os.makedirs(f"{RES}/main/res/drawable-nodpi", exist_ok=True)
+panda_mark.save(f"{RES}/main/res/drawable-nodpi/panda_mark.png", optimize=True)
 print("done")
