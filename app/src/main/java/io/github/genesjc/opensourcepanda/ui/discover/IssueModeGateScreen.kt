@@ -94,7 +94,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp, bottom = 40.dp),
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         IssueLabelFilter.entries.forEach { mode ->
                             ModeCard(mode = mode, slots = slots, onSelect = { onModeSelected(mode) })
                         }
@@ -116,10 +116,10 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
         label = "modeDescriptionChevronRotation",
     )
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.10f)),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 // One button, centered in the card with room kept free on both sides for the arrow,
                 // so the button never runs under it. Every button fills that same width, so they match;
@@ -174,7 +174,7 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
                     stringResource(mode.descriptionRes()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 12.dp),
+                    modifier = Modifier.padding(top = 8.dp),
                 )
             }
         }
@@ -183,10 +183,10 @@ private fun ModeCard(mode: IssueLabelFilter, slots: ModeButtonSlots, onSelect: (
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
-/** The icon and the name share this text size, 25% above titleMedium. */
+/** The icon and the name share this text size, 15% above titleMedium. */
 @Composable
 private fun modeButtonTextStyle() = MaterialTheme.typography.titleMedium.let {
-    it.copy(fontSize = it.fontSize * 1.25f, lineHeight = it.lineHeight * 1.25f)
+    it.copy(fontSize = it.fontSize * 1.15f, lineHeight = it.lineHeight * 1.15f)
 }
 
 /** The width of the icon slot: the widest icon of any mode, shared by every button. */
@@ -206,10 +206,10 @@ private fun rememberModeButtonSlots(): ModeButtonSlots {
     }
 }
 
-private val MODE_BUTTON_SIDE_PADDING = 14.dp
+private val MODE_BUTTON_SIDE_PADDING = 12.dp
 
 /** Space kept free at each end of the button row, the width the expand arrow needs. */
-private val CHEVRON_RESERVED_WIDTH = 36.dp
+private val CHEVRON_RESERVED_WIDTH = 28.dp
 
 // Half the 24dp this started at.
-private val MODE_ICON_TEXT_GAP = 12.dp
+private val MODE_ICON_TEXT_GAP = 10.dp

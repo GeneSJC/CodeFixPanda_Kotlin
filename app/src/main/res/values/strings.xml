@@ -164,7 +164,8 @@
     <!-- Issue modes and languages. -->
     <string name="mode_good_first_issue_name">beginner-friendly issues</string>
     <string name="mode_help_wanted_name">projects asking for help</string>
-    <string name="mode_good_first_issue_button">Beginner-Friendly Issues</string>
+    <!-- The invisible break point after the hyphen lets a narrow screen wrap at "Beginner-" instead of in the middle of "Friendly". -->
+    <string name="mode_good_first_issue_button">Beginner-&#8203;Friendly Issues</string>
     <string name="mode_help_wanted_button">Projects Asking for Help</string>
     <string name="mode_good_first_issue_description">Issues the project\'s maintainers marked as a good place for newcomers to start — usually small, clearly explained, and not needing deep knowledge of the code. A good fit if you are new to contributing. (GitHub\'s label for these is \"good first issue.\")</string>
     <string name="mode_help_wanted_description">Issues where the maintainers say they would welcome outside help. They can be simple or quite involved, so they are less aimed at beginners. (GitHub\'s label for these is \"help wanted.\")</string>
