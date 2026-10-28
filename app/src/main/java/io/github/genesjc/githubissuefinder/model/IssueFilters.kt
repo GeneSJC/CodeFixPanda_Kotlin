@@ -16,8 +16,8 @@ enum class IssueLabelFilter(
 
 /**
  * A small fixed set rather than free-text input, per the "nimble" project
- * convention — covers the languages most relevant to an Android-developer
- * portfolio piece. queryValue is null for ANY, meaning "no language
+ * convention — covers the languages most relevant to Android developers.
+ * queryValue is null for ANY, meaning "no language
  * qualifier added to the search query."
  */
 enum class LanguageFilter(val queryValue: String?) {

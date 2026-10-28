@@ -1,6 +1,6 @@
 # Design notes
 
-**Who this is for:** engineers and hiring managers evaluating this project. **What is here:** the decisions and trade-offs behind the code, and the reasons for them, which are too long for a code comment. Code points here by section title.
+The decisions and trade-offs behind the code, and the reasons for them, which are too long for a code comment. Code points here by section title.
 
 ## Top Repos screen
 

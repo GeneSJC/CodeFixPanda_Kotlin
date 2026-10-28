@@ -1,6 +1,6 @@
 # GitHubIssueFinder - App Overview
 
-Feature and value report - prepared September 28, 2026 | Android portfolio project (Jetpack Compose, MVVM, Coroutines/Flow)
+Feature and value report - prepared September 28, 2026 | Android project (Jetpack Compose, MVVM, Coroutines/Flow)
 
 ## What the App Is
 

@@ -8,7 +8,7 @@ package io.github.genesjc.githubissuefinder.data
  * reads BuildConfig once to build this object.
  *
  * Why include [buildLabel] even though it is display-only: one rule
- * ("views never read BuildConfig") is easier to follow and to review
+ * ("views never read BuildConfig") is easier to follow
  * than a rule with a carve-out, and the cost is one forwarding getter.
  *
  * A test builds its own [AppConfig], for example one with the drawer flag
