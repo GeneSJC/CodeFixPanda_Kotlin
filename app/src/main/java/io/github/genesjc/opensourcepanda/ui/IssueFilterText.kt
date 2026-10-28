@@ -24,7 +24,7 @@ fun IssueLabelFilter.buttonLabelRes(): Int = when (this) {
     IssueLabelFilter.HELP_WANTED -> R.string.mode_help_wanted_button
 }
 
-/** What the mode's GitHub label means, shared by the info dialog and the gate screen's cards. */
+/** What the mode's GitHub label means, shown in the info dialog. */
 @StringRes
 fun IssueLabelFilter.descriptionRes(): Int = when (this) {
     IssueLabelFilter.GOOD_FIRST_ISSUE -> R.string.mode_good_first_issue_description

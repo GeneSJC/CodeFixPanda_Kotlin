@@ -19,7 +19,7 @@ import io.github.genesjc.opensourcepanda.ui.nameRes
 
 /**
  * The "what do these two choices mean?" dialog for the beginner-friendly and asking-for-help modes. The wording comes
- * from IssueLabelFilter.descriptionRes(), shared with the gate screen's cards so they cannot drift apart.
+ * from IssueLabelFilter.descriptionRes(). It opens from the info icon on the mode gate and from the pill on Top Repos.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

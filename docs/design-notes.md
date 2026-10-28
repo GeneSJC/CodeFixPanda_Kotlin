@@ -76,7 +76,7 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **A literal gate.** With no mode chosen the app shows this screen instead of a silent default; the mode is one deliberate choice made here.
 - **Nested theme.** The screen's content sits in a theme with `issueMode = null`. Tapping a card sets the mode synchronously, so the single root theme recomposed every visible screen, including this one still fading out; the theme's crossfade covers only a handful of color roles, so the subheader and text color visibly snapped to the new mode's tone just before the transition. Pinning this subtree to the neutral scheme removes the snap.
 - **Plain names, labels second.** The modes are called "beginner-friendly issues" and "projects asking for help", because GitHub's own labels ("good first issue", "help wanted") mean little to someone outside open-source convention. The descriptions name the labels, and the search queries still use the real ones, so only the words on screen are plain.
-- **Expanding cards.** Only the colored pill selects a mode; a separate chevron reveals the description, which is the same wording `LabelInfoDialog` uses, held in one place so the two cannot drift.
+- **One info icon, one dialog.** The screen explains itself (the question, the prompt, two buttons), so there are no per-mode descriptions on it. An info icon beside the prompt opens a single dialog (`LabelInfoDialog`) describing both modes for anyone who wants more, and it is the same dialog and wording the Top Repos pill uses, held in one place so they cannot drift. The "not affiliated with GitHub" line sits directly under the headline, so it is seen before anything is chosen.
 
 ## Splash screen
 
