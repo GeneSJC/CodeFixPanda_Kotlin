@@ -80,10 +80,11 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 
 ## Splash screen
 
-- **The animation.** The title builds itself: "Open" slides in from the left and lurches as it stops, "Source" slides in from the right and shudders on impact, then "PANDA" rises into place beneath them while a soft burst of light flashes behind the title. It plays at half speed so each beat can be seen.
-- **Later launches.** Once a device has seen the full animation finish, every later launch plays a short version: the finished title fades in, sits for a moment, and then the same burst plays, so a returning user is not made to watch the build each time. The short version is its own composable with an independent copy of the ending, so changes to it can never affect the first-launch animation.
+- **The animation.** The title builds itself: "Open" slides in from the left and lurches as it stops, "Source" slides in from the right and shudders on impact, and "PANDA" rises into place beneath them. Then the panda drops in above the name, falling with gravity, and lands with a squash from its base as a soft burst of light flashes behind it. It plays at half speed so each beat can be seen.
+- **Later launches.** Once a device has seen the full animation finish, every later launch plays a short version: the finished title and the panda fade in, sit for a moment, and then the same burst plays, so a returning user is not made to watch the build each time. The short version is its own composable with an independent copy of the ending, so changes to it can never affect the first-launch animation. Both versions draw the same `TitleWordmark` (the panda, the name and "PANDA"), so the short version starts exactly where the full one ends, and they share one burst, `SplashBurst`, which is drawn rather than laid out so that it can grow far past the panda without moving anything.
 - **One entry point.** `AppStartSplashScreen` decides which version plays. The cold start and the menu's "Play App Start Animation" replay both call it, so a replay always matches what a user sees.
 - **Fixed look.** The splash always uses the app's purple palette, whichever issue mode is active. It is the app's own identity, so it does not repaint when the mode changes.
+- **The panda art.** The splash draws `panda_mark.png`, the panda cropped from the launcher icon by `docs/images/make_launcher_icons.py`. It is only about 300 px tall, so it is shown at 130 dp; a larger panda would need higher-resolution art.
 
 ## String resources
 
