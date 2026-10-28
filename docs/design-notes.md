@@ -77,13 +77,12 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **Nested theme.** The screen's content sits in a theme with `issueMode = null`. Tapping a card sets the mode synchronously, so the single root theme recomposed every visible screen, including this one still fading out; the theme's crossfade covers only a handful of color roles, so the subheader and text color visibly snapped to the new mode's tone just before the transition. Pinning this subtree to the neutral scheme removes the snap.
 - **Expanding cards.** "Good first issue" is not self-explanatory to someone outside open-source convention. Only the colored pill selects a mode; a separate chevron reveals the description, which is the same wording `LabelInfoDialog` uses, held in one place so the two cannot drift.
 
-## Splash screens
+## Splash screen
 
-- **Pinned palette.** The splash is the project's fixed brand identity, so every splash uses the Good First Issue (purple) palette and does not repaint under Help Wanted.
-- **Not GitHub's logo.** The "GH" mark is the project's own: an independent, unaffiliated portfolio project.
-- **Which one plays** is chosen in one place, `AppStartSplashScreen`, which both the cold start and the menu replay call, so a replay cannot drift from what a user saw. After the first launch a short version replaces the full animation: it fades the settled title in linearly from the first frame until the burst has finished (a short fade was not visible) and shows it on its own for about 1.35 seconds, then plays the same "sonic boom" burst and hold the full animation ends with, at the same 0.5x speed but with the burst 25% slower (1.25 s) and the hold trimmed by 150 ms. It is an independent copy of that ending (`TitleSettledSplashScreen`), so changes to it can never affect the first-launch animation.
-- **Origami fold.** Every shape is drawn already oriented as a diamond so each fold is a single-axis rotation; two earlier attempts needed to compose two rotations on one layer, which could not be verified without seeing it render.
-- **Shape stack** is a separate animation built to keep the snap-and-hold rhythm that emerged while tuning the folds. It is deliberately longer than the others.
+- **The animation.** The title builds itself: "Open" slides in from the left and lurches as it stops, "Source" slides in from the right and shudders on impact, then "PANDA" rises into place beneath them while a soft burst of light flashes behind the title. It plays at half speed so each beat can be seen.
+- **Later launches.** Once a device has seen the full animation finish, every later launch plays a short version: the finished title fades in, sits for a moment, and then the same burst plays, so a returning user is not made to watch the build each time. The short version is its own composable with an independent copy of the ending, so changes to it can never affect the first-launch animation.
+- **One entry point.** `AppStartSplashScreen` decides which version plays. The cold start and the menu's "Play App Start Animation" replay both call it, so a replay always matches what a user sees.
+- **Fixed look.** The splash always uses the app's purple palette, whichever issue mode is active. It is the app's own identity, so it does not repaint when the mode changes.
 
 ## String resources
 
