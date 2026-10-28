@@ -3,7 +3,7 @@
     <!-- The name under the launcher icon. -->
     <string name="launcher_label">Open Source Panda</string>
     <!-- Shown on every screen that names GitHub. -->
-    <string name="independent_notice">Independent app. Not affiliated with or endorsed by GitHub.</string>
+    <string name="independent_notice">Open Source Panda is not affiliated with or endorsed by GitHub.</string>
 
     <!-- Wording the ViewModels build from the data layer's facts. -->
     <string name="error_unknown">unknown error</string>
