@@ -9,7 +9,7 @@ The top projects with open issues that suit beginners, or that are asking for he
 
 <br>
 
-[![CI](https://github.com/GeneSJC/GitHubIssueFinder_Android/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/GitHubIssueFinder_Android/actions/workflows/ci.yml)
+[![CI](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM-1D4ED8?style=flat-square)
@@ -17,11 +17,13 @@ The top projects with open issues that suit beginners, or that are asking for he
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0B1736?style=flat-square)](LICENSE)
 
-[**What it does**](#-what-it-does) &nbsp;·&nbsp; [**Screens**](#-screens) &nbsp;·&nbsp; [**Run it**](#-run-it) &nbsp;·&nbsp; [**Architecture**](#-architecture) &nbsp;·&nbsp; [**Tech stack**](#-tech-stack) &nbsp;·&nbsp; [**Docs**](#-docs) &nbsp;·&nbsp; [**Status**](#-status)
+[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
 <img src="docs/images/divider.png" alt="" width="100%">
 
 </div>
+
+<a id="what-it-does"></a>
 
 ## ✨ What it does
 
@@ -64,6 +66,8 @@ a kind of issue and a language, and it lists the repositories with the most open
 > first screen walks you through making one in about a minute. The token is stored encrypted on your device, shown masked,
 > and sent only to GitHub.
 
+<a id="screens"></a>
+
 ## 📱 Screens
 
 <div align="center">
@@ -84,14 +88,19 @@ a kind of issue and a language, and it lists the repositories with the most open
 
 <sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
 
+<a id="run-it"></a>
+
 ## 🚀 Run it
 
 **You need** Android Studio (current stable) and a JDK to launch Gradle (CI uses 21; Gradle downloads the compile toolchain
 itself). The app runs on Android 7.0 (API 24) and newer.
 
+> [!NOTE]
+> **Which branch?** `develop` is the default and holds the latest code. `main` holds the latest stable release. Short-lived `feature-set/*` and `refinement/*` branches carry work in progress.
+
 ```bash
-git clone https://github.com/GeneSJC/GitHubIssueFinder_Android.git
-cd GitHubIssueFinder_Android
+git clone https://github.com/GeneSJC/OpenSourcePanda_Kotlin.git
+cd OpenSourcePanda_Kotlin
 ```
 
 1. Open the folder in Android Studio and let Gradle sync.
@@ -119,6 +128,24 @@ debug builds start with it, skipping the welcome screen. Release builds never in
 setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 </details>
+
+<a id="developer-tools"></a>
+
+## 🛠️ Developer tools
+
+Small command-line tools keep verification fast and repeatable, and CI runs the same ones, so a green run on your machine means a green run there.
+
+| Tool | What it does | When to run it |
+|---|---|---|
+| `./scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
+| `./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug` | Unit tests and debug builds for both flavors. Both are named because the bare task names are ambiguous with two flavors | After any code change; a `foss`-only run can miss a break in the `commercial` source folder |
+| `./scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
+| `./scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
+| `python3 docs/images/make_art.py` | Regenerates the README banner, divider, mascot and placeholder screens | After a rename or a color change |
+| `python3 docs/images/make_launcher_icons.py` | Regenerates the launcher icon backgrounds and the pre-Android-8 icons | After changing the icon colors |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
+
+<a id="architecture"></a>
 
 ## 🏗️ Architecture
 
@@ -260,7 +287,7 @@ Flavors, and not a runtime flag, keep code that only one build may contain out o
 **The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
 steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
-More in `docs/design-notes.md`, "Front door" and "Token storage".
+More in `docs/design-notes.md`, "Token storage".
 
 **Ads are parked.** No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
 flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then taken out of the
@@ -283,7 +310,7 @@ build because the ad account, privacy and consent work behind it is not finished
 ### Where things live
 
 ```text
-app/src/main/java/io/github/genesjc/githubissuefinder/
+app/src/main/java/io/github/genesjc/opensourcepanda/
 ├── ads/          the SDK-free ads contract (ads are parked)
 ├── data/         repositories, state holders, storage, rate limit, and demo/ (the invented data)
 ├── di/           AppModule: the one place Koin is told how things are built
@@ -302,6 +329,8 @@ app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
 docs/          design notes, ads restore guide              _meta/     setup docs
 ```
 
+<a id="tech-stack"></a>
+
 ## 🧰 Tech stack
 
 | | |
@@ -317,15 +346,19 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
 | **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
+<a id="docs"></a>
+
 ## 📚 Docs
 
 | Read | To learn |
 |---|---|
-| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, the front door, token storage, flavors |
+| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
 | [`docs/ads-restore.md`](docs/ads-restore.md) | How to bring the parked ads layer back, step by step |
 | [`docs/ads-architecture.md`](docs/ads-architecture.md) | How the ads layer works, including the ad-free hour |
 | [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
+
+<a id="status"></a>
 
 ## 🗺️ Status
 
@@ -335,6 +368,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
 | 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
 | 💡 **Later** | Sign in with GitHub instead of pasting a token |
+
+<a id="license"></a>
 
 ## 📄 License
 

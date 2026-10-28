@@ -16,3 +16,5 @@ generated; just add them.
 
 Tips: take screenshots in light mode with the demo data (nothing personal on screen), and keep each PNG under about
 400 KB so the page loads fast (an optimizer such as `pngquant` or Squoosh helps).
+
+Note on the navigation row: each README section has an explicit `<a id="..."></a>` anchor above its heading, and the row links to those. Headings with an emoji such as the map or the building carry a hidden character that GitHub keeps in its generated link, so links to the generated anchor can silently fail.
