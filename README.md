@@ -95,6 +95,9 @@ a kind of issue and a language, and it lists the repositories with the most open
 **You need** Android Studio (current stable) and a JDK to launch Gradle (CI uses 21; Gradle downloads the compile toolchain
 itself). The app runs on Android 7.0 (API 24) and newer.
 
+> [!NOTE]
+> **Which branch?** `develop` is the default and holds the latest code. `main` holds the latest stable release. Short-lived `feature-set/*` and `refinement/*` branches carry work in progress.
+
 ```bash
 git clone https://github.com/GeneSJC/OpenSourcePanda_Kotlin.git
 cd OpenSourcePanda_Kotlin
@@ -338,8 +341,6 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | [`docs/ads-architecture.md`](docs/ads-architecture.md) | How the ads layer works, including the ad-free hour |
 | [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
-
-**Branches.** `develop` is the default branch and holds the latest work, merged one feature set at a time, with CI on every push and pull request. `main` is the last release: it moves only when a version ships, and each release is tagged. Short-lived `feature-set/*` and `refinement/*` branches carry the work in progress.
 
 <a id="status"></a>
 
