@@ -339,6 +339,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
 
+**Branches.** `develop` is the default branch and holds the latest work, merged one feature set at a time, with CI on every push and pull request. `main` is the last release: it moves only when a version ships, and each release is tagged. Short-lived `feature-set/*` and `refinement/*` branches carry the work in progress.
+
 <a id="status"></a>
 
 ## 🗺️ Status

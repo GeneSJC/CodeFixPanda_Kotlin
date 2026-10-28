@@ -149,3 +149,11 @@ Decisions that are worth remembering but too long for a code comment. Code point
 - **What did not change.** The code package and the `namespace` stay `io.github.genesjc.githubissuefinder` (users never see them), as do the repository name and the `GitHubIssueFinder*` class names. The application ids did change, before any store upload.
 - **Icons.** The old backgrounds carried the letters G, H, I and F (GitHub Issue Finder). They are now plain gradients, made by `docs/images/make_launcher_icons.py`, so a future rename cannot leave wrong letters behind.
 - **The independence notice.** One line, "Independent app. Not affiliated with or endorsed by GitHub.", is shown by `IndependentNotice` on every screen that names GitHub: the welcome, token guide, mode gate and Settings screens, and the menu header. Any new screen that names GitHub should show it too.
+
+## Branches
+
+- **`develop` is the default; `main` is the last release.** A visitor to the repository sees the default branch first, and `develop` is where the current work and the front-page README live, so that is the one to show. `main` stays an older, released line, and the rule is that it only moves when a version ships.
+- **Moving `main`.** Fast-forward it to `develop` and tag the release: `git push origin origin/develop:refs/heads/main` (a fast-forward, never a force push), then tag the commit. This works as long as `main` stays inside `develop`'s history, which it does because nothing is ever committed to `main` directly. `main` was brought level with `develop` on 2026-10-28 (it was 309 commits behind and a month old, with the old README).
+- **Working branches.** Each feature set uses `feature-set/<name>` as staging and `refinement/<name>` for the work, with one commit per step. They are deleted after the merge.
+- **When the repository goes public.** Turn on protection for the default branch so a merge needs a green CI run (the TO-DO on the `docs/publicRepoCiTodo` branch), and switch the default branch to `develop` in the repository settings if it is not already.
+
