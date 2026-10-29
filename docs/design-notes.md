@@ -84,7 +84,14 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **Later launches.** Once a device has seen the full animation finish, every later launch plays a short version: the finished title and the panda fade in, sit for a moment, and then the same burst plays, so a returning user is not made to watch the build each time. The short version is its own composable with an independent copy of the ending, so changes to it can never affect the first-launch animation. Both versions draw the same `TitleWordmark` (the panda, the name and "PANDA"), so the short version starts exactly where the full one ends, and they share one burst, `SplashBurst`, which is drawn rather than laid out so that it can grow far past the panda without moving anything.
 - **One entry point.** `AppStartSplashScreen` decides which version plays. The cold start and the menu's "Play App Start Animation" replay both call it, so a replay always matches what a user sees.
 - **Fixed look.** The splash always uses the app's purple palette, whichever issue mode is active. It is the app's own identity, so it does not repaint when the mode changes.
-- **The panda art.** The splash draws `panda_mark.png`, the panda cropped from the launcher icon by `docs/images/make_launcher_icons.py`. It is only about 300 px tall, so it is shown at 130 dp; a larger panda would need higher-resolution art.
+- **The panda art.** The splash and the welcome screen draw `panda_mark.png`, the mascot from the launcher icon art, 512 px tall, so it stays sharp at 130 dp even on the densest screens.
+
+## Launcher icon
+
+- **One icon for both flavors.** The icon lives only in `app/src/main/res`, so `foss` and `commercial` share it. The earlier per-flavor overrides were removed because two icons meant two sets of files to keep in step.
+- **Adaptive layers in `mipmap`.** Background, foreground and the themed monochrome layer sit beside the legacy square and round icons, and the adaptive definitions (`mipmap-anydpi-v26`) point at them. The launcher shows only the middle 72 of the 108 canvas, so everything that matters stays inside it. The monochrome layer is a solid silhouette because the system tints it with a single color.
+- **The branch glyph.** The glyph behind the panda is a drawing of a branch (a trunk, a curved branch and three nodes), not a copy of an official logo. Before the public release it has not yet been compared with the Git project's logo and trademark terms, which could not be read while building this; that check belongs before a public release.
+- **No generator.** The icon files are committed as finished images and are edited as images, not regenerated from code.
 
 ## String resources
 

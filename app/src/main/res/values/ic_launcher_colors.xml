@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Background color for Android 8.0+ adaptive launcher icon -->
-    <color name="ic_launcher_background">#2563EB</color>
-</resources>

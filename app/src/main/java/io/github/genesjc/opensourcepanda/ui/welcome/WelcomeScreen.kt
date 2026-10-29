@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -94,9 +93,9 @@ fun WelcomeScreen(
             ) {
                 // Decorative: the title below already says what this is.
                 Image(
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    painter = painterResource(R.drawable.panda_mark),
                     contentDescription = null,
-                    modifier = Modifier.size(140.dp),
+                    modifier = Modifier.height(140.dp),
                 )
                 // "Welcome to" is smaller and lighter so the app's name stands out on its own.
                 Text(
