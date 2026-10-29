@@ -31,16 +31,25 @@ private const val FADE_START = 0.3f
 /**
  * The backdrop for the content under the top bar, in the Issue Mode's colors (tangerine, or blue for
  * beginner-friendly): a pale gradient with the branch glyph in a deeper shade of it, large, bleeding off the
- * right edge and fading in toward the bottom right, behind [content].
+ * right edge and fading in toward the bottom right, behind [content]. [glyphShiftX] is how far (as a fraction
+ * of the width) the glyph is moved right of the middle, and [fadeStart] how far across the diagonal the fade begins,
+ * for a screen that wants more of the glyph showing.
  */
 @Composable
-internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+internal fun BrandSoftBackground(
+    modifier: Modifier = Modifier,
+    glyphShiftX: Float = GLYPH_SHIFT_X,
+    fadeStart: Float = FADE_START,
+    content: @Composable BoxScope.() -> Unit,
+) {
     val decor = LocalModeDecor.current
     GlyphBackdrop(
         gradient = listOf(decor.backdropTop, decor.backdropBottom),
         glyphFill = decor.backdropGlyph,
         outlined = false,
         glyphMaxAlpha = SOFT_GLYPH_MAX_ALPHA,
+        glyphShiftX = glyphShiftX,
+        fadeStart = fadeStart,
         modifier = modifier,
         content = content,
     )
@@ -60,6 +69,8 @@ internal fun GlyphBackdrop(
     outlined: Boolean,
     glyphMaxAlpha: Float,
     modifier: Modifier = Modifier,
+    glyphShiftX: Float = GLYPH_SHIFT_X,
+    fadeStart: Float = FADE_START,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
@@ -73,14 +84,14 @@ internal fun GlyphBackdrop(
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
         ) {
             val unit = size.height * GLYPH_HEIGHT_FRACTION / BRANCH_GLYPH_HEIGHT
-            translate(left = size.width * GLYPH_SHIFT_X, top = size.height * GLYPH_SHIFT_Y) {
+            translate(left = size.width * glyphShiftX, top = size.height * GLYPH_SHIFT_Y) {
                 drawBranchGlyph(unit, fill = glyphFill, outlined = outlined)
             }
             // Keeps only as much of the glyph as the fade lets through (only the mask's alpha counts).
             drawRect(
                 brush = Brush.linearGradient(
                     0f to Color.Transparent,
-                    FADE_START to Color.Transparent,
+                    fadeStart to Color.Transparent,
                     1f to glyphFill.copy(alpha = glyphMaxAlpha),
                     start = Offset.Zero,
                     end = Offset(size.width, size.height),
