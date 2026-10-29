@@ -215,8 +215,11 @@ private fun RepoIssuesFilterRow(
             ReadmeToggleButton(
                 expanded = readmeExpanded,
                 onClick = onToggleReadme,
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(start = README_TOGGLE_GAP),
             )
         }
     }
 }
+
+/** The space between the mode pill and the README toggle: not right against the pill, but not pushed to the right edge either, since a wider screen has more room. */
+private val README_TOGGLE_GAP = 24.dp
