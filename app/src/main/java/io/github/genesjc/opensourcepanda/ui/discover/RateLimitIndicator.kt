@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -52,16 +51,17 @@ private const val RATE_LIMIT_ICON_SCALE = 0.7f
 
 /**
  * Tappable rate-limit indicator: a meter icon and remaining/limit. Always rendered (a
- * placeholder when there are no numbers yet) so it does not pop in. Opens the dial dialog.
+ * placeholder when there are no numbers yet) so it does not pop in. Opens the dial dialog. It has no margin
+ * of its own: the caller places it.
  */
 @Composable
-internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
+internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val base = MaterialTheme.typography.bodySmall
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp),
+        modifier = modifier,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -89,12 +89,13 @@ internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit) {
 /**
  * The chip that stands where the rate-limit chip would while the demo data is shown: with no token there
  * are no rate-limit numbers, so it says "Demo data" instead. Same size and shape as [RateLimitChip]. With
- * an [onClick] it is tappable (Top Repos explains the missing token); without one it is just a label.
+ * an [onClick] it is tappable (Top Repos explains the missing token); without one it is just a label. Like
+ * [RateLimitChip] it has no margin of its own: the caller places it.
  */
 @Composable
-internal fun DemoChip(onClick: (() -> Unit)? = null) {
+internal fun DemoChip(onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val base = MaterialTheme.typography.bodySmall
-    val chipModifier = Modifier.padding(end = (8 * RATE_LIMIT_CHIP_SCALE).dp)
+    val chipModifier = modifier
     val label: @Composable () -> Unit = {
         Text(
             stringResource(R.string.demo_chip_label),

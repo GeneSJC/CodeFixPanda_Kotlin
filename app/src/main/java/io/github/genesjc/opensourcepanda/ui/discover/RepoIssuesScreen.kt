@@ -121,7 +121,7 @@ fun RepoIssuesScreen(
                         }
                     },
                     actions = {
-                        if (isDemo) DemoChip()
+                        if (isDemo) DemoChip(modifier = Modifier.padding(end = 8.dp))
                         BrandBarIconButton(
                             onClick = {
                                 context.startActivity(

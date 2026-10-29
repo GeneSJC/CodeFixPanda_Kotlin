@@ -170,19 +170,18 @@ fun TopReposScreen(
                             }
                         },
                         trailing = {
-                            if (!isLandscape) {
-                                UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(end = 8.dp), onBar = true)
-                            }
-                            // The count (tappable: it opens the ranking explanation) and the rate limit on one row, their right
-                            // edge on the updated line's. The rate-limit chip is always shown (a placeholder with no data yet) so
-                            // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
-                            // its place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
-                            Row(
-                                modifier = Modifier.padding(top = if (isLandscape) 0.dp else 4.dp, end = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+                            // The updated line, the count (tappable: it opens the ranking explanation) and the rate limit, one
+                            // above the other on one right edge. The rate-limit chip is always shown (a placeholder with no data
+                            // yet) so the header does not shift. With no token there are no rate-limit numbers, so the demo
+                            // marker takes its place, and with a token problem the tap explains it instead of opening the
+                            // rate-limit dialog.
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(end = 8.dp),
                             ) {
                                 if (!isLandscape) {
+                                    UpdatedText(uiState.lastUpdatedAtMs, onBar = true)
                                     RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
                                 }
                                 if (isDemo) {
