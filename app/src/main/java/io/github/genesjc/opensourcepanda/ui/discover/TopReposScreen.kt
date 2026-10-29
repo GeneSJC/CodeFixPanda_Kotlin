@@ -171,11 +171,11 @@ fun TopReposScreen(
                             }
                         },
                         trailing = {
-                            // The updated line, the count (tappable: it opens the ranking explanation) and the rate limit, one
-                            // above the other on one right edge. The rate-limit chip is always shown (a placeholder with no data
-                            // yet) so the header does not shift. With no token there are no rate-limit numbers, so the demo
-                            // marker takes its place, and with a token problem the tap explains it instead of opening the
-                            // rate-limit dialog.
+                            // The updated line, the rate limit and the count, one above the other on one right edge, the count
+                            // last so it sits at the bottom of the header, next to the list it counts. It is tappable and opens the
+                            // ranking explanation. The rate-limit chip is always shown (a placeholder with no data yet) so the
+                            // header does not shift. With no token there are no rate-limit numbers, so the demo marker takes its
+                            // place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
                             Column(
                                 horizontalAlignment = Alignment.End,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -183,7 +183,6 @@ fun TopReposScreen(
                             ) {
                                 if (!isLandscape) {
                                     UpdatedText(uiState.lastUpdatedAtMs, onBar = true)
-                                    RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
                                 }
                                 if (isDemo) {
                                     DemoChip(onClick = { showTokenProblemDialog = true })
@@ -198,6 +197,9 @@ fun TopReposScreen(
                                             }
                                         },
                                     )
+                                }
+                                if (!isLandscape) {
+                                    RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
                                 }
                             }
                             // The ad-free offer, under the count; in the open build the line draws nothing.
