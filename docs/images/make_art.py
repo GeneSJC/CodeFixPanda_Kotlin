@@ -72,45 +72,72 @@ def issue_card(w, h, title_w, chips, comments):
     d.text((w - 28 - f.getlength(str(comments)) - 38, h - 52), "● " + str(comments), font=f, fill=(100, 116, 139))
     return img
 
+# The launcher icon's palette, so the banner matches the icon (the glyph is the one behind the panda in the icon).
+ORANGE_TOP, ORANGE_MID, ORANGE_BOTTOM = (0xCF, 0x66, 0x57), (0xBC, 0x52, 0x4A), (0xA5, 0x40, 0x3E)
+SUN, ICON_NAVY, MINT = (0xFF, 0xD9, 0x4D), (0x0F, 0x2A, 0x52), (0x6F, 0xD6, 0xA5)
+GLYPH_TRUNK = [(76.57, 79.80), (40.43, 28.20)]
+GLYPH_BRANCH = [(51.62, 44.17), (54.51, 46.17), (57.20, 47.97), (60.01, 49.60), (62.61, 50.65), (65.25, 51.39),
+                (67.92, 51.86), (70.53, 52.05), (73.03, 51.89), (75.68, 51.23), (78.18, 50.34), (80.86, 49.33)]
+GLYPH_NODES = [(76.57, 79.80), (40.43, 28.20), (80.86, 49.33)]
+
+def glyph(height):
+    """The icon's branch glyph (design units on a 108 grid) drawn as a transparent layer of the given height."""
+    k = height / 69.0                       # the glyph spans about 67 units top to bottom, plus a margin
+    ox, oy = 31.5, 19.5                     # its top-left corner in design units, with the margin
+    w = int(58 * k)
+    img = Image.new("RGBA", (w, height), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    def pt(q): return ((q[0] - ox) * k, (q[1] - oy) * k)
+    width = int(4.6 * k)
+    for line in (GLYPH_TRUNK, GLYPH_BRANCH):
+        pts = [pt(q) for q in line]
+        d.line(pts, fill=SUN + (255,), width=width, joint="curve")
+        for x, y in (pts[0], pts[-1]):
+            d.ellipse((x - width / 2, y - width / 2, x + width / 2, y + width / 2), fill=SUN + (255,))
+    for q in GLYPH_NODES:
+        x, y = pt(q)
+        r = 7.6 * k
+        d.ellipse((x - r, y - r, x + r, y + r), fill=SUN + (255,))
+    return img
+
 def banner():
     S, W, H = 2, 1600, 520
     w, h = W * S, H * S
-    img = gradient(w, h, [(0, NAVY), (0.5, BLUE), (1, BLUE2)]).convert("RGBA")
+    img = Image.new("RGB", (w, h))
+    bg = ImageDraw.Draw(img)
+    for y in range(h):
+        t = y / h
+        lo, hi, u = (ORANGE_TOP, ORANGE_MID, t * 2) if t < 0.5 else (ORANGE_MID, ORANGE_BOTTOM, t * 2 - 1)
+        bg.line([(0, y), (w, y)], fill=tuple(int(lo[i] + (hi[i] - lo[i]) * u) for i in range(3)))
+    img = img.convert("RGBA")
     d = ImageDraw.Draw(img, "RGBA")
     # faint dot grid
     for gx in range(0, w, 64 * S):
         for gy in range(0, h, 64 * S):
-            d.ellipse((gx, gy, gx + 4 * S, gy + 4 * S), fill=(255, 255, 255, 10))
-    # soft glows
+            d.ellipse((gx, gy, gx + 4 * S, gy + 4 * S), fill=(255, 255, 255, 22))
+    # soft warm glow behind the glyph
     glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    gd.ellipse((int(w * 0.55), -int(h * 0.55), int(w * 1.1), int(h * 0.7)), fill=SKY + (120,))
-    gd.ellipse((-int(w * 0.1), int(h * 0.55), int(w * 0.3), int(h * 1.3)), fill=PURPLE + (70,))
-    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(90 * S)))
+    ImageDraw.Draw(glow).ellipse((int(w * 0.62), -int(h * 0.2), int(w * 1.1), int(h * 1.0)), fill=(255, 190, 120, 75))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(150 * S)))
     d = ImageDraw.Draw(img, "RGBA")
     # panda
     p = panda(380 * S)
     shadowed(img, p, (64 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
+    # branch glyph on the right
+    g = glyph(440 * S)
+    shadowed(img, g, (1180 * S, (h - g.height) // 2), blur=18 * S, offset=(0, 14 * S), opacity=70)
     # title
     x0 = 470 * S
     d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
-    d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=AMBER)
-    d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=SOFT)
-    d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=SOFT)
+    d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
+    d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
+    d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
     cx = x0
-    for text, fill in (("beginner-friendly", PURPLE), ("asking for help", GREEN), ("kotlin", (14, 165, 233))):
-        c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S))
+    for text, fill, ink in (("beginner-friendly", ICON_NAVY, (255, 255, 255)), ("asking for help", MINT, ICON_NAVY), ("kotlin", SUN, ICON_NAVY)):
+        c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S), text_fill=ink)
         img.alpha_composite(c, (cx, 432 * S))
         cx += c.width + 14 * S
-    # floating issue cards on the right
-    specs = [((1190, 44), 300, 160, 190, ("beginner-friendly",), 3, PURPLE, 3),
-             ((1262, 190), 300, 160, 160, ("asking for help",), 7, GREEN, -2),
-             ((1160, 330), 300, 160, 210, ("beginner-friendly", "kotlin"), 2, PURPLE, 2)]
-    for (x, y), cw, ch, tw, labels, comments, _c, rot in specs:
-        chips = [chip(l, PURPLE if "good" in l else (GREEN if "help" in l else (14, 165, 233)), size=17 * S, pad=(12 * S, 6 * S)) for l in labels]
-        card = issue_card(cw * S, ch * S, tw * S, chips, comments).rotate(rot, expand=True, resample=Image.BICUBIC)
-        shadowed(img, card, (x * S, y * S), blur=16 * S, offset=(0, 12 * S), opacity=80)
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
 def divider():
