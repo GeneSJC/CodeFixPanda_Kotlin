@@ -71,9 +71,9 @@ internal fun BrandBarIconButton(onClick: () -> Unit, modifier: Modifier = Modifi
 
 /**
  * A header with the same gradient and white content as [BrandTopAppBar] but a layout of its own, for a
- * screen with more to show than a title. The top row is [leading] at the start, [center] filling the
- * middle and [trailing], a column, at the end; [below] is a row of its own under them, so each widget
- * has a place and none is put wherever there is room. It reaches under the status bar like the bar does.
+ * screen with more to show than a title: [leading] at the start (top-aligned), [center] filling the
+ * middle, and [trailing], a column, at the end, so each widget has a place and none is put wherever there
+ * is room. It reaches under the status bar like the bar does.
  */
 @Composable
 internal fun BrandHeader(
@@ -81,23 +81,20 @@ internal fun BrandHeader(
     leading: @Composable () -> Unit,
     center: @Composable () -> Unit,
     trailing: @Composable ColumnScope.() -> Unit,
-    below: @Composable () -> Unit = {},
 ) {
     val decor = LocalModeDecor.current
     CompositionLocalProvider(LocalContentColor provides BrandOnOrange) {
-        Column(
+        Row(
             modifier = modifier
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(decor.headerTop, decor.headerBottom)))
                 .statusBarsPadding()
                 .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                leading()
-                Box(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) { center() }
-                Column(horizontalAlignment = Alignment.End, content = trailing)
-            }
-            below()
+            Box(modifier = Modifier.align(Alignment.Top)) { leading() }
+            Box(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) { center() }
+            Column(horizontalAlignment = Alignment.End, content = trailing)
         }
     }
 }

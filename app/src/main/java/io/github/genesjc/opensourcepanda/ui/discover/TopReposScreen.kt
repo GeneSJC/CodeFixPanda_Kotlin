@@ -166,7 +166,12 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModePill(mode = currentMode, onBar = true, onInfoClick = { showLabelInfoDialog = true })
+                                ModePill(
+                                    mode = currentMode,
+                                    onBar = true,
+                                    onInfoClick = { showLabelInfoDialog = true },
+                                    modifier = Modifier.width(HEADER_PILL_WIDTH),
+                                )
                             }
                         },
                         trailing = {
@@ -184,19 +189,10 @@ fun TopReposScreen(
                             if (!isLandscape) {
                                 UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(top = 4.dp, end = 8.dp), onBar = true)
                             }
-                            // The ad-free offer, under the count; in the open build the line draws nothing.
-                            AdFreeOfferLine(
-                                adFreeUntilMs = adFreeUntilMs,
-                                canOffer = canOfferAdFree,
-                                onOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                modifier = Modifier.padding(end = 8.dp, top = 2.dp),
-                            )
-                        },
-                        // Under the menu, in line with its glyph. Always shown (a placeholder with no data yet) so the
-                        // header does not shift. With no token there are no rate-limit numbers, so the demo marker takes its
-                        // place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
-                        below = {
-                            Box(modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)) {
+                            // Under the updated line, on the same right edge. Always shown (a placeholder with no data yet) so
+                            // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
+                            // its place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
+                            Box(modifier = Modifier.padding(top = 6.dp, end = 8.dp)) {
                                 if (isDemo) {
                                     DemoChip(onClick = { showTokenProblemDialog = true })
                                 } else {
@@ -212,6 +208,13 @@ fun TopReposScreen(
                                     )
                                 }
                             }
+                            // The ad-free offer, under the count; in the open build the line draws nothing.
+                            AdFreeOfferLine(
+                                adFreeUntilMs = adFreeUntilMs,
+                                canOffer = canOfferAdFree,
+                                onOffer = { activity?.let(viewModel::onAdFreeOffer) },
+                                modifier = Modifier.padding(end = 8.dp, top = 2.dp),
+                            )
                         },
                     )
                 },
@@ -297,3 +300,6 @@ fun TopReposScreen(
         )
     }
 }
+
+/** The mode pill in the header, which works as the screen's title: a fixed width, so both modes line up and a long name wraps. */
+private val HEADER_PILL_WIDTH = 180.dp

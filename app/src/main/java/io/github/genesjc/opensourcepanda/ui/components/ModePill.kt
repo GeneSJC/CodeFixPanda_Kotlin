@@ -21,7 +21,8 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 /**
  * The active mode's name on its own color. With [onInfoClick], the beginner-friendly mode also gets an
  * info icon, so a newcomer can see what the mode means. [onBar] is for a place on a mode-colored top bar,
- * where the mode's own color would vanish into the bar: the pill is a see-through white with white text.
+ * where the mode's own color would vanish into the bar: the pill is a see-through white with larger white
+ * text, and it works as the screen's title (give it a fixed width and the name wraps).
  */
 @Composable
 fun ModePill(
@@ -36,13 +37,15 @@ fun ModePill(
     Box(
         modifier = modifier
             .background(pillColor, RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = if (onBar) ON_BAR_PILL_VERTICAL_PADDING else 6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(mode.nameRes()),
-                style = if (onBar) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
+                style = if (onBar) onBarTextStyle() else MaterialTheme.typography.labelLarge,
                 color = contentColor,
+                // In a pill of a fixed width the name wraps, and the icon keeps its place at the end.
+                modifier = Modifier.weight(1f, fill = false),
             )
             if (onInfoClick != null && mode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
                 Text(
@@ -60,3 +63,12 @@ fun ModePill(
 
 /** How much of the bar's color the pill lets through, so it reads as a pill without a color of its own. */
 private const val ON_BAR_PILL_ALPHA = 0.2f
+
+/** The pill's text on a bar, larger than the usual label because the pill is the screen's title there. */
+@Composable
+private fun onBarTextStyle() = MaterialTheme.typography.labelLarge.let {
+    it.copy(fontSize = it.fontSize * ON_BAR_TEXT_SCALE, lineHeight = it.lineHeight * ON_BAR_TEXT_SCALE)
+}
+
+private const val ON_BAR_TEXT_SCALE = 1.2f
+private val ON_BAR_PILL_VERTICAL_PADDING = 10.dp
