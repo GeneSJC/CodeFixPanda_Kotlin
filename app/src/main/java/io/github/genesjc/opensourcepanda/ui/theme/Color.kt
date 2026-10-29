@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.Color
 // Replaces the Android Studio template's generic Purple80/Purple40 defaults.
 
 // Light scheme
-val BrandBlue40 = Color(0xFF0B5FA5)
 val BrandContainerLight = Color(0xFFFFDCC9)
 val OnBrandContainerLight = Color(0xFF4A1A14)
 val BackgroundLight = Color(0xFFFAF9F7)
@@ -31,7 +30,10 @@ val BrandSun = Color(0xFFFFD94D) // the branch glyph
 val BrandNavy = Color(0xFF0F2A52) // outlines and text on the sun and mint accents
 val BrandBlue = Color(0xFF1F4B8E) // a lighter step of the navy, the blue that sits well beside the orange
 val BrandBlueContainerLight = Color(0xFFD8E4F5)
-val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs
+val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs as drawn, light: for tints and the artwork, not for text
+val BrandSeafoam = Color(0xFF187A5E) // the scrubs' color deepened for the UI: white text on it passes contrast
+val BrandSeafoamContainerLight = Color(0xFFDDF5EA)
+val OnBrandSeafoamContainerLight = Color(0xFF0B3B2D)
 val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
 val BrandSoftWhite = Color(0xFFFFECE0) // secondary text on the orange
 

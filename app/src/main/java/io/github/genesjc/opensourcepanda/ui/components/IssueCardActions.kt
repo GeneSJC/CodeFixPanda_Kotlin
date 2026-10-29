@@ -53,7 +53,7 @@ internal fun IssueCardActions(
                 CardBadge(glyph = "✕", onClick = onHide)
             }
             if (onToggleBookmark != null) {
-                CardBadge(glyph = if (isBookmarked) "★" else "☆", onClick = onToggleBookmark)
+                CardBadge(glyph = if (isBookmarked) "★" else "☆", onClick = onToggleBookmark, highlighted = isBookmarked)
             }
             CardBadge(
                 glyph = "📤",

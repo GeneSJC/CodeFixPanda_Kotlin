@@ -146,10 +146,10 @@ private const val CARD_EXPAND_COLLAPSE_DURATION_MS = 300
  * the caller animate the chevron.
  */
 @Composable
-internal fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f) {
+internal fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f, highlighted: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondaryContainer,
         onClick = onClick,
     ) {
         Text(
@@ -157,7 +157,7 @@ internal fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f)
             style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
             ),
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = if (highlighted) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp).rotate(rotation),
         )
     }
