@@ -8,10 +8,10 @@ The images used by the front-page `README.md`.
 | `divider.png` | The gradient rule between sections | Keep |
 | `panda.png` | The footer mascot | Keep |
 | `placeholder-welcome.png`, `placeholder-top-repos.png`, `placeholder-repo-issues.png` | The three phone screenshots in the "Screens" gallery | Real screenshots, about 540 x 1100 (or any phone-shaped size). Save as `screen-welcome.png`, `screen-top-repos.png`, `screen-repo-issues.png` and change the three `src` paths in the README |
-| `splash-storyboard.png` | The collapsed launch-animation illustration under the gallery | Keep, or real frames if the animation is ever recorded. `make_splash_storyboard.py` redraws it |
+| `splash.png` | The first phone in the "Screens" gallery: the launch screen's final frame, drawn from the splash's design | Keep, or a real screenshot of the launch screen. `make_splash_still.py` redraws it |
 
 `make_art.py` generates the banner, divider, panda and placeholders (needs Pillow; it reads the app's own panda from
-`app/src/main/res`). Run it from this folder after changing colors or text. `make_splash_storyboard.py` draws the storyboard
+`app/src/main/res`). Run it from this folder after changing colors or text. `make_splash_still.py` draws the launch screen
 the same way. The real screenshots are not generated; just add them.
 
 Tips: take screenshots in light mode with the demo data (nothing personal on screen), and keep each PNG under about

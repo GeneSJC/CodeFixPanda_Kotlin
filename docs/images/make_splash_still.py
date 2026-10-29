@@ -1,10 +1,10 @@
-"""Draws the README's launch-animation storyboard (a 3 x 2 grid of frames) with Pillow.
+"""Draws the README's launch-screen image (the splash's final frame in a phone) with Pillow.
 
-Run from this folder:  python3 make_splash_storyboard.py
-It reuses the panda and fonts from make_art.py and writes splash-storyboard.png next to this file. The frames
-are an illustration drawn from the animation's design (the positions and timings in TitleRevealSplashScreen),
-not captures of the running app, so the README says so; replace the image with real frames if they are ever
-recorded. The font here is a stand-in for the app's own, so letter shapes differ slightly.
+Run from this folder:  python3 make_splash_still.py
+It reuses the panda and fonts from make_art.py and writes splash.png next to this file. The frame is an
+illustration drawn from the animation's design (the layout in TitleWordmark), not a capture of the running
+app, so the README labels it as one; replace the image with a real screenshot if one is taken. The font is a
+stand-in for the app's own, so letter shapes differ slightly.
 """
 import math
 import os
@@ -83,33 +83,18 @@ def frame(open_dx=0, open_rot=0, src_dx=0, src_a=1, open_a=1, panda_dy=None, bur
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
 
-FRAMES = [
-    ("1  \"Open\" slides in", frame(open_dx=-170, open_rot=-4, src_a=0, text_a=0)),
-    ("2  \"Source\" hits, \"Open\" lurches", frame(open_dx=16, open_rot=-8, src_dx=60, text_a=0)),
-    ("3  \"PANDA\" rises", frame(text_dy=26, text_a=0.5)),
-    ("4  The panda drops in", frame(panda_dy=-210)),
-    ("5  It lands: a squash and a burst", frame(panda_dy=12, panda_sx=1.08, panda_sy=0.93, burst_a=0.9, burst_r=215)),
-    ("6  The final frame", frame(panda_dy=0)),
-]
-
-
-def storyboard():
-    cw, ch, gap, cap = 380, 774, 28, 64
-    cols, rows = 3, 2
-    sheet = Image.new("RGB", (cols * cw + (cols + 1) * gap, rows * (ch + cap) + (rows + 1) * gap // 2 + gap // 2), (30, 41, 59))
-    d = ImageDraw.Draw(sheet)
-    label = A.font(A.FONT_TEXT_BOLD, 26)
-    for i, (name, im) in enumerate(FRAMES):
-        x = gap + (i % cols) * (cw + gap)
-        y = gap // 2 + gap // 2 + (i // cols) * (ch + cap + gap // 2)
-        t = im.resize((cw, ch), Image.LANCZOS)
-        mask = Image.new("L", t.size, 0)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, t.width - 1, t.height - 1), radius=30, fill=255)
-        sheet.paste(t, (x, y), mask)
-        d.text((x + cw // 2, y + ch + cap // 2), name, font=label, fill=(226, 232, 240), anchor="mm")
-    return sheet
+def phone_still():
+    """The final frame inside the same dark phone bezel the placeholder screens use."""
+    pw, ph, bezel = 540 * S, 1100 * S, 14 * S
+    out = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    ImageDraw.Draw(out).rounded_rectangle((0, 0, pw - 1, ph - 1), radius=70 * S, fill=A.INK)
+    screen = frame(panda_dy=0).resize((pw - 2 * bezel, ph - 2 * bezel), Image.LANCZOS).convert("RGBA")
+    mask = Image.new("L", screen.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, screen.width - 1, screen.height - 1), radius=58 * S, fill=255)
+    out.paste(screen, (bezel, bezel), mask)
+    return out.resize((540, 1100), Image.LANCZOS)
 
 
 if __name__ == "__main__":
-    storyboard().save(os.path.join(HERE, "splash-storyboard.png"), optimize=True)
+    phone_still().save(os.path.join(HERE, "splash.png"), optimize=True)
     print("done")
