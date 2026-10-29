@@ -74,7 +74,7 @@ def issue_card(w, h, title_w, chips, comments):
 
 # The launcher icon's palette, so the banner matches the icon (the glyph is the one behind the panda in the icon).
 ORANGE_TOP, ORANGE_MID, ORANGE_BOTTOM = (0xCF, 0x66, 0x57), (0xBC, 0x52, 0x4A), (0xA5, 0x40, 0x3E)
-SUN, ICON_NAVY, MINT = (0xFF, 0xD9, 0x4D), (0x0F, 0x2A, 0x52), (0x6F, 0xD6, 0xA5)
+SUN, ICON_NAVY, MINT = (0xFF, 0xD9, 0x4D), (0x0F, 0x2A, 0x52), (0x4D, 0xBB, 0x92)
 GLYPH_TRUNK = [(76.57, 79.80), (40.43, 28.20)]
 GLYPH_BRANCH = [(51.62, 44.17), (54.51, 46.17), (57.20, 47.97), (60.01, 49.60), (62.61, 50.65), (65.25, 51.39),
                 (67.92, 51.86), (70.53, 52.05), (73.03, 51.89), (75.68, 51.23), (78.18, 50.34), (80.86, 49.33)]
