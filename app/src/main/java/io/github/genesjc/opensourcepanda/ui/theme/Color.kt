@@ -33,6 +33,12 @@ val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs
 val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
 val BrandSoftWhite = Color(0xFFFFECE0) // secondary text on the orange
 
+// The soft tangerine for the content of the screens under the brand title bar: a pale gradient with the glyph
+// in a deeper tangerine behind it, so the orange stays the title bar's color and the content stays readable.
+val TangerineLight = Color(0xFFFFE2CC)
+val TangerineMid = Color(0xFFFFCDAA)
+val TangerineGlyph = Color(0xFFF09664)
+
 // Issue Mode schemes — two shades of blue, deliberately their own palette and not the brand orange: the
 // orange is the app's identity (see above), while a mode's colors stand for what the user is looking at
 // and have to comfortably BE the background/surface across an entire screen without turning harsh or

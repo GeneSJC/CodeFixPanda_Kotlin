@@ -37,12 +37,13 @@ internal const val BRANCH_GLYPH_WIDTH = 55.6f
 internal const val BRANCH_GLYPH_HEIGHT = 66.8f
 
 /**
- * Draws the black-outlined sun-yellow branch glyph centered in the draw area, [unit] pixels per design
- * unit. The outline is drawn first as the same shapes widened, so one pass of the fill covers the middle.
+ * Draws the branch glyph centered in the draw area, [unit] pixels per design unit, black-outlined and sun
+ * yellow unless told otherwise. The outline is drawn first as the same shapes widened, so one pass of the
+ * fill covers the middle.
  */
-internal fun DrawScope.drawBranchGlyph(unit: Float) {
-    drawGlyphPass(unit, BrandOutlineBlack, extra = OUTLINE_UNITS * 2)
-    drawGlyphPass(unit, BrandSun, extra = 0f)
+internal fun DrawScope.drawBranchGlyph(unit: Float, fill: Color = BrandSun, outlined: Boolean = true) {
+    if (outlined) drawGlyphPass(unit, BrandOutlineBlack, extra = OUTLINE_UNITS * 2)
+    drawGlyphPass(unit, fill, extra = 0f)
 }
 
 /** The pixels per design unit that make the outlined glyph exactly [heightPx] tall. */
