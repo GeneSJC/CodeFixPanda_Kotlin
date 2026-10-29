@@ -50,13 +50,6 @@ val BlueBackdropLight = Color(0xFFDCE8F8)
 val BlueBackdropMid = Color(0xFFC6D9F2)
 val BlueBackdropGlyph = Color(0xFF8FB0DE)
 
-// The chips' tones: each backdrop's tone and its glyph's at half their saturation, worn by the other mode's chips,
-// so a chip stands out from the backdrop without being sharp.
-val TangerineChipFill = Color(0xFFEAD1BF)
-val TangerineChipOutline = Color(0xFFCDA087)
-val BlueChipFill = Color(0xFFD1DBE7)
-val BlueChipOutline = Color(0xFFA3B3CA)
-
 // Issue Mode schemes — the brand blue and a deeper shade of the brand orange, which sit well together: a mode's
 // colors have to comfortably BE the background/surface across a whole screen, so each pairs a strong primary
 // (white text on it passes contrast) with a very light tint of the same hue. Beginner-friendly is the blue,

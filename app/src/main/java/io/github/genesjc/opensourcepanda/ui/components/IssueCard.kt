@@ -10,7 +10,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
  * list and would cancel its own scope; the screen owns the Undo Snackbar. The revealed row is
  * IssueCardActions. More in docs/design-notes.md, "Issue card".
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IssueCard(
     issue: Issue,
@@ -85,9 +87,11 @@ fun IssueCard(
                 )
 
                 if (issue.labels.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    // Keeps clear of the badge stack on the right, like the title, and wraps when the labels do not fit.
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, end = 56.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         issue.labels.take(3).forEach { label -> LabelChip(label) }
                     }
