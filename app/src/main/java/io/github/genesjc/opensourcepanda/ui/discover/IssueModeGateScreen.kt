@@ -119,7 +119,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
 @Composable
 private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: Modifier = Modifier) {
     val scheme = mode.colorScheme()
-    val textStyle = MaterialTheme.typography.titleSmall
+    val nameStyle = MaterialTheme.typography.titleMedium
     // The icon above the name, both centered; a long name wraps onto a second line.
     Surface(
         onClick = onSelect,
@@ -128,7 +128,7 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
         modifier = modifier,
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = MODE_BUTTON_SIDE_PADDING, vertical = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = MODE_BUTTON_SIDE_PADDING, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -136,12 +136,12 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
                 // The text-presentation selector keeps a device from swapping in a
                 // colored emoji glyph, which would ignore the text color.
                 mode.glyph + TEXT_PRESENTATION_SELECTOR,
-                style = textStyle,
+                style = MaterialTheme.typography.titleLarge,
                 color = scheme.onPrimary,
             )
             Text(
                 stringResource(mode.buttonLabelRes()),
-                style = textStyle,
+                style = nameStyle,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
                 color = scheme.onPrimary,
@@ -153,5 +153,5 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
-private val MODE_BUTTON_SIDE_PADDING = 8.dp
+private val MODE_BUTTON_SIDE_PADDING = 6.dp
 private val MODE_BUTTON_GAP = 12.dp

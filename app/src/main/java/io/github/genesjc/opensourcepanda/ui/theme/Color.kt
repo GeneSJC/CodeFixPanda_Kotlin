@@ -2,13 +2,13 @@ package io.github.genesjc.opensourcepanda.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Baseline scheme (no Issue Mode chosen): the blues the two modes are shades of, on a warm white.
+// Baseline scheme (no Issue Mode chosen): the brand orange's deeper shades on a warm white.
 // Replaces the Android Studio template's generic Purple80/Purple40 defaults.
 
 // Light scheme
 val BrandBlue40 = Color(0xFF0B5FA5)
-val BlueContainerLight = Color(0xFFDCE8FD)
-val OnBlueContainerLight = Color(0xFF0F2A66)
+val BrandContainerLight = Color(0xFFFFDCC9)
+val OnBrandContainerLight = Color(0xFF4A1A14)
 val BackgroundLight = Color(0xFFFAF9F7)
 val SurfaceLight = Color(0xFFFFFFFF)
 
@@ -39,28 +39,28 @@ val TangerineLight = Color(0xFFFFE2CC)
 val TangerineMid = Color(0xFFFFCDAA)
 val TangerineGlyph = Color(0xFFF09664)
 
-// Issue Mode schemes — two shades of blue, deliberately their own palette and not the brand orange: the
-// orange is the app's identity (see above), while a mode's colors stand for what the user is looking at
-// and have to comfortably BE the background/surface across an entire screen without turning harsh or
-// fatiguing, so each pairs a strong primary (white text on it passes contrast) with a very light tint
-// of the same blue. The two differ in depth: beginner-friendly is the lighter blue, projects asking for
-// help the darker. Light-only for now — see ModeColorSchemes.kt for why dark variants aren't included yet.
+// Issue Mode schemes — two deeper shades of the brand orange, between its light and dark ends. A mode's
+// colors have to comfortably BE the background/surface across a whole screen, so each pairs a strong
+// primary (white text on it passes contrast) with a very light tint of the same hue. The two differ in
+// depth: beginner-friendly is the lighter shade, projects asking for help the darker. Light-only for
+// now — see ModeColorSchemes.kt for why dark variants aren't included yet. They reuse the brand
+// constants above, so this block has to stay below them.
 
-// Beginner-friendly issues — the lighter blue
-val ModeGfiBackground = Color(0xFFEEF4FF)
+// Beginner-friendly issues — the lighter shade
+val ModeGfiBackground = Color(0xFFFFF2E9)
 val ModeGfiSurface = Color(0xFFFFFFFF)
-val ModeGfiPrimary = Color(0xFF2F6FE6)
+val ModeGfiPrimary = BrandOrangeMid
 val ModeGfiOnPrimary = Color(0xFFFFFFFF)
-val ModeGfiSecondaryContainer = Color(0xFFDCE8FD)
-val ModeGfiOnSecondaryContainer = Color(0xFF0F2A66)
+val ModeGfiSecondaryContainer = BrandContainerLight
+val ModeGfiOnSecondaryContainer = OnBrandContainerLight
 
-// Projects asking for help — the darker blue
-val ModeHwBackground = Color(0xFFE8EEFA)
+// Projects asking for help — the darker shade
+val ModeHwBackground = Color(0xFFFDEBE4)
 val ModeHwSurface = Color(0xFFFFFFFF)
-val ModeHwPrimary = Color(0xFF1D4ED8)
+val ModeHwPrimary = BrandOrangeBottom
 val ModeHwOnPrimary = Color(0xFFFFFFFF)
-val ModeHwSecondaryContainer = Color(0xFFD3DEF7)
-val ModeHwOnSecondaryContainer = Color(0xFF0B1E5E)
+val ModeHwSecondaryContainer = Color(0xFFF6D3C6)
+val ModeHwOnSecondaryContainer = Color(0xFF3E1412)
 
 // Hamburger-menu section backgrounds (TopReposScreen's drawer) —
 // deliberately their own fixed pastel set, NOT derived from the active

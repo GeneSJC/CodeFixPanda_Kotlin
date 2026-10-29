@@ -25,12 +25,12 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandBlue40,
+    primary = BrandOrangeMid,
     onPrimary = SurfaceLight,
-    secondary = BrandBlue40,
+    secondary = BrandOrangeMid,
     tertiary = BrandBlue40,
-    secondaryContainer = BlueContainerLight,
-    onSecondaryContainer = OnBlueContainerLight,
+    secondaryContainer = BrandContainerLight,
+    onSecondaryContainer = OnBrandContainerLight,
     background = BackgroundLight,
     surface = SurfaceLight,
 )

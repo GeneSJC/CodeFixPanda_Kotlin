@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -20,12 +23,18 @@ private const val GLYPH_HEIGHT_FRACTION = 0.6f
 private const val GLYPH_SHIFT_X = 0.28f
 private const val GLYPH_SHIFT_Y = 0.12f
 
-/** The glyph is faint, so the content on top stays the first thing seen. */
-private const val GLYPH_ALPHA = 0.4f
+/**
+ * The glyph fades in along the diagonal from the top left to the bottom right: invisible until
+ * [FADE_START] of the way across, then up to [GLYPH_MAX_ALPHA] in the corner, so it never runs under the
+ * headline and the text at the top and is strongest where the screen is empty.
+ */
+private const val FADE_START = 0.3f
+private const val GLYPH_MAX_ALPHA = 0.6f
 
 /**
  * The backdrop for the content under the brand title bar: a pale tangerine gradient with the branch glyph
- * in a deeper tangerine, large, faint and bleeding off the right edge, behind [content].
+ * in a deeper tangerine, large, bleeding off the right edge and fading in toward the bottom right, behind
+ * [content].
  */
 @Composable
 internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
@@ -37,15 +46,23 @@ internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Compos
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    alpha = GLYPH_ALPHA
-                    compositingStrategy = CompositingStrategy.Offscreen
-                },
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
         ) {
             val unit = size.height * GLYPH_HEIGHT_FRACTION / BRANCH_GLYPH_HEIGHT
             translate(left = size.width * GLYPH_SHIFT_X, top = size.height * GLYPH_SHIFT_Y) {
                 drawBranchGlyph(unit, fill = TangerineGlyph, outlined = false)
             }
+            // Keeps only as much of the glyph as the fade lets through (only the mask's alpha counts).
+            drawRect(
+                brush = Brush.linearGradient(
+                    0f to Color.Transparent,
+                    FADE_START to Color.Transparent,
+                    1f to TangerineGlyph.copy(alpha = GLYPH_MAX_ALPHA),
+                    start = Offset.Zero,
+                    end = Offset(size.width, size.height),
+                ),
+                blendMode = BlendMode.DstIn,
+            )
         }
         content()
     }
