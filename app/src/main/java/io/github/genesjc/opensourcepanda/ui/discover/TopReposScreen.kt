@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -166,7 +167,7 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModeTitle(mode = currentMode, modifier = Modifier.fillMaxSize())
+                                ModeTitle(mode = currentMode, modifier = Modifier.fillMaxWidth())
                             }
                         },
                         trailing = {

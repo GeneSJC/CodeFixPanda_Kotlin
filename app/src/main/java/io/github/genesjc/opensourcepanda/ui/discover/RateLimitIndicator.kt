@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -57,11 +59,12 @@ private const val RATE_LIMIT_ICON_SCALE = 0.7f
 @Composable
 internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val base = MaterialTheme.typography.bodySmall
+    val shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp)
+    // Tappable through clickable and not Surface(onClick), which would pad the chip out to Material's 48 dp touch target.
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp),
+        shape = shape,
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = modifier,
+        modifier = modifier.clip(shape).clickable(onClick = onClick),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -112,11 +115,8 @@ internal fun DemoChip(onClick: (() -> Unit)? = null, modifier: Modifier = Modifi
     }
     val shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp)
     val color = MaterialTheme.colorScheme.tertiaryContainer
-    if (onClick != null) {
-        Surface(onClick = onClick, shape = shape, color = color, modifier = chipModifier, content = label)
-    } else {
-        Surface(shape = shape, color = color, modifier = chipModifier, content = label)
-    }
+    val tapModifier = if (onClick != null) chipModifier.clip(shape).clickable(onClick = onClick) else chipModifier
+    Surface(shape = shape, color = color, modifier = tapModifier, content = label)
 }
 
 /**
