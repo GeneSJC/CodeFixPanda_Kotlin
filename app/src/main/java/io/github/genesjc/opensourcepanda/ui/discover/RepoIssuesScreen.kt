@@ -52,6 +52,7 @@ import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 import io.github.genesjc.opensourcepanda.ui.nameRes
+import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 import kotlinx.coroutines.launch
 
 /**
@@ -203,6 +204,7 @@ private fun RepoIssuesFilterRow(
     readmeExpanded: Boolean,
     onToggleReadme: () -> Unit,
 ) {
+    val decor = LocalModeDecor.current
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -213,8 +215,8 @@ private fun RepoIssuesFilterRow(
             Surface(
                 modifier = Modifier.padding(start = 8.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                color = decor.chipFill,
+                border = BorderStroke(1.dp, decor.chipOutline),
             ) {
                 Text(
                     stringResource(language.nameRes()),

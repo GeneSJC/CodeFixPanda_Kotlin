@@ -41,6 +41,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
+import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 import io.noties.markwon.Markwon
 
 /**
@@ -61,6 +62,7 @@ private const val EXPAND_COLLAPSE_DURATION_MS = 2000
  */
 @Composable
 fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val decor = LocalModeDecor.current
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = tween(EXPAND_COLLAPSE_DURATION_MS),
@@ -68,8 +70,8 @@ fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifie
     )
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        color = decor.chipFill,
+        border = BorderStroke(1.dp, decor.chipOutline),
         onClick = onClick,
         modifier = modifier.wrapContentWidth(),
     ) {
