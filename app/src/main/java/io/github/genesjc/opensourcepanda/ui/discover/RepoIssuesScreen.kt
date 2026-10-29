@@ -2,7 +2,7 @@ package io.github.genesjc.opensourcepanda.ui.discover
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +20,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +51,7 @@ import io.github.genesjc.opensourcepanda.ui.findActivity
 import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
+import io.github.genesjc.opensourcepanda.ui.nameRes
 import kotlinx.coroutines.launch
 
 /**
@@ -141,6 +143,7 @@ fun RepoIssuesScreen(
             Column(modifier = Modifier.padding(padding).fillMaxSize()) {
                 RepoIssuesFilterRow(
                     mode = activeMode,
+                    language = language,
                     readmeExpanded = readmeExpanded,
                     onToggleReadme = { readmeExpanded = !readmeExpanded },
                 )
@@ -196,6 +199,7 @@ fun RepoIssuesScreen(
 @Composable
 private fun RepoIssuesFilterRow(
     mode: IssueLabelFilter,
+    language: LanguageFilter,
     readmeExpanded: Boolean,
     onToggleReadme: () -> Unit,
 ) {
@@ -204,20 +208,21 @@ private fun RepoIssuesFilterRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ModePill(mode = mode)
-            Box(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .background(
-                        MaterialTheme.colorScheme.secondaryContainer,
-                        RoundedCornerShape(8.dp),
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            // The mode's name takes the room the two chips leave and wraps; the chips stay on one line.
+            ModePill(mode = mode, modifier = Modifier.weight(1f, fill = false))
+            Surface(
+                modifier = Modifier.padding(start = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             ) {
                 Text(
-                    "Kotlin",
+                    stringResource(language.nameRes()),
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
             ReadmeToggleButton(

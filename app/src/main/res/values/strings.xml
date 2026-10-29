@@ -23,6 +23,7 @@
     </plurals>
     <string name="check_new_repos_failed_http">Couldn\'t check for new repos (HTTP %1$d)</string>
     <string name="check_new_repos_failed">Couldn\'t check for new repos: %1$s</string>
+    <string name="readme_toggle_label">README</string>
     <string name="readme_unreadable">Couldn\'t read this README\'s content.</string>
     <string name="readme_load_failed">Couldn\'t load the README: %1$s</string>
 
