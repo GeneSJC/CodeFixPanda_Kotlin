@@ -171,9 +171,9 @@ fun TopReposScreen(
                             }
                         },
                         trailing = {
-                            // The rate limit, the updated line and the count, one above the other on one right edge, the count
-                            // last so it sits at the bottom of the header, next to the list it counts. It is tappable and opens
-                            // the ranking explanation. The rate-limit chip is always shown (a placeholder with no data yet) so
+                            // The rate limit, the count and the updated line, one above the other on one right edge, the updated
+                            // line last so it sits at the bottom of the header. The count is tappable and opens the ranking
+                            // explanation. The rate-limit chip is always shown (a placeholder with no data yet) so
                             // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
                             // its place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
                             Column(
@@ -196,8 +196,8 @@ fun TopReposScreen(
                                     )
                                 }
                                 if (!isLandscape) {
-                                    UpdatedText(uiState.lastUpdatedAtMs, onBar = true)
                                     RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
+                                    UpdatedText(uiState.lastUpdatedAtMs, onBar = true)
                                 }
                             }
                             // The ad-free offer, under the count; in the open build the line draws nothing.
