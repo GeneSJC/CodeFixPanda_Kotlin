@@ -19,6 +19,20 @@ private val GfiColorScheme = lightColorScheme(
     surfaceVariant = ModeGfiCard,
     outline = ModeGfiOutline,
     outlineVariant = ModeGfiOutlineVariant,
+    primaryContainer = ModeGfiSecondaryContainer,
+    onPrimaryContainer = ModeGfiOnSecondaryContainer,
+    inversePrimary = ModeGfiSecondaryContainer,
+    onBackground = ModeGfiOnSurface,
+    onSurface = ModeGfiOnSurface,
+    onSurfaceVariant = ModeGfiOnSurfaceVariant,
+    surfaceTint = ModeGfiPrimary,
+    inverseSurface = ModeGfiInverseSurface,
+    inverseOnSurface = ModeGfiBackground,
+    surfaceContainerLowest = ModeGfiSurface,
+    surfaceContainerLow = ModeGfiSurfaceLow,
+    surfaceContainer = ModeGfiSurfaceContainer,
+    surfaceContainerHigh = ModeGfiCard,
+    surfaceContainerHighest = ModeGfiCard,
 )
 
 private val HwColorScheme = lightColorScheme(
@@ -36,6 +50,20 @@ private val HwColorScheme = lightColorScheme(
     surfaceVariant = ModeHwCard,
     outline = ModeHwOutline,
     outlineVariant = ModeHwOutlineVariant,
+    primaryContainer = ModeHwSecondaryContainer,
+    onPrimaryContainer = ModeHwOnSecondaryContainer,
+    inversePrimary = ModeHwSecondaryContainer,
+    onBackground = ModeHwOnSurface,
+    onSurface = ModeHwOnSurface,
+    onSurfaceVariant = ModeHwOnSurfaceVariant,
+    surfaceTint = ModeHwPrimary,
+    inverseSurface = ModeHwInverseSurface,
+    inverseOnSurface = ModeHwBackground,
+    surfaceContainerLowest = ModeHwSurface,
+    surfaceContainerLow = ModeHwSurfaceLow,
+    surfaceContainer = ModeHwSurfaceContainer,
+    surfaceContainerHigh = ModeHwCard,
+    surfaceContainerHighest = ModeHwCard,
 )
 
 /**

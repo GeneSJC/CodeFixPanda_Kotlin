@@ -63,7 +63,12 @@ val ModeGfiPrimary = BrandBlue
 val ModeGfiOnPrimary = Color(0xFFFFFFFF)
 val ModeGfiSecondaryContainer = BrandBlueContainerLight
 val ModeGfiOnSecondaryContainer = BrandNavy
-val ModeGfiCard = Color(0xFFF2F6FC)
+val ModeGfiCard = Color(0xFFF2F6FC) // cards and dialogs (the container roles Material reads for them)
+val ModeGfiSurfaceLow = Color(0xFFFAFCFF)
+val ModeGfiSurfaceContainer = Color(0xFFF5F8FD)
+val ModeGfiOnSurface = Color(0xFF111A2B) // text: a near-black with the blue's cast, not Material's plum
+val ModeGfiOnSurfaceVariant = Color(0xFF3E4A63)
+val ModeGfiInverseSurface = Color(0xFF1F2A44) // the snackbar
 val ModeGfiOutline = Color(0xFF8AA0C4)
 val ModeGfiOutlineVariant = Color(0xFFC5D3EA)
 
@@ -74,7 +79,12 @@ val ModeHwPrimary = BrandOrangeMid
 val ModeHwOnPrimary = Color(0xFFFFFFFF)
 val ModeHwSecondaryContainer = BrandContainerLight
 val ModeHwOnSecondaryContainer = OnBrandContainerLight
-val ModeHwCard = Color(0xFFFFF7F1)
+val ModeHwCard = Color(0xFFFFF7F1) // cards and dialogs (the container roles Material reads for them)
+val ModeHwSurfaceLow = Color(0xFFFFFBF8)
+val ModeHwSurfaceContainer = Color(0xFFFFF9F5)
+val ModeHwOnSurface = Color(0xFF2A1B18) // text: a warm near-black, not Material's plum
+val ModeHwOnSurfaceVariant = Color(0xFF5C453F)
+val ModeHwInverseSurface = Color(0xFF3A2A26) // the snackbar
 val ModeHwOutline = Color(0xFFC79A8D)
 val ModeHwOutlineVariant = Color(0xFFF0CFC2)
 

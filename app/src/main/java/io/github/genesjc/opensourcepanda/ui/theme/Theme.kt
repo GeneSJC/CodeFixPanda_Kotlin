@@ -40,6 +40,20 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = ModeHwCard,
     outline = ModeHwOutline,
     outlineVariant = ModeHwOutlineVariant,
+    primaryContainer = ModeHwSecondaryContainer,
+    onPrimaryContainer = ModeHwOnSecondaryContainer,
+    inversePrimary = ModeHwSecondaryContainer,
+    onBackground = ModeHwOnSurface,
+    onSurface = ModeHwOnSurface,
+    onSurfaceVariant = ModeHwOnSurfaceVariant,
+    surfaceTint = ModeHwPrimary,
+    inverseSurface = ModeHwInverseSurface,
+    inverseOnSurface = ModeHwBackground,
+    surfaceContainerLowest = ModeHwSurface,
+    surfaceContainerLow = ModeHwSurfaceLow,
+    surfaceContainer = ModeHwSurfaceContainer,
+    surfaceContainerHigh = ModeHwCard,
+    surfaceContainerHighest = ModeHwCard,
 )
 
 /**
