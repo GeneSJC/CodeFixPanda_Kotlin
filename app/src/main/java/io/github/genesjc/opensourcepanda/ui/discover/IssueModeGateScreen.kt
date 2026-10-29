@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -34,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
+import io.github.genesjc.opensourcepanda.ui.components.BrandTitleBand
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.LabelInfoDialog
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -51,7 +50,6 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
  * synchronously, and without the wrapper this screen's text color snapped to the new mode's tone just
  * before the transition. More in docs/design-notes.md, "Mode gate".
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     val slots = rememberModeButtonSlots()
@@ -59,13 +57,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     val infoLabel = stringResource(R.string.label_info_title)
     OpenSourcePandaTheme(issueMode = null) {
         Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
-                    },
-                )
-            },
+            topBar = { BrandTitleBand() },
         ) { padding ->
             Box(
                 modifier = Modifier.padding(padding).fillMaxSize().padding(start = 24.dp, end = 24.dp, top = 16.dp),
