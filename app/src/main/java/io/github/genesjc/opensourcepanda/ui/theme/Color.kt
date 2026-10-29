@@ -34,6 +34,7 @@ val BrandSeafoam = Color(0xFF4DBB92) // the panda's scrubs; navy text on it pass
 val BrandSeafoamContainerLight = Color(0xFFDDF5EA)
 val OnBrandSeafoamContainerLight = Color(0xFF0B3B2D)
 val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
+val BrandOnOrange = Color(0xFFFFFFFF) // text and icons on the orange
 val BrandSoftWhite = Color(0xFFFFECE0) // secondary text on the orange
 
 // The soft tangerine for the content of the screens under the brand title bar: a pale gradient with the glyph

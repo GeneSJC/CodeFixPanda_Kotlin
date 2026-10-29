@@ -14,13 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.relativeTimeText
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
 /**
  * The record of every issue hidden with a card's "✕" badge, reached from the Top Repos menu and from
@@ -61,7 +63,7 @@ fun HiddenIssuesScreen(
             containerColor = Color.Transparent,
             modifier = modifier,
             topBar = {
-                TopAppBar(
+                BrandTopAppBar(
                     title = { Text(stringResource(R.string.hidden_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
@@ -70,7 +72,10 @@ fun HiddenIssuesScreen(
                     },
                     actions = {
                         if (hiddenIssues.isNotEmpty()) {
-                            TextButton(onClick = { showUnhideAllConfirm = true }) {
+                            TextButton(
+                                onClick = { showUnhideAllConfirm = true },
+                                colors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current),
+                            ) {
                                 Text(stringResource(R.string.hidden_unhide_all))
                             }
                         }

@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +35,7 @@ import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
 import io.github.genesjc.opensourcepanda.data.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
 /**
  * Where a user supplies their own GitHub token; the build-time token exists only for someone
@@ -63,7 +63,7 @@ fun SettingsScreen(
             containerColor = Color.Transparent,
             modifier = modifier,
             topBar = {
-                TopAppBar(
+                BrandTopAppBar(
                     title = { Text(stringResource(R.string.settings_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {

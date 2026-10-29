@@ -1,7 +1,6 @@
 package io.github.genesjc.opensourcepanda.ui.theme
 
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.ui.graphics.Color
 
 /**
  * The app's identity colors as a color scheme, for the screens that stand for the app itself (the
@@ -11,10 +10,10 @@ import androidx.compose.ui.graphics.Color
 val BrandColorScheme = lightColorScheme(
     primary = BrandSun,
     onPrimary = BrandNavy,
-    secondary = Color.White,
+    secondary = BrandOnOrange,
     background = BrandOrangeMid,
-    onBackground = Color.White,
+    onBackground = BrandOnOrange,
     surface = BrandOrangeMid,
-    onSurface = Color.White,
+    onSurface = BrandOnOrange,
     onSurfaceVariant = BrandSoftWhite,
 )

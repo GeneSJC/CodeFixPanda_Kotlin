@@ -22,7 +22,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +49,7 @@ import io.github.genesjc.opensourcepanda.ui.ads.AdFreeOfferLine
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
 import io.github.genesjc.opensourcepanda.ui.findActivity
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 import kotlinx.coroutines.launch
 
 /**
@@ -104,7 +104,7 @@ fun RepoIssuesScreen(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
             topBar = {
-                TopAppBar(
+                BrandTopAppBar(
                     title = {
                         Column {
                             Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)

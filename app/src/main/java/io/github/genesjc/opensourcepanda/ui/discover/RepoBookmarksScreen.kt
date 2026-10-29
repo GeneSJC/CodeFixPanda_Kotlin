@@ -16,7 +16,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -31,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IssueCard
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
 /**
  * The Bookmarks screen, reached from the Top Repos menu: every issue saved with the bookmark toggle.
@@ -55,7 +55,7 @@ fun RepoBookmarksScreen(
             modifier = modifier,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
+                BrandTopAppBar(
                     title = { Text(stringResource(R.string.bookmarks_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {

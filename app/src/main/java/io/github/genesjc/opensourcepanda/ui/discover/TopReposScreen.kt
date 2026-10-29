@@ -15,12 +15,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +46,7 @@ import io.github.genesjc.opensourcepanda.ui.components.LanguageFilterRow
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
 import io.github.genesjc.opensourcepanda.ui.findActivity
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -135,17 +136,17 @@ fun TopReposScreen(
                 bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
                 topBar = {
                     Column {
-                        TopAppBar(
+                        BrandTopAppBar(
                             title = {
                                 // In landscape this content lives in the left rail instead.
                                 if (!isLandscape) {
                                     Column {
-                                        ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
+                                        ModePill(mode = currentMode, onBar = true, onInfoClick = { showLabelInfoDialog = true })
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.padding(top = 4.dp),
                                         ) {
-                                            RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
+                                            RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs, onBar = true)
                                         }
                                     }
                                 }
@@ -202,7 +203,7 @@ fun TopReposScreen(
                                         Text(
                                             "ⓘ",
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = LocalContentColor.current,
                                             modifier = Modifier
                                                 .clickable { showInfoDialog = true }
                                                 .padding(end = 16.dp),

@@ -12,10 +12,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.relativeTimeText
+import io.github.genesjc.opensourcepanda.ui.theme.BrandSoftWhite
 
-/** The repo-count chip and the "Updated X ago" line, as two siblings for the caller's Row. */
+/**
+ * The repo-count chip and the "Updated X ago" line, as two siblings for the caller's Row. [onBar] is for the
+ * brand orange top bar, where the line is the soft white and not the usual dark gray.
+ */
 @Composable
-internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?) {
+internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?, onBar: Boolean = false) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -30,7 +34,7 @@ internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?) {
     Text(
         lastUpdatedAtMs?.let { stringResource(R.string.repo_list_updated, relativeTimeText(it)) }.orEmpty(),
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if (onBar) BrandSoftWhite else MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 8.dp),
     )
 }
