@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IssueCard
+import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 
 /**
  * The Bookmarks screen, reached from the Top Repos menu: every issue saved with the bookmark toggle.
@@ -47,49 +49,52 @@ fun RepoBookmarksScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val bookmarkedIssues by viewModel.bookmarks.collectAsStateWithLifecycle()
 
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.bookmarks_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        if (bookmarkedIssues.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    stringResource(R.string.bookmarks_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    BrandSoftBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            modifier = modifier,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.bookmarks_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Text("←", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
                 )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(bookmarkedIssues, key = { it.id }) { issue ->
-                    IssueCard(
-                        issue = issue,
-                        isBookmarked = true, // guaranteed true — this screen only ever shows what's currently bookmarked
-                        showExternalLinkIndicator = true,
-                        onClick = {
-                            context.startActivity(
-                                Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
-                            )
-                        },
-                        onToggleBookmark = { viewModel.toggleBookmark(issue) },
-                        snackbarHostState = snackbarHostState,
+            },
+        ) { padding ->
+            if (bookmarkedIssues.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(R.string.bookmarks_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(bookmarkedIssues, key = { it.id }) { issue ->
+                        IssueCard(
+                            issue = issue,
+                            isBookmarked = true, // guaranteed true — this screen only ever shows what's currently bookmarked
+                            showExternalLinkIndicator = true,
+                            onClick = {
+                                context.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)),
+                                )
+                            },
+                            onToggleBookmark = { viewModel.toggleBookmark(issue) },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
                 }
             }
         }

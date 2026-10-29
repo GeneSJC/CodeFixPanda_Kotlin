@@ -33,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,7 @@ import io.github.genesjc.opensourcepanda.ui.ads.AdBannerSlot
 import io.github.genesjc.opensourcepanda.ui.ads.AdFreeOfferLine
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
 import io.github.genesjc.opensourcepanda.ui.findActivity
+import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import kotlinx.coroutines.launch
 
 /**
@@ -95,93 +97,96 @@ fun RepoIssuesScreen(
         viewModel.loadIfNeeded(repoGroup)
     }
 
-    Scaffold(
-        modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
-                        AdFreeOfferLine(
-                            adFreeUntilMs = adFreeUntilMs,
-                            canOffer = canOfferAdFree,
-                            onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-                actions = {
-                    if (isDemo) DemoChip()
-                    IconButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/${repoGroup.repoFullName}"),
-                                ),
+    BrandSoftBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            modifier = modifier,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
+                            AdFreeOfferLine(
+                                adFreeUntilMs = adFreeUntilMs,
+                                canOffer = canOfferAdFree,
+                                onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
                             )
-                        },
-                    ) {
-                        Text("↗", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            RepoIssuesFilterRow(
-                mode = activeMode,
-                readmeExpanded = readmeExpanded,
-                onToggleReadme = { readmeExpanded = !readmeExpanded },
-            )
-
-            // Always composed and full-size; the README overlay below is drawn on top of it.
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                RepoIssueList(
-                    uiState = uiState,
-                    visibleIssues = visibleIssues,
-                    bookmarkedIds = bookmarkedIds,
-                    listState = issueListState,
-                    snackbarHostState = snackbarHostState,
-                    onIssueClick = { issue ->
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)))
-                    },
-                    onToggleBookmark = { issue -> viewModel.toggleBookmark(issue) },
-                    onHide = { issue ->
-                        viewModel.hideIssue(issue)
-                        coroutineScope.launch {
-                            val result = snackbarHostState.showSnackbar(
-                                message = issueHiddenMessage,
-                                actionLabel = undoLabel,
-                                duration = SnackbarDuration.Short,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                viewModel.unhideIssue(issue.id)
-                            }
                         }
                     },
-                    onOpenHidden = onOpenHidden,
-                    onRefresh = { viewModel.refreshThisRepo(repoGroup, language) },
-                    modifier = Modifier.fillMaxSize(),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Text("←", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
+                    actions = {
+                        if (isDemo) DemoChip()
+                        IconButton(
+                            onClick = {
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://github.com/${repoGroup.repoFullName}"),
+                                    ),
+                                )
+                            },
+                        ) {
+                            Text("↗", style = MaterialTheme.typography.titleLarge)
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+                RepoIssuesFilterRow(
+                    mode = activeMode,
+                    readmeExpanded = readmeExpanded,
+                    onToggleReadme = { readmeExpanded = !readmeExpanded },
                 )
 
-                ReadmeExpandableBody(
-                    expanded = readmeExpanded,
-                    repoOwner = repoGroup.repoOwner,
-                    repoName = repoGroup.repoName,
-                    repoFullName = repoGroup.repoFullName,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 16.dp),
-                )
+                // Always composed and full-size; the README overlay below is drawn on top of it.
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    RepoIssueList(
+                        uiState = uiState,
+                        visibleIssues = visibleIssues,
+                        bookmarkedIds = bookmarkedIds,
+                        listState = issueListState,
+                        snackbarHostState = snackbarHostState,
+                        onIssueClick = { issue ->
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(issue.htmlUrl)))
+                        },
+                        onToggleBookmark = { issue -> viewModel.toggleBookmark(issue) },
+                        onHide = { issue ->
+                            viewModel.hideIssue(issue)
+                            coroutineScope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = issueHiddenMessage,
+                                    actionLabel = undoLabel,
+                                    duration = SnackbarDuration.Short,
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.unhideIssue(issue.id)
+                                }
+                            }
+                        },
+                        onOpenHidden = onOpenHidden,
+                        onRefresh = { viewModel.refreshThisRepo(repoGroup, language) },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+
+                    ReadmeExpandableBody(
+                        expanded = readmeExpanded,
+                        repoOwner = repoGroup.repoOwner,
+                        repoName = repoGroup.repoName,
+                        repoFullName = repoGroup.repoFullName,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(horizontal = 16.dp),
+                    )
+                }
             }
         }
     }

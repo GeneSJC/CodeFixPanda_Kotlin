@@ -87,10 +87,10 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                             Text(
                                 "ⓘ",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
                                     .clickable(onClickLabel = infoLabel) { showInfo = true }
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    .padding(horizontal = INFO_ICON_SIDE_PADDING, vertical = 8.dp),
                             )
                         }
                         // The two choices side by side, equally wide and as tall as the taller one.
@@ -155,3 +155,6 @@ private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
 private val MODE_BUTTON_SIDE_PADDING = 6.dp
 private val MODE_BUTTON_GAP = 12.dp
+
+/** The info icon's tap area is larger than the glyph; the side margin was 12 dp and is 20% less. */
+private val INFO_ICON_SIDE_PADDING = 9.6.dp

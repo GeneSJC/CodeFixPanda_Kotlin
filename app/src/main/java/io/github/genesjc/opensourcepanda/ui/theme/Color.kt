@@ -29,6 +29,8 @@ val BrandOrangeMid = Color(0xFFBC524A)
 val BrandOrangeBottom = Color(0xFFA5403E)
 val BrandSun = Color(0xFFFFD94D) // the branch glyph
 val BrandNavy = Color(0xFF0F2A52) // outlines and text on the sun and mint accents
+val BrandBlue = Color(0xFF1F4B8E) // a lighter step of the navy, the blue that sits well beside the orange
+val BrandBlueContainerLight = Color(0xFFD8E4F5)
 val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs
 val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
 val BrandSoftWhite = Color(0xFFFFECE0) // secondary text on the orange
@@ -39,28 +41,27 @@ val TangerineLight = Color(0xFFFFE2CC)
 val TangerineMid = Color(0xFFFFCDAA)
 val TangerineGlyph = Color(0xFFF09664)
 
-// Issue Mode schemes — two deeper shades of the brand orange, between its light and dark ends. A mode's
-// colors have to comfortably BE the background/surface across a whole screen, so each pairs a strong
-// primary (white text on it passes contrast) with a very light tint of the same hue. The two differ in
-// depth: beginner-friendly is the lighter shade, projects asking for help the darker. Light-only for
-// now — see ModeColorSchemes.kt for why dark variants aren't included yet. They reuse the brand
-// constants above, so this block has to stay below them.
+// Issue Mode schemes — the brand blue and a deeper shade of the brand orange, which sit well together: a mode's
+// colors have to comfortably BE the background/surface across a whole screen, so each pairs a strong primary
+// (white text on it passes contrast) with a very light tint of the same hue. Beginner-friendly is the blue,
+// projects asking for help the orange. Light-only for now — see ModeColorSchemes.kt for why dark variants
+// aren't included yet. They reuse the brand constants above, so this block has to stay below them.
 
-// Beginner-friendly issues — the lighter shade
-val ModeGfiBackground = Color(0xFFFFF2E9)
+// Beginner-friendly issues — the blue
+val ModeGfiBackground = Color(0xFFEEF3FB)
 val ModeGfiSurface = Color(0xFFFFFFFF)
-val ModeGfiPrimary = BrandOrangeMid
+val ModeGfiPrimary = BrandBlue
 val ModeGfiOnPrimary = Color(0xFFFFFFFF)
-val ModeGfiSecondaryContainer = BrandContainerLight
-val ModeGfiOnSecondaryContainer = OnBrandContainerLight
+val ModeGfiSecondaryContainer = BrandBlueContainerLight
+val ModeGfiOnSecondaryContainer = BrandNavy
 
-// Projects asking for help — the darker shade
-val ModeHwBackground = Color(0xFFFDEBE4)
+// Projects asking for help — the orange
+val ModeHwBackground = Color(0xFFFFF2E9)
 val ModeHwSurface = Color(0xFFFFFFFF)
-val ModeHwPrimary = BrandOrangeBottom
+val ModeHwPrimary = BrandOrangeMid
 val ModeHwOnPrimary = Color(0xFFFFFFFF)
-val ModeHwSecondaryContainer = Color(0xFFF6D3C6)
-val ModeHwOnSecondaryContainer = Color(0xFF3E1412)
+val ModeHwSecondaryContainer = BrandContainerLight
+val ModeHwOnSecondaryContainer = OnBrandContainerLight
 
 // Hamburger-menu section backgrounds (TopReposScreen's drawer) —
 // deliberately their own fixed pastel set, NOT derived from the active
