@@ -95,6 +95,7 @@
     <string name="rate_limit_used">Used</string>
     <string name="rate_limit_resets_in">Resets in</string>
     <string name="rate_limit_search_note">This reflects GitHub\'s Search API limit specifically, which is separate from and stricter than the general REST API limit.</string>
+    <string name="rate_limit_window_note">The limit renews every minute, and these numbers come from your most recent search, so they may already have reset. Opening a list that is saved on your device uses no searches. Load More, a language you have not opened yet, Check for New Repos and Refresh this repo each use one.</string>
     <string name="rate_limit_gauge_description">Rate limit gauge: %1$d of %2$d remaining</string>
 
     <!-- Lists, hidden issues, bookmarks, label info and the issue card. -->

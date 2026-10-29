@@ -202,6 +202,12 @@ internal fun RateLimitDialog(info: RateLimitInfo?, onDismiss: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp),
                     )
+                    Text(
+                        stringResource(R.string.rate_limit_window_note),
+                        style = MaterialTheme.typography.bodySmall.rateLimitDialogScaled(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
                 }
             }
         },
