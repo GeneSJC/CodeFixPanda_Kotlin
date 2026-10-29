@@ -80,13 +80,24 @@ a kind of issue and a language, and it lists the repositories with the most open
   </tr>
 </table>
 
+</div>
+
+<sub>Real screenshots are on the way; the phones above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
+
+<details>
+<summary><b>The launch animation</b> (an illustration; click to expand)</summary>
+
 <br>
 
-<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+<div align="center">
+
+<img src="docs/images/splash-storyboard.png" alt="Six frames of the launch animation: Open slides in, Source hits and Open lurches, PANDA rises, the panda drops in, it lands with a squash and a burst of light, and the final frame" width="720">
+
+<sub>Six frames of the launch animation, drawn from its design (they are not captures of the running app).<br>The title builds itself, then the panda drops in above it and lands with a burst of light.</sub>
 
 </div>
 
-<sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
+</details>
 
 <a id="run-it"></a>
 
@@ -142,6 +153,7 @@ Small command-line tools keep verification fast and repeatable, and CI runs the 
 | `./scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
 | `./scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
 | `python3 docs/images/make_art.py` | Regenerates the README banner, divider, mascot and placeholder screens | After a rename or a color change |
+| `python3 docs/images/make_splash_storyboard.py` | Redraws the launch-animation storyboard shown under Screens | After changing the splash animation |
 | `python3 docs/images/make_launcher_icons.py` | Regenerates the launcher icon backgrounds and the pre-Android-8 icons | After changing the icon colors |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
 

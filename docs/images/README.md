@@ -8,11 +8,11 @@ The images used by the front-page `README.md`.
 | `divider.png` | The gradient rule between sections | Keep |
 | `panda.png` | The footer mascot | Keep |
 | `placeholder-welcome.png`, `placeholder-top-repos.png`, `placeholder-repo-issues.png` | The three phone screenshots in the "Screens" gallery | Real screenshots, about 540 x 1100 (or any phone-shaped size). Save as `screen-welcome.png`, `screen-top-repos.png`, `screen-repo-issues.png` and change the three `src` paths in the README |
-| `placeholder-demo.png` | The demo slot under the gallery | An animated `demo.gif` (keep it under about 8 MB; GitHub shows it inline). Change the one `src` path in the README |
+| `splash-storyboard.png` | The collapsed launch-animation illustration under the gallery | Keep, or real frames if the animation is ever recorded. `make_splash_storyboard.py` redraws it |
 
 `make_art.py` generates the banner, divider, panda and placeholders (needs Pillow; it reads the app's own panda from
-`app/src/main/res`). Run it from this folder after changing colors or text. The real screenshots and GIF are not
-generated; just add them.
+`app/src/main/res`). Run it from this folder after changing colors or text. `make_splash_storyboard.py` draws the storyboard
+the same way. The real screenshots are not generated; just add them.
 
 Tips: take screenshots in light mode with the demo data (nothing personal on screen), and keep each PNG under about
 400 KB so the page loads fast (an optimizer such as `pngquant` or Squoosh helps).

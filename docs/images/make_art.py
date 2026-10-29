@@ -2,7 +2,7 @@
 
 Run from this folder:  python3 make_art.py
 It reads the app's panda from app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png and writes PNGs next to
-this file. Real screenshots and GIFs replace the placeholder-*.png files; keep the file names, or change the
+this file. Real screenshots replace the placeholder-*.png files; keep the file names, or change the
 README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
@@ -160,17 +160,6 @@ def phone(name, caption, kind):
     d.text((w // 2, py + 100 * S), caption, font=f2, fill=SOFT, anchor="mm")
     return img.resize((W, H), Image.LANCZOS)
 
-def demo_placeholder():
-    S, W, H = 2, 1200, 675
-    img = gradient(W * S, H * S, [(0, NAVY), (0.55, BLUE), (1, BLUE2)]).convert("RGBA")
-    d = ImageDraw.Draw(img)
-    cx, cy = W * S // 2, H * S // 2 - 30 * S
-    d.ellipse((cx - 90 * S, cy - 90 * S, cx + 90 * S, cy + 90 * S), fill=(255, 255, 255, 235))
-    d.polygon([(cx - 26 * S, cy - 48 * S), (cx - 26 * S, cy + 48 * S), (cx + 54 * S, cy)], fill=BLUE)
-    d.text((cx, cy + 150 * S), "Demo GIF coming soon", font=font(FONT_BOLD, 44 * S), fill=(255, 255, 255), anchor="mm")
-    d.text((cx, cy + 205 * S), "swap this file for docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
-    return img.convert("RGB").resize((W, H), Image.LANCZOS)
-
 if __name__ == "__main__":
     out = lambda n: os.path.join(HERE, n)
     banner().save(out("banner.png"), optimize=True)
@@ -178,6 +167,5 @@ if __name__ == "__main__":
     phone("welcome", "Welcome / token gate", "welcome").save(out("placeholder-welcome.png"), optimize=True)
     phone("top", "Top Repos", "list").save(out("placeholder-top-repos.png"), optimize=True)
     phone("issues", "Repo issues", "list").save(out("placeholder-repo-issues.png"), optimize=True)
-    demo_placeholder().save(out("placeholder-demo.png"), optimize=True)
     panda(160).save(out("panda.png"), optimize=True)
     print("done")
