@@ -119,7 +119,10 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
 @Composable
 private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: Modifier = Modifier) {
     val scheme = mode.colorScheme()
-    val nameStyle = MaterialTheme.typography.titleMedium
+    // 25% larger than titleMedium, size and line height together.
+    val nameStyle = MaterialTheme.typography.titleMedium.let {
+        it.copy(fontSize = it.fontSize * MODE_BUTTON_TEXT_SCALE, lineHeight = it.lineHeight * MODE_BUTTON_TEXT_SCALE)
+    }
     // The icon above the name, both centered; a long name wraps onto a second line.
     Surface(
         onClick = onSelect,
@@ -152,6 +155,8 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
 }
 
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
+
+private const val MODE_BUTTON_TEXT_SCALE = 1.25f
 
 private val MODE_BUTTON_SIDE_PADDING = 6.dp
 private val MODE_BUTTON_GAP = 12.dp
