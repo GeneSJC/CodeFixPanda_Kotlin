@@ -115,19 +115,18 @@ def banner():
     for gx in range(0, w, 64 * S):
         for gy in range(0, h, 64 * S):
             d.ellipse((gx, gy, gx + 4 * S, gy + 4 * S), fill=(255, 255, 255, 22))
-    # soft warm glow behind the glyph
+    # soft warm glow behind the glyph and panda
     glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(glow).ellipse((int(w * 0.62), -int(h * 0.2), int(w * 1.1), int(h * 1.0)), fill=(255, 190, 120, 75))
+    ImageDraw.Draw(glow).ellipse((-int(w * 0.1), -int(h * 0.2), int(w * 0.4), int(h * 1.0)), fill=(255, 190, 120, 75))
     img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(150 * S)))
     d = ImageDraw.Draw(img, "RGBA")
-    # panda
+    # branch glyph on the left, then the panda beside it, then the title: the branch leads to the panda
+    g = glyph(420 * S)
+    shadowed(img, g, (100 * S, (h - g.height) // 2), blur=18 * S, offset=(0, 14 * S), opacity=70)
     p = panda(380 * S)
-    shadowed(img, p, (64 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
-    # branch glyph on the right
-    g = glyph(440 * S)
-    shadowed(img, g, (1180 * S, (h - g.height) // 2), blur=18 * S, offset=(0, 14 * S), opacity=70)
+    shadowed(img, p, (g.width + 100 * S - 12 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
     # title
-    x0 = 470 * S
+    x0 = 790 * S
     d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
