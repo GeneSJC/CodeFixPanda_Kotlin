@@ -80,14 +80,15 @@ GLYPH_BRANCH = [(51.62, 44.17), (54.51, 46.17), (57.20, 47.97), (60.01, 49.60), 
                 (67.92, 51.86), (70.53, 52.05), (73.03, 51.89), (75.68, 51.23), (78.18, 50.34), (80.86, 49.33)]
 GLYPH_NODES = [(76.57, 79.80), (40.43, 28.20), (80.86, 49.33)]
 
-def glyph(height):
-    """The icon's branch glyph (design units on a 108 grid) drawn as a transparent layer of the given height."""
+def glyph(height, outline=0):
+    """The icon's branch glyph (design units on a 108 grid) drawn as a transparent layer of the given height.
+    With outline > 0 the layer gains a black outline that many pixels wide, and grows by that much on every side."""
     k = height / 69.0                       # the glyph spans about 67 units top to bottom, plus a margin
     ox, oy = 31.5, 19.5                     # its top-left corner in design units, with the margin
     w = int(58 * k)
-    img = Image.new("RGBA", (w, height), (0, 0, 0, 0))
+    img = Image.new("RGBA", (w + 2 * outline, height + 2 * outline), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    def pt(q): return ((q[0] - ox) * k, (q[1] - oy) * k)
+    def pt(q): return ((q[0] - ox) * k + outline, (q[1] - oy) * k + outline)
     width = int(4.6 * k)
     for line in (GLYPH_TRUNK, GLYPH_BRANCH):
         pts = [pt(q) for q in line]
@@ -98,6 +99,12 @@ def glyph(height):
         x, y = pt(q)
         r = 7.6 * k
         d.ellipse((x - r, y - r, x + r, y + r), fill=SUN + (255,))
+    if outline:
+        edge = img.split()[-1].filter(ImageFilter.MaxFilter(2 * outline + 1))
+        out = Image.new("RGBA", img.size, (8, 8, 12, 0))
+        out.putalpha(edge)
+        out.alpha_composite(img)
+        img = out
     return img
 
 def banner():
@@ -121,12 +128,13 @@ def banner():
     img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(150 * S)))
     d = ImageDraw.Draw(img, "RGBA")
     # branch glyph on the left, then the panda beside it, then the title: the branch leads to the panda
-    g = glyph(420 * S)
-    shadowed(img, g, (100 * S, (h - g.height) // 2), blur=18 * S, offset=(0, 14 * S), opacity=70)
+    edge = 5 * S                             # black outline so the glyph pops off the orange
+    g = glyph(410 * S, outline=edge)
+    shadowed(img, g, (100 * S - edge, (h - g.height) // 2), blur=18 * S, offset=(0, 14 * S), opacity=70)
     p = panda(380 * S)
-    shadowed(img, p, (g.width + 100 * S - 12 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
+    shadowed(img, p, (100 * S + g.width - 2 * edge + 36 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
     # title
-    x0 = 790 * S
+    x0 = 835 * S
     d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
