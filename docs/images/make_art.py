@@ -1,15 +1,15 @@
-"""Generates the README's artwork (banner, divider, placeholder screens, panda) with Pillow.
+"""README tooling only: generates the GitHub front page's artwork (banner, divider, placeholder screens, panda)
+with Pillow. It is not part of the Android app and nothing here ships in either build flavor.
 
 Run from this folder:  python3 make_art.py
-It reads the app's panda from app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png and writes PNGs next to
-this file. Real screenshots and GIFs replace the placeholder-*.png files; keep the file names, or change the
-README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
+It reads the mascot from panda-source.png (next to this file) and writes PNGs next to this file.
+Real screenshots and GIFs replace the placeholder-*.png files; keep the file names, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PANDA = os.path.join(HERE, "..", "..", "app", "src", "main", "res", "drawable-xxxhdpi", "ic_launcher_foreground.png")
+PANDA = os.path.join(HERE, "panda-source.png")
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_TEXT = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 FONT_TEXT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
