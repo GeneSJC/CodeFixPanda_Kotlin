@@ -24,6 +24,17 @@ val OnGreenContainerDark = Color(0xFFB6E7D6)
 val BackgroundDark = Color(0xFF14140F)
 val SurfaceDark = Color(0xFF1E1E1A)
 
+// App identity — the launcher icon's palette. These colors stand for the app itself (the splash, the
+// front screens, the artwork), as opposed to the Issue Mode colors below, which stand for what the user
+// is looking at. Keeping the two groups apart is what stops the palette growing a new color per screen.
+val BrandOrangeTop = Color(0xFFCF6657)
+val BrandOrangeMid = Color(0xFFBC524A)
+val BrandOrangeBottom = Color(0xFFA5403E)
+val BrandSun = Color(0xFFFFD94D) // the branch glyph
+val BrandNavy = Color(0xFF0F2A52) // outlines and text on the sun and mint accents
+val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs
+val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
+
 // Issue Mode pastel schemes (v0.41) — deliberately their own palette,
 // not a reuse of BrandPurple/BrandGreen above at full strength. Those
 // exist to accent small elements (a label chip, a secondary color) on

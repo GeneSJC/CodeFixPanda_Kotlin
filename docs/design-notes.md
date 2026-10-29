@@ -86,6 +86,12 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **Fixed look.** The splash always uses the app's purple palette, whichever issue mode is active. It is the app's own identity, so it does not repaint when the mode changes.
 - **The panda art.** The splash and the welcome screen draw `panda_mark.png`, the mascot from the launcher icon art, 512 px tall, so it stays sharp at 130 dp even on the densest screens.
 
+## Color palette
+
+- **Two groups, kept apart.** The app's identity colors (orange, sun yellow, navy, mint, in `Color.kt` as `Brand*`) come from the launcher icon and stand for the app itself: the splash, the front screens, the artwork. The Issue Mode colors (the purple for beginner-friendly issues, the green for projects asking for help) stand for what the user is looking at, and repaint a screen when the mode changes. A new screen takes one group or the other; it does not add a color.
+- **Where purple is left.** The mode purple and green are unchanged. `secondary` in the theme still holds the old brand purple, but no screen reads it, so it is left alone until a component needs a secondary color.
+- **Dark mode is tabled.** `OpenSourcePandaTheme` still has a `darkTheme` parameter and a dark scheme, but it is hardcoded to false and the mode schemes are light-only. There is no setting for it, so nothing is hidden; a dark mode would need a dark scheme per mode first.
+
 ## Launcher icon
 
 - **One icon for both flavors.** The icon lives only in `app/src/main/res`, so `foss` and `commercial` share it. The earlier per-flavor overrides were removed because two icons meant two sets of files to keep in step.
