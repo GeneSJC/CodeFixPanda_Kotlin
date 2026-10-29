@@ -94,7 +94,7 @@ fun WelcomeScreen(
             ) {
                 // Decorative: the title below already says what this is.
                 Image(
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    painter = painterResource(R.mipmap.ic_launcher_foreground),
                     contentDescription = null,
                     modifier = Modifier.size(140.dp),
                 )
