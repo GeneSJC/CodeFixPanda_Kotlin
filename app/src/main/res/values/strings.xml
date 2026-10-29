@@ -122,7 +122,7 @@
     <string name="hidden_unhide_all_message">They\'ll reappear wherever they\'re still cached — Top Repos and repo lists alike.</string>
     <string name="bookmarks_title">Bookmarks</string>
     <string name="bookmarks_empty">No bookmarks yet — tap the ★ on any issue to save it here.</string>
-    <string name="label_info_title">What do these two choices mean?</string>
+    <string name="label_info_title">About the issue types</string>
     <string name="label_info_footer">Maintainers choose these labels themselves; GitHub does not check them, so difficulty and quality vary from project to project.</string>
     <string name="share_issue_chooser">Share issue</string>
     <string name="link_copied">Link copied</string>
