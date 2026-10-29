@@ -23,24 +23,49 @@ private const val GLYPH_SHIFT_Y = 0.12f
 
 /**
  * The glyph fades in along the diagonal from the top left to the bottom right: invisible until
- * [FADE_START] of the way across, then up to [GLYPH_MAX_ALPHA] in the corner, so it never runs under the
+ * [FADE_START] of the way across, then up to the given maximum in the corner, so it never runs under the
  * headline and the text at the top and is strongest where the screen is empty.
  */
 private const val FADE_START = 0.3f
-private const val GLYPH_MAX_ALPHA = 0.6f
 
 /**
  * The backdrop for the content under the top bar, in the Issue Mode's colors (tangerine, or blue for
- * beginner-friendly): a pale gradient with the branch glyph in a deeper shade of it, large, bleeding off the right edge and fading in toward the bottom right, behind
- * [content].
+ * beginner-friendly): a pale gradient with the branch glyph in a deeper shade of it, large, bleeding off the
+ * right edge and fading in toward the bottom right, behind [content].
  */
 @Composable
 internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val decor = LocalModeDecor.current
+    GlyphBackdrop(
+        gradient = listOf(decor.backdropTop, decor.backdropBottom),
+        glyphFill = decor.backdropGlyph,
+        outlined = false,
+        glyphMaxAlpha = SOFT_GLYPH_MAX_ALPHA,
+        modifier = modifier,
+        content = content,
+    )
+}
+
+private const val SOFT_GLYPH_MAX_ALPHA = 0.6f
+
+/**
+ * A vertical [gradient] with the branch glyph on it (in [glyphFill], with the black outline when
+ * [outlined]), large, bleeding off the right edge and fading in toward the bottom right up to [glyphMaxAlpha],
+ * behind [content]. The one drawing behind the soft backdrop and the front screens' orange.
+ */
+@Composable
+internal fun GlyphBackdrop(
+    gradient: List<Color>,
+    glyphFill: Color,
+    outlined: Boolean,
+    glyphMaxAlpha: Float,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(decor.backdropTop, decor.backdropBottom))),
+            .background(Brush.verticalGradient(gradient)),
     ) {
         Canvas(
             modifier = Modifier
@@ -49,14 +74,14 @@ internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Compos
         ) {
             val unit = size.height * GLYPH_HEIGHT_FRACTION / BRANCH_GLYPH_HEIGHT
             translate(left = size.width * GLYPH_SHIFT_X, top = size.height * GLYPH_SHIFT_Y) {
-                drawBranchGlyph(unit, fill = decor.backdropGlyph, outlined = false)
+                drawBranchGlyph(unit, fill = glyphFill, outlined = outlined)
             }
             // Keeps only as much of the glyph as the fade lets through (only the mask's alpha counts).
             drawRect(
                 brush = Brush.linearGradient(
                     0f to Color.Transparent,
                     FADE_START to Color.Transparent,
-                    1f to decor.backdropGlyph.copy(alpha = GLYPH_MAX_ALPHA),
+                    1f to glyphFill.copy(alpha = glyphMaxAlpha),
                     start = Offset.Zero,
                     end = Offset(size.width, size.height),
                 ),

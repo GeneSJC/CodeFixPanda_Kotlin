@@ -30,7 +30,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,8 +44,8 @@ import io.github.genesjc.opensourcepanda.data.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
 import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
-import io.github.genesjc.opensourcepanda.ui.theme.FrontDoorSoftWhite
-import io.github.genesjc.opensourcepanda.ui.theme.FrontDoorBlueDark
+import io.github.genesjc.opensourcepanda.ui.theme.BrandOnOrangeSoft
+import io.github.genesjc.opensourcepanda.ui.theme.BrandNavy
 
 /** How much larger the front door's button and link text is than the standard button text. */
 private const val ACTION_TEXT_SCALE = 1.5f
@@ -103,7 +102,7 @@ fun WelcomeScreen(
                 Text(
                     stringResource(R.string.welcome_title_intro),
                     style = MaterialTheme.typography.titleMedium,
-                    color = FrontDoorSoftWhite,
+                    color = BrandOnOrangeSoft,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -111,21 +110,21 @@ fun WelcomeScreen(
                     stringResource(R.string.welcome_title_name),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = BrandOnOrange,
                     textAlign = TextAlign.Center,
                 )
                 Text(
                     stringResource(R.string.welcome_message),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = FrontDoorSoftWhite,
+                    color = BrandOnOrangeSoft,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
                 )
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
                         onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
-                        border = BorderStroke(1.dp, Color.White),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                        border = BorderStroke(1.dp, BrandOnOrange),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandOnOrange),
                         modifier = Modifier.weight(1f),
                     ) {
                         Text(stringResource(R.string.action_get_token), style = actionTextStyle)
@@ -135,7 +134,7 @@ fun WelcomeScreen(
                         Text(
                             stringResource(R.string.welcome_how_to_link),
                             style = actionTextStyle,
-                            color = Color.White,
+                            color = BrandOnOrange,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -145,15 +144,15 @@ fun WelcomeScreen(
                     value = tokenDraft,
                     onValueChange = { tokenDraft = it },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color.White,
-                        unfocusedBorderColor = FrontDoorSoftWhite,
-                        focusedLabelColor = Color.White,
-                        unfocusedLabelColor = FrontDoorSoftWhite,
-                        cursorColor = Color.White,
+                        focusedTextColor = BrandOnOrange,
+                        unfocusedTextColor = BrandOnOrange,
+                        focusedBorderColor = BrandOnOrange,
+                        unfocusedBorderColor = BrandOnOrangeSoft,
+                        focusedLabelColor = BrandOnOrange,
+                        unfocusedLabelColor = BrandOnOrangeSoft,
+                        cursorColor = BrandOnOrange,
                     ),
-                    toggleColor = Color.White,
+                    toggleColor = BrandOnOrange,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -161,10 +160,10 @@ fun WelcomeScreen(
                     onClick = { if (viewModel.saveToken(tokenDraft)) onTokenSaved() },
                     enabled = tokenDraft.isNotBlank() && tokenDraft.trim() != startingToken,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = FrontDoorBlueDark,
-                        disabledContainerColor = FrontDoorSoftWhite.copy(alpha = 0.25f),
-                        disabledContentColor = FrontDoorSoftWhite,
+                        containerColor = BrandOnOrange,
+                        contentColor = BrandNavy,
+                        disabledContainerColor = BrandOnOrangeSoft.copy(alpha = 0.25f),
+                        disabledContentColor = BrandOnOrangeSoft,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -180,8 +179,8 @@ fun WelcomeScreen(
                     },
                     enabled = savedToken.isNotEmpty(),
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color.White,
-                        disabledContentColor = FrontDoorSoftWhite.copy(alpha = 0.4f),
+                        contentColor = BrandOnOrange,
+                        disabledContentColor = BrandOnOrangeSoft.copy(alpha = 0.4f),
                     ),
                 ) {
                     Text(stringResource(R.string.settings_remove_token), style = actionTextStyle)
@@ -190,7 +189,7 @@ fun WelcomeScreen(
                     Text(
                         stringResource(R.string.token_remove_unavailable_build),
                         style = MaterialTheme.typography.bodySmall,
-                        color = FrontDoorSoftWhite,
+                        color = BrandOnOrangeSoft,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -201,9 +200,9 @@ fun WelcomeScreen(
                     },
                     modifier = Modifier.padding(top = 8.dp),
                 ) {
-                    Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = FrontDoorSoftWhite)
+                    Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = BrandOnOrangeSoft)
                 }
-                IndependentNotice(color = FrontDoorSoftWhite, modifier = Modifier.padding(top = 16.dp))
+                IndependentNotice(color = BrandOnOrangeSoft, modifier = Modifier.padding(top = 16.dp))
             }
         }
     }
