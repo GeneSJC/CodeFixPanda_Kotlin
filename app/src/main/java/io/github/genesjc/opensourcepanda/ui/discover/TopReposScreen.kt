@@ -162,23 +162,6 @@ fun TopReposScreen(
                                     onReplay = { replayAnimation = it },
                                 )
                             }
-                            // Always shown (a placeholder with no data yet) so the header does not shift. With no token
-                            // there are no rate-limit numbers, so the demo marker takes its place, and with a token
-                            // problem the tap explains it instead of opening the rate-limit dialog.
-                            if (isDemo) {
-                                DemoChip(onClick = { showTokenProblemDialog = true })
-                            } else {
-                                RateLimitChip(
-                                    info = rateLimit,
-                                    onClick = {
-                                        if (hasToken && !uiState.tokenRejected) {
-                                            showRateLimitDialog = true
-                                        } else {
-                                            showTokenProblemDialog = true
-                                        }
-                                    },
-                                )
-                            }
                         },
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
@@ -208,6 +191,27 @@ fun TopReposScreen(
                                 onOffer = { activity?.let(viewModel::onAdFreeOffer) },
                                 modifier = Modifier.padding(end = 8.dp, top = 2.dp),
                             )
+                        },
+                        // Under the menu, in line with its glyph. Always shown (a placeholder with no data yet) so the
+                        // header does not shift. With no token there are no rate-limit numbers, so the demo marker takes its
+                        // place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
+                        below = {
+                            Box(modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)) {
+                                if (isDemo) {
+                                    DemoChip(onClick = { showTokenProblemDialog = true })
+                                } else {
+                                    RateLimitChip(
+                                        info = rateLimit,
+                                        onClick = {
+                                            if (hasToken && !uiState.tokenRejected) {
+                                                showRateLimitDialog = true
+                                            } else {
+                                                showTokenProblemDialog = true
+                                            }
+                                        },
+                                    )
+                                }
+                            }
                         },
                     )
                 },
