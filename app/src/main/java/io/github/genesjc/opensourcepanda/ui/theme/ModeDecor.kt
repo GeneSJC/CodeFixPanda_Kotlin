@@ -30,8 +30,8 @@ private val HelpWantedDecor = ModeDecor(
     backdropTop = TangerineLight,
     backdropBottom = TangerineMid,
     backdropGlyph = TangerineGlyph,
-    chipFill = BlueBackdropMid,
-    chipOutline = BlueBackdropGlyph,
+    chipFill = BlueChipFill,
+    chipOutline = BlueChipOutline,
 )
 
 /** Beginner-friendly issues: the blue header on the blue backdrop. */
@@ -41,8 +41,8 @@ private val BeginnerDecor = ModeDecor(
     backdropTop = BlueBackdropLight,
     backdropBottom = BlueBackdropMid,
     backdropGlyph = BlueBackdropGlyph,
-    chipFill = TangerineMid,
-    chipOutline = TangerineGlyph,
+    chipFill = TangerineChipFill,
+    chipOutline = TangerineChipOutline,
 )
 
 /** What a screen with no mode chosen uses. */
