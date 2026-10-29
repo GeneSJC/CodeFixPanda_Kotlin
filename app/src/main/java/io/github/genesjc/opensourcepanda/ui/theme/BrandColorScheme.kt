@@ -16,5 +16,5 @@ val BrandColorScheme = lightColorScheme(
     onBackground = Color.White,
     surface = BrandOrangeMid,
     onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFFFECE0),
+    onSurfaceVariant = BrandSoftWhite,
 )

@@ -34,6 +34,7 @@ val BrandSun = Color(0xFFFFD94D) // the branch glyph
 val BrandNavy = Color(0xFF0F2A52) // outlines and text on the sun and mint accents
 val BrandMint = Color(0xFF6FD6A5) // the panda's scrubs
 val BrandOutlineBlack = Color(0xFF08080C) // the glyph's outline on the orange
+val BrandSoftWhite = Color(0xFFFFECE0) // secondary text on the orange
 
 // Issue Mode pastel schemes (v0.41) — deliberately their own palette,
 // not a reuse of BrandPurple/BrandGreen above at full strength. Those
@@ -68,3 +69,21 @@ val ModeHwOnSecondaryContainer = Color(0xFF0B4A24)
 val DrawerSectionRepoManagement = Color(0xFFE9F1FB) // light blue
 val DrawerSectionFindIssues = Color(0xFFFDF1E0) // light amber
 val DrawerSectionSandbox = Color(0xFFEFEFEF) // light neutral gray
+
+// The rate-limit gauge: a traffic-light scale (red is empty, green is full), the same on every screen.
+val RateLimitRed = Color(0xFFE53935)
+val RateLimitAmber = Color(0xFFFB8C00)
+val RateLimitYellow = Color(0xFFFDD835)
+val RateLimitGreen = Color(0xFF43A047)
+
+// The front screens' (welcome and token guide) own palette, the icon's earlier blues.
+val FrontDoorBlueDark = Color(0xFF0B1736)
+val FrontDoorBlueMid = Color(0xFF1D4ED8)
+val FrontDoorBlueLight = Color(0xFF2563EB)
+val FrontDoorSkyBlue = Color(0xFF38BDF8)
+val FrontDoorSoftWhite = Color(0xCCFFFFFF) // white at 80%, for secondary text and outlines on the gradient
+
+// The older shape-stack splash variant draws three fixed colors of its own (it is not the launch splash).
+val ShapeStackGreen = Color(0xFF0F6E56)
+val ShapeStackPurple = Color(0xFF534AB7)
+val ShapeStackBlue = Color(0xFF0B5FA5)

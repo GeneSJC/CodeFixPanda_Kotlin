@@ -45,6 +45,8 @@ import io.github.genesjc.opensourcepanda.data.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
 import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.opensourcepanda.ui.theme.FrontDoorSoftWhite
+import io.github.genesjc.opensourcepanda.ui.theme.FrontDoorBlueDark
 
 /** How much larger the front door's button and link text is than the standard button text. */
 private const val ACTION_TEXT_SCALE = 1.5f
@@ -101,7 +103,7 @@ fun WelcomeScreen(
                 Text(
                     stringResource(R.string.welcome_title_intro),
                     style = MaterialTheme.typography.titleMedium,
-                    color = SoftWhite,
+                    color = FrontDoorSoftWhite,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -115,7 +117,7 @@ fun WelcomeScreen(
                 Text(
                     stringResource(R.string.welcome_message),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = SoftWhite,
+                    color = FrontDoorSoftWhite,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
                 )
@@ -146,9 +148,9 @@ fun WelcomeScreen(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = Color.White,
-                        unfocusedBorderColor = SoftWhite,
+                        unfocusedBorderColor = FrontDoorSoftWhite,
                         focusedLabelColor = Color.White,
-                        unfocusedLabelColor = SoftWhite,
+                        unfocusedLabelColor = FrontDoorSoftWhite,
                         cursorColor = Color.White,
                     ),
                     toggleColor = Color.White,
@@ -160,9 +162,9 @@ fun WelcomeScreen(
                     enabled = tokenDraft.isNotBlank() && tokenDraft.trim() != startingToken,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
-                        contentColor = GradientDark,
-                        disabledContainerColor = SoftWhite.copy(alpha = 0.25f),
-                        disabledContentColor = SoftWhite,
+                        contentColor = FrontDoorBlueDark,
+                        disabledContainerColor = FrontDoorSoftWhite.copy(alpha = 0.25f),
+                        disabledContentColor = FrontDoorSoftWhite,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -179,7 +181,7 @@ fun WelcomeScreen(
                     enabled = savedToken.isNotEmpty(),
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = Color.White,
-                        disabledContentColor = SoftWhite.copy(alpha = 0.4f),
+                        disabledContentColor = FrontDoorSoftWhite.copy(alpha = 0.4f),
                     ),
                 ) {
                     Text(stringResource(R.string.settings_remove_token), style = actionTextStyle)
@@ -188,7 +190,7 @@ fun WelcomeScreen(
                     Text(
                         stringResource(R.string.token_remove_unavailable_build),
                         style = MaterialTheme.typography.bodySmall,
-                        color = SoftWhite,
+                        color = FrontDoorSoftWhite,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -199,9 +201,9 @@ fun WelcomeScreen(
                     },
                     modifier = Modifier.padding(top = 8.dp),
                 ) {
-                    Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = SoftWhite)
+                    Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = FrontDoorSoftWhite)
                 }
-                IndependentNotice(color = SoftWhite, modifier = Modifier.padding(top = 16.dp))
+                IndependentNotice(color = FrontDoorSoftWhite, modifier = Modifier.padding(top = 16.dp))
             }
         }
     }

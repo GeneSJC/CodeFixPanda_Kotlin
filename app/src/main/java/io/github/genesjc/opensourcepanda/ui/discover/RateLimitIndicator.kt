@@ -37,6 +37,10 @@ import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.RateLimitInfo
 import io.github.genesjc.opensourcepanda.ui.resetsInText
+import io.github.genesjc.opensourcepanda.ui.theme.RateLimitAmber
+import io.github.genesjc.opensourcepanda.ui.theme.RateLimitGreen
+import io.github.genesjc.opensourcepanda.ui.theme.RateLimitRed
+import io.github.genesjc.opensourcepanda.ui.theme.RateLimitYellow
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -136,7 +140,7 @@ private fun RateLimitMeterIcon(modifier: Modifier = Modifier, scale: Float = 1f)
         val arcSize = Size(radius * 2f, radius * 2f)
 
         // Three 56-degree segments with 6-degree gaps across the top half.
-        val segmentColors = listOf(Color(0xFFE53935), Color(0xFFFB8C00), Color(0xFF43A047))
+        val segmentColors = listOf(RateLimitRed, RateLimitAmber, RateLimitGreen)
         segmentColors.forEachIndexed { index, color ->
             drawArc(
                 color = color,
@@ -245,11 +249,11 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
             // Fixed track: red at 180° (left, "0") through orange and yellow to green at 0° (right,
             // "max"). Only the visible half is drawn.
             val trackBrush = Brush.sweepGradient(
-                0.0f to Color(0xFF43A047),
-                0.5f to Color(0xFFE53935),
-                0.667f to Color(0xFFFB8C00),
-                0.833f to Color(0xFFFDD835),
-                1.0f to Color(0xFF43A047),
+                0.0f to RateLimitGreen,
+                0.5f to RateLimitRed,
+                0.667f to RateLimitAmber,
+                0.833f to RateLimitYellow,
+                1.0f to RateLimitGreen,
                 center = center,
             )
 
