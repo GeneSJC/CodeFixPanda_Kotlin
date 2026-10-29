@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -28,22 +27,23 @@ fun ModePill(
     modifier: Modifier = Modifier,
     onInfoClick: (() -> Unit)? = null,
 ) {
+    val scheme = mode.colorScheme()
     Box(
         modifier = modifier
-            .background(mode.colorScheme().primary, RoundedCornerShape(8.dp))
+            .background(scheme.primary, RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(mode.nameRes()),
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.White,
+                color = scheme.onPrimary,
             )
             if (onInfoClick != null && mode == IssueLabelFilter.GOOD_FIRST_ISSUE) {
                 Text(
                     "ⓘ",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
+                    color = scheme.onPrimary,
                     modifier = Modifier
                         .padding(start = 6.dp)
                         .clickable(onClick = onInfoClick),

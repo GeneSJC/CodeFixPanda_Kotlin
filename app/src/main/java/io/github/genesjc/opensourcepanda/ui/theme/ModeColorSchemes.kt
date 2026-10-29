@@ -7,7 +7,7 @@ import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 private val GfiColorScheme = lightColorScheme(
     primary = ModeGfiPrimary,
     onPrimary = ModeGfiOnPrimary,
-    secondary = BrandPurple40,
+    secondary = ModeGfiPrimary,
     tertiary = BrandBlue40,
     secondaryContainer = ModeGfiSecondaryContainer,
     onSecondaryContainer = ModeGfiOnSecondaryContainer,
@@ -18,7 +18,7 @@ private val GfiColorScheme = lightColorScheme(
 private val HwColorScheme = lightColorScheme(
     primary = ModeHwPrimary,
     onPrimary = ModeHwOnPrimary,
-    secondary = BrandGreen40,
+    secondary = ModeHwPrimary,
     tertiary = BrandBlue40,
     secondaryContainer = ModeHwSecondaryContainer,
     onSecondaryContainer = ModeHwOnSecondaryContainer,
