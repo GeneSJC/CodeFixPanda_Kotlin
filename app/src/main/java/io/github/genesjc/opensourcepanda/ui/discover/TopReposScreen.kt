@@ -165,17 +165,18 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModeTitle(
-                                    mode = currentMode,
-                                    repoCount = hiddenGroups.size,
-                                    onRepoCountClick = { showInfoDialog = true },
-                                    modifier = Modifier.width(HEADER_PILL_WIDTH),
-                                )
+                                ModeTitle(mode = currentMode, modifier = Modifier.width(HEADER_PILL_WIDTH))
                             }
                         },
                         trailing = {
                             if (!isLandscape) {
                                 UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(end = 8.dp), onBar = true)
+                                // Tappable: opens the ranking explanation.
+                                RepoCountChip(
+                                    repoCount = hiddenGroups.size,
+                                    modifier = Modifier.padding(top = 6.dp, end = 8.dp),
+                                    onClick = { showInfoDialog = true },
+                                )
                             }
                             // Under the updated line, on the same right edge. Always shown (a placeholder with no data yet) so
                             // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes

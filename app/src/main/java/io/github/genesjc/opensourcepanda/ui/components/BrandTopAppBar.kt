@@ -89,7 +89,7 @@ internal fun BrandHeader(
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(decor.headerTop, decor.headerBottom)))
                 .statusBarsPadding()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(modifier = Modifier.align(Alignment.Top)) { leading() }
