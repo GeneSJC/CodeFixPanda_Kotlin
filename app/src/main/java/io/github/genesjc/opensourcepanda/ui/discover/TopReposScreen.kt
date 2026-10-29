@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -165,23 +166,25 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModeTitle(mode = currentMode, modifier = Modifier.width(HEADER_PILL_WIDTH))
+                                ModeTitle(mode = currentMode, modifier = Modifier.fillMaxSize())
                             }
                         },
                         trailing = {
                             if (!isLandscape) {
                                 UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(end = 8.dp), onBar = true)
-                                // Tappable: opens the ranking explanation.
-                                RepoCountChip(
-                                    repoCount = hiddenGroups.size,
-                                    modifier = Modifier.padding(top = 6.dp, end = 8.dp),
-                                    onClick = { showInfoDialog = true },
-                                )
                             }
-                            // Under the updated line, on the same right edge. Always shown (a placeholder with no data yet) so
+                            // The count (tappable: it opens the ranking explanation) and the rate limit on one row, their right
+                            // edge on the updated line's. The rate-limit chip is always shown (a placeholder with no data yet) so
                             // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
                             // its place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
-                            Box(modifier = Modifier.padding(top = 6.dp, end = 8.dp)) {
+                            Row(
+                                modifier = Modifier.padding(top = if (isLandscape) 0.dp else 4.dp, end = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (!isLandscape) {
+                                    RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
+                                }
                                 if (isDemo) {
                                     DemoChip(onClick = { showTokenProblemDialog = true })
                                 } else {
@@ -293,6 +296,3 @@ fun TopReposScreen(
         )
     }
 }
-
-/** The mode pill in the header, which works as the screen's title: a fixed width, so both modes line up and a long name wraps. */
-private val HEADER_PILL_WIDTH = 180.dp

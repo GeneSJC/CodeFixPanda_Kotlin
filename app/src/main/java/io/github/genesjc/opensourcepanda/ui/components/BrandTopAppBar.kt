@@ -4,9 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,9 +74,10 @@ internal fun BrandBarIconButton(onClick: () -> Unit, modifier: Modifier = Modifi
 
 /**
  * A header with the same gradient and white content as [BrandTopAppBar] but a layout of its own, for a
- * screen with more to show than a title: [leading] at the start (top-aligned), [center] filling the
- * middle, and [trailing], a column, at the end, so each widget has a place and none is put wherever there
- * is room. It reaches under the status bar like the bar does.
+ * screen with more to show than a title: [leading] at the start, [center] filling the middle, and
+ * [trailing], a column, at the end, all aligned to the top. The row is as tall as its tallest part, and
+ * [center] is given that height (it can fill it), so the three read as one band. It reaches under the status
+ * bar like the bar does.
  */
 @Composable
 internal fun BrandHeader(
@@ -89,11 +93,12 @@ internal fun BrandHeader(
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(decor.headerTop, decor.headerBottom)))
                 .statusBarsPadding()
-                .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.Top,
         ) {
-            Box(modifier = Modifier.align(Alignment.Top)) { leading() }
-            Box(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.CenterStart) { center() }
+            leading()
+            Box(modifier = Modifier.weight(1f).fillMaxHeight().padding(horizontal = 8.dp)) { center() }
             Column(horizontalAlignment = Alignment.End, content = trailing)
         }
     }

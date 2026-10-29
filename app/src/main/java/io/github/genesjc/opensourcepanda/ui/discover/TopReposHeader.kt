@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -58,26 +59,20 @@ internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?, onCount
 }
 
 /**
- * The header's title: the mode's name on a see-through white pill, larger than a label. Give it a fixed
- * width and a long name wraps. Less padding below than above, so the pill leaves more of a margin before
- * the content under the header.
+ * The header's title: the mode's name on a see-through white pill. It fills the width and the height it is
+ * given (the header makes it as tall as the right-hand column), and a long name wraps inside it.
  */
 @Composable
 internal fun ModeTitle(mode: IssueLabelFilter, modifier: Modifier = Modifier) {
-    val style = MaterialTheme.typography.labelLarge.let {
-        it.copy(fontSize = it.fontSize * TITLE_TEXT_SCALE, lineHeight = it.lineHeight * TITLE_TEXT_SCALE)
-    }
     Box(
         modifier = modifier
             .background(BrandOnOrange.copy(alpha = TITLE_PILL_ALPHA), RoundedCornerShape(8.dp))
-            .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Text(stringResource(mode.nameRes()), style = style, color = BrandOnOrange)
+        Text(stringResource(mode.nameRes()), style = MaterialTheme.typography.labelLarge, color = BrandOnOrange)
     }
 }
-
-/** The title is 20% larger than a label, since it is the screen's title. */
-private const val TITLE_TEXT_SCALE = 1.2f
 
 /** How much of the header's color the pill lets through, so it reads as a pill without a color of its own. */
 private const val TITLE_PILL_ALPHA = 0.2f
