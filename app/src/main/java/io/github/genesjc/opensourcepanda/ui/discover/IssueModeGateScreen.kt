@@ -158,7 +158,7 @@ private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
 private const val MODE_BUTTON_TEXT_SCALE = 1.25f
 
-private val MODE_BUTTON_SIDE_PADDING = 6.dp
+private val MODE_BUTTON_SIDE_PADDING = 14.dp
 private val MODE_BUTTON_GAP = 12.dp
 
 /** The info icon's tap area is larger than the glyph; the side margin was 12 dp and is 20% less. */

@@ -65,6 +65,7 @@
     <string name="menu_section_find_issues">Find Issues</string>
     <string name="menu_find_good_first_issues">Find Beginner-Friendly Issues</string>
     <string name="menu_find_help_wanted_issues">Find Projects Asking for Help</string>
+    <string name="menu_about_issue_types">About the Issue Types</string>
     <string name="menu_section_sandbox">Sandbox</string>
     <string name="menu_play_origami">Play Origami Animation</string>
     <string name="menu_play_shape_stack">Play Shape Stack Animation</string>

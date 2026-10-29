@@ -1,7 +1,6 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -159,6 +157,7 @@ fun TopReposScreen(
                                     showAdFreeOffer = canOfferAdFree,
                                     onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
                                     onSelectMode = viewModel::onModeSelected,
+                                    onAboutIssueTypes = { showLabelInfoDialog = true },
                                     onReplay = { replayAnimation = it },
                                 )
                             }
@@ -166,28 +165,17 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModePill(
+                                ModeTitle(
                                     mode = currentMode,
-                                    onBar = true,
-                                    onInfoClick = { showLabelInfoDialog = true },
+                                    repoCount = hiddenGroups.size,
+                                    onRepoCountClick = { showInfoDialog = true },
                                     modifier = Modifier.width(HEADER_PILL_WIDTH),
                                 )
                             }
                         },
                         trailing = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (!isLandscape) RepoCountChip(repoCount = hiddenGroups.size)
-                                Text(
-                                    "ⓘ",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = LocalContentColor.current,
-                                    modifier = Modifier
-                                        .clickable { showInfoDialog = true }
-                                        .padding(horizontal = 8.dp),
-                                )
-                            }
                             if (!isLandscape) {
-                                UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(top = 4.dp, end = 8.dp), onBar = true)
+                                UpdatedText(uiState.lastUpdatedAtMs, modifier = Modifier.padding(end = 8.dp), onBar = true)
                             }
                             // Under the updated line, on the same right edge. Always shown (a placeholder with no data yet) so
                             // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
@@ -230,12 +218,16 @@ fun TopReposScreen(
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
-                            ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
+                            ModePill(mode = currentMode)
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(top = 8.dp),
                             ) {
-                                RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
+                                RepoCountAndUpdated(
+                                    repoCount = hiddenGroups.size,
+                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                    onCountClick = { showInfoDialog = true },
+                                )
                             }
                             LanguageFilterRow(
                                 selected = uiState.selectedLanguage,
