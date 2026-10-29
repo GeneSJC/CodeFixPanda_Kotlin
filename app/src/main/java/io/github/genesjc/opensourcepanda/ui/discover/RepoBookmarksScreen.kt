@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -29,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IssueCard
+import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
@@ -58,7 +58,7 @@ fun RepoBookmarksScreen(
                 BrandTopAppBar(
                     title = { Text(stringResource(R.string.bookmarks_title)) },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        BrandBarIconButton(onClick = onBack) {
                             Text("←", style = MaterialTheme.typography.titleLarge)
                         }
                     },

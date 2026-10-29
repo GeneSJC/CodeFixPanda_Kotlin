@@ -29,6 +29,7 @@ val BrandOrangeBottom = Color(0xFFA5403E)
 val BrandSun = Color(0xFFFFD94D) // the branch glyph
 val BrandNavy = Color(0xFF0F2A52) // outlines and text on the sun and mint accents
 val BrandBlue = Color(0xFF1F4B8E) // a lighter step of the navy, the blue that sits well beside the orange
+val BrandBlueLight = Color(0xFF2E62AE) // the lighter end of the blue header gradient
 val BrandBlueContainerLight = Color(0xFFD8E4F5)
 val BrandSeafoam = Color(0xFF4DBB92) // the panda's scrubs; navy text on it passes contrast, white does not
 val BrandSeafoamContainerLight = Color(0xFFDDF5EA)
@@ -43,6 +44,11 @@ val TangerineLight = Color(0xFFFFE2CC)
 val TangerineMid = Color(0xFFFFCDAA)
 val TangerineGlyph = Color(0xFFF09664)
 
+// The same backdrop in the blue, for the beginner-friendly screens.
+val BlueBackdropLight = Color(0xFFDCE8F8)
+val BlueBackdropMid = Color(0xFFC6D9F2)
+val BlueBackdropGlyph = Color(0xFF8FB0DE)
+
 // Issue Mode schemes — the brand blue and a deeper shade of the brand orange, which sit well together: a mode's
 // colors have to comfortably BE the background/surface across a whole screen, so each pairs a strong primary
 // (white text on it passes contrast) with a very light tint of the same hue. Beginner-friendly is the blue,
@@ -56,6 +62,9 @@ val ModeGfiPrimary = BrandBlue
 val ModeGfiOnPrimary = Color(0xFFFFFFFF)
 val ModeGfiSecondaryContainer = BrandBlueContainerLight
 val ModeGfiOnSecondaryContainer = BrandNavy
+val ModeGfiCard = Color(0xFFF2F6FC)
+val ModeGfiOutline = Color(0xFF8AA0C4)
+val ModeGfiOutlineVariant = Color(0xFFC5D3EA)
 
 // Projects asking for help — the orange
 val ModeHwBackground = Color(0xFFFFF2E9)
@@ -64,6 +73,9 @@ val ModeHwPrimary = BrandOrangeMid
 val ModeHwOnPrimary = Color(0xFFFFFFFF)
 val ModeHwSecondaryContainer = BrandContainerLight
 val ModeHwOnSecondaryContainer = OnBrandContainerLight
+val ModeHwCard = Color(0xFFFFF7F1)
+val ModeHwOutline = Color(0xFFC79A8D)
+val ModeHwOutlineVariant = Color(0xFFF0CFC2)
 
 // Hamburger-menu section backgrounds (TopReposScreen's drawer) —
 // deliberately their own fixed pastel set, NOT derived from the active

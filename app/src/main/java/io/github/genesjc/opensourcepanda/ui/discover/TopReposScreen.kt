@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -45,6 +44,7 @@ import io.github.genesjc.opensourcepanda.ui.components.LabelInfoDialog
 import io.github.genesjc.opensourcepanda.ui.components.LanguageFilterRow
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
 import io.github.genesjc.opensourcepanda.ui.findActivity
+import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 import kotlinx.coroutines.flow.collect
@@ -153,7 +153,7 @@ fun TopReposScreen(
                             },
                             navigationIcon = {
                                 Box {
-                                    IconButton(onClick = { showMenu = true }) {
+                                    BrandBarIconButton(onClick = { showMenu = true }) {
                                         Text("☰", style = MaterialTheme.typography.titleLarge)
                                     }
                                     TopReposMenu(

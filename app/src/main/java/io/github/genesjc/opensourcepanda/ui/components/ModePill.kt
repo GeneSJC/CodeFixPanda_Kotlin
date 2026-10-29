@@ -4,11 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,9 +20,8 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 
 /**
  * The active mode's name on its own color. With [onInfoClick], the beginner-friendly mode also gets an
- * info icon, so a newcomer can see what the mode means. [onBar] is for a place on the brand orange, where
- * the mode's own color could vanish (the help-wanted orange is the bar's orange): the pill turns white,
- * with a dot and the name in the mode's color.
+ * info icon, so a newcomer can see what the mode means. [onBar] is for a place on a mode-colored top bar,
+ * where the mode's own color would vanish into the bar: the pill is a see-through white with white text.
  */
 @Composable
 fun ModePill(
@@ -36,18 +31,14 @@ fun ModePill(
     onInfoClick: (() -> Unit)? = null,
 ) {
     val scheme = mode.colorScheme()
-    val pillColor = if (onBar) BrandOnOrange else scheme.primary
-    val contentColor = if (onBar) scheme.primary else scheme.onPrimary
+    val pillColor = if (onBar) BrandOnOrange.copy(alpha = ON_BAR_PILL_ALPHA) else scheme.primary
+    val contentColor = if (onBar) BrandOnOrange else scheme.onPrimary
     Box(
         modifier = modifier
             .background(pillColor, RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (onBar) {
-                Box(Modifier.size(8.dp).background(scheme.primary, CircleShape))
-                Spacer(Modifier.width(6.dp))
-            }
             Text(
                 stringResource(mode.nameRes()),
                 style = MaterialTheme.typography.labelLarge,
@@ -66,3 +57,6 @@ fun ModePill(
         }
     }
 }
+
+/** How much of the bar's color the pill lets through, so it reads as a pill without a color of its own. */
+private const val ON_BAR_PILL_ALPHA = 0.2f

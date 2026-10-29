@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -34,6 +33,7 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
 import io.github.genesjc.opensourcepanda.data.TokenSource
+import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
@@ -66,7 +66,7 @@ fun SettingsScreen(
                 BrandTopAppBar(
                     title = { Text(stringResource(R.string.settings_title)) },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        BrandBarIconButton(onClick = onBack) {
                             Text("←", style = MaterialTheme.typography.titleLarge)
                         }
                     },

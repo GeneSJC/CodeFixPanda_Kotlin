@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 
@@ -36,6 +37,9 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = OnBrandContainerLight,
     background = BackgroundLight,
     surface = SurfaceLight,
+    surfaceVariant = ModeHwCard,
+    outline = ModeHwOutline,
+    outlineVariant = ModeHwOutlineVariant,
 )
 
 /**
@@ -82,11 +86,13 @@ fun OpenSourcePandaTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = targetScheme.animateAllColors(),
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalModeDecor provides (issueMode?.decor() ?: DefaultModeDecor)) {
+        MaterialTheme(
+            colorScheme = targetScheme.animateAllColors(),
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 /**

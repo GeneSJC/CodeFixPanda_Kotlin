@@ -16,6 +16,9 @@ private val GfiColorScheme = lightColorScheme(
     onSecondaryContainer = ModeGfiOnSecondaryContainer,
     background = ModeGfiBackground,
     surface = ModeGfiSurface,
+    surfaceVariant = ModeGfiCard,
+    outline = ModeGfiOutline,
+    outlineVariant = ModeGfiOutlineVariant,
 )
 
 private val HwColorScheme = lightColorScheme(
@@ -30,6 +33,9 @@ private val HwColorScheme = lightColorScheme(
     onSecondaryContainer = ModeHwOnSecondaryContainer,
     background = ModeHwBackground,
     surface = ModeHwSurface,
+    surfaceVariant = ModeHwCard,
+    outline = ModeHwOutline,
+    outlineVariant = ModeHwOutlineVariant,
 )
 
 /**
