@@ -1,14 +1,13 @@
 package io.github.genesjc.opensourcepanda.ui.splash
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -39,6 +38,16 @@ private const val SOURCE_BASE_DURATION_MS = 320
 private const val PANDA_BASE_DURATION_MS = 384
 private const val HOLD_BASE_MS = 900
 private const val BURST_BASE_DURATION_MS = 500
+
+// The panda drops in after "PANDA" has risen, falls with gravity (an accelerating curve), and lands with a
+// squash from its base; the burst fires at the moment it lands.
+private const val MASCOT_DROP_BASE_MS = 420
+private const val MASCOT_SQUASH_BASE_MS = 300
+private val MASCOT_DROP_OFFSET = 200.dp
+private const val MASCOT_SQUASH_Y = 0.88f
+private const val MASCOT_SQUASH_X = 1.10f
+private const val MASCOT_REBOUND_Y = 1.04f
+private const val MASCOT_REBOUND_X = 0.98f
 
 private val OFFSCREEN_OFFSET = 260.dp
 private val VERTICAL_RISE_OFFSET = 140.dp
@@ -65,8 +74,8 @@ private const val BURST_HOLD_FRACTION = 0.45
 
 /**
  * A kinetic title-reveal splash: "Open" slides in from the left and overshoots before settling, "Source"
- * slides in from the right and shudders on impact, then "Panda" rises into place beneath them,
- * spelling the app's own name (see SplashBrandMark.kt on why it does not use GitSource's brand).
+ * slides in from the right and shudders on impact, "PANDA" rises into place beneath them, and finally the
+ * panda drops in above the name and lands with a squash while a burst of light flashes behind it.
  * [speedMultiplier] scales every stage duration (0.5 means twice as slow), so one composable serves
  * the standard and half-speed replays. Each word has its own Animatable(s), launched in a coroutine
  * with a delay to its stage start, which keeps each word's motion readable. The text is drawn by
@@ -85,6 +94,10 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val sourceDurationMs = (SOURCE_BASE_DURATION_MS / speedMultiplier).toInt()
     val pandaStartMs = sourceStartMs + sourceDurationMs
     val pandaDurationMs = (PANDA_BASE_DURATION_MS / speedMultiplier).toInt()
+    val mascotStartMs = pandaStartMs + pandaDurationMs
+    val mascotDropMs = (MASCOT_DROP_BASE_MS / speedMultiplier).toInt()
+    val mascotSquashMs = (MASCOT_SQUASH_BASE_MS / speedMultiplier).toInt()
+    val mascotLandMs = mascotStartMs + mascotDropMs
     val holdMs = (HOLD_BASE_MS / speedMultiplier).toInt()
     val burstDurationMs = (BURST_BASE_DURATION_MS / speedMultiplier).toInt()
     // Exactly when, within Source's own entrance, the collision itself
@@ -108,6 +121,11 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     val sourceOffsetX = remember { Animatable(offscreenPx) }
     val pandaOffsetY = remember { Animatable(riseOffsetPx) }
     val pandaAlpha = remember { Animatable(0f) }
+    val mascotDropPx = with(density) { MASCOT_DROP_OFFSET.toPx() }
+    val mascotOffsetY = remember { Animatable(-mascotDropPx) }
+    val mascotAlpha = remember { Animatable(0f) }
+    val mascotScaleX = remember { Animatable(1f) }
+    val mascotScaleY = remember { Animatable(1f) }
     val burstScale = remember { Animatable(BURST_START_SCALE) }
     val burstAlpha = remember { Animatable(0f) }
 
@@ -180,11 +198,11 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             )
         }
 
-        // The finishing burst: a soft radial pulse behind the wordmark, fired once everything has settled.
+        // The finishing burst: a soft radial pulse behind the panda, fired the moment it lands.
         // Alpha holds near its start for the first BURST_HOLD_FRACTION before fading; fading and scaling from
         // the start left the circle nearly transparent by the time it was big enough to see.
         launch {
-            delay((pandaStartMs + pandaDurationMs).toLong())
+            delay(mascotLandMs.toLong())
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
             }
@@ -210,7 +228,39 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             pandaAlpha.animateTo(1f, tween(pandaDurationMs))
         }
 
-        delay((pandaStartMs + pandaDurationMs + holdMs).toLong())
+        // The panda: drops from above (accelerating, fading in over the first part of the fall), then squashes
+        // on landing from its base and settles with a small rebound.
+        launch {
+            delay(mascotStartMs.toLong())
+            launch {
+                mascotAlpha.animateTo(1f, tween((mascotDropMs * 0.3f).toInt()))
+            }
+            mascotOffsetY.animateTo(0f, tween(mascotDropMs, easing = FastOutLinearInEasing))
+            launch {
+                mascotScaleY.animateTo(
+                    targetValue = 1f,
+                    animationSpec = keyframes {
+                        durationMillis = mascotSquashMs
+                        1f at 0
+                        MASCOT_SQUASH_Y at (mascotSquashMs * 0.3f).toInt() using FastOutSlowInEasing
+                        MASCOT_REBOUND_Y at (mascotSquashMs * 0.7f).toInt() using FastOutSlowInEasing
+                        1f at mascotSquashMs using FastOutSlowInEasing
+                    },
+                )
+            }
+            mascotScaleX.animateTo(
+                targetValue = 1f,
+                animationSpec = keyframes {
+                    durationMillis = mascotSquashMs
+                    1f at 0
+                    MASCOT_SQUASH_X at (mascotSquashMs * 0.3f).toInt() using FastOutSlowInEasing
+                    MASCOT_REBOUND_X at (mascotSquashMs * 0.7f).toInt() using FastOutSlowInEasing
+                    1f at mascotSquashMs using FastOutSlowInEasing
+                },
+            )
+        }
+
+        delay((mascotLandMs + mascotSquashMs + holdMs).toLong())
         onFinished()
     }
 
@@ -228,26 +278,6 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
-        // Drawn first so it sits BEHIND the wordmark below (draw order
-        // in Compose follows declaration order within a Box).
-        Box(
-            modifier = Modifier
-                .size(BURST_SIZE)
-                .graphicsLayer {
-                    scaleX = burstScale.value
-                    scaleY = burstScale.value
-                    alpha = burstAlpha.value
-                }
-                .background(
-                    Brush.radialGradient(
-                        0f to MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                        0.6f to MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                        1f to MaterialTheme.colorScheme.primary.copy(alpha = 0f),
-                    ),
-                    CircleShape,
-                ),
-        )
-
         TitleWordmark(
             modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
             openModifier = Modifier.graphicsLayer {
@@ -258,6 +288,16 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
             pandaModifier = Modifier.graphicsLayer {
                 translationY = pandaOffsetY.value
                 alpha = pandaAlpha.value
+            },
+            mascotModifier = Modifier.graphicsLayer {
+                translationY = mascotOffsetY.value
+                alpha = mascotAlpha.value
+                scaleX = mascotScaleX.value
+                scaleY = mascotScaleY.value
+                transformOrigin = TransformOrigin(0.5f, 1f)
+            },
+            mascotBackdrop = {
+                SplashBurst(BURST_SIZE / 2, burstScale = { burstScale.value }, burstAlpha = { burstAlpha.value })
             },
         )
     }
