@@ -2,7 +2,6 @@ package io.github.genesjc.opensourcepanda.ui.discover
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,7 +18,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,7 +49,6 @@ import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 import io.github.genesjc.opensourcepanda.ui.nameRes
-import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 import kotlinx.coroutines.launch
 
 /**
@@ -204,29 +200,18 @@ private fun RepoIssuesFilterRow(
     readmeExpanded: Boolean,
     onToggleReadme: () -> Unit,
 ) {
-    val decor = LocalModeDecor.current
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The mode's name takes the room the two chips leave and wraps; the chips stay on one line.
-            ModePill(mode = mode, modifier = Modifier.weight(1f, fill = false))
-            Surface(
-                modifier = Modifier.padding(start = 8.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = decor.chipFill,
-                border = BorderStroke(1.dp, decor.chipOutline),
-            ) {
-                Text(
-                    stringResource(language.nameRes()),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    softWrap = false,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                )
-            }
+            // The mode's name, with the language under it, takes the room the README toggle leaves and wraps. The
+            // language is not a chip, since it is not a control: it is part of what the list is.
+            ModePill(
+                mode = mode,
+                subtitle = stringResource(language.nameRes()),
+                modifier = Modifier.weight(1f, fill = false),
+            )
             ReadmeToggleButton(
                 expanded = readmeExpanded,
                 onClick = onToggleReadme,
