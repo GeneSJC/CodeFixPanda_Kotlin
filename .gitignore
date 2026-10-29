@@ -27,3 +27,6 @@ local.properties
 
 .idea/deviceManager.xml
 .idea/markdown.xml
+
+# Python caches from the docs/images art scripts
+__pycache__/
