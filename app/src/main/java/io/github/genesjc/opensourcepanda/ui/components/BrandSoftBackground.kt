@@ -16,51 +16,45 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 
-/** How tall the glyph is relative to the area, and how far it is moved right and down from the middle (as fractions of it). */
-private const val GLYPH_HEIGHT_FRACTION = 0.6f
-private const val GLYPH_SHIFT_X = 0.28f
+/** How far down from the middle the glyph is moved, as a fraction of the area's height. */
 private const val GLYPH_SHIFT_Y = 0.12f
 
 /**
- * The glyph fades in along the diagonal from the top left to the bottom right: invisible until
- * [FADE_START] of the way across, then up to the given maximum in the corner, so it never runs under the
- * headline and the text at the top and is strongest where the screen is empty.
+ * The soft backdrop's glyph: a little over half the area's height, centered across it (so the nodes on both
+ * sides show, with at most their edges touching the screen's), and fading in from 15% of the way along the
+ * diagonal, so it is faint under the headline and strongest toward the bottom right.
  */
-private const val FADE_START = 0.3f
+private const val SOFT_GLYPH_HEIGHT_FRACTION = 0.55f
+private const val SOFT_GLYPH_SHIFT_X = 0.0f
+private const val SOFT_FADE_START = 0.15f
+private const val SOFT_GLYPH_MAX_ALPHA = 0.6f
 
 /**
  * The backdrop for the content under the top bar, in the Issue Mode's colors (tangerine, or blue for
- * beginner-friendly): a pale gradient with the branch glyph in a deeper shade of it, large, bleeding off the
- * right edge and fading in toward the bottom right, behind [content]. [glyphShiftX] is how far (as a fraction
- * of the width) the glyph is moved right of the middle, and [fadeStart] how far across the diagonal the fade begins,
- * for a screen that wants more of the glyph showing.
+ * beginner-friendly): a pale gradient with the branch glyph in a deeper shade of it, large, centered and
+ * fading in toward the bottom right, behind [content].
  */
 @Composable
-internal fun BrandSoftBackground(
-    modifier: Modifier = Modifier,
-    glyphShiftX: Float = GLYPH_SHIFT_X,
-    fadeStart: Float = FADE_START,
-    content: @Composable BoxScope.() -> Unit,
-) {
+internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val decor = LocalModeDecor.current
     GlyphBackdrop(
         gradient = listOf(decor.backdropTop, decor.backdropBottom),
         glyphFill = decor.backdropGlyph,
         outlined = false,
         glyphMaxAlpha = SOFT_GLYPH_MAX_ALPHA,
-        glyphShiftX = glyphShiftX,
-        fadeStart = fadeStart,
+        glyphHeightFraction = SOFT_GLYPH_HEIGHT_FRACTION,
+        glyphShiftX = SOFT_GLYPH_SHIFT_X,
+        fadeStart = SOFT_FADE_START,
         modifier = modifier,
         content = content,
     )
 }
 
-private const val SOFT_GLYPH_MAX_ALPHA = 0.6f
-
 /**
  * A vertical [gradient] with the branch glyph on it (in [glyphFill], with the black outline when
- * [outlined]), large, bleeding off the right edge and fading in toward the bottom right up to [glyphMaxAlpha],
- * behind [content]. The one drawing behind the soft backdrop and the front screens' orange.
+ * [outlined]), [glyphHeightFraction] of the area tall and moved [glyphShiftX] of the width right of the middle,
+ * fading in toward the bottom right from [fadeStart] of the way along the diagonal up to [glyphMaxAlpha], behind
+ * [content]. The one drawing behind the soft backdrop and the front screens' orange.
  */
 @Composable
 internal fun GlyphBackdrop(
@@ -68,9 +62,10 @@ internal fun GlyphBackdrop(
     glyphFill: Color,
     outlined: Boolean,
     glyphMaxAlpha: Float,
+    glyphHeightFraction: Float,
+    glyphShiftX: Float,
+    fadeStart: Float,
     modifier: Modifier = Modifier,
-    glyphShiftX: Float = GLYPH_SHIFT_X,
-    fadeStart: Float = FADE_START,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
@@ -83,7 +78,7 @@ internal fun GlyphBackdrop(
                 .fillMaxSize()
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
         ) {
-            val unit = size.height * GLYPH_HEIGHT_FRACTION / BRANCH_GLYPH_HEIGHT
+            val unit = size.height * glyphHeightFraction / BRANCH_GLYPH_HEIGHT
             translate(left = size.width * glyphShiftX, top = size.height * GLYPH_SHIFT_Y) {
                 drawBranchGlyph(unit, fill = glyphFill, outlined = outlined)
             }

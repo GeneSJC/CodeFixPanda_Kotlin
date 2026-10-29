@@ -53,7 +53,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
     val infoLabel = stringResource(R.string.label_info_title)
     OpenSourcePandaTheme(issueMode = null) {
-        BrandSoftBackground(glyphShiftX = GATE_GLYPH_SHIFT_X, fadeStart = GATE_FADE_START) {
+        BrandSoftBackground {
             Scaffold(
                 containerColor = Color.Transparent,
                 topBar = { BrandTitleBand() },
@@ -157,10 +157,6 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
 private const val TEXT_PRESENTATION_SELECTOR = "\uFE0E"
 
 private const val MODE_BUTTON_TEXT_SCALE = 1.25f
-
-/** The start screen shows more of the glyph than the other screens: it sits nearer the middle and its fade begins sooner. */
-private const val GATE_GLYPH_SHIFT_X = 0.08f
-private const val GATE_FADE_START = 0.15f
 
 private val MODE_BUTTON_SIDE_PADDING = 14.dp
 private val MODE_BUTTON_GAP = 12.dp
