@@ -41,7 +41,7 @@ fun ModePill(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(mode.nameRes()),
-                style = MaterialTheme.typography.labelLarge,
+                style = if (onBar) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelLarge,
                 color = contentColor,
             )
             if (onInfoClick != null && mode == IssueLabelFilter.GOOD_FIRST_ISSUE) {

@@ -132,7 +132,7 @@ fun RepoIssuesScreen(
                                 )
                             },
                         ) {
-                            Text("↗", style = MaterialTheme.typography.titleLarge)
+                            Text("↗\uFE0E", style = MaterialTheme.typography.titleLarge)
                         }
                     },
                 )

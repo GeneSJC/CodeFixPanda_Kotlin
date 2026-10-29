@@ -14,12 +14,9 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.relativeTimeText
 import io.github.genesjc.opensourcepanda.ui.theme.BrandSoftWhite
 
-/**
- * The repo-count chip and the "Updated X ago" line, as two siblings for the caller's Row. [onBar] is for the
- * brand orange top bar, where the line is the soft white and not the usual dark gray.
- */
+/** The repo-count chip. */
 @Composable
-internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?, onBar: Boolean = false) {
+internal fun RepoCountChip(repoCount: Int) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -31,12 +28,24 @@ internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?, onBar: 
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
+}
+
+/** The "Updated X ago" line. [onBar] is for a mode-colored header, where it is the soft white and not the usual dark gray. */
+@Composable
+internal fun UpdatedText(lastUpdatedAtMs: Long?, modifier: Modifier = Modifier, onBar: Boolean = false) {
     Text(
         lastUpdatedAtMs?.let { stringResource(R.string.repo_list_updated, relativeTimeText(it)) }.orEmpty(),
         style = MaterialTheme.typography.labelSmall,
         color = if (onBar) BrandSoftWhite else MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 8.dp),
+        modifier = modifier,
     )
+}
+
+/** The count chip and the updated line as two siblings for the caller's Row (the landscape side rail). */
+@Composable
+internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?) {
+    RepoCountChip(repoCount)
+    UpdatedText(lastUpdatedAtMs, modifier = Modifier.padding(start = 8.dp))
 }
 
 @Composable

@@ -1,16 +1,27 @@
 package io.github.genesjc.opensourcepanda.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.ui.theme.BrandOnOrange
 import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 
@@ -56,4 +67,34 @@ internal fun BrandBarIconButton(onClick: () -> Unit, modifier: Modifier = Modifi
         colors = IconButtonDefaults.iconButtonColors(contentColor = BrandOnOrange),
         content = content,
     )
+}
+
+/**
+ * A header with the same gradient and white content as [BrandTopAppBar] but a layout of its own, for a
+ * screen with more to show than a title: [leading] is a column at the start, [center] fills the middle,
+ * and [trailing] is a column at the end, so each widget has a place and none is placed wherever there is
+ * room. It reaches under the status bar like the bar does.
+ */
+@Composable
+internal fun BrandHeader(
+    modifier: Modifier = Modifier,
+    leading: @Composable ColumnScope.() -> Unit,
+    center: @Composable () -> Unit,
+    trailing: @Composable ColumnScope.() -> Unit,
+) {
+    val decor = LocalModeDecor.current
+    CompositionLocalProvider(LocalContentColor provides BrandOnOrange) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(decor.headerTop, decor.headerBottom)))
+                .statusBarsPadding()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(horizontalAlignment = Alignment.Start, content = leading)
+            Box(modifier = Modifier.weight(1f).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) { center() }
+            Column(horizontalAlignment = Alignment.End, content = trailing)
+        }
+    }
 }
