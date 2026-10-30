@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -195,6 +198,17 @@ private fun RepoCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 6.dp),
                 )
+            }
+            // Opened, the card offers the way in as a button; closed, the whole card is still the way in.
+            if (expanded && group.issues.isNotEmpty()) {
+                Button(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Text(pluralStringResource(R.plurals.explore_issues, group.matchCount, group.matchCount))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 8.dp).size(18.dp).rotate(180f),
+                    )
+                }
             }
         }
     }

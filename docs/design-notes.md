@@ -13,6 +13,7 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **Landscape split view.** A landscape phone is short on height, not width. The mode, repo count and language picker move into a narrow independently-scrolling left rail so the card list gets the full height. The language chips wrap in the rail because a horizontally scrolling row nested inside a vertically scrolling column would compete for gestures.
 - **Menu groups.** Repo Management, Find Issues, then Sandbox (the dev-only animation replays, deliberately last). The build label is always visible in the menu header, so the running build is easy to identify.
 - **README preview on cards.** A plain-text snippet, 2 lines when collapsed, expandable with no extra network call. It renders nothing while loading or when the repo has no README, because a spinner or a "no README" note would be clutter.
+- **The repo card.** Title, match count and, when the repo has a README preview, the expand button in one top row (it never moves), the preview under it (two lines, or all of it open), and, open, an "Explore N issues" button, the explicit way in. The pack's card also carried a repo meta line (stars, forks, license, language, repo updated); an issue search returns none of those, and the language and list time it could show are already on the screen (the language chips, the header), so the card has no meta line.
 
 ## Issue card
 

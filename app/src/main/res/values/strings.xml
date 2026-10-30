@@ -148,6 +148,10 @@
         <item quantity="one">%d match</item>
         <item quantity="other">%d matches</item>
     </plurals>
+    <plurals name="explore_issues">
+        <item quantity="one">Explore %d issue</item>
+        <item quantity="other">Explore %d issues</item>
+    </plurals>
     <plurals name="repo_count">
         <item quantity="one">%d repo</item>
         <item quantity="other">%d repos</item>
