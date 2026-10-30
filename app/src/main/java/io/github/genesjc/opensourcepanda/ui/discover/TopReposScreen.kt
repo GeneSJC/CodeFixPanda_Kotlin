@@ -175,20 +175,18 @@ fun TopReposScreen(
                             }
                         },
                         trailing = {
-                            // The rate limit, the count and the updated line, one above the other on one right edge, the updated
-                            // line last so it sits at the bottom of the header. The count is tappable and opens the ranking
-                            // explanation. The rate-limit chip is always shown (a placeholder with no data yet) so
-                            // the header does not shift. With no token there are no rate-limit numbers, so the demo marker takes
-                            // its place, and with a token problem the tap explains it instead of opening the rate-limit dialog.
+                            // The rate limit as a rounded square, always shown (a placeholder with no data yet) so the header does
+                            // not shift. With no token there are no rate-limit numbers, so the demo marker takes its place, and
+                            // with a token problem the tap explains it instead of opening the rate-limit dialog.
                             Column(
                                 horizontalAlignment = Alignment.End,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier.padding(end = 8.dp),
                             ) {
                                 if (isDemo) {
-                                    DemoChip(onClick = { showTokenProblemDialog = true })
+                                    DemoWidget(onClick = { showTokenProblemDialog = true })
                                 } else {
-                                    RateLimitChip(
+                                    RateLimitWidget(
                                         info = rateLimit,
                                         onClick = {
                                             if (hasToken && !uiState.tokenRejected) {

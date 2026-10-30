@@ -1,11 +1,13 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,6 +36,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.RateLimitInfo
@@ -48,42 +51,73 @@ import kotlin.math.sin
 /** How much bigger the rate-limit chip is than its original size (5% larger; it was 50% larger before being shrunk 30%). */
 private const val RATE_LIMIT_CHIP_SCALE = 1.05f
 
-/** The meter icon's size relative to its full-size drawing, shrunk with the chip's text (30% smaller). */
-private const val RATE_LIMIT_ICON_SCALE = 0.7f
-
 /**
- * Tappable rate-limit indicator: a meter icon and remaining/limit. Always rendered (a
- * placeholder when there are no numbers yet) so it does not pop in. Opens the dial dialog. It has no margin
- * of its own: the caller places it.
+ * Tappable rate-limit indicator as a rounded square: the meter icon over the remaining count over the limit,
+ * like a fraction, so it reads top to bottom and takes only [RATE_WIDGET_WIDTH] of a header's width. Always
+ * rendered (a dash over a dash when there are no numbers yet) so it does not pop in. Opens the dial dialog. It
+ * has no margin of its own: the caller places it.
  */
 @Composable
-internal fun RateLimitChip(info: RateLimitInfo?, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val base = MaterialTheme.typography.bodySmall
-    val shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp)
-    // Tappable through clickable and not Surface(onClick), which would pad the chip out to Material's 48 dp touch target.
+internal fun RateLimitWidget(info: RateLimitInfo?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val base = MaterialTheme.typography.labelMedium
+    val color = MaterialTheme.colorScheme.onSecondaryContainer
+    val shape = RoundedCornerShape(RATE_WIDGET_CORNER)
+    // Tappable through clickable and not Surface(onClick), which would pad the widget out to Material's 48 dp touch target.
     Surface(
         shape = shape,
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = modifier.clip(shape).clickable(onClick = onClick),
+        modifier = modifier.size(width = RATE_WIDGET_WIDTH, height = RATE_WIDGET_HEIGHT).clip(shape).clickable(onClick = onClick),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
-                horizontal = (10 * RATE_LIMIT_CHIP_SCALE).dp,
-                vertical = (4 * RATE_LIMIT_CHIP_SCALE).dp,
-            ),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(),
         ) {
-            RateLimitMeterIcon(scale = RATE_LIMIT_ICON_SCALE)
-            Spacer(modifier = Modifier.width(6.dp))
+            RateLimitMeterIcon()
+            // Normally supplied with the first list (a live search, or a /rate_limit lookup after a cache hit); the
+            // dashes show only briefly or if that lookup fails.
             Text(
-                // Normally supplied with the first list (a live search, or a /rate_limit lookup after a
-                // cache hit); the placeholder shows only briefly or if that lookup fails.
-                if (info != null) "${info.remaining}/${info.limit}" else "—",
-                style = base.copy(
-                    fontSize = base.fontSize * RATE_LIMIT_CHIP_SCALE,
-                    lineHeight = base.lineHeight * RATE_LIMIT_CHIP_SCALE,
-                ),
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                info?.remaining?.toString() ?: "—",
+                style = base.copy(fontWeight = FontWeight.SemiBold, lineHeight = base.fontSize * 1.1f),
+                color = color,
+            )
+            Box(modifier = Modifier.width(RATE_WIDGET_RULE_WIDTH).height(1.dp).background(color.copy(alpha = RATE_WIDGET_RULE_ALPHA)))
+            Text(
+                info?.limit?.toString() ?: "—",
+                style = MaterialTheme.typography.labelSmall.let { it.copy(lineHeight = it.fontSize * 1.1f) },
+                color = color,
+            )
+        }
+    }
+}
+
+/** The widget's size and corner: a square-ish tile that fits the narrow column beside a header's title. */
+private val RATE_WIDGET_WIDTH = 48.dp
+private val RATE_WIDGET_HEIGHT = 52.dp
+private val RATE_WIDGET_CORNER = 12.dp
+private val RATE_WIDGET_RULE_WIDTH = 18.dp
+private const val RATE_WIDGET_RULE_ALPHA = 0.45f
+
+/**
+ * The widget that stands where [RateLimitWidget] would while the demo data is shown: with no token there are no
+ * rate-limit numbers, so it says "Demo data" in the same rounded square. With an [onClick] it is tappable (Top
+ * Repos explains the missing token).
+ */
+@Composable
+internal fun DemoWidget(onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(RATE_WIDGET_CORNER)
+    val tapModifier = if (onClick != null) modifier.clip(shape).clickable(onClick = onClick) else modifier
+    Surface(
+        shape = shape,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        modifier = tapModifier.size(width = RATE_WIDGET_WIDTH, height = RATE_WIDGET_HEIGHT),
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(
+                stringResource(R.string.demo_chip_label),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                textAlign = TextAlign.Center,
             )
         }
     }
