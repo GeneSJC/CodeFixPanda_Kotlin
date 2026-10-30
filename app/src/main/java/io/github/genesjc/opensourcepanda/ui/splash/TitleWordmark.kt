@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,7 +75,7 @@ internal fun TitleWordmark(
         fontSize = display.fontSize.scaledBy(SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR),
         lineHeight = display.lineHeight.scaledBy(SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR),
         shadow = Shadow(
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+            color = Color.Black.copy(alpha = 0.35f),
             offset = Offset(0f, 8f),
             blurRadius = 28f,
         ),
@@ -110,7 +111,7 @@ internal fun TitleWordmark(
                 "Source",
                 style = wordmarkStyle,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = sourceModifier,
             )
         }

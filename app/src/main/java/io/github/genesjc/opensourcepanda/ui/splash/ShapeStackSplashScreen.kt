@@ -24,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
+import io.github.genesjc.opensourcepanda.ui.theme.ShapeStackBlue
+import io.github.genesjc.opensourcepanda.ui.theme.ShapeStackGreen
+import io.github.genesjc.opensourcepanda.ui.theme.ShapeStackPurple
 import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 import kotlinx.coroutines.delay
 
@@ -73,7 +76,7 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
             Box(modifier = Modifier.size(220.dp)) {
                 // Shape 1: brand green.
                 StackedTriangle(
-                    color = Color(0xFF0F6E56),
+                    color = ShapeStackGreen,
                     progress = shape1Progress.value,
                     modifier = Modifier
                         .size(140.dp)
@@ -82,7 +85,7 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
                 // Shape 2: purple, offset down-right, tilted — leaves a
                 // corner of shape 1 visible behind/above it.
                 StackedTriangle(
-                    color = Color(0xFF534AB7),
+                    color = ShapeStackPurple,
                     progress = shape2Progress.value,
                     rotationDegrees = 18f,
                     modifier = Modifier
@@ -92,7 +95,7 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
                 // Shape 3: blue, offset again, tilted the other way — leaves
                 // slivers of both earlier shapes visible.
                 StackedTriangle(
-                    color = Color(0xFF0B5FA5),
+                    color = ShapeStackBlue,
                     progress = shape3Progress.value,
                     rotationDegrees = -14f,
                     modifier = Modifier

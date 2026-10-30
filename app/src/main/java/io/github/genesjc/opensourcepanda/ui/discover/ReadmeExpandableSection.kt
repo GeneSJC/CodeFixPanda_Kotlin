@@ -9,6 +9,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +44,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
+import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 import io.noties.markwon.Markwon
 
 /**
@@ -60,6 +65,7 @@ private const val EXPAND_COLLAPSE_DURATION_MS = 2000
  */
 @Composable
 fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val decor = LocalModeDecor.current
     val rotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         animationSpec = tween(EXPAND_COLLAPSE_DURATION_MS),
@@ -67,7 +73,8 @@ fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifie
     )
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = decor.chipFill,
+        border = BorderStroke(1.dp, decor.chipOutline),
         onClick = onClick,
         modifier = modifier.wrapContentWidth(),
     ) {
@@ -75,16 +82,23 @@ fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifie
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                "README.md",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            Icon(
+                painter = painterResource(R.drawable.ic_document),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
             )
             Text(
-                "⌄",
+                stringResource(R.string.readme_toggle_label),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.padding(start = 4.dp).rotate(rotation),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.padding(start = 6.dp),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
+                modifier = Modifier.padding(start = 4.dp).size(16.dp).rotate(rotation),
             )
         }
     }

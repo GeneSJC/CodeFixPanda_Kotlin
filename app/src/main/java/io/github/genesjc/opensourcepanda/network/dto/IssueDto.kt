@@ -24,6 +24,13 @@ data class IssueDto(
     val comments: Int,
     @Json(name = "updated_at") val updatedAt: String,
     val labels: List<LabelDto> = emptyList(),
+    @Json(name = "created_at") val createdAt: String? = null,
+    val user: UserDto? = null,
+)
+
+/** The issue's author, as the search response carries it. */
+data class UserDto(
+    val login: String,
 )
 
 data class LabelDto(

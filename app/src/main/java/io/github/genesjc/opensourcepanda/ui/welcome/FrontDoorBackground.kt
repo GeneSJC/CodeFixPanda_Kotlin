@@ -1,40 +1,34 @@
 package io.github.genesjc.opensourcepanda.ui.welcome
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import io.github.genesjc.opensourcepanda.ui.components.GlyphBackdrop
+import io.github.genesjc.opensourcepanda.ui.theme.BrandOrangeBottom
+import io.github.genesjc.opensourcepanda.ui.theme.BrandOrangeMid
+import io.github.genesjc.opensourcepanda.ui.theme.BrandOrangeTop
+import io.github.genesjc.opensourcepanda.ui.theme.BrandSun
 
-// The launcher icon's blues, so the front door looks like the app's icon. The light end of the icon's
-// gradient is left out because white text must stay readable over every part of the screen.
-internal val GradientDark = Color(0xFF0B1736)
-private val GradientMid = Color(0xFF1D4ED8)
-private val GradientLight = Color(0xFF2563EB)
+/** The glyph's size, its shift to the right of the middle and where its fade begins: larger and further right than on the soft backdrop, so it clears the centered text. */
+private const val GLYPH_HEIGHT_FRACTION = 0.6f
+private const val GLYPH_SHIFT_X = 0.28f
+private const val FADE_START = 0.3f
 
-/** White at 80%, for secondary text and outlines on the gradient. */
-internal val SoftWhite = Color(0xCCFFFFFF)
+/** How strong the glyph gets in the corner where it is strongest: less than on the soft backdrop, since white text sits on this one. */
+private const val GLYPH_MAX_ALPHA = 0.5f
 
-/** The icon's sky blue, for a border that shows against both the gradient and a white panel. */
-internal val SkyBlue = Color(0xFF38BDF8)
-
-/** The blue gradient behind the welcome screen and the token guide, running from the lower left to the upper right. */
+/** The brand orange gradient with the outlined branch glyph behind the welcome screen and the token guide. */
 @Composable
 internal fun FrontDoorBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(GradientDark, GradientMid, GradientLight),
-                    start = Offset(0f, Float.POSITIVE_INFINITY),
-                    end = Offset(Float.POSITIVE_INFINITY, 0f),
-                ),
-            ),
+    GlyphBackdrop(
+        gradient = listOf(BrandOrangeTop, BrandOrangeMid, BrandOrangeBottom),
+        glyphFill = BrandSun,
+        outlined = true,
+        glyphMaxAlpha = GLYPH_MAX_ALPHA,
+        glyphHeightFraction = GLYPH_HEIGHT_FRACTION,
+        glyphShiftX = GLYPH_SHIFT_X,
+        fadeStart = FADE_START,
+        modifier = modifier,
         content = content,
     )
 }

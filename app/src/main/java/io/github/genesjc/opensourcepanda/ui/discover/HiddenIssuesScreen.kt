@@ -14,13 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,16 +29,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.relativeTimeText
+import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
+import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
 /**
- * The record of every issue hidden with a card's "✕" badge, reached from the Top Repos menu and from
+ * The record of every issue hidden with a card's hide badge, reached from the Top Repos menu and from
  * the repo screen's all-hidden state. A simple row, not IssueCard: HiddenIssue is a minimal snapshot
  * (id, title, repo, URL, hidden time), so there are no labels or comment count to show. The list
  * comes from HiddenIssuesViewModel, so un-hiding a row removes it immediately. "Unhide all" is in the
@@ -54,63 +60,72 @@ fun HiddenIssuesScreen(
     val hiddenIssues by viewModel.hiddenIssues.collectAsStateWithLifecycle()
     var showUnhideAllConfirm by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.hidden_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←", style = MaterialTheme.typography.titleLarge)
-                    }
-                },
-                actions = {
-                    if (hiddenIssues.isNotEmpty()) {
-                        TextButton(onClick = { showUnhideAllConfirm = true }) {
-                            Text(stringResource(R.string.hidden_unhide_all))
+    BrandSoftBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            modifier = modifier,
+            topBar = {
+                BrandTopAppBar(
+                    title = { Text(stringResource(R.string.hidden_title)) },
+                    navigationIcon = {
+                        BrandBarIconButton(onClick = onBack) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_arrow_back),
+                                contentDescription = stringResource(R.string.action_back_description),
+                            )
                         }
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        if (hiddenIssues.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    stringResource(R.string.hidden_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                items(hiddenIssues, key = { it.id }) { hidden ->
-                    Card(
-                        onClick = {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(hidden.htmlUrl)))
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(hidden.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
-                                Text(
-                                    stringResource(R.string.hidden_item_subtitle, hidden.repoFullName, relativeTimeText(hidden.hiddenAtMs)),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                    },
+                    actions = {
+                        if (hiddenIssues.isNotEmpty()) {
+                            TextButton(
+                                onClick = { showUnhideAllConfirm = true },
+                                colors = ButtonDefaults.textButtonColors(contentColor = LocalContentColor.current),
+                            ) {
+                                Text(stringResource(R.string.hidden_unhide_all))
                             }
-                            TextButton(onClick = { viewModel.unhide(hidden.id) }) {
-                                Text(stringResource(R.string.hidden_unhide))
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            if (hiddenIssues.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(R.string.hidden_empty),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    items(hiddenIssues, key = { it.id }) { hidden ->
+                        Card(
+                            onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(hidden.htmlUrl)))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(hidden.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+                                    Text(
+                                        stringResource(R.string.hidden_item_subtitle, hidden.repoFullName, relativeTimeText(hidden.hiddenAtMs)),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                TextButton(onClick = { viewModel.unhide(hidden.id) }) {
+                                    Text(stringResource(R.string.hidden_unhide))
+                                }
                             }
                         }
                     }

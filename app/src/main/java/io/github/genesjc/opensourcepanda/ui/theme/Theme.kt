@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 
@@ -25,14 +26,34 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandGreen40,
+    primary = BrandOrangeMid,
     onPrimary = SurfaceLight,
-    secondary = BrandPurple40,
-    tertiary = BrandBlue40,
-    secondaryContainer = GreenContainerLight,
-    onSecondaryContainer = OnGreenContainerLight,
+    secondary = BrandOrangeMid,
+    tertiary = BrandSeafoam,
+    onTertiary = BrandNavy,
+    tertiaryContainer = BrandSeafoamContainerLight,
+    onTertiaryContainer = OnBrandSeafoamContainerLight,
+    secondaryContainer = BrandContainerLight,
+    onSecondaryContainer = OnBrandContainerLight,
     background = BackgroundLight,
     surface = SurfaceLight,
+    surfaceVariant = ModeHwCard,
+    outline = ModeHwOutline,
+    outlineVariant = ModeHwOutlineVariant,
+    primaryContainer = ModeHwSecondaryContainer,
+    onPrimaryContainer = ModeHwOnSecondaryContainer,
+    inversePrimary = ModeHwSecondaryContainer,
+    onBackground = ModeHwOnSurface,
+    onSurface = ModeHwOnSurface,
+    onSurfaceVariant = ModeHwOnSurfaceVariant,
+    surfaceTint = ModeHwPrimary,
+    inverseSurface = ModeHwInverseSurface,
+    inverseOnSurface = ModeHwBackground,
+    surfaceContainerLowest = ModeHwSurface,
+    surfaceContainerLow = ModeHwSurfaceLow,
+    surfaceContainer = ModeHwSurfaceContainer,
+    surfaceContainerHigh = ModeHwCard,
+    surfaceContainerHighest = ModeHwCard,
 )
 
 /**
@@ -79,11 +100,13 @@ fun OpenSourcePandaTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = targetScheme.animateAllColors(),
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalModeDecor provides (issueMode?.decor() ?: DefaultModeDecor)) {
+        MaterialTheme(
+            colorScheme = targetScheme.animateAllColors(),
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 /**

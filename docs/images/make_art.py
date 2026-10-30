@@ -14,9 +14,13 @@ FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_TEXT = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 FONT_TEXT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 
-NAVY, BLUE, BLUE2, SKY = (11, 23, 54), (29, 78, 216), (37, 99, 235), (56, 189, 248)
-PURPLE, GREEN, AMBER = (112, 87, 255), (0, 134, 114), (245, 158, 11)
-INK, SOFT, PAPER = (15, 23, 42), (203, 213, 225), (243, 242, 250)
+# The app's palette (Color.kt), so the artwork looks like the app: the launcher icon's orange gradient, the sun
+# yellow of the glyph, the navy of the panda's outline and the seafoam of its scrubs, and the soft tangerine
+# backdrop with its cards and chips.
+ORANGE_TOP, ORANGE_MID, ORANGE_BOTTOM = (0xCF, 0x66, 0x57), (0xBC, 0x52, 0x4A), (0xA5, 0x40, 0x3E)
+SUN, NAVY, SEAFOAM = (0xFF, 0xD9, 0x4D), (0x0F, 0x2A, 0x52), (0x4D, 0xBB, 0x92)
+TANGERINE_LIGHT, TANGERINE_MID = (0xFF, 0xE2, 0xCC), (0xFF, 0xCD, 0xAA)
+CARD, CHIP, SOFT = (0xFF, 0xF7, 0xF1), (0xFF, 0xDC, 0xC9), (0xFF, 0xEC, 0xE0)
 
 def font(path, size): return ImageFont.truetype(path, size)
 
@@ -33,6 +37,20 @@ def gradient(w, h, stops, diagonal=True):
                     k = (t - t0) / (t1 - t0) if t1 > t0 else 0
                     px[x, y] = tuple(int(c0[j] + (c1[j] - c0[j]) * k) for j in range(3))
                     break
+    return img
+
+def vgradient(w, h, stops):
+    """Linear gradient from the top to the bottom."""
+    img = Image.new("RGB", (w, h))
+    d = ImageDraw.Draw(img)
+    for y in range(h):
+        t = y / h
+        for i in range(len(stops) - 1):
+            (t0, c0), (t1, c1) = stops[i], stops[i + 1]
+            if t0 <= t <= t1:
+                k = (t - t0) / (t1 - t0) if t1 > t0 else 0
+                d.line([(0, y), (w, y)], fill=tuple(int(c0[j] + (c1[j] - c0[j]) * k) for j in range(3)))
+                break
     return img
 
 def panda(height):
@@ -72,9 +90,7 @@ def issue_card(w, h, title_w, chips, comments):
     d.text((w - 28 - f.getlength(str(comments)) - 38, h - 52), "● " + str(comments), font=f, fill=(100, 116, 139))
     return img
 
-# The launcher icon's palette, so the banner matches the icon (the glyph is the one behind the panda in the icon).
-ORANGE_TOP, ORANGE_MID, ORANGE_BOTTOM = (0xCF, 0x66, 0x57), (0xBC, 0x52, 0x4A), (0xA5, 0x40, 0x3E)
-SUN, ICON_NAVY, MINT = (0xFF, 0xD9, 0x4D), (0x0F, 0x2A, 0x52), (0x6F, 0xD6, 0xA5)
+# The glyph behind the panda in the icon.
 GLYPH_TRUNK = [(76.57, 79.80), (40.43, 28.20)]
 GLYPH_BRANCH = [(51.62, 44.17), (54.51, 46.17), (57.20, 47.97), (60.01, 49.60), (62.61, 50.65), (65.25, 51.39),
                 (67.92, 51.86), (70.53, 52.05), (73.03, 51.89), (75.68, 51.23), (78.18, 50.34), (80.86, 49.33)]
@@ -141,7 +157,7 @@ def banner():
     d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
     d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
     cx = x0
-    for text, fill, ink in (("beginner-friendly", ICON_NAVY, (255, 255, 255)), ("asking for help", MINT, ICON_NAVY), ("kotlin", SUN, ICON_NAVY)):
+    for text, fill, ink in (("beginner-friendly", NAVY, (255, 255, 255)), ("asking for help", SEAFOAM, NAVY), ("kotlin", SUN, NAVY)):
         c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S), text_fill=ink)
         img.alpha_composite(c, (cx, 432 * S))
         cx += c.width + 14 * S
@@ -149,7 +165,7 @@ def banner():
 
 def divider():
     W, H = 1600, 6
-    img = gradient(W, H, [(0, NAVY), (0.35, BLUE), (0.65, SKY), (1, BLUE)], diagonal=False)
+    img = gradient(W, H, [(0, ORANGE_BOTTOM), (0.35, ORANGE_TOP), (0.65, SUN), (1, ORANGE_TOP)], diagonal=False)
     return img
 
 def phone(name, caption, kind):
@@ -157,12 +173,18 @@ def phone(name, caption, kind):
     w, h = W * S, H * S
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=70 * S, fill=INK)
+    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=70 * S, fill=NAVY)
     inner = (14 * S, 14 * S, w - 14 * S, h - 14 * S)
     if kind == "welcome":
-        screen = gradient(inner[2] - inner[0], inner[3] - inner[1], [(0, NAVY), (0.55, BLUE), (1, BLUE2)])
+        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, ORANGE_TOP), (0.5, ORANGE_MID), (1, ORANGE_BOTTOM)])
     else:
-        screen = Image.new("RGB", (inner[2] - inner[0], inner[3] - inner[1]), PAPER)
+        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, TANGERINE_LIGHT), (1, TANGERINE_MID)])
+        # The header band and its see-through title pill are drawn on the screen before it is rounded off.
+        screen.paste(vgradient(screen.width, 110 * S, [(0, ORANGE_TOP), (1, ORANGE_MID)]), (0, 0))
+        screen = screen.convert("RGBA")
+        pill = Image.new("RGBA", screen.size, (0, 0, 0, 0))
+        ImageDraw.Draw(pill).rounded_rectangle((90 * S, 38 * S, 300 * S, 80 * S), radius=12 * S, fill=(255, 255, 255, 51))
+        screen = Image.alpha_composite(screen, pill).convert("RGB")
     mask = Image.new("L", screen.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, screen.width - 1, screen.height - 1), radius=58 * S, fill=255)
     img.paste(screen, inner[:2], mask)
@@ -177,30 +199,28 @@ def phone(name, caption, kind):
         d.rounded_rectangle((ox + 56 * S, oy + 700 * S, ox + 456 * S, oy + 770 * S), radius=35 * S, outline=(255, 255, 255), width=3 * S)
         d.rounded_rectangle((ox + 56 * S, oy + 800 * S, ox + 456 * S, oy + 870 * S), radius=35 * S, fill=(255, 255, 255))
     else:
-        d.rectangle((ox, oy, ox + 512 * S, oy + 110 * S), fill=(255, 255, 255))
-        d.rounded_rectangle((ox + 90 * S, oy + 38 * S, ox + 300 * S, oy + 80 * S), radius=21 * S, fill=PURPLE)
         for i in range(5):
             top = oy + (140 + i * 120) * S
-            d.rounded_rectangle((ox + 24 * S, top, ox + 488 * S, top + 104 * S), radius=24 * S, fill=(255, 255, 255))
-            d.rounded_rectangle((ox + 48 * S, top + 24 * S, ox + 230 * S, top + 44 * S), radius=10 * S, fill=(30, 41, 59))
-            d.rounded_rectangle((ox + 48 * S, top + 62 * S, ox + 380 * S, top + 76 * S), radius=7 * S, fill=(203, 213, 225))
-            d.rounded_rectangle((ox + 384 * S, top + 24 * S, ox + 464 * S, top + 48 * S), radius=12 * S, fill=(232, 228, 252))
+            d.rounded_rectangle((ox + 24 * S, top, ox + 488 * S, top + 104 * S), radius=24 * S, fill=CARD)
+            d.rounded_rectangle((ox + 48 * S, top + 24 * S, ox + 230 * S, top + 44 * S), radius=10 * S, fill=(42, 27, 24))
+            d.rounded_rectangle((ox + 48 * S, top + 62 * S, ox + 380 * S, top + 76 * S), radius=7 * S, fill=(92, 69, 63))
+            d.rounded_rectangle((ox + 384 * S, top + 24 * S, ox + 464 * S, top + 48 * S), radius=12 * S, fill=CHIP)
     # caption pill
     f1, f2 = font(FONT_BOLD, 30 * S), font(FONT_TEXT, 24 * S)
     pw = 430 * S
     px, py = (w - pw) // 2, h // 2 - 70 * S
-    d.rounded_rectangle((px, py, px + pw, py + 150 * S), radius=30 * S, fill=(15, 23, 42, 235))
+    d.rounded_rectangle((px, py, px + pw, py + 150 * S), radius=30 * S, fill=NAVY + (235,))
     d.text((w // 2, py + 50 * S), "Screenshot coming", font=f1, fill=(255, 255, 255), anchor="mm")
     d.text((w // 2, py + 100 * S), caption, font=f2, fill=SOFT, anchor="mm")
     return img.resize((W, H), Image.LANCZOS)
 
 def demo_placeholder():
     S, W, H = 2, 1200, 675
-    img = gradient(W * S, H * S, [(0, NAVY), (0.55, BLUE), (1, BLUE2)]).convert("RGBA")
+    img = vgradient(W * S, H * S, [(0, ORANGE_TOP), (0.5, ORANGE_MID), (1, ORANGE_BOTTOM)]).convert("RGBA")
     d = ImageDraw.Draw(img)
     cx, cy = W * S // 2, H * S // 2 - 30 * S
     d.ellipse((cx - 90 * S, cy - 90 * S, cx + 90 * S, cy + 90 * S), fill=(255, 255, 255, 235))
-    d.polygon([(cx - 26 * S, cy - 48 * S), (cx - 26 * S, cy + 48 * S), (cx + 54 * S, cy)], fill=BLUE)
+    d.polygon([(cx - 26 * S, cy - 48 * S), (cx - 26 * S, cy + 48 * S), (cx + 54 * S, cy)], fill=ORANGE_MID)
     d.text((cx, cy + 150 * S), "Demo GIF coming soon", font=font(FONT_BOLD, 44 * S), fill=(255, 255, 255), anchor="mm")
     d.text((cx, cy + 205 * S), "swap this file for docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
     return img.convert("RGB").resize((W, H), Image.LANCZOS)

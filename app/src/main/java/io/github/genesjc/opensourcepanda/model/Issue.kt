@@ -23,6 +23,12 @@ data class Issue(
     /** Public GitHub URL for this issue — used by the "Open in GitHub" action. */
     val htmlUrl: String,
     val tag: String? = null,
+    /** The issue's number in its repo (the "#89"); 0 for one saved before this was recorded. */
+    val number: Int = 0,
+    /** When the issue was opened (epoch millis); null if unknown or saved before this was recorded. */
+    val createdAtMs: Long? = null,
+    /** The GitHub login of whoever opened it; null if unknown or saved before this was recorded. */
+    val authorLogin: String? = null,
 ) {
     val repoFullName: String get() = "$repoOwner/$repoName"
     val repoDisplayTitle: String get() = humanizeRepoName(repoName)

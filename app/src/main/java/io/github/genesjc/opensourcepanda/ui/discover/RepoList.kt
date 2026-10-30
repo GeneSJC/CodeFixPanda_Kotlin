@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -39,6 +41,7 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
+import io.github.genesjc.opensourcepanda.ui.components.CardBadge
 import io.github.genesjc.opensourcepanda.ui.nameRes
 import kotlinx.coroutines.flow.StateFlow
 
@@ -154,10 +157,12 @@ private fun RepoCard(
 
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // The title, the match count and, when the repo has a README preview, the expand button, which keeps
+            // this place whether the card is open or closed so it never moves under a thumb.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     group.repoDisplayTitle,
@@ -175,43 +180,34 @@ private fun RepoCard(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
+                if (!snippet.isNullOrBlank()) {
+                    CardBadge(
+                        icon = R.drawable.ic_chevron_down,
+                        contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
+                        onClick = { expanded = !expanded },
+                        rotation = chevronRotation,
+                    )
+                }
             }
             if (!snippet.isNullOrBlank()) {
-                if (expanded) {
-                    // Expanded: the chevron gets its own row under the full snippet.
-                    Column(modifier = Modifier.padding(top = 6.dp)) {
-                        Text(
-                            snippet,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        ReadmeSnippetChevron(
-                            rotation = chevronRotation,
-                            onClick = { expanded = !expanded },
-                            modifier = Modifier.padding(top = 6.dp),
-                        )
-                    }
-                } else {
-                    // Collapsed: the chevron sits inline at the end of the 2-line text to save a row. Compose
-                    // Text cannot place it after only the last wrapped line, so both lines narrow slightly.
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        Text(
-                            snippet,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        ReadmeSnippetChevron(
-                            rotation = chevronRotation,
-                            onClick = { expanded = !expanded },
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
-                    }
+                Text(
+                    snippet,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (expanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+            // Opened, the card offers the way in as a button; closed, the whole card is still the way in.
+            if (expanded && group.issues.isNotEmpty()) {
+                Button(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Text(pluralStringResource(R.plurals.explore_issues, group.matchCount, group.matchCount))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 8.dp).size(18.dp).rotate(180f),
+                    )
                 }
             }
         }
@@ -220,29 +216,6 @@ private fun RepoCard(
 
 @Composable
 private fun matchCountLabel(count: Int): String = pluralStringResource(R.plurals.match_count, count, count)
-
-/**
- * The expand/collapse chevron for a card's README preview; used inline when collapsed and
- * on its own row when expanded.
- */
-@Composable
-private fun ReadmeSnippetChevron(rotation: Float, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        onClick = onClick,
-        modifier = modifier,
-    ) {
-        Text(
-            "⌄",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 1.dp)
-                .rotate(rotation),
-        )
-    }
-}
 
 
 /**

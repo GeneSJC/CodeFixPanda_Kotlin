@@ -5,20 +5,15 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
-import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
+import io.github.genesjc.opensourcepanda.ui.theme.BrandColorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -49,8 +44,8 @@ private const val BURST_HOLD_FRACTION = 0.45
  * that animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
  * that ending, not shared code, so the first-launch animation is never at risk from changes here.
  * Like the original it lets two frames go by before starting, since the first frame of a cold start
- * can be slow. Pinned to the Good First Issue (purple) palette, because the splash is the
- * project's fixed brand identity.
+ * can be slow. Pinned to the brand palette, because the splash is the
+ * app's fixed identity.
  */
 @Composable
 fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.5f) {
@@ -92,11 +87,8 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
         onFinished()
     }
 
-    MaterialTheme(colorScheme = IssueLabelFilter.GOOD_FIRST_ISSUE.colorScheme()) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
+    MaterialTheme(colorScheme = BrandColorScheme) {
+        SplashBackground {
             // The title fades in piece by piece (not as one layer), so the burst behind the panda is not
             // dimmed by the fade.
             val fade = Modifier.graphicsLayer { alpha = titleAlpha.value }

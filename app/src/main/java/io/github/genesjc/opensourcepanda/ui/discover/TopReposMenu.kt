@@ -46,6 +46,7 @@ internal fun TopReposMenu(
     showAdFreeOffer: Boolean,
     onAdFreeOffer: () -> Unit,
     onSelectMode: (IssueLabelFilter) -> Unit,
+    onAboutIssueTypes: () -> Unit,
     onReplay: (AnimationReplay) -> Unit,
 ) {
     DropdownMenu(
@@ -151,6 +152,13 @@ internal fun TopReposMenu(
                 onClick = {
                     onDismiss()
                     onSelectMode(IssueLabelFilter.HELP_WANTED)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_about_issue_types)) },
+                onClick = {
+                    onDismiss()
+                    onAboutIssueTypes()
                 },
             )
         }

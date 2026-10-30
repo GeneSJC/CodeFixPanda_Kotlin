@@ -5,9 +5,6 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,14 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
-import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
+import io.github.genesjc.opensourcepanda.ui.theme.BrandColorScheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -264,42 +259,33 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
         onFinished()
     }
 
-    // Pinned to the Good First Issue (purple) palette regardless of the
-    // app's currently active Issue Mode — the splash is this project's
-    // own fixed brand identity (see SplashBrandMark's doc comment), not
-    // something that should repaint itself green under Help Wanted just
-    // because Theme.kt's root MaterialTheme call happens to be mode-
-    // aware. Without this override, MaterialTheme.colorScheme reads
-    // straight from that ambient, mode-driven scheme, so replaying this
-    // animation (or a real cold start with Help Wanted already chosen)
-    // would show it in green instead of the intended purple.
-    MaterialTheme(colorScheme = IssueLabelFilter.GOOD_FIRST_ISSUE.colorScheme()) {
-    Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        TitleWordmark(
-            modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
-            openModifier = Modifier.graphicsLayer {
-                translationX = openOffsetX.value
-                rotationZ = openRotation.value
-            },
-            sourceModifier = Modifier.graphicsLayer { translationX = sourceOffsetX.value },
-            pandaModifier = Modifier.graphicsLayer {
-                translationY = pandaOffsetY.value
-                alpha = pandaAlpha.value
-            },
-            mascotModifier = Modifier.graphicsLayer {
-                translationY = mascotOffsetY.value
-                alpha = mascotAlpha.value
-                scaleX = mascotScaleX.value
-                scaleY = mascotScaleY.value
-                transformOrigin = TransformOrigin(0.5f, 1f)
-            },
-            mascotBackdrop = {
-                SplashBurst(BURST_SIZE / 2, burstScale = { burstScale.value }, burstAlpha = { burstAlpha.value })
-            },
-        )
-    }
+    // Pinned to the brand palette regardless of the app's currently active Issue Mode: the splash is the
+    // app's own fixed identity (see SplashBrandMark's doc comment), not something that should repaint
+    // itself green under Help Wanted because Theme.kt's root MaterialTheme call is mode-aware.
+    MaterialTheme(colorScheme = BrandColorScheme) {
+        SplashBackground {
+            TitleWordmark(
+                modifier = Modifier.graphicsLayer { alpha = if (started) 1f else 0f },
+                openModifier = Modifier.graphicsLayer {
+                    translationX = openOffsetX.value
+                    rotationZ = openRotation.value
+                },
+                sourceModifier = Modifier.graphicsLayer { translationX = sourceOffsetX.value },
+                pandaModifier = Modifier.graphicsLayer {
+                    translationY = pandaOffsetY.value
+                    alpha = pandaAlpha.value
+                },
+                mascotModifier = Modifier.graphicsLayer {
+                    translationY = mascotOffsetY.value
+                    alpha = mascotAlpha.value
+                    scaleX = mascotScaleX.value
+                    scaleY = mascotScaleY.value
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                },
+                mascotBackdrop = {
+                    SplashBurst(BURST_SIZE / 2, burstScale = { burstScale.value }, burstAlpha = { burstAlpha.value })
+                },
+            )
+        }
     }
 }

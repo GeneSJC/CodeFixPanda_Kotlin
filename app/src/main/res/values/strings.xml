@@ -23,6 +23,7 @@
     </plurals>
     <string name="check_new_repos_failed_http">Couldn\'t check for new repos (HTTP %1$d)</string>
     <string name="check_new_repos_failed">Couldn\'t check for new repos: %1$s</string>
+    <string name="readme_toggle_label">README</string>
     <string name="readme_unreadable">Couldn\'t read this README\'s content.</string>
     <string name="readme_load_failed">Couldn\'t load the README: %1$s</string>
 
@@ -63,8 +64,10 @@
     <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
+    <string name="menu_open_description">Open menu</string>
     <string name="menu_find_good_first_issues">Find Beginner-Friendly Issues</string>
     <string name="menu_find_help_wanted_issues">Find Projects Asking for Help</string>
+    <string name="menu_about_issue_types">About the Issue Types</string>
     <string name="menu_section_sandbox">Sandbox</string>
     <string name="menu_play_origami">Play Origami Animation</string>
     <string name="menu_play_shape_stack">Play Shape Stack Animation</string>
@@ -95,12 +98,26 @@
     <string name="rate_limit_used">Used</string>
     <string name="rate_limit_resets_in">Resets in</string>
     <string name="rate_limit_search_note">This reflects GitHub\'s Search API limit specifically, which is separate from and stricter than the general REST API limit.</string>
+    <string name="rate_limit_window_note">The limit renews every minute, and these numbers come from your most recent search, so they may already have reset. Opening a list that is saved on your device uses no searches. Load More, a language you have not opened yet, Check for New Repos and Refresh this repo each use one.</string>
     <string name="rate_limit_gauge_description">Rate limit gauge: %1$d of %2$d remaining</string>
 
     <!-- Lists, hidden issues, bookmarks, label info and the issue card. -->
     <string name="action_retry">Retry</string>
     <string name="repo_list_empty">No repos found for \"%1$s\" in this language right now.</string>
     <string name="repo_card_all_hidden">All hidden</string>
+    <!-- Icon buttons: their descriptions for screen readers. -->
+    <string name="action_saved">Saved</string>
+    <string name="action_share">Share</string>
+    <string name="action_hide">Hide</string>
+    <string name="action_back_description">Back</string>
+    <string name="action_open_on_github">Open on GitHub</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
+    <string name="action_hide_issue">Hide this issue</string>
+    <string name="action_save_issue">Save this issue</string>
+    <string name="action_unsave_issue">Remove from saved</string>
+    <string name="action_share_issue">Share this issue</string>
+    <string name="action_copy_link">Copy link</string>
     <string name="action_load_more">Load More</string>
     <string name="load_more_end">That\'s everything GitHub has for this search.</string>
     <string name="repo_list_updated">Updated %1$s</string>
@@ -119,15 +136,21 @@
     <string name="hidden_unhide_all_message">They\'ll reappear wherever they\'re still cached — Top Repos and repo lists alike.</string>
     <string name="bookmarks_title">Bookmarks</string>
     <string name="bookmarks_empty">No bookmarks yet — tap the ★ on any issue to save it here.</string>
-    <string name="label_info_title">What do these two choices mean?</string>
+    <string name="label_info_title">About the issue types</string>
     <string name="label_info_footer">Maintainers choose these labels themselves; GitHub does not check them, so difficulty and quality vary from project to project.</string>
     <string name="share_issue_chooser">Share issue</string>
     <string name="link_copied">Link copied</string>
+    <string name="issue_meta_opened">#%1$d · opened %2$s</string>
+    <string name="issue_meta_opened_by">#%1$d · opened %2$s by @%3$s</string>
     <string name="comments_and_updated">%1$s · %2$s</string>
     <string name="readme_not_found">%1$s doesn\'t have a README at the root of its default branch.</string>
     <plurals name="match_count">
         <item quantity="one">%d match</item>
         <item quantity="other">%d matches</item>
+    </plurals>
+    <plurals name="explore_issues">
+        <item quantity="one">Explore %d issue</item>
+        <item quantity="other">Explore %d issues</item>
     </plurals>
     <plurals name="repo_count">
         <item quantity="one">%d repo</item>

@@ -40,6 +40,7 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.opensourcepanda.ui.theme.BrandSun
 import kotlinx.coroutines.launch
 
 /** The gap between the panel and the screen edges. */
@@ -71,7 +72,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize().systemBarsPadding().padding(PANEL_MARGIN),
                 shape = RoundedCornerShape(PANEL_CORNER_RADIUS),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(3.dp, SkyBlue),
+                border = BorderStroke(3.dp, BrandSun),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Text(

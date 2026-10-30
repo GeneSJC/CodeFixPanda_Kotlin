@@ -1,12 +1,13 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,13 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,11 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.filterHiddenIssues
 import io.github.genesjc.opensourcepanda.data.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
@@ -44,6 +46,9 @@ import io.github.genesjc.opensourcepanda.ui.components.LabelInfoDialog
 import io.github.genesjc.opensourcepanda.ui.components.LanguageFilterRow
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
 import io.github.genesjc.opensourcepanda.ui.findActivity
+import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
+import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
+import io.github.genesjc.opensourcepanda.ui.components.BrandHeader
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -126,30 +131,20 @@ fun TopReposScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
-            topBar = {
-                Column {
-                    TopAppBar(
-                        title = {
-                            // In landscape this content lives in the left rail instead.
-                            if (!isLandscape) {
-                                Column {
-                                    ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(top = 4.dp),
-                                    ) {
-                                        RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
-                                    }
-                                }
-                            }
-                        },
-                        navigationIcon = {
+        BrandSoftBackground {
+            Scaffold(
+                containerColor = Color.Transparent,
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
+                topBar = {
+                    BrandHeader(
+                        leading = {
                             Box {
-                                IconButton(onClick = { showMenu = true }) {
-                                    Text("☰", style = MaterialTheme.typography.titleLarge)
+                                BrandBarIconButton(onClick = { showMenu = true }) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_menu),
+                                        contentDescription = stringResource(R.string.menu_open_description),
+                                    )
                                 }
                                 TopReposMenu(
                                     expanded = showMenu,
@@ -168,88 +163,97 @@ fun TopReposScreen(
                                     showAdFreeOffer = canOfferAdFree,
                                     onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
                                     onSelectMode = viewModel::onModeSelected,
+                                    onAboutIssueTypes = { showLabelInfoDialog = true },
                                     onReplay = { replayAnimation = it },
                                 )
                             }
                         },
-                        actions = {
-                            // The top row is the rate-limit chip and the info icon, level with the mode pill. The ad-free
-                            // offer sits below them, level with the repo count, with its right edge on the info icon's
-                            // so it stands on its own at the screen edge. In the open build the line draws nothing. The chip
-                            // is always shown (a placeholder with no data yet) so the title bar does not shift. With a token
-                            // problem the tap explains it instead of opening the rate-limit dialog.
-                            Column(horizontalAlignment = Alignment.End) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // With no token there are no rate-limit numbers, so the demo marker takes the chip's place.
-                                    if (isDemo) {
-                                        DemoChip(onClick = { showTokenProblemDialog = true })
-                                    } else {
-                                        RateLimitChip(
-                                            info = rateLimit,
-                                            onClick = {
-                                                if (hasToken && !uiState.tokenRejected) {
-                                                    showRateLimitDialog = true
-                                                } else {
-                                                    showTokenProblemDialog = true
-                                                }
-                                            },
-                                        )
-                                    }
-                                    Text(
-                                        "ⓘ",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier
-                                            .clickable { showInfoDialog = true }
-                                            .padding(end = 16.dp),
-                                    )
-                                }
-                                AdFreeOfferLine(
-                                    adFreeUntilMs = adFreeUntilMs,
-                                    canOffer = canOfferAdFree,
-                                    onOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                    modifier = Modifier.padding(end = 16.dp, top = 2.dp),
+                        // In landscape the mode and the count live in the left rail instead.
+                        center = {
+                            if (!isLandscape) {
+                                ModeTitle(
+                                    mode = currentMode,
+                                    repoCount = hiddenGroups.size,
+                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                    onRepoCountClick = { showInfoDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                             }
                         },
+                        trailing = {
+                            // The rate limit as a rounded square, always shown (a placeholder with no data yet) so the header does
+                            // not shift. With no token there are no rate-limit numbers, so the demo marker takes its place, and
+                            // with a token problem the tap explains it instead of opening the rate-limit dialog.
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(end = 8.dp),
+                            ) {
+                                if (isDemo) {
+                                    DemoWidget(onClick = { showTokenProblemDialog = true })
+                                } else {
+                                    RateLimitWidget(
+                                        info = rateLimit,
+                                        onClick = {
+                                            if (hasToken && !uiState.tokenRejected) {
+                                                showRateLimitDialog = true
+                                            } else {
+                                                showTokenProblemDialog = true
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                            // The ad-free offer, under the widget; in the open build the line draws nothing.
+                            AdFreeOfferLine(
+                                adFreeUntilMs = adFreeUntilMs,
+                                canOffer = canOfferAdFree,
+                                onOffer = { activity?.let(viewModel::onAdFreeOffer) },
+                                modifier = Modifier.padding(end = 8.dp, top = 2.dp),
+                            )
+                        },
                     )
-                }
-            },
-        ) { padding ->
-            if (isLandscape) {
-                // Landscape: a left rail (mode, count, language picker) beside the card list, so the list
-                // gets the full height.
-                Row(modifier = Modifier.padding(padding).fillMaxSize()) {
-                    Column(
-                        modifier = Modifier
-                            .width(180.dp)
-                            .fillMaxHeight()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                    ) {
-                        ModePill(mode = currentMode, onInfoClick = { showLabelInfoDialog = true })
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 8.dp),
+                },
+            ) { padding ->
+                if (isLandscape) {
+                    // Landscape: a left rail (mode, count, language picker) beside the card list, so the list
+                    // gets the full height.
+                    Row(modifier = Modifier.padding(padding).fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .width(180.dp)
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
-                            RepoCountAndUpdated(repoCount = hiddenGroups.size, lastUpdatedAtMs = uiState.lastUpdatedAtMs)
+                            ModePill(mode = currentMode)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 8.dp),
+                            ) {
+                                RepoCountAndUpdated(
+                                    repoCount = hiddenGroups.size,
+                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                    onCountClick = { showInfoDialog = true },
+                                )
+                            }
+                            LanguageFilterRow(
+                                selected = uiState.selectedLanguage,
+                                onSelect = viewModel::onLanguageSelected,
+                                wrap = true,
+                                modifier = Modifier.padding(top = 12.dp),
+                            )
                         }
+                        repoList(Modifier.weight(1f).fillMaxHeight())
+                    }
+                } else {
+                    Column(modifier = Modifier.padding(padding)) {
                         LanguageFilterRow(
                             selected = uiState.selectedLanguage,
                             onSelect = viewModel::onLanguageSelected,
-                            wrap = true,
-                            modifier = Modifier.padding(top = 12.dp),
                         )
+                        repoList(Modifier.fillMaxSize())
                     }
-                    repoList(Modifier.weight(1f).fillMaxHeight())
-                }
-            } else {
-                Column(modifier = Modifier.padding(padding)) {
-                    LanguageFilterRow(
-                        selected = uiState.selectedLanguage,
-                        onSelect = viewModel::onLanguageSelected,
-                    )
-                    repoList(Modifier.fillMaxSize())
                 }
             }
         }

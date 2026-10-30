@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -40,6 +42,7 @@ fun LanguageFilterRow(
                     selected = option == selected,
                     onClick = { onSelect(option) },
                     label = { Text(stringResource(option.nameRes())) },
+                    colors = languageChipColors(),
                 )
             }
         }
@@ -54,8 +57,16 @@ fun LanguageFilterRow(
                     selected = option == selected,
                     onClick = { onSelect(option) },
                     label = { Text(stringResource(option.nameRes())) },
+                    colors = languageChipColors(),
                 )
             }
         }
     }
 }
+
+/** The chosen language is the seafoam: "what you have selected" has its own color, apart from the mode's. */
+@Composable
+private fun languageChipColors() = FilterChipDefaults.filterChipColors(
+    selectedContainerColor = MaterialTheme.colorScheme.tertiary,
+    selectedLabelColor = MaterialTheme.colorScheme.onTertiary,
+)
