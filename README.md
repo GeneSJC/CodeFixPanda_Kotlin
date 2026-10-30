@@ -12,10 +12,10 @@ The top projects with open issues that suit beginners, or that are asking for he
 [![CI](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-MVVM-1D4ED8?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-MVVM-1F4B8E?style=flat-square)
 ![Koin](https://img.shields.io/badge/DI-Koin-F2A50F?style=flat-square)
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
-[![License](https://img.shields.io/badge/License-Apache_2.0-0B1736?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-0F2A52?style=flat-square)](LICENSE)
 
 [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
@@ -172,10 +172,10 @@ flowchart TB
     K{{"💉 Koin<br/>supplies every dependency"}} -.-> VM
     K -.-> SH
     K -.-> R
-    classDef ui fill:#1D4ED8,stroke:#0B1736,color:#ffffff;
-    classDef data fill:#0B1736,stroke:#38BDF8,color:#ffffff;
-    classDef edge fill:#F59E0B,stroke:#0B1736,color:#0B1736;
-    classDef di fill:#7057FF,stroke:#0B1736,color:#ffffff;
+    classDef ui fill:#1F4B8E,stroke:#0F2A52,color:#ffffff;
+    classDef data fill:#0F2A52,stroke:#FFD94D,color:#ffffff;
+    classDef edge fill:#BC524A,stroke:#0F2A52,color:#ffffff;
+    classDef di fill:#4DBB92,stroke:#0F2A52,color:#0F2A52;
     class V,VM ui;
     class SH,R,DS data;
     class GH,F edge;
@@ -198,9 +198,9 @@ flowchart LR
     T -- no --> DEMO["🧪 Demo data<br/>16 invented repos, in memory"]
     REAL --> SAME["Same repositories,<br/>same state holders,<br/>same screens"]
     DEMO --> SAME
-    classDef a fill:#1D4ED8,stroke:#0B1736,color:#ffffff;
-    classDef b fill:#0B1736,stroke:#38BDF8,color:#ffffff;
-    classDef c fill:#F59E0B,stroke:#0B1736,color:#0B1736;
+    classDef a fill:#1F4B8E,stroke:#0F2A52,color:#ffffff;
+    classDef b fill:#0F2A52,stroke:#FFD94D,color:#ffffff;
+    classDef c fill:#BC524A,stroke:#0F2A52,color:#ffffff;
     class T c;
     class REAL a;
     class DEMO b;
