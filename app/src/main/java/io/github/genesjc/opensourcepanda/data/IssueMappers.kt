@@ -29,6 +29,9 @@ fun IssueDto.toIssue(languageFilter: String?, tag: String? = null): Issue {
         updatedAtMs = parseGitHubTimestamp(updatedAt),
         htmlUrl = htmlUrl,
         tag = tag,
+        number = number,
+        createdAtMs = createdAt?.let(::parseGitHubTimestamp),
+        authorLogin = user?.login,
     )
 }
 

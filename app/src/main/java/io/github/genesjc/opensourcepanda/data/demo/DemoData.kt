@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data.demo
 
 import io.github.genesjc.opensourcepanda.network.dto.IssueDto
 import io.github.genesjc.opensourcepanda.network.dto.LabelDto
+import io.github.genesjc.opensourcepanda.network.dto.UserDto
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,6 +49,10 @@ internal object DemoData {
 
     private var nextId = -1L
 
+    /** The demo issues were opened this many days before they were last updated, by one made-up author. */
+    private const val DEMO_OPENED_DAYS_BEFORE_UPDATE = 3
+    private const val DEMO_AUTHOR = "demo-user"
+
     private val timestampFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
@@ -75,6 +80,8 @@ internal object DemoData {
             comments = comments,
             updatedAt = daysAgo(updatedDaysAgo),
             labels = listOf(LabelDto(name = label, color = if (label == GOOD_FIRST_ISSUE) "7057ff" else "008672")),
+            createdAt = daysAgo(updatedDaysAgo + DEMO_OPENED_DAYS_BEFORE_UPDATE),
+            user = UserDto(login = DEMO_AUTHOR),
         )
         return DemoIssue(dto, repoFullName = "$OWNER/$repo", language = language)
     }

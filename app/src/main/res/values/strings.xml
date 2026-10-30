@@ -137,6 +137,8 @@
     <string name="label_info_footer">Maintainers choose these labels themselves; GitHub does not check them, so difficulty and quality vary from project to project.</string>
     <string name="share_issue_chooser">Share issue</string>
     <string name="link_copied">Link copied</string>
+    <string name="issue_meta_opened">#%1$d · opened %2$s</string>
+    <string name="issue_meta_opened_by">#%1$d · opened %2$s by @%3$s</string>
     <string name="comments_and_updated">%1$s · %2$s</string>
     <string name="readme_not_found">%1$s doesn\'t have a README at the root of its default branch.</string>
     <plurals name="match_count">
