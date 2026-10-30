@@ -14,16 +14,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +53,7 @@ import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandHeader
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * The Top Repos screen: the repos with the most open issues for the active Issue Mode
@@ -58,7 +62,7 @@ import kotlinx.coroutines.flow.collect
  * Portrait stacks the language row above the list. Landscape puts the mode, repo count
  * and language picker in a narrow left rail so the card list gets the full height.
  * Hidden issues are filtered at display time; the raw data stays in uiState, and the
- * repo screen receives the raw group. The hamburger menu holds navigation, the two
+ * repo screen receives the raw group. The navigation drawer (opened from the menu icon) holds navigation, the two
  * mode switches and, in dev builds, the animation replays.
  *
  * Deliberately not a mode dropdown in the title: the mode is one whole-app choice made
@@ -82,7 +86,8 @@ fun TopReposScreen(
     var showLabelInfoDialog by remember { mutableStateOf(false) }
     var showRateLimitDialog by remember { mutableStateOf(false) }
     var showTokenProblemDialog by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var replayAnimation by remember { mutableStateOf<AnimationReplay?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -130,140 +135,139 @@ fun TopReposScreen(
         viewModel.syncFromCache()
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        BrandSoftBackground {
-            Scaffold(
-                containerColor = Color.Transparent,
-                snackbarHost = { SnackbarHost(snackbarHostState) },
-                bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
-                topBar = {
-                    BrandHeader(
-                        leading = {
-                            Box {
-                                BrandBarIconButton(onClick = { showMenu = true }) {
+    TopReposDrawer(
+        drawerState = drawerState,
+        buildLabel = viewModel.buildLabel,
+        currentMode = currentMode,
+        showAllAnimations = viewModel.showDetailedDrawerMenu,
+        onOpenBookmarks = onOpenBookmarks,
+        onOpenHidden = onOpenHidden,
+        onCheckForNewRepos = viewModel::checkForNewRepos,
+        onClearCache = { showClearCacheConfirm = true },
+        onOpenSettings = onOpenSettings,
+        onOpenWelcome = onOpenWelcome,
+        onResetApp = onResetApp,
+        showPrivacyOptions = privacyOptionsRequired,
+        onPrivacyOptions = { activity?.let(viewModel::onPrivacyOptions) },
+        showAdFreeOffer = canOfferAdFree,
+        onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
+        onSelectMode = viewModel::onModeSelected,
+        onAboutIssueTypes = { showLabelInfoDialog = true },
+        onReplay = { replayAnimation = it },
+    ) {
+        Box(modifier = modifier.fillMaxSize()) {
+            BrandSoftBackground {
+                Scaffold(
+                    containerColor = Color.Transparent,
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
+                    bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
+                    topBar = {
+                        BrandHeader(
+                            leading = {
+                                BrandBarIconButton(onClick = { scope.launch { drawerState.open() } }) {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_menu),
                                         contentDescription = stringResource(R.string.menu_open_description),
                                     )
                                 }
-                                TopReposMenu(
-                                    expanded = showMenu,
-                                    onDismiss = { showMenu = false },
-                                    buildLabel = viewModel.buildLabel,
-                                    showAllAnimations = viewModel.showDetailedDrawerMenu,
-                                    onOpenBookmarks = onOpenBookmarks,
-                                    onOpenHidden = onOpenHidden,
-                                    onCheckForNewRepos = viewModel::checkForNewRepos,
-                                    onClearCache = { showClearCacheConfirm = true },
-                                    onOpenSettings = onOpenSettings,
-                                    onOpenWelcome = onOpenWelcome,
-                                    onResetApp = onResetApp,
-                                    showPrivacyOptions = privacyOptionsRequired,
-                                    onPrivacyOptions = { activity?.let(viewModel::onPrivacyOptions) },
-                                    showAdFreeOffer = canOfferAdFree,
-                                    onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                    onSelectMode = viewModel::onModeSelected,
-                                    onAboutIssueTypes = { showLabelInfoDialog = true },
-                                    onReplay = { replayAnimation = it },
-                                )
-                            }
-                        },
-                        // In landscape the mode and the count live in the left rail instead.
-                        center = {
-                            if (!isLandscape) {
-                                ModeTitle(
-                                    mode = currentMode,
-                                    repoCount = hiddenGroups.size,
-                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
-                                    onRepoCountClick = { showInfoDialog = true },
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                        },
-                        trailing = {
-                            // The rate limit as a rounded square, always shown (a placeholder with no data yet) so the header does
-                            // not shift. With no token there are no rate-limit numbers, so the demo marker takes its place, and
-                            // with a token problem the tap explains it instead of opening the rate-limit dialog.
-                            Column(
-                                horizontalAlignment = Alignment.End,
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(end = 8.dp),
-                            ) {
-                                if (isDemo) {
-                                    DemoWidget(onClick = { showTokenProblemDialog = true })
-                                } else {
-                                    RateLimitWidget(
-                                        info = rateLimit,
-                                        onClick = {
-                                            if (hasToken && !uiState.tokenRejected) {
-                                                showRateLimitDialog = true
-                                            } else {
-                                                showTokenProblemDialog = true
-                                            }
-                                        },
+                            },
+                            // In landscape the mode and the count live in the left rail instead.
+                            center = {
+                                if (!isLandscape) {
+                                    ModeTitle(
+                                        mode = currentMode,
+                                        repoCount = hiddenGroups.size,
+                                        lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                        onRepoCountClick = { showInfoDialog = true },
+                                        modifier = Modifier.fillMaxWidth(),
                                     )
                                 }
-                            }
-                            // The ad-free offer, under the widget; in the open build the line draws nothing.
-                            AdFreeOfferLine(
-                                adFreeUntilMs = adFreeUntilMs,
-                                canOffer = canOfferAdFree,
-                                onOffer = { activity?.let(viewModel::onAdFreeOffer) },
-                                modifier = Modifier.padding(end = 8.dp, top = 2.dp),
-                            )
-                        },
-                    )
-                },
-            ) { padding ->
-                if (isLandscape) {
-                    // Landscape: a left rail (mode, count, language picker) beside the card list, so the list
-                    // gets the full height.
-                    Row(modifier = Modifier.padding(padding).fillMaxSize()) {
-                        Column(
-                            modifier = Modifier
-                                .width(180.dp)
-                                .fillMaxHeight()
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                        ) {
-                            ModePill(mode = currentMode)
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = 8.dp),
+                            },
+                            trailing = {
+                                // The rate limit as a rounded square, always shown (a placeholder with no data yet) so the header does
+                                // not shift. With no token there are no rate-limit numbers, so the demo marker takes its place, and
+                                // with a token problem the tap explains it instead of opening the rate-limit dialog.
+                                Column(
+                                    horizontalAlignment = Alignment.End,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(end = 8.dp),
+                                ) {
+                                    if (isDemo) {
+                                        DemoWidget(onClick = { showTokenProblemDialog = true })
+                                    } else {
+                                        RateLimitWidget(
+                                            info = rateLimit,
+                                            onClick = {
+                                                if (hasToken && !uiState.tokenRejected) {
+                                                    showRateLimitDialog = true
+                                                } else {
+                                                    showTokenProblemDialog = true
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
+                                // The ad-free offer, under the widget; in the open build the line draws nothing.
+                                AdFreeOfferLine(
+                                    adFreeUntilMs = adFreeUntilMs,
+                                    canOffer = canOfferAdFree,
+                                    onOffer = { activity?.let(viewModel::onAdFreeOffer) },
+                                    modifier = Modifier.padding(end = 8.dp, top = 2.dp),
+                                )
+                            },
+                        )
+                    },
+                ) { padding ->
+                    if (isLandscape) {
+                        // Landscape: a left rail (mode, count, language picker) beside the card list, so the list
+                        // gets the full height.
+                        Row(modifier = Modifier.padding(padding).fillMaxSize()) {
+                            Column(
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .fillMaxHeight()
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                             ) {
-                                RepoCountAndUpdated(
-                                    repoCount = hiddenGroups.size,
-                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
-                                    onCountClick = { showInfoDialog = true },
+                                ModePill(mode = currentMode)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                ) {
+                                    RepoCountAndUpdated(
+                                        repoCount = hiddenGroups.size,
+                                        lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                        onCountClick = { showInfoDialog = true },
+                                    )
+                                }
+                                LanguageFilterRow(
+                                    selected = uiState.selectedLanguage,
+                                    onSelect = viewModel::onLanguageSelected,
+                                    wrap = true,
+                                    modifier = Modifier.padding(top = 12.dp),
                                 )
                             }
+                            repoList(Modifier.weight(1f).fillMaxHeight())
+                        }
+                    } else {
+                        Column(modifier = Modifier.padding(padding)) {
                             LanguageFilterRow(
                                 selected = uiState.selectedLanguage,
                                 onSelect = viewModel::onLanguageSelected,
-                                wrap = true,
-                                modifier = Modifier.padding(top = 12.dp),
                             )
+                            repoList(Modifier.fillMaxSize())
                         }
-                        repoList(Modifier.weight(1f).fillMaxHeight())
-                    }
-                } else {
-                    Column(modifier = Modifier.padding(padding)) {
-                        LanguageFilterRow(
-                            selected = uiState.selectedLanguage,
-                            onSelect = viewModel::onLanguageSelected,
-                        )
-                        repoList(Modifier.fillMaxSize())
                     }
                 }
             }
-        }
 
-        replayAnimation?.let { animation ->
-            AnimationReplayOverlay(
-                animation = animation,
-                splashAnimation = viewModel.splashAnimation,
-                onFinished = { replayAnimation = null },
-            )
+            replayAnimation?.let { animation ->
+                AnimationReplayOverlay(
+                    animation = animation,
+                    splashAnimation = viewModel.splashAnimation,
+                    onFinished = { replayAnimation = null },
+                )
+            }
         }
     }
 
