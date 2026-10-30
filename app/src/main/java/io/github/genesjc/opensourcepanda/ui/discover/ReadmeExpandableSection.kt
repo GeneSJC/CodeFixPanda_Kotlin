@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -79,18 +82,23 @@ fun ReadmeToggleButton(expanded: Boolean, onClick: () -> Unit, modifier: Modifie
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_document),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
             Text(
                 stringResource(R.string.readme_toggle_label),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 softWrap = false,
+                modifier = Modifier.padding(start = 6.dp),
             )
-            Text(
-                "⌄",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 4.dp).rotate(rotation),
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
+                modifier = Modifier.padding(start = 4.dp).size(16.dp).rotate(rotation),
             )
         }
     }

@@ -109,6 +109,12 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **The branch glyph.** The glyph behind the panda is a drawing of a branch (a trunk, a curved branch and three nodes), not a copy of an official logo. Before the public release it has not yet been compared with the Git project's logo and trademark terms, which could not be read while building this; that check belongs before a public release.
 - **No generator.** The icon files are committed as finished images and are edited as images, not regenerated from code.
 
+## Icons
+
+- **Vector drawables, tinted where used.** Every icon in the app is a vector drawable in `res/drawable` (the menu, back, open-on-GitHub, chevron, save, share, copy link, hide, comments and README icons), drawn with `Icon` so it takes its color from where it sits: white on a header, the mode's tonal color on a card badge, the seafoam when something is saved. The colors in the files are placeholders. Text characters (arrows, a letter v, a star, emoji) were used before, and a device draws some of them as its own colored emoji that ignores the color the text is given. Each icon button has a content description for screen readers.
+- **Badges are a fixed size.** `CardBadge` is a 36 dp rounded square with a 20 dp icon, made clickable with `clickable` and not `Surface(onClick)`, which would grow it to Material's 48 dp touch target.
+- **An expand button stays where it is.** A card's expand/collapse button (the same icon, rotated) sits in the same place open or closed: at the top of the issue card, and in the top row of a repo card after the match count, so it never moves under a thumb.
+
 ## String resources
 
 - **Two paths.** Fixed text in a composable is `stringResource(R.string.x)` (or `pluralStringResource`). Text a ViewModel builds from the data layer's facts (an error with its status code, "2 new repos") is resolved in the ViewModel through `BaseViewModel.string`, so the wording decision stays in the ViewModel and the View receives a plain `String`.

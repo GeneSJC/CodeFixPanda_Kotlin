@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,7 +43,7 @@ import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
 
 /**
- * The record of every issue hidden with a card's "✕" badge, reached from the Top Repos menu and from
+ * The record of every issue hidden with a card's hide badge, reached from the Top Repos menu and from
  * the repo screen's all-hidden state. A simple row, not IssueCard: HiddenIssue is a minimal snapshot
  * (id, title, repo, URL, hidden time), so there are no labels or comment count to show. The list
  * comes from HiddenIssuesViewModel, so un-hiding a row removes it immediately. "Unhide all" is in the
@@ -67,7 +69,10 @@ fun HiddenIssuesScreen(
                     title = { Text(stringResource(R.string.hidden_title)) },
                     navigationIcon = {
                         BrandBarIconButton(onClick = onBack) {
-                            Text("←", style = MaterialTheme.typography.titleLarge)
+                            Icon(
+                                painter = painterResource(R.drawable.ic_arrow_back),
+                                contentDescription = stringResource(R.string.action_back_description),
+                            )
                         }
                     },
                     actions = {
