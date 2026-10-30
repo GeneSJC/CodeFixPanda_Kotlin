@@ -3,6 +3,7 @@ package io.github.genesjc.opensourcepanda.ui.discover
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerState
@@ -17,9 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -29,6 +32,9 @@ import io.github.genesjc.opensourcepanda.ui.theme.DrawerSectionFindIssues
 import io.github.genesjc.opensourcepanda.ui.theme.DrawerSectionRepoManagement
 import io.github.genesjc.opensourcepanda.ui.theme.DrawerSectionSandbox
 import kotlinx.coroutines.launch
+
+private const val DRAWER_WIDTH_FRACTION = 0.8f
+private val DRAWER_MAX_WIDTH: Dp = 360.dp
 
 /**
  * The navigation drawer around the Top Repos screen: the app name and build label, then three
@@ -59,6 +65,8 @@ internal fun TopReposDrawer(
     content: @Composable () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    // 80% of the screen, so the app shows through beside it; capped so wide screens do not get a huge sheet.
+    val drawerWidth = minOf((LocalConfiguration.current.screenWidthDp * DRAWER_WIDTH_FRACTION).dp, DRAWER_MAX_WIDTH)
 
     // One item: closes the drawer, then runs the action.
     @Composable
@@ -77,7 +85,7 @@ internal fun TopReposDrawer(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(modifier = Modifier.width(drawerWidth)) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     // Always-visible app name and build label, so the running build can be checked
                     // against the version line in chat.
