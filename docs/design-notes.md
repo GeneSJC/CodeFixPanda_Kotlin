@@ -23,6 +23,8 @@ The decisions and trade-offs behind the code, and the reasons for them, which ar
 - **Density.** The repo identity row is gone (the repo name is redundant on a per-repo screen). Labels always show, because a label such as "good first issue" identifies the issue. The actions are collapsed behind a chevron. `expanded` is local state; the screen keys cards by issue id, so it survives recomposition.
 - **Chevron animation** is a 300 ms tween, not the README widget's 2 s: it fires on every card in a scrolling list, where a slow animation would feel sluggish. The top-right badge stack (external-link badge above the chevron, a 2 dp gap, a 7 dp top offset) is accepted as it is; it will not line up exactly with a two-line title.
 - **Labels wrap clear of the badges.** The card's labels sit in a wrapping row with the same right margin as the title, so a third label drops to a second line and never slides under the arrow and chevron badges.
+- **What the card shows.** A title (two lines at most) with a meta line under it ("#89 · opened 22h ago by @sarah_dev", from the number, opening time and author the search response already carries, so no extra call; nothing for an issue saved before they were recorded), the open-on-GitHub and expand badges at the end of that row, and the labels under it. Expanded, a divider, the first three lines of the body as plain text (`issueBodyPreview` drops template comments, HTML, images and Markdown marks), and a panel with the comment count and updated time, a copy-link badge, and labeled Save/Saved, Share and Hide buttons.
+- **Labels are quiet.** A label is an outlined chip in the app's colors with a dot in GitHub's color for it, so GitHub's loud label colors no longer fill the cards.
 
 ## Repo issues screen
 

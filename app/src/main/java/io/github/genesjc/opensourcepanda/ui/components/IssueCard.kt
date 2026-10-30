@@ -14,13 +14,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -38,14 +39,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.Issue
+import io.github.genesjc.opensourcepanda.ui.issueBodyPreview
+import io.github.genesjc.opensourcepanda.ui.issueMetaText
 import kotlinx.coroutines.launch
 
 /**
- * The issue card: the title and labels always show, and an expand chevron reveals an
- * action row (hide, bookmark, share, copy link) with the comment count and updated time.
+ * The issue card: the title, its meta line (number, when it was opened, by whom) and the labels always show, and
+ * an expand chevron reveals the body's first lines and a panel with the comment count and updated time, the
+ * save, share and hide buttons and a copy-link badge.
  * `isBookmarked` is passed in, not read from Issue, so Issue stays immutable and the
  * bookmark repository stays the single source of truth. Bookmark, hide and the
  * external-link badge are optional: each appears only when its callback is given.
@@ -83,33 +88,78 @@ fun IssueCard(
         ),
         shape = RoundedCornerShape(16.dp),
     ) {
-        Box {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Text(
-                    text = issue.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
-                    modifier = Modifier.fillMaxWidth().padding(end = 56.dp),
-                )
-
-                if (issue.labels.isNotEmpty()) {
-                    // Keeps clear of the badge stack on the right, like the title, and wraps when the labels do not fit.
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, end = 56.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        issue.labels.take(3).forEach { label -> LabelChip(label) }
+        Column(modifier = Modifier.padding(14.dp)) {
+            // The title and its meta line, and the badges at the end: the same place, closed or open.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = issue.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                    )
+                    issueMetaText(issue)?.let { meta ->
+                        Text(
+                            text = meta,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
                     }
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (showExternalLinkIndicator) {
+                        CardBadge(
+                            icon = R.drawable.ic_open_in_new,
+                            contentDescription = stringResource(R.string.action_open_on_github),
+                            onClick = onClick,
+                        )
+                    }
+                    CardBadge(
+                        icon = R.drawable.ic_chevron_down,
+                        contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
+                        onClick = { expanded = !expanded },
+                        rotation = chevronRotation,
+                    )
+                }
+            }
 
-                AnimatedVisibility(
-                    visible = expanded,
-                    enter = expandVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
-                        fadeIn(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
-                    exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
-                        fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
+            if (issue.labels.isNotEmpty()) {
+                // Wraps when the labels do not fit.
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
+                    issue.labels.take(3).forEach { label -> LabelChip(label) }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                    fadeIn(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
+                exit = shrinkVertically(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)) +
+                    fadeOut(animationSpec = tween(CARD_EXPAND_COLLAPSE_DURATION_MS)),
+            ) {
+                Column {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                    val preview = remember(issue.bodyText) { issueBodyPreview(issue.bodyText) }
+                    if (preview.isNotEmpty()) {
+                        Text(
+                            text = preview,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                    }
                     IssueCardActions(
                         issue = issue,
                         isBookmarked = isBookmarked,
@@ -123,32 +173,9 @@ fun IssueCard(
                                 }
                             }
                         },
-                        modifier = Modifier.padding(top = 10.dp),
+                        modifier = Modifier.padding(top = 12.dp),
                     )
                 }
-            }
-
-            // Top-right badge stack: the external-link indicator above the expand chevron.
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 7.dp, end = 14.dp),
-            ) {
-                if (showExternalLinkIndicator) {
-                    CardBadge(
-                        icon = R.drawable.ic_open_in_new,
-                        contentDescription = stringResource(R.string.action_open_on_github),
-                        onClick = onClick,
-                    )
-                    Box(modifier = Modifier.height(2.dp))
-                }
-                CardBadge(
-                    icon = R.drawable.ic_chevron_down,
-                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
-                    onClick = { expanded = !expanded },
-                    rotation = chevronRotation,
-                )
             }
         }
     }
