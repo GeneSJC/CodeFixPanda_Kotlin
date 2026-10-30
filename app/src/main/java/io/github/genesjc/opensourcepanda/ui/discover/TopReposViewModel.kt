@@ -98,7 +98,7 @@ class TopReposViewModel : BaseViewModel() {
     fun onLanguageSelected(language: LanguageFilter) = stateHolder.selectLanguage(language)
 
     /**
-     * Handler for the two hamburger-menu items TopReposScreen offers
+     * Handler for the two navigation-drawer items TopReposScreen offers
      * ("Find Beginner-Friendly Issues" / "Find Projects Asking for Help"): a direct,
      * in-place switch rather than navigating anywhere. See
      * TopReposScreen's doc comment for the full reasoning, including why
