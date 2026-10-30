@@ -1,5 +1,6 @@
 package io.github.genesjc.opensourcepanda.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -7,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,9 +17,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -30,7 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
@@ -130,11 +136,16 @@ fun IssueCard(
                     .padding(top = 7.dp, end = 14.dp),
             ) {
                 if (showExternalLinkIndicator) {
-                    CardBadge(glyph = "→", onClick = onClick)
+                    CardBadge(
+                        icon = R.drawable.ic_open_in_new,
+                        contentDescription = stringResource(R.string.action_open_on_github),
+                        onClick = onClick,
+                    )
                     Box(modifier = Modifier.height(2.dp))
                 }
                 CardBadge(
-                    glyph = "⌄",
+                    icon = R.drawable.ic_chevron_down,
+                    contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
                     onClick = { expanded = !expanded },
                     rotation = chevronRotation,
                 )
@@ -146,23 +157,34 @@ fun IssueCard(
 private const val CARD_EXPAND_COLLAPSE_DURATION_MS = 300
 
 /**
- * The shared single-glyph badge used for every small action on the card. `rotation` lets
- * the caller animate the chevron.
+ * The shared icon badge used for every small action on the card: a rounded square holding a vector icon,
+ * [highlighted] in the seafoam for a saved state. `rotation` lets the caller animate the chevron. It is
+ * clickable and not Surface(onClick), so it stays the size it looks instead of growing to a 48 dp touch target.
  */
 @Composable
-internal fun CardBadge(glyph: String, onClick: () -> Unit, rotation: Float = 0f, highlighted: Boolean = false) {
+internal fun CardBadge(
+    @DrawableRes icon: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+    rotation: Float = 0f,
+    highlighted: Boolean = false,
+) {
+    val shape = RoundedCornerShape(10.dp)
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = shape,
         color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondaryContainer,
-        onClick = onClick,
+        contentColor = if (highlighted) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.size(CARD_BADGE_SIZE).clip(shape).clickable(onClick = onClick),
     ) {
-        Text(
-            glyph,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = MaterialTheme.typography.titleMedium.fontSize * 1.67f,
-            ),
-            color = if (highlighted) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp).rotate(rotation),
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(CARD_BADGE_ICON_SIZE).rotate(rotation),
+            )
+        }
     }
 }
+
+private val CARD_BADGE_SIZE = 36.dp
+private val CARD_BADGE_ICON_SIZE = 20.dp
