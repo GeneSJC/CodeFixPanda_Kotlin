@@ -2,6 +2,8 @@ package io.github.genesjc.opensourcepanda.ui.discover
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
+import io.github.genesjc.opensourcepanda.ui.components.BrandTitleBand
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.VersionLabel
 import io.github.genesjc.opensourcepanda.ui.theme.DrawerSectionFindIssues
@@ -37,7 +40,7 @@ private const val DRAWER_WIDTH_FRACTION = 0.8f
 private val DRAWER_MAX_WIDTH: Dp = 360.dp
 
 /**
- * The navigation drawer around the Top Repos screen: the app name and build label, then three
+ * The navigation drawer around the Top Repos screen: the brand band (glyph and panda), the build label, then three
  * groups (Repo Management, Find Issues, and the dev-only Sandbox, last). Stateless apart from the
  * [drawerState] the caller owns: every choice is a callback, and each item closes the drawer
  * first. Back closes it too (Material's modal drawer handles that itself).
@@ -85,16 +88,13 @@ internal fun TopReposDrawer(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(modifier = Modifier.width(drawerWidth)) {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    // Always-visible app name and build label, so the running build can be checked
-                    // against the version line in chat.
-                    Column(modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp)) {
-                        Text(
-                            stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
+            // No window insets on the sheet: the brand band reaches under the status bar itself.
+            ModalDrawerSheet(modifier = Modifier.width(drawerWidth), windowInsets = WindowInsets(0)) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding()) {
+                    BrandTitleBand()
+                    // Always-visible build label, so the running build can be checked against the
+                    // version line in chat.
+                    Column(modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp)) {
                         VersionLabel(label = buildLabel)
                         IndependentNotice(textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
                     }
