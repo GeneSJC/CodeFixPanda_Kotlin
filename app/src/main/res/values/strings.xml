@@ -64,6 +64,7 @@
     <string name="menu_welcome">Welcome and token help</string>
     <string name="menu_reset_app">Reset App</string>
     <string name="menu_section_find_issues">Find Issues</string>
+    <string name="menu_open_description">Open menu</string>
     <string name="menu_find_good_first_issues">Find Beginner-Friendly Issues</string>
     <string name="menu_find_help_wanted_issues">Find Projects Asking for Help</string>
     <string name="menu_about_issue_types">About the Issue Types</string>

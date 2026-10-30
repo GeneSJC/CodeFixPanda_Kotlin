@@ -15,11 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,9 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.filterHiddenIssues
 import io.github.genesjc.opensourcepanda.data.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
@@ -139,8 +141,10 @@ fun TopReposScreen(
                         leading = {
                             Box {
                                 BrandBarIconButton(onClick = { showMenu = true }) {
-                                    // The text-presentation selector keeps the device from drawing its own dark emoji glyph.
-                                    Text("☰\uFE0E", style = MaterialTheme.typography.titleLarge)
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_menu),
+                                        contentDescription = stringResource(R.string.menu_open_description),
+                                    )
                                 }
                                 TopReposMenu(
                                     expanded = showMenu,
