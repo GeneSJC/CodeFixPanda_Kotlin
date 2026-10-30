@@ -171,7 +171,13 @@ fun TopReposScreen(
                         // In landscape the mode and the count live in the left rail instead.
                         center = {
                             if (!isLandscape) {
-                                ModeTitle(mode = currentMode, modifier = Modifier.fillMaxWidth())
+                                ModeTitle(
+                                    mode = currentMode,
+                                    repoCount = hiddenGroups.size,
+                                    lastUpdatedAtMs = uiState.lastUpdatedAtMs,
+                                    onRepoCountClick = { showInfoDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
                             }
                         },
                         trailing = {
@@ -197,12 +203,8 @@ fun TopReposScreen(
                                         },
                                     )
                                 }
-                                if (!isLandscape) {
-                                    RepoCountChip(repoCount = hiddenGroups.size, onClick = { showInfoDialog = true })
-                                    UpdatedText(uiState.lastUpdatedAtMs, onBar = true)
-                                }
                             }
-                            // The ad-free offer, under the count; in the open build the line draws nothing.
+                            // The ad-free offer, under the widget; in the open build the line draws nothing.
                             AdFreeOfferLine(
                                 adFreeUntilMs = adFreeUntilMs,
                                 canOffer = canOfferAdFree,

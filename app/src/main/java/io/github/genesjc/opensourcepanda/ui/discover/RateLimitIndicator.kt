@@ -124,10 +124,10 @@ internal fun DemoWidget(onClick: (() -> Unit)? = null, modifier: Modifier = Modi
 }
 
 /**
- * The chip that stands where the rate-limit chip would while the demo data is shown: with no token there
- * are no rate-limit numbers, so it says "Demo data" instead. Same size and shape as [RateLimitChip]. With
+ * The chip that stands where the rate-limit widget would while the demo data is shown: with no token there
+ * are no rate-limit numbers, so it says "Demo data" instead. A chip, for the places a chip fits (the repo screen's bar); the Top Repos header uses [DemoWidget]. With
  * an [onClick] it is tappable (Top Repos explains the missing token); without one it is just a label. Like
- * [RateLimitChip] it has no margin of its own: the caller places it.
+ * [RateLimitWidget] it has no margin of its own: the caller places it.
  */
 @Composable
 internal fun DemoChip(onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {

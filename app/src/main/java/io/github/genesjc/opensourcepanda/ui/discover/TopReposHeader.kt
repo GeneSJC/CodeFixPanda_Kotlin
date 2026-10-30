@@ -2,13 +2,16 @@ package io.github.genesjc.opensourcepanda.ui.discover
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
@@ -57,20 +60,35 @@ internal fun RepoCountAndUpdated(repoCount: Int, lastUpdatedAtMs: Long?, onCount
 }
 
 /**
- * The header's title: the mode's name on a see-through white pill, as large as a title. The pill is as wide
- * as the space it is given and only as tall as the (wrapped) name with its padding.
+ * The header's title: a see-through white badge holding the mode's name in title-sized text and, under it, the
+ * repo count (a tappable chip that opens the ranking explanation) and the updated line. The badge is as wide
+ * as the space it is given and only as tall as its content, so a long name wraps and the badge grows.
  */
 @Composable
-internal fun ModeTitle(mode: IssueLabelFilter, modifier: Modifier = Modifier) {
+internal fun ModeTitle(
+    mode: IssueLabelFilter,
+    repoCount: Int,
+    lastUpdatedAtMs: Long?,
+    onRepoCountClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val style = MaterialTheme.typography.labelLarge.let {
         it.copy(fontSize = it.fontSize * TITLE_TEXT_SCALE, lineHeight = it.lineHeight * TITLE_TEXT_SCALE)
     }
-    Box(
+    Column(
         modifier = modifier
             .background(BrandOnOrange.copy(alpha = TITLE_PILL_ALPHA), RoundedCornerShape(8.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp),
     ) {
         Text(stringResource(mode.nameRes()), style = style, color = BrandOnOrange)
+        Row(
+            modifier = Modifier.padding(top = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            RepoCountChip(repoCount, onClick = onRepoCountClick)
+            UpdatedText(lastUpdatedAtMs, onBar = true)
+        }
     }
 }
 
