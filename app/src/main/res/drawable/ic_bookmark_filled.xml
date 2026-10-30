@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tinted where it is used (Icon(tint = ...)), so the colors here are placeholders. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M19,21 L12,16 L5,21 V5 a2,2 0 0,1 2,-2 h10 a2,2 0 0,1 2,2 z"/>
+</vector>

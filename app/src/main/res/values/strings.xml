@@ -105,6 +105,16 @@
     <string name="action_retry">Retry</string>
     <string name="repo_list_empty">No repos found for \"%1$s\" in this language right now.</string>
     <string name="repo_card_all_hidden">All hidden</string>
+    <!-- Icon buttons: their descriptions for screen readers. -->
+    <string name="action_back_description">Back</string>
+    <string name="action_open_on_github">Open on GitHub</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
+    <string name="action_hide_issue">Hide this issue</string>
+    <string name="action_save_issue">Save this issue</string>
+    <string name="action_unsave_issue">Remove from saved</string>
+    <string name="action_share_issue">Share this issue</string>
+    <string name="action_copy_link">Copy link</string>
     <string name="action_load_more">Load More</string>
     <string name="load_more_end">That\'s everything GitHub has for this search.</string>
     <string name="repo_list_updated">Updated %1$s</string>
