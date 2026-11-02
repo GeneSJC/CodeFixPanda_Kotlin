@@ -5,7 +5,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * The layering and naming rules, checked by reading the source files as text, so they need no
+ * The layering, naming and size rules, checked by reading the source files as text, so they need no
  * library and run with the other unit tests.
  *
  * The layers, innermost first: model (plain types), domain (pure rules), data (repositories, storage,
@@ -38,9 +38,47 @@ class LayeringRulesTest {
         val publicTypes: List<String> =
             TYPE_DECLARATION.findAll(text).map { it.groupValues[1] }.toList()
 
+        val lineCount: Int = text.lines().size
+
+        /** Each function's name and its length in lines, from its `fun` line to the closing brace. Expression-bodied functions are skipped. */
+        val functionLengths: List<Pair<String, Int>> by lazy { measureFunctions(text) }
+
         val isComposableFile: Boolean get() = "@Composable" in text && !path.endsWith("ViewModel.kt")
 
         companion object {
+            private val FUNCTION = Regex("^\\s*(?:(?:private|internal|public|override|inline|suspend|operator|tailrec) )*fun\\s+(?:<[^>]*>\\s*)?([\\w.]+)\\s*\\(")
+            private val STRING_LITERAL = Regex("\"(?:[^\"\\\\]|\\\\.)*\"")
+
+            private fun measureFunctions(text: String): List<Pair<String, Int>> {
+                val lines = text.lines()
+                val found = mutableListOf<Pair<String, Int>>()
+                for (start in lines.indices) {
+                    val name = FUNCTION.find(lines[start])?.groupValues?.get(1) ?: continue
+                    var depth = 0
+                    var opened = false
+                    var expressionBody = false
+                    var end = start
+                    while (end < lines.size && end < start + MAX_SCAN_LINES) {
+                        val line = lines[end].replace(STRING_LITERAL, "\"\"").substringBefore("//")
+                        if (!opened && end > start + 12 && '{' !in line) expressionBody = true
+                        for (ch in line) {
+                            if (ch == '{') {
+                                depth++
+                                opened = true
+                            } else if (ch == '}') {
+                                depth--
+                            }
+                        }
+                        if (opened && depth <= 0) break
+                        end++
+                    }
+                    if (opened && !expressionBody) found += name to (end - start + 1)
+                }
+                return found
+            }
+
+            private const val MAX_SCAN_LINES = 4000
+
             private val TYPE_DECLARATION = Regex(
                 "^(?:@\\w+(?:\\([^)]*\\))?\\s+)*(?:(?:public|internal)\\s+)?" +
                     "(?:(?:data|sealed|enum|abstract|open|annotation|inline|value|fun)\\s+)*" +
@@ -152,5 +190,25 @@ class LayeringRulesTest {
                 "domain/RepoIssueGrouping.kt",
             ),
         )
+    }
+
+    /** Small files are found by name and read in one sitting; a file this long is doing several jobs. */
+    @Test
+    fun filesStayUnderTheLineLimit() {
+        check("file length (limit $MAX_FILE_LINES)", sources.filter { it.lineCount > MAX_FILE_LINES }.map { it.path }.toSet())
+    }
+
+    /** A function this long cannot be tested or reviewed in one piece, and every new feature lands in it. */
+    @Test
+    fun functionsStayUnderTheLineLimit() {
+        val tooLong = sources
+            .flatMap { s -> s.functionLengths.filter { it.second > MAX_FUNCTION_LINES }.map { "${s.path}: ${it.first}" } }
+            .toSet()
+        check("function length (limit $MAX_FUNCTION_LINES)", tooLong)
+    }
+
+    private companion object {
+        const val MAX_FILE_LINES = 600
+        const val MAX_FUNCTION_LINES = 150
     }
 }
