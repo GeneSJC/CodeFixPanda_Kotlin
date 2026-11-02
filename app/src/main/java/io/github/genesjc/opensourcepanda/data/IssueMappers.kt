@@ -1,8 +1,8 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueDto
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabel
-import io.github.genesjc.opensourcepanda.network.dto.IssueDto
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone

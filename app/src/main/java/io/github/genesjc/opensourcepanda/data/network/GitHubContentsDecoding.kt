@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.network
+package io.github.genesjc.opensourcepanda.data.network
 
 import android.util.Base64
 

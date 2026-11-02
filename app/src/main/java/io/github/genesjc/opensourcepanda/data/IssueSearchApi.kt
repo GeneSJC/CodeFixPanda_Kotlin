@@ -1,8 +1,8 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.data.network.GitHubApiService
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
-import io.github.genesjc.opensourcepanda.network.GitHubApiService
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

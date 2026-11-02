@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.network
+package io.github.genesjc.opensourcepanda.data.network
 
 import com.squareup.moshi.Moshi
 import io.github.genesjc.opensourcepanda.BuildConfig

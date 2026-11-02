@@ -1,8 +1,8 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.network.dto.RateLimitBucketDto
-import io.github.genesjc.opensourcepanda.network.dto.RateLimitResourcesDto
-import io.github.genesjc.opensourcepanda.network.dto.RateLimitResponseDto
+import io.github.genesjc.opensourcepanda.data.network.dto.RateLimitBucketDto
+import io.github.genesjc.opensourcepanda.data.network.dto.RateLimitResourcesDto
+import io.github.genesjc.opensourcepanda.data.network.dto.RateLimitResponseDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

@@ -1,6 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.network.decodeGitHubContentsBase64
+import io.github.genesjc.opensourcepanda.data.network.decodeGitHubContentsBase64
 import kotlinx.coroutines.CancellationException
 
 /**

@@ -31,8 +31,8 @@ import io.github.genesjc.opensourcepanda.data.SwitchedRepoIssueGroupStorage
 import io.github.genesjc.opensourcepanda.data.demo.DemoIssueSearchApi
 import io.github.genesjc.opensourcepanda.data.demo.DemoReadmeApi
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
+import io.github.genesjc.opensourcepanda.data.network.GitHubApiClient
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
-import io.github.genesjc.opensourcepanda.network.GitHubApiClient
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.ContextStringResolver

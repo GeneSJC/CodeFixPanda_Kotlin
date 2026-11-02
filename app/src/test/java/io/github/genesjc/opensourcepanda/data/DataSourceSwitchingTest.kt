@@ -1,8 +1,8 @@
 package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,8 +1,8 @@
-package io.github.genesjc.opensourcepanda.network
+package io.github.genesjc.opensourcepanda.data.network
 
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
-import io.github.genesjc.opensourcepanda.network.dto.RateLimitResponseDto
-import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.data.network.dto.RateLimitResponseDto
+import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path

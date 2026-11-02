@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.network.dto
+package io.github.genesjc.opensourcepanda.data.network.dto
 
 import com.squareup.moshi.Json
 

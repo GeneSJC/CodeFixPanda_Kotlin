@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.data.network.dto.RateLimitResponseDto
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
-import io.github.genesjc.opensourcepanda.network.dto.RateLimitResponseDto
 import okhttp3.Headers
 
 /**

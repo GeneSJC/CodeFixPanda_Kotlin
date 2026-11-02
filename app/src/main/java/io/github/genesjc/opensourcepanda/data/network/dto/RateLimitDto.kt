@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.network.dto
+package io.github.genesjc.opensourcepanda.data.network.dto
 
 /**
  * Raw shape of GET /rate_limit, which does not count against any limit, so the app can use it to

@@ -1,6 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
+import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.network.GitHubApiService
-import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
+import io.github.genesjc.opensourcepanda.data.network.GitHubApiService
+import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

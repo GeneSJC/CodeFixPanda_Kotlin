@@ -1,8 +1,8 @@
 package io.github.genesjc.opensourcepanda.data.demo
 
-import io.github.genesjc.opensourcepanda.network.dto.IssueDto
-import io.github.genesjc.opensourcepanda.network.dto.LabelDto
-import io.github.genesjc.opensourcepanda.network.dto.UserDto
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueDto
+import io.github.genesjc.opensourcepanda.data.network.dto.LabelDto
+import io.github.genesjc.opensourcepanda.data.network.dto.UserDto
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
