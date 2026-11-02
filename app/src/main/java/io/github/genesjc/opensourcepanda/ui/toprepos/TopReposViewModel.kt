@@ -6,14 +6,18 @@ import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
+import io.github.genesjc.opensourcepanda.domain.filterHiddenIssues
+import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -46,8 +50,17 @@ class TopReposViewModel : BaseViewModel() {
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
     val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage(string) }
 
-    /** Ids the user hid, to filter hidden issues out of the list at display time. */
-    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
+    /**
+     * The repo groups the screen lists: [uiState]'s groups with the issues the user hid taken out. A repo whose
+     * issues are all hidden stays in the list (its card says so); the cache and the state keep every issue.
+     */
+    val visibleRepoGroups: StateFlow<List<RepoIssueGroup>> =
+        combine(uiState, hiddenIssuesRepository.hiddenIds) { state, hiddenIds -> filterHiddenIssues(state.repoGroups, hiddenIds) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                filterHiddenIssues(uiState.value.repoGroups, hiddenIssuesRepository.hiddenIds.value),
+            )
 
     /** README preview text by repo full name, for the repo cards (a null value means "no preview"). */
     val snippets: StateFlow<Map<String, String?>> = snippetRepository.snippets
@@ -80,11 +93,12 @@ class TopReposViewModel : BaseViewModel() {
     val hasToken: StateFlow<Boolean> = stateHolder.hasToken
 
     /**
-     * The active Issue Mode, or null while none is chosen (which
-     * DiscoverNavHost prevents from ever being observed here — see
-     * IssueModeGateScreen).
+     * The mode the screen queries and draws with: the chosen Issue Mode, or the defensive fallback while none is
+     * chosen (which DiscoverNavHost prevents from ever being observed here; see IssueModeGateScreen).
      */
-    val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode
+    val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode
+        .map { resolveActiveMode(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, resolveActiveMode(stateHolder.mode.value))
 
     /**
      * A repo card appeared on screen: load its README preview if it

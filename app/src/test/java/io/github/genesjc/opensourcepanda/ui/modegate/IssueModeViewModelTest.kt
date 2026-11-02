@@ -7,7 +7,9 @@ import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin
 import io.github.genesjc.opensourcepanda.testutil.testAppConfig
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -36,6 +38,18 @@ class IssueModeViewModelTest {
     fun modeIsNullUntilOneIsSelected() {
         val viewModel = createViewModel(IssueModeRepository(FakeStorage()))
         assertNull(viewModel.mode.value)
+    }
+
+    @Test
+    fun theGateIsNeededUntilAModeIsChosen() {
+        val viewModel = createViewModel(IssueModeRepository(FakeStorage()))
+        assertTrue(viewModel.isGateNeeded())
+
+        viewModel.selectMode(IssueLabelFilter.GOOD_FIRST_ISSUE)
+        assertFalse(viewModel.isGateNeeded())
+
+        viewModel.clearMode()
+        assertTrue(viewModel.isGateNeeded())
     }
 
     @Test

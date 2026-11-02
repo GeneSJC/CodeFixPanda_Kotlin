@@ -12,7 +12,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.github.genesjc.opensourcepanda.domain.needsModeGate
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.ui.bookmarks.RepoBookmarksScreen
@@ -73,7 +72,7 @@ fun DiscoverNavHost(
     val startDestination = remember {
         when {
             welcomeViewModel.needsWelcomeAtStart() -> ROUTE_WELCOME
-            needsModeGate(issueModeViewModel.mode.value) -> ROUTE_ISSUE_MODE_GATE
+            issueModeViewModel.isGateNeeded() -> ROUTE_ISSUE_MODE_GATE
             else -> ROUTE_TOP_REPOS
         }
     }
@@ -84,7 +83,7 @@ fun DiscoverNavHost(
         modifier = modifier,
     ) {
         composable(ROUTE_WELCOME) {
-            val next = if (needsModeGate(issueModeViewModel.mode.value)) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
+            val next = if (issueModeViewModel.isGateNeeded()) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
             WelcomeScreen(
                 onOpenGuide = { navController.navigate(ROUTE_TOKEN_GUIDE) },
                 onTokenSaved = {

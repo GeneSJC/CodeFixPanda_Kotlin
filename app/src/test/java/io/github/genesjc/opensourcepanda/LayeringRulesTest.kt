@@ -107,15 +107,7 @@ class LayeringRulesTest {
             .filter { s -> s.imports.any { it.startsWith("$base.data.") || it.startsWith("$base.domain.") || it.startsWith("$base.state.") } }
             .map { it.path }
             .toSet()
-        check(
-            "composables",
-            found,
-            allowed = setOf(
-                "ui/navigation/DiscoverNavHost.kt",
-                "ui/repoissues/RepoIssuesScreen.kt",
-                "ui/toprepos/TopReposScreen.kt",
-            ),
-        )
+        check("composables", found)
     }
 
     @Test

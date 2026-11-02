@@ -6,6 +6,8 @@ import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
+import io.github.genesjc.opensourcepanda.domain.filterHiddenIssuesFlat
+import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
@@ -14,6 +16,7 @@ import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.inject
@@ -57,16 +60,24 @@ class RepoIssuesViewModel : BaseViewModel() {
     /** Plays the rewarded video behind the ad-free offer. The Activity is used for this call only. */
     fun onAdFreeOffer(activity: Activity) = adsController.showAdFreeOffer(activity)
 
-    /** The active Issue Mode, so RepoIssuesScreen observes it through this ViewModel instead of reading a global. */
-    val mode: StateFlow<IssueLabelFilter?> = stateHolder.mode
+    /** The mode the screen draws with: the chosen Issue Mode, or the defensive fallback (DiscoverNavHost ensures one is chosen first). */
+    val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode
+        .map { resolveActiveMode(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, resolveActiveMode(stateHolder.mode.value))
 
     fun loadIfNeeded(repoGroup: RepoIssueGroup) = stateHolder.loadIfNeeded(repoGroup)
 
     /** The one explicit, user-initiated fetch for this repo; see RepoIssuesStateHolder.refreshThisRepo(). */
     fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) = stateHolder.refreshThisRepo(repoGroup, language)
 
-    /** Ids the user hid, to filter hidden issues out of the list at display time. */
-    val hiddenIds: StateFlow<Set<Long>> = hiddenIssuesRepository.hiddenIds
+    /** The issues the screen lists: [uiState]'s issues with the ones the user hid taken out. The state keeps every issue. */
+    val visibleIssues: StateFlow<List<Issue>> =
+        combine(uiState, hiddenIssuesRepository.hiddenIds) { state, hiddenIds -> filterHiddenIssuesFlat(state.issues, hiddenIds) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                filterHiddenIssuesFlat(uiState.value.issues, hiddenIssuesRepository.hiddenIds.value),
+            )
 
     /** Ids of bookmarked issues, to draw each issue card's star. */
     val bookmarkedIds: StateFlow<Set<Long>> = bookmarksRepository.bookmarkedIds

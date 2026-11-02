@@ -125,20 +125,22 @@ class RepoIssuesViewModelTest {
     fun theModeComesFromTheStateHolder() {
         val vm = viewModel(ViewModelFixtures(mode = IssueLabelFilter.HELP_WANTED))
 
-        assertEquals(IssueLabelFilter.HELP_WANTED, vm.mode.value)
+        assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
     }
 
     @Test
     fun hidingAndUnhidingGoThroughTheRepository() {
         val f = ViewModelFixtures()
         val vm = viewModel(f)
-        val issue = repoGroupOf("octo", "repo", 1).issues.single()
+        val group = repoGroupOf("octo", "repo", 1, 2)
+        vm.loadIfNeeded(group)
 
-        vm.hideIssue(issue)
-        assertEquals(setOf(1L), vm.hiddenIds.value)
+        vm.hideIssue(group.issues.first())
+        assertEquals(listOf(2L), vm.visibleIssues.value.map { it.id })
+        assertEquals(group.issues, vm.uiState.value.issues)
 
         vm.unhideIssue(1L)
-        assertTrue(vm.hiddenIds.value.isEmpty())
+        assertEquals(listOf(1L, 2L), vm.visibleIssues.value.map { it.id })
     }
 
     @Test
