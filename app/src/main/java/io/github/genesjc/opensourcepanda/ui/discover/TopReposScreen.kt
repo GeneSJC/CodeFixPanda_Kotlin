@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.data.filterHiddenIssues
-import io.github.genesjc.opensourcepanda.data.resolveActiveMode
+import io.github.genesjc.opensourcepanda.domain.filterHiddenIssues
+import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.ui.ads.AdBannerSlot

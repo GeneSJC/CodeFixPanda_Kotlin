@@ -4,9 +4,9 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.data.ReadmeFetch
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupCacheEntry
-import io.github.genesjc.opensourcepanda.data.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.data.cacheKeyFor
 import io.github.genesjc.opensourcepanda.data.topReposQuery
+import io.github.genesjc.opensourcepanda.domain.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo

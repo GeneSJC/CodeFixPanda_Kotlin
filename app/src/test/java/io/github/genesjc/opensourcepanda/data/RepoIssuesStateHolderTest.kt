@@ -1,5 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.domain.REPO_ISSUES_MAX_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup

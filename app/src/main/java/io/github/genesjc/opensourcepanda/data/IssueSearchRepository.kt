@@ -1,5 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.domain.REPO_ISSUES_MAX_PER_PAGE
+import io.github.genesjc.opensourcepanda.domain.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
@@ -7,12 +9,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-/** Issues per page for Top Repos' list. GitHub's Search API is 1-indexed and returns at most this many per request. */
-const val TOP_REPOS_PER_PAGE = 30
-
-/** The most issues one search can return; a single repo's full refresh asks for this many at once. */
-const val REPO_ISSUES_MAX_PER_PAGE = 100
 
 /** The Search API query for Top Repos: open issues carrying the mode's label, optionally in one language. */
 fun topReposQuery(mode: IssueLabelFilter, language: LanguageFilter): String = buildString {

@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.domain
 
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import org.junit.Assert.assertEquals

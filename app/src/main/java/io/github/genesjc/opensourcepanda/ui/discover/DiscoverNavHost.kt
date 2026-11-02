@@ -12,7 +12,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.github.genesjc.opensourcepanda.data.needsModeGate
+import io.github.genesjc.opensourcepanda.domain.needsModeGate
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.ui.settings.SettingsScreen

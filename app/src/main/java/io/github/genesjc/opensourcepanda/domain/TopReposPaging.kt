@@ -1,4 +1,10 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.domain
+
+/** Issues per page for Top Repos' list. GitHub's Search API is 1-indexed and returns at most this many per request. */
+const val TOP_REPOS_PER_PAGE = 30
+
+/** The most issues one search can return; a single repo's full refresh asks for this many at once. */
+const val REPO_ISSUES_MAX_PER_PAGE = 100
 
 /**
  * GitHub's Search API hard cap — it will not return results past this

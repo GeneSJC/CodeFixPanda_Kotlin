@@ -1,5 +1,11 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.domain.addIssuesToRepoGroups
+import io.github.genesjc.opensourcepanda.domain.canRequestNextPage
+import io.github.genesjc.opensourcepanda.domain.groupByRepo
+import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
+import io.github.genesjc.opensourcepanda.domain.shouldSwitchMode
+import io.github.genesjc.opensourcepanda.domain.updateIssuesInRepoGroups
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
