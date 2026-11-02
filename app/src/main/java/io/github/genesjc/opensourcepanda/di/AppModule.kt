@@ -56,7 +56,10 @@ val appModule = module {
 
     // Shared plumbing.
     single { Moshi.Builder().add(KotlinJsonAdapterFactory()).build() }
-    single { GitHubApiClient(tokenRepository = get(), moshi = get()) }
+    single {
+        val tokens = get<ApiTokenRepository>()
+        GitHubApiClient(tokenProvider = { tokens.effectiveToken.value }, moshi = get())
+    }
     single { get<GitHubApiClient>().api }
 
     // Resolves string resources for the wording ViewModels build.

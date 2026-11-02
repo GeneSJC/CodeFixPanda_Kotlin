@@ -85,6 +85,17 @@ class LayeringRulesTest {
         )
     }
 
+    /** The network client knows nothing of repositories: it is handed what it needs (the token) as a function. */
+    @Test
+    fun networkClientImportsNothingFromData() {
+        val found = sources
+            .filter { it.path.startsWith("data/network/") }
+            .filter { s -> s.imports.any { it.startsWith("$base.data.") && !it.startsWith("$base.data.network.") } }
+            .map { it.path }
+            .toSet()
+        check("data/network", found)
+    }
+
     @Test
     fun stateHoldersKnowNoUiAndNoAndroid() {
         check(
