@@ -54,7 +54,7 @@ internal fun TopReposDrawer(
     onOpenBookmarks: () -> Unit,
     onOpenHidden: () -> Unit,
     onCheckForNewRepos: () -> Unit,
-    onClearCache: () -> Unit,
+    onClearCacheRequested: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenWelcome: () -> Unit,
     onResetApp: () -> Unit,
@@ -103,7 +103,7 @@ internal fun TopReposDrawer(
                         Item(stringResource(R.string.menu_bookmarks)) { onOpenBookmarks() }
                         Item(stringResource(R.string.menu_hidden_issues)) { onOpenHidden() }
                         Item(stringResource(R.string.menu_check_new_repos)) { onCheckForNewRepos() }
-                        Item(stringResource(R.string.action_clear_cache)) { onClearCache() }
+                        Item(stringResource(R.string.action_clear_cache)) { onClearCacheRequested() }
                         Item(stringResource(R.string.menu_settings)) { onOpenSettings() }
                         // Reopens the welcome slideshow: how to get a token, and a place to paste it.
                         Item(stringResource(R.string.menu_welcome)) { onOpenWelcome() }
