@@ -318,16 +318,25 @@ build because the ad account, privacy and consent work behind it is not finished
 ```text
 app/src/main/java/io/github/genesjc/opensourcepanda/
 ├── ads/          the SDK-free ads contract (ads are parked)
-├── data/         repositories, state holders, storage, rate limit, and demo/ (the invented data)
+├── config/       AppConfig: the build-time values the UI may read
+├── data/         repositories and their storage, rate limit parsing, demo/ (the invented data),
+│                 network/ (the GitHub client and its DTOs)
 ├── di/           AppModule: the one place Koin is told how things are built
-├── model/        Issue, RepoIssueGroup, the mode and language filters
-├── network/      the GitHub client and its DTOs
+├── domain/       pure rules: mode rules, hidden-issue filter, repo grouping, paging limits
+├── model/        plain types: Issue, RepoIssueGroup, the filters, RateLimitInfo, SearchFailure
+├── state/        the state holders (Top Repos, repo issues) and their state types
 └── ui/
-    ├── components/   issue cards, label chips, the mode pill
-    ├── discover/     Top Repos, repo issues, bookmarks, hidden issues, navigation
+    ├── bookmarks/    the saved-issues screen
+    ├── components/   issue cards, label chips, the mode pill, the rate-limit widget
+    ├── hidden/       the hidden-issues screen
+    ├── modegate/     the mode gate screen and the app-wide mode ViewModel
+    ├── navigation/   the navigation host
+    ├── repoissues/   one repo's issues, with its README section
     ├── settings/     the token screen
     ├── splash/       the animated start screens
+    ├── text/         the wording helpers (relative time, issue meta, filter names)
     ├── theme/        colors, including one scheme per issue mode
+    ├── toprepos/     the Top Repos screen, its drawer, header and dialogs
     ├── welcome/      the token gate and its guide
     └── ads/          the SDK-free hooks
 

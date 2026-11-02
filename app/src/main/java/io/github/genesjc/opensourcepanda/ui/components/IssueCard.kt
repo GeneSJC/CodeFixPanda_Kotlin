@@ -43,8 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.Issue
-import io.github.genesjc.opensourcepanda.ui.issueBodyPreview
-import io.github.genesjc.opensourcepanda.ui.issueMetaText
+import io.github.genesjc.opensourcepanda.ui.text.issueBodyPreview
+import io.github.genesjc.opensourcepanda.ui.text.issueMetaText
 import kotlinx.coroutines.launch
 
 /**

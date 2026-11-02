@@ -1,14 +1,14 @@
 package io.github.genesjc.opensourcepanda.ui
 
 import io.github.genesjc.opensourcepanda.ui.ads.AdsViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.BookmarksViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.HiddenIssuesViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.IssueModeViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.RepoIssuesViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.RepoReadmeViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.TopReposViewModel
+import io.github.genesjc.opensourcepanda.ui.bookmarks.BookmarksViewModel
+import io.github.genesjc.opensourcepanda.ui.hidden.HiddenIssuesViewModel
+import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeViewModel
+import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
+import io.github.genesjc.opensourcepanda.ui.repoissues.RepoReadmeViewModel
 import io.github.genesjc.opensourcepanda.ui.settings.ApiTokenViewModel
 import io.github.genesjc.opensourcepanda.ui.splash.StartupSplashViewModel
+import io.github.genesjc.opensourcepanda.ui.toprepos.TopReposViewModel
 import io.github.genesjc.opensourcepanda.ui.welcome.WelcomeViewModel
 import org.junit.Assert.assertTrue
 import org.junit.Test

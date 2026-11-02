@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.testutil
 
-import io.github.genesjc.opensourcepanda.ui.StringResolver
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
+
 
 /**
  * A resolver for JVM tests, where string resources cannot be read: it echoes the resource id and

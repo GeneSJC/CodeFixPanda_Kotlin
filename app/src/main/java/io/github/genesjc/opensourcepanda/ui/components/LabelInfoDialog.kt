@@ -14,8 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
-import io.github.genesjc.opensourcepanda.ui.descriptionRes
-import io.github.genesjc.opensourcepanda.ui.nameRes
+import io.github.genesjc.opensourcepanda.ui.text.descriptionRes
+import io.github.genesjc.opensourcepanda.ui.text.nameRes
 
 /**
  * The "what do these two choices mean?" dialog for the beginner-friendly and asking-for-help modes. The wording comes

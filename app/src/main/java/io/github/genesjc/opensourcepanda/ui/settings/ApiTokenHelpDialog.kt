@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
+import io.github.genesjc.opensourcepanda.ui.welcome.NEW_TOKEN_URL
 
 /** Opens GitHub's "new classic token" form with the description already filled in. */
 

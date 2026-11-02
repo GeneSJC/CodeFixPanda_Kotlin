@@ -12,8 +12,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.ui.ads.AdsViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.DiscoverNavHost
-import io.github.genesjc.opensourcepanda.ui.discover.IssueModeViewModel
+import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeViewModel
+import io.github.genesjc.opensourcepanda.ui.navigation.DiscoverNavHost
 import io.github.genesjc.opensourcepanda.ui.splash.AppStartSplashScreen
 import io.github.genesjc.opensourcepanda.ui.splash.StartupSplashViewModel
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme

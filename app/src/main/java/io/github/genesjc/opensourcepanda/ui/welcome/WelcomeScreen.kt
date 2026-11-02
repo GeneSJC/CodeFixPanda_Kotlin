@@ -42,7 +42,6 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
-import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
 import io.github.genesjc.opensourcepanda.ui.theme.BrandOnOrange
 import io.github.genesjc.opensourcepanda.ui.theme.BrandOnOrangeSoft

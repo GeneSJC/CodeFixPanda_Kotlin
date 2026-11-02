@@ -35,8 +35,8 @@ import io.github.genesjc.opensourcepanda.data.network.GitHubApiClient
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
-import io.github.genesjc.opensourcepanda.ui.ContextStringResolver
-import io.github.genesjc.opensourcepanda.ui.StringResolver
+import io.github.genesjc.opensourcepanda.ui.text.ContextStringResolver
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 

@@ -31,7 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.Issue
-import io.github.genesjc.opensourcepanda.ui.relativeTimeText
+import io.github.genesjc.opensourcepanda.ui.text.relativeTimeText
 
 /**
  * The panel an expanded issue card reveals: the comment count with the updated time and a copy-link badge, and

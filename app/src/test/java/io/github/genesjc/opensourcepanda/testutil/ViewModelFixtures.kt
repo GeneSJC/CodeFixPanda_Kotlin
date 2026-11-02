@@ -28,9 +28,9 @@ import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
-import io.github.genesjc.opensourcepanda.ui.StringResolver
-import io.github.genesjc.opensourcepanda.ui.discover.RepoIssuesViewModel
-import io.github.genesjc.opensourcepanda.ui.discover.TopReposViewModel
+import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
+import io.github.genesjc.opensourcepanda.ui.toprepos.TopReposViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
