@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
 import android.content.Context
+import android.util.Log
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -14,6 +15,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private const val FILE_NAME = "repo_issue_group_cache.json"
+private const val TAG = "RepoIssueGroupStorage"
 
 /**
  * One cached result: the groups Top Repos had loaded for a (language, mode) pair, plus how far
@@ -69,6 +71,8 @@ class JsonFileRepoIssueGroupStorage(context: Context, moshi: Moshi) : RepoIssueG
         return try {
             adapter.fromJson(file.readText()) ?: emptyMap()
         } catch (e: Exception) {
+            // A cache that cannot be read is just a miss: the list is fetched again.
+            Log.w(TAG, "The cache could not be read; starting empty", e)
             emptyMap()
         }
     }
@@ -77,7 +81,8 @@ class JsonFileRepoIssueGroupStorage(context: Context, moshi: Moshi) : RepoIssueG
         try {
             file.writeText(adapter.toJson(all))
         } catch (e: Exception) {
-            // Best-effort — a failed write never breaks the screen, matching every other store in this app.
+            // The cache is rebuilt from a fresh search, so a failed write costs one refetch, not the user's data.
+            Log.w(TAG, "The cache could not be saved", e)
         }
     }
 

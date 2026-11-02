@@ -5,7 +5,7 @@ import org.junit.Test
 import java.io.File
 
 /**
- * The layering, naming and size rules, checked by reading the source files as text, so they need no
+ * The layering, naming, size and honesty rules, checked by reading the source files as text, so they need no
  * library and run with the other unit tests.
  *
  * The layers, innermost first: model (plain types), domain (pure rules), data (repositories, storage,
@@ -192,6 +192,23 @@ class LayeringRulesTest {
         )
     }
 
+    /** A catch block must do something with the failure (return a value, report it, or log it); an empty one hides it. */
+    @Test
+    fun noCatchBlockIsEmpty() {
+        val found = sources
+            .filter { s -> EMPTY_CATCH.findAll(s.text).any { it.groupValues[1].replace(LINE_COMMENT, "").isBlank() } }
+            .map { it.path }
+            .toSet()
+        check("empty catch blocks", found)
+    }
+
+    /** The mode fallbacks were removed because they covered a problem; a comment calling something one is the sign of a new one. */
+    @Test
+    fun noDefensiveFallbackComments() {
+        val found = sources.filter { it.text.contains("defensive fallback", ignoreCase = true) }.map { it.path }.toSet()
+        check("\"defensive fallback\" comments", found)
+    }
+
     /** Small files are found by name and read in one sitting; a file this long is doing several jobs. */
     @Test
     fun filesStayUnderTheLineLimit() {
@@ -208,6 +225,8 @@ class LayeringRulesTest {
     }
 
     private companion object {
+        val EMPTY_CATCH = Regex("catch \\(\\w+: \\w+\\) \\{([^{}]*)\\}")
+        val LINE_COMMENT = Regex("//[^\\n]*")
         const val MAX_FILE_LINES = 600
         const val MAX_FUNCTION_LINES = 150
     }
