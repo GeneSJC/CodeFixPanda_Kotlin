@@ -6,7 +6,6 @@ import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import java.io.File
-import java.util.concurrent.Executors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,38 +29,21 @@ interface HiddenIssuesStorage {
 /**
  * A JSON file in private storage, the project's pattern for lists of objects (SharedPreferences
  * is for single values). The file name is unchanged, so issues hidden before the refactor are
- * still hidden. Writes run in order on one background thread, so two quick changes cannot land
- * out of order. A failed write is swallowed on purpose: it never rolls back what the user already
- * saw, like every other store.
+ * still hidden. Reading and writing go through [JsonListFile], which writes atomically, in order,
+ * on one background thread, so two quick changes cannot land out of order.
  */
 class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssuesStorage {
 
-    private val file = File(context.applicationContext.filesDir, FILE_NAME)
-    private val writer = Executors.newSingleThreadExecutor()
-    private val adapter by lazy {
-        moshi.adapter<List<HiddenIssue>>(
-            Types.newParameterizedType(List::class.java, HiddenIssue::class.java),
-        )
-    }
+    private val list = JsonListFile(
+        file = File(context.applicationContext.filesDir, FILE_NAME),
+        adapterFactory = {
+            moshi.adapter<List<HiddenIssue>>(Types.newParameterizedType(List::class.java, HiddenIssue::class.java))
+        },
+    )
 
-    override fun load(): List<HiddenIssue> {
-        if (!file.exists()) return emptyList()
-        return try {
-            adapter.fromJson(file.readText()) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    override fun load(): List<HiddenIssue> = list.load()
 
-    override fun save(issues: List<HiddenIssue>) {
-        writer.execute {
-            try {
-                file.writeText(adapter.toJson(issues))
-            } catch (e: Exception) {
-                // Best-effort — see the class doc comment.
-            }
-        }
-    }
+    override fun save(issues: List<HiddenIssue>) = list.save(issues)
 }
 
 /**

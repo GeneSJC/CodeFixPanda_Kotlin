@@ -5,7 +5,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.Issue
 import java.io.File
-import java.util.concurrent.Executors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,38 +26,21 @@ interface BookmarksStorage {
 
 /**
  * A JSON file in private storage: a bookmark is a full Issue, not a primitive, so it needs real
- * serialization. The file name is unchanged, so earlier bookmarks survive. Writes run in order on
- * one background thread; a failed write is swallowed on purpose and never rolls back a toggle
- * the user already saw.
+ * serialization. The file name is unchanged, so earlier bookmarks survive. Reading and writing go
+ * through [JsonListFile], which writes atomically, in order, on one background thread.
  */
 class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorage {
 
-    private val file = File(context.applicationContext.filesDir, FILE_NAME)
-    private val writer = Executors.newSingleThreadExecutor()
-    private val adapter by lazy {
-        moshi.adapter<List<Issue>>(
-            Types.newParameterizedType(List::class.java, Issue::class.java),
-        )
-    }
+    private val list = JsonListFile(
+        file = File(context.applicationContext.filesDir, FILE_NAME),
+        adapterFactory = {
+            moshi.adapter<List<Issue>>(Types.newParameterizedType(List::class.java, Issue::class.java))
+        },
+    )
 
-    override fun load(): List<Issue> {
-        if (!file.exists()) return emptyList()
-        return try {
-            adapter.fromJson(file.readText()) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    override fun load(): List<Issue> = list.load()
 
-    override fun save(issues: List<Issue>) {
-        writer.execute {
-            try {
-                file.writeText(adapter.toJson(issues))
-            } catch (e: Exception) {
-                // Best-effort — see the class doc comment.
-            }
-        }
-    }
+    override fun save(issues: List<Issue>) = list.save(issues)
 }
 
 /**
