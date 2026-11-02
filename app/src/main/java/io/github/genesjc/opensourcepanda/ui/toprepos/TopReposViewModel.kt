@@ -13,12 +13,14 @@ import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
+import io.github.genesjc.opensourcepanda.ui.text.messageRes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
@@ -48,7 +50,10 @@ class TopReposViewModel : BaseViewModel() {
         .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState(string))
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
-    val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage(string) }
+    val snackbarEvents: Flow<String> = merge(
+        stateHolder.events.map { it.toMessage(string) },
+        tokenRepository.storageProblem.filterNotNull().map { string(it.messageRes()) },
+    )
 
     /**
      * The repo groups the screen lists: [uiState]'s groups with the issues the user hid taken out. A repo whose

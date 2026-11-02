@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.ui.settings
 
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.model.TokenSource
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject
@@ -24,6 +25,9 @@ class ApiTokenViewModel : BaseViewModel() {
 
     /** Which token is actually in use right now: the user's, the build-time one, or none. */
     val tokenSource: StateFlow<TokenSource> = repository.tokenSource
+
+    /** Something that went wrong keeping the saved token, or null; Settings shows it. */
+    val storageProblem: StateFlow<TokenStorageProblem?> = repository.storageProblem
 
     /** Saves [token] as the user's own. Whitespace is trimmed; a blank value clears it. */
     fun saveToken(token: String) {

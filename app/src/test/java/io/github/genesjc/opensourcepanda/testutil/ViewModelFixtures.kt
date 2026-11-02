@@ -26,6 +26,7 @@ import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
@@ -49,6 +50,7 @@ class FakeIssueModeStorage(var stored: String? = null) : IssueModeStorage {
 }
 
 class FakeApiTokenStorage(var stored: String? = null) : ApiTokenStorage {
+    override var lastProblem: TokenStorageProblem? = null
     override fun load(): String? = stored
     override fun save(token: String?) {
         stored = token

@@ -1,5 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -51,6 +52,37 @@ class EncryptingApiTokenStorageTest {
 
         assertNull(inner.stored)
         assertNull(storage.load())
+    }
+
+    @Test
+    fun aTokenThatCannotBeDecryptedIsDiscardedAndReported() {
+        inner.stored = "not-ours"
+
+        assertNull(storage.load())
+
+        assertNull(inner.stored)
+        assertEquals(TokenStorageProblem.COULD_NOT_READ, storage.lastProblem)
+    }
+
+    @Test
+    fun aTokenThatCannotBeEncryptedIsNotStoredAndIsReported() {
+        cipher.failToEncrypt = true
+
+        storage.save("ghp_secret")
+
+        assertNull(inner.stored)
+        assertEquals(TokenStorageProblem.COULD_NOT_SAVE, storage.lastProblem)
+    }
+
+    @Test
+    fun aSuccessfulSaveClearsTheProblem() {
+        cipher.failToEncrypt = true
+        storage.save("ghp_secret")
+        cipher.failToEncrypt = false
+
+        storage.save("ghp_secret")
+
+        assertNull(storage.lastProblem)
     }
 
     @Test

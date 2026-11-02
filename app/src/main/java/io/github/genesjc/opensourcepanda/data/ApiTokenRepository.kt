@@ -3,6 +3,7 @@ package io.github.genesjc.opensourcepanda.data
 import android.content.Context
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.model.TokenSource
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +41,9 @@ interface ApiTokenStorage {
 
     /** Saves [token], or clears the stored value when null. */
     fun save(token: String?)
+
+    /** What went wrong the last time the token was read or saved, or null. Only a storage that can fail this way reports one. */
+    val lastProblem: TokenStorageProblem? get() = null
 }
 
 /**
@@ -80,6 +84,15 @@ class ApiTokenRepository(
 
     private val _userToken = MutableStateFlow(storage.load().orEmpty().trim())
 
+    private val _storageProblem = MutableStateFlow(storage.lastProblem)
+
+    /**
+     * Something that went wrong keeping the saved token, or null: a saved token that could not be read (it was
+     * discarded) or one that could not be saved (it lasts until the app closes). The screens tell the user.
+     * A successful save clears it. It is not remembered across launches.
+     */
+    val storageProblem: StateFlow<TokenStorageProblem?> = _storageProblem.asStateFlow()
+
     /** The token the user entered, or empty if none. Pre-fills the Settings field. */
     val userToken: StateFlow<String> = _userToken.asStateFlow()
 
@@ -118,6 +131,7 @@ class ApiTokenRepository(
         demoOnly = false
         publish()
         storage.save(trimmed.ifEmpty { null })
+        _storageProblem.value = storage.lastProblem
     }
 
     /** True from [startDemo] until the user saves or removes a token, or the app is closed. Never stored. */

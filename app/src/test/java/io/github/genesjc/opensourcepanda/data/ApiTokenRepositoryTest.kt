@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.model.TokenSource
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -11,10 +12,35 @@ import org.junit.Test
 class ApiTokenRepositoryTest {
 
     private class FakeStorage(var stored: String? = null) : ApiTokenStorage {
+        override var lastProblem: TokenStorageProblem? = null
         override fun load(): String? = stored
         override fun save(token: String?) {
             stored = token
         }
+    }
+
+    @Test
+    fun aProblemKeepingTheTokenIsPassedOnAndClearedBySuccess() {
+        val storage = FakeStorage()
+        val repository = ApiTokenRepository(storage, buildToken = "")
+        assertNull(repository.storageProblem.value)
+
+        storage.lastProblem = TokenStorageProblem.COULD_NOT_SAVE
+        repository.setUserToken("ghp_secret")
+        assertEquals(TokenStorageProblem.COULD_NOT_SAVE, repository.storageProblem.value)
+
+        storage.lastProblem = null
+        repository.setUserToken("ghp_secret")
+        assertNull(repository.storageProblem.value)
+    }
+
+    @Test
+    fun aProblemFoundWhenTheSavedTokenWasReadIsReportedFromTheStart() {
+        val storage = FakeStorage().apply { lastProblem = TokenStorageProblem.COULD_NOT_READ }
+
+        val repository = ApiTokenRepository(storage, buildToken = "")
+
+        assertEquals(TokenStorageProblem.COULD_NOT_READ, repository.storageProblem.value)
     }
 
     // ---- the precedence rule, as pure functions ----

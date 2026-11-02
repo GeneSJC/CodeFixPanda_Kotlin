@@ -10,6 +10,7 @@ import io.github.genesjc.opensourcepanda.domain.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import io.github.genesjc.opensourcepanda.testutil.FakeReadmeSource
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.MainDispatcherRule
@@ -233,6 +234,19 @@ class TopReposViewModelTest {
         f.modeRepository.setMode(null)
 
         assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
+    }
+
+    @Test
+    fun aTokenThatCannotBeSavedBecomesASnackbarMessage() {
+        val f = ViewModelFixtures()
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        val vm = viewModel(f)
+        f.tokenStorage.lastProblem = TokenStorageProblem.COULD_NOT_SAVE
+        f.tokenRepository.setUserToken("ghp_secret")
+
+        val message = runBlocking { vm.snackbarEvents.first() }
+
+        assertEquals(s(R.string.token_problem_could_not_save), message)
     }
 
     // ---- pass-throughs for the repo cards ----
