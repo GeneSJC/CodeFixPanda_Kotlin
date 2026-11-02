@@ -67,6 +67,11 @@ class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
  * [userToken] are StateFlows: the network client reads the current value on every request, so a
  * saved token applies without a rebuild, and ViewModels can react to a change. Both are updated
  * together in [setUserToken], so they cannot disagree with each other or with storage.
+ *
+ * It also answers which data is in use ([activeTag], [isDemo], [startDemo]). That is one decision
+ * with the token, not a second job: a demo session blanks [effectiveToken] so the network client sends
+ * nothing, and the flags are republished with it in [publish]. Moving them to their own class would
+ * need flows derived from the token, and keeping three flags consistent is what this one place is for.
  */
 class ApiTokenRepository(
     private val storage: ApiTokenStorage,

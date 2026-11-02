@@ -1,19 +1,17 @@
 package io.github.genesjc.opensourcepanda.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.github.genesjc.opensourcepanda.model.LanguageFilter
-import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.ui.bookmarks.RepoBookmarksScreen
 import io.github.genesjc.opensourcepanda.ui.hidden.HiddenIssuesScreen
 import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeGateScreen
@@ -51,8 +49,9 @@ private fun NavController.popBackStackDebounced() {
  * The gate is a real start destination inside this NavHost, not an early return outside it:
  * outside, Top Repos was the only entry on the back stack and Back closed the app. The start
  * destination is computed once: the gate if no mode is chosen yet, otherwise Top Repos.
- * The selected repo group and language are plain Compose state held here, not passed through
- * the route. "Reset App" clears the mode and pops the whole back stack, so the gate is not
+ * The selected repo group and language are held by RepoSelectionViewModel, not passed through
+ * the route; if the back stack is restored without them (the process was killed), the repo
+ * screen's route returns to Top Repos. "Reset App" clears the mode and pops the whole back stack, so the gate is not
  * duplicated. More in docs/design-notes.md, "Navigation".
  */
 @Composable
@@ -60,12 +59,10 @@ fun DiscoverNavHost(
     modifier: Modifier = Modifier,
     issueModeViewModel: IssueModeViewModel = viewModel(),
     welcomeViewModel: WelcomeViewModel = viewModel(),
+    selectionViewModel: RepoSelectionViewModel = viewModel(),
 ) {
     val navController = rememberNavController()
-    var selectedRepoGroup by remember { mutableStateOf<RepoIssueGroup?>(null) }
-    // The language Top Repos was showing, so "Refresh this repo" writes back to the right cache
-    // entry. Held here, like selectedRepoGroup, rather than passed through the route.
-    var selectedLanguage by remember { mutableStateOf(LanguageFilter.KOTLIN) }
+    val selection by selectionViewModel.selection.collectAsStateWithLifecycle()
 
     // The welcome comes first for someone with no token who has not seen it; then the gate if no mode is
     // chosen; otherwise Top Repos.
@@ -113,8 +110,7 @@ fun DiscoverNavHost(
         composable(ROUTE_TOP_REPOS) {
             TopReposScreen(
                 onRepoClick = { group, language ->
-                    selectedRepoGroup = group
-                    selectedLanguage = language
+                    selectionViewModel.select(group, language)
                     navController.navigate(ROUTE_REPO_ISSUES)
                 },
                 onOpenBookmarks = { navController.navigate(ROUTE_REPO_BOOKMARKS) },
@@ -131,13 +127,18 @@ fun DiscoverNavHost(
             )
         }
         composable(ROUTE_REPO_ISSUES) {
-            selectedRepoGroup?.let { group ->
+            val current = selection
+            if (current != null) {
                 RepoIssuesScreen(
-                    repoGroup = group,
-                    language = selectedLanguage,
+                    repoGroup = current.repoGroup,
+                    language = current.language,
                     onBack = { navController.popBackStackDebounced() },
                     onOpenHidden = { navController.navigate(ROUTE_HIDDEN_ISSUES) },
                 )
+            } else {
+                // The back stack was restored after the process was killed, and the choice of repo was lost with
+                // it: go back to Top Repos rather than showing a blank screen.
+                LaunchedEffect(Unit) { navController.popBackStack() }
             }
         }
         composable(ROUTE_REPO_BOOKMARKS) {
