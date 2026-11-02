@@ -27,8 +27,8 @@ class SwitchedReadmeApi(
     private val useDemo: () -> Boolean,
 ) : ReadmeApi {
 
-    override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
-        (if (useDemo()) demo else live).getReadme(repoOwner, repoName)
+    override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
+        (if (useDemo()) demo else live).fetchReadme(repoOwner, repoName)
 }
 
 /** Reads and writes the real cache file, or the in-memory demo cache, so demo results never reach the file. */

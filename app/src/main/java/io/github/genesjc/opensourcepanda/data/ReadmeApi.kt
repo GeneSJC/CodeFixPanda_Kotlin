@@ -13,7 +13,7 @@ data class ReadmeApiResponse(val code: Int, val isSuccessful: Boolean, val body:
  * rules can be unit-tested against a plain fake with no network.
  */
 fun interface ReadmeApi {
-    suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse
+    suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse
 }
 
 /**
@@ -22,7 +22,7 @@ fun interface ReadmeApi {
  * IssueSearchRepository.rateLimit.
  */
 class GitHubReadmeApi(private val service: GitHubApiService) : ReadmeApi {
-    override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
+    override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
         withContext(Dispatchers.IO) {
             val response = service.getReadme(repoOwner, repoName)
             ReadmeApiResponse(response.code(), response.isSuccessful, response.body())

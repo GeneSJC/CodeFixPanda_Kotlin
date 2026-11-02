@@ -35,6 +35,7 @@ import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.LabelInfoDialog
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.ui.text.buttonLabelRes
+import io.github.genesjc.opensourcepanda.ui.text.glyph
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
 import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 
@@ -138,7 +139,7 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
             Text(
                 // The text-presentation selector keeps a device from swapping in a
                 // colored emoji glyph, which would ignore the text color.
-                mode.glyph + TEXT_PRESENTATION_SELECTOR,
+                mode.glyph() + TEXT_PRESENTATION_SELECTOR,
                 style = MaterialTheme.typography.titleLarge,
                 color = scheme.onPrimary,
             )

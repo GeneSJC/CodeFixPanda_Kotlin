@@ -52,7 +52,7 @@ class DemoIssueSearchApi : IssueSearchApi {
 @OptIn(ExperimentalEncodingApi::class)
 class DemoReadmeApi : ReadmeApi {
 
-    override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
+    override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
         val description = DemoData.repos.firstOrNull { it.name == repoName }?.description.orEmpty()
         val markdown = "# $repoName\n\n$description\n\nThis README is demo data, shown because no GitHub token is set. " +
             "Add a token in Settings to see real repositories and their READMEs.\n"

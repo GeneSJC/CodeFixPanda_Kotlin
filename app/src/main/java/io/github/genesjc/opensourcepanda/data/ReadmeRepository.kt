@@ -18,7 +18,7 @@ class ReadmeRepository(
 
     suspend fun fetch(repoOwner: String, repoName: String): ReadmeResult {
         return try {
-            val response = api.getReadme(repoOwner, repoName)
+            val response = api.fetchReadme(repoOwner, repoName)
             if (response.code == 404) return ReadmeResult.NotFound
             val body = response.body
             if (!response.isSuccessful || body == null) return ReadmeResult.HttpError(response.code)

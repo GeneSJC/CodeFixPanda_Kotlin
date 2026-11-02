@@ -10,6 +10,15 @@ import io.github.genesjc.opensourcepanda.model.LanguageFilter
  * mode or a language will not compile until its text is added here.
  */
 
+/**
+ * The single plain-text symbol shown beside the mode's name on the mode gate, rendered in the same
+ * white-on-accent text as the name (the codebase's convention for icon-like affordances).
+ */
+fun IssueLabelFilter.glyph(): String = when (this) {
+    IssueLabelFilter.GOOD_FIRST_ISSUE -> "✦"
+    IssueLabelFilter.HELP_WANTED -> "⚑"
+}
+
 /** The mode's name as used in a sentence or a pill: "beginner-friendly issues". */
 @StringRes
 fun IssueLabelFilter.nameRes(): Int = when (this) {
