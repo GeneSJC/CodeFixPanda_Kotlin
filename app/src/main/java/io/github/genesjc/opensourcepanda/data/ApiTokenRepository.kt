@@ -9,18 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 private const val PREFS_NAME = "api_token_prefs"
 private const val KEY_USER_TOKEN = "user_token"
 
-/** Where a token currently in effect came from — shown in Settings so a user can tell which one the app is using. */
-enum class TokenSource {
-    /** A token the user entered in Settings. */
-    USER,
-
-    /** The token baked in at build time from local.properties. */
-    BUILD,
-
-    /** Neither is set, so live requests can't be made. */
-    NONE,
-}
-
 /**
  * The token the app should actually use: whatever the user entered in
  * Settings if there is one, otherwise the build-time token. A value the

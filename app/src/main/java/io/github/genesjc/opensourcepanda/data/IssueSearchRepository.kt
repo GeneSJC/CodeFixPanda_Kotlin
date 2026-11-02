@@ -1,94 +1,17 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
-import io.github.genesjc.opensourcepanda.network.GitHubApiService
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 
 /** Issues per page for Top Repos' list. GitHub's Search API is 1-indexed and returns at most this many per request. */
 const val TOP_REPOS_PER_PAGE = 30
 
 /** The most issues one search can return; a single repo's full refresh asks for this many at once. */
 const val REPO_ISSUES_MAX_PER_PAGE = 100
-
-/** One page of search results, already converted to the app's own Issue type. */
-data class IssueSearchPage(val issues: List<Issue>, val totalCount: Int)
-
-/**
- * Every way a search can end, so callers react to an outcome instead of
- * poking at an HTTP response themselves.
- */
-sealed interface IssueSearchResult {
-    data class Success(val page: IssueSearchPage) : IssueSearchResult
-
-    /**
-     * GitHub answered with an error. [rateLimited] is true for a 403 whose
-     * rate-limit headers say nothing is left — GitHub's own signal for
-     * "slow down," distinct from a 401, which means the token itself was
-     * rejected (check [code]).
-     */
-    data class HttpError(val code: Int, val rateLimited: Boolean) : IssueSearchResult
-
-    /** The request itself failed (no network, a timeout, ...). */
-    data class Failed(val message: String?) : IssueSearchResult
-}
-
-/** What came back from the Search API: the HTTP status, the body if any, and the rate-limit headers it carried. */
-data class IssueSearchApiResponse(
-    val code: Int,
-    val isSuccessful: Boolean,
-    val body: IssueSearchResponseDto?,
-    val rateLimit: RateLimitInfo?,
-    /** The tag to put on the issues in [body] (see Issue.tag): null for real GitHub data. */
-    val tag: String? = null,
-)
-
-/**
- * The two GitHub calls this repository makes, split out so the
- * repository's own rules can be unit-tested against a plain fake with no
- * network.
- */
-interface IssueSearchApi {
-    suspend fun searchIssues(query: String, perPage: Int, page: Int): IssueSearchApiResponse
-
-    /** The Search API's current rate-limit numbers from GitHub's free /rate_limit endpoint, or null if they couldn't be read. */
-    suspend fun fetchRateLimit(): RateLimitInfo?
-}
-
-/** The real calls, run off the main thread through the Retrofit service. */
-class GitHubIssueSearchApi(private val service: GitHubApiService) : IssueSearchApi {
-
-    override suspend fun searchIssues(query: String, perPage: Int, page: Int): IssueSearchApiResponse =
-        withContext(Dispatchers.IO) {
-            val response = service.searchIssues(query = query, perPage = perPage, page = page)
-            IssueSearchApiResponse(
-                code = response.code(),
-                isSuccessful = response.isSuccessful,
-                body = response.body(),
-                rateLimit = parseRateLimitHeaders(response.headers()),
-            )
-        }
-
-    override suspend fun fetchRateLimit(): RateLimitInfo? =
-        withContext(Dispatchers.IO) {
-            try {
-                val response = service.getRateLimit()
-                val body = response.body()
-                if (response.isSuccessful && body != null) body.toSearchRateLimitInfo() else null
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                null
-            }
-        }
-}
 
 /** The Search API query for Top Repos: open issues carrying the mode's label, optionally in one language. */
 fun topReposQuery(mode: IssueLabelFilter, language: LanguageFilter): String = buildString {
