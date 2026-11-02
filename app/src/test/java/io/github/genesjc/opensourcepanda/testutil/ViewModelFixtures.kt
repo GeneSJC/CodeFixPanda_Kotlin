@@ -19,8 +19,6 @@ import io.github.genesjc.opensourcepanda.data.ReadmeSource
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupCacheEntry
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupRepository
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupStorage
-import io.github.genesjc.opensourcepanda.data.RepoIssuesStateHolder
-import io.github.genesjc.opensourcepanda.data.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.data.toIssue
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
@@ -28,6 +26,8 @@ import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.network.dto.IssueDto
 import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
+import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.StringResolver
 import io.github.genesjc.opensourcepanda.ui.discover.RepoIssuesViewModel
 import io.github.genesjc.opensourcepanda.ui.discover.TopReposViewModel

@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.state
 
 /** One-shot things the screen should tell the user, reported as facts. The ViewModel turns them into the Snackbar text. */
 sealed interface TopReposEvent {

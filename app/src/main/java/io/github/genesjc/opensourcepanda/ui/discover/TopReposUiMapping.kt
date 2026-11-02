@@ -1,9 +1,9 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.data.TopReposEvent
-import io.github.genesjc.opensourcepanda.data.TopReposState
 import io.github.genesjc.opensourcepanda.model.SearchFailure
+import io.github.genesjc.opensourcepanda.state.TopReposEvent
+import io.github.genesjc.opensourcepanda.state.TopReposState
 import io.github.genesjc.opensourcepanda.ui.StringResolver
 import io.github.genesjc.opensourcepanda.ui.relativeTime
 
