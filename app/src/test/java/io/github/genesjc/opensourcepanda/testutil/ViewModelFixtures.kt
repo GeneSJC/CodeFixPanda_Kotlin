@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.testutil
 
 import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.ApiTokenStorage
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
@@ -178,7 +179,7 @@ class ViewModelFixtures(
 }
 
 /** A config for tests that do not care about its values. */
-fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = "coin", showDetailedDrawerMenu = false)
+fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = SplashAnimation.COIN, showDetailedDrawerMenu = false)
 
 /** A search-API issue as GitHub would send it, in repo [owner]/[repo]. */
 fun issueDto(id: Long, owner: String = "octo", repo: String = "repo") = IssueDto(

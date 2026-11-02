@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.github.genesjc.opensourcepanda.BuildConfig
 import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.GitHubIssueSearchApi
@@ -71,7 +72,7 @@ val appModule = module {
         val live = if (get<AdsController>().adsAreLive) ", LIVE ADS" else ""
         AppConfig(
             "${BuildConfig.BUILD_LABEL} (${BuildConfig.FLAVOR}$live)",
-            BuildConfig.SPLASH_ANIMATION,
+            SplashAnimation.fromConfigName(BuildConfig.SPLASH_ANIMATION),
             BuildConfig.SHOW_DETAILED_DRAWER_MENU,
         )
     }

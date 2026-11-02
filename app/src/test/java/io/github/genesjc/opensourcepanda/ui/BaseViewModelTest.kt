@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui
 
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin
@@ -31,23 +32,23 @@ class BaseViewModelTest {
 
     @Test
     fun gettersForwardTheConfigValues() {
-        val vm = viewModel(AppConfig(buildLabel = "24.1", splashAnimation = "origami", showDetailedDrawerMenu = true))
+        val vm = viewModel(AppConfig(buildLabel = "24.1", splashAnimation = SplashAnimation.ORIGAMI, showDetailedDrawerMenu = true))
 
         assertEquals("24.1", vm.buildLabel)
-        assertEquals("origami", vm.splashAnimation)
+        assertEquals(SplashAnimation.ORIGAMI, vm.splashAnimation)
         assertTrue(vm.showDetailedDrawerMenu)
     }
 
     @Test
     fun theDrawerFlagCanBeOff() {
-        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
+        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = SplashAnimation.COIN, showDetailedDrawerMenu = false))
 
         assertFalse(vm.showDetailedDrawerMenu)
     }
 
     @Test
     fun stringResolvesThroughTheRegisteredResolver() {
-        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = "coin", showDetailedDrawerMenu = false))
+        val vm = viewModel(AppConfig(buildLabel = "1.0", splashAnimation = SplashAnimation.COIN, showDetailedDrawerMenu = false))
 
         assertEquals(FakeStringResolver(7, "a", 2), vm.text(7, "a", 2))
     }

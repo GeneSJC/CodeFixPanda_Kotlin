@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.ui.toprepos
 
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ReadmeFetch
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupCacheEntry
 import io.github.genesjc.opensourcepanda.data.cacheKeyFor
@@ -279,11 +280,11 @@ class TopReposViewModelTest {
     fun configValuesComeFromTheAppConfig() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val config = AppConfig(buildLabel = "9.9", splashAnimation = "shapeStack", showDetailedDrawerMenu = true)
+        val config = AppConfig(buildLabel = "9.9", splashAnimation = SplashAnimation.SHAPE_STACK, showDetailedDrawerMenu = true)
         val vm = viewModel(f, config)
 
         assertEquals("9.9", vm.buildLabel)
-        assertEquals("shapeStack", vm.splashAnimation)
+        assertEquals(SplashAnimation.SHAPE_STACK, vm.splashAnimation)
         assertTrue(vm.showDetailedDrawerMenu)
     }
 }
