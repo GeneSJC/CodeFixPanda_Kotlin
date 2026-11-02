@@ -5,7 +5,6 @@ import io.github.genesjc.opensourcepanda.data.IssueModeRepository
 import io.github.genesjc.opensourcepanda.data.IssueSearchRepository
 import io.github.genesjc.opensourcepanda.data.IssueSearchResult
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupRepository
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
@@ -51,6 +50,9 @@ class RepoIssuesStateHolder(
     /** The active Issue Mode, or null while none is chosen (which DiscoverNavHost prevents from ever being observed here). */
     val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
 
+    /** The chosen mode, for the ViewModel's starting value; see [IssueModeRepository.requireMode]. */
+    fun requireMode(): IssueLabelFilter = modeRepository.requireMode()
+
     private var loadedForRepoFullName: String? = null
 
     /** Parent of everything one visit to the screen starts; open() cancels it and starts a new one. */
@@ -77,8 +79,7 @@ class RepoIssuesStateHolder(
     fun refreshThisRepo(repoGroup: RepoIssueGroup, language: LanguageFilter) {
         if (_state.value.isRefreshing) return
 
-        // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
-        val activeMode = resolveActiveMode(modeRepository.mode.value)
+        val activeMode = modeRepository.requireMode()
 
         scope.launch(visitJob) {
             _state.update { it.copy(isRefreshing = true, refreshFailure = null) }

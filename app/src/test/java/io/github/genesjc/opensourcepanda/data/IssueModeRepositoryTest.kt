@@ -39,6 +39,17 @@ class IssueModeRepositoryTest {
     }
 
     @Test
+    fun requireModeReturnsTheChosenMode() {
+        val repository = IssueModeRepository(FakeStorage(IssueLabelFilter.HELP_WANTED.name))
+        assertEquals(IssueLabelFilter.HELP_WANTED, repository.requireMode())
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun requireModeFailsWhenNoModeIsChosen() {
+        IssueModeRepository(FakeStorage()).requireMode()
+    }
+
+    @Test
     fun setModeUpdatesStateAndPersists() {
         val storage = FakeStorage()
         val repository = IssueModeRepository(storage)

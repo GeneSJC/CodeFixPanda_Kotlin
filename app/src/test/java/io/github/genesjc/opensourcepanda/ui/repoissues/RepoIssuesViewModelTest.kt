@@ -129,6 +129,16 @@ class RepoIssuesViewModelTest {
     }
 
     @Test
+    fun theActiveModeKeepsTheLastChosenModeWhenTheModeIsCleared() {
+        val f = ViewModelFixtures(mode = IssueLabelFilter.HELP_WANTED)
+        val vm = viewModel(f)
+
+        f.modeRepository.setMode(null)
+
+        assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
+    }
+
+    @Test
     fun hidingAndUnhidingGoThroughTheRepository() {
         val f = ViewModelFixtures()
         val vm = viewModel(f)

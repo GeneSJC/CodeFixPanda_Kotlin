@@ -7,7 +7,6 @@ import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
 import io.github.genesjc.opensourcepanda.domain.filterHiddenIssues
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -93,12 +93,13 @@ class TopReposViewModel : BaseViewModel() {
     val hasToken: StateFlow<Boolean> = stateHolder.hasToken
 
     /**
-     * The mode the screen queries and draws with: the chosen Issue Mode, or the defensive fallback while none is
-     * chosen (which DiscoverNavHost prevents from ever being observed here; see IssueModeGateScreen).
+     * The mode the screen queries and draws with. This screen is only shown once a mode is chosen, so it starts
+     * with the chosen mode (a missing one is a bug and fails here). Reset App clears the mode while this screen is
+     * still leaving; a cleared mode is not passed on, so the screen keeps the last real one until it is gone.
      */
     val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode
-        .map { resolveActiveMode(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, resolveActiveMode(stateHolder.mode.value))
+        .filterNotNull()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.requireMode())
 
     /**
      * A repo card appeared on screen: load its README preview if it

@@ -7,7 +7,6 @@ import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.domain.filterHiddenIssuesFlat
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
@@ -17,6 +16,7 @@ import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.inject
@@ -60,10 +60,10 @@ class RepoIssuesViewModel : BaseViewModel() {
     /** Plays the rewarded video behind the ad-free offer. The Activity is used for this call only. */
     fun onAdFreeOffer(activity: Activity) = adsController.showAdFreeOffer(activity)
 
-    /** The mode the screen draws with: the chosen Issue Mode, or the defensive fallback (DiscoverNavHost ensures one is chosen first). */
+    /** The mode the screen draws with. Like Top Repos, it starts with the chosen mode and ignores a cleared one (Reset App). */
     val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode
-        .map { resolveActiveMode(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, resolveActiveMode(stateHolder.mode.value))
+        .filterNotNull()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.requireMode())
 
     fun loadIfNeeded(repoGroup: RepoIssueGroup) = stateHolder.loadIfNeeded(repoGroup)
 

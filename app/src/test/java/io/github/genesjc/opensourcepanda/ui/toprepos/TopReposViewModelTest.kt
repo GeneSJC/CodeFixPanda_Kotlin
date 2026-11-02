@@ -224,6 +224,17 @@ class TopReposViewModelTest {
         assertEquals(2, f.api.calls.size)
     }
 
+    @Test
+    fun theActiveModeKeepsTheLastChosenModeWhenTheModeIsCleared() {
+        val f = ViewModelFixtures(mode = IssueLabelFilter.HELP_WANTED)
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        val vm = viewModel(f)
+
+        f.modeRepository.setMode(null)
+
+        assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
+    }
+
     // ---- pass-throughs for the repo cards ----
 
     @Test

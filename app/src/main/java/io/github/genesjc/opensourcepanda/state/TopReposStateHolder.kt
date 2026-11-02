@@ -8,7 +8,6 @@ import io.github.genesjc.opensourcepanda.data.RepoIssueGroupRepository
 import io.github.genesjc.opensourcepanda.domain.addIssuesToRepoGroups
 import io.github.genesjc.opensourcepanda.domain.canRequestNextPage
 import io.github.genesjc.opensourcepanda.domain.groupByRepo
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.domain.shouldSwitchMode
 import io.github.genesjc.opensourcepanda.domain.updateIssuesInRepoGroups
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
@@ -66,6 +65,9 @@ class TopReposStateHolder(
 
     /** The active Issue Mode, or null while none is chosen (which DiscoverNavHost prevents from ever being observed here). */
     val mode: StateFlow<IssueLabelFilter?> = modeRepository.mode
+
+    /** The chosen mode, for the ViewModel's starting value; see [IssueModeRepository.requireMode]. */
+    fun requireMode(): IssueLabelFilter = modeRepository.requireMode()
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
     val rateLimit: StateFlow<RateLimitInfo?> = searchRepository.rateLimit
@@ -162,7 +164,7 @@ class TopReposStateHolder(
      */
     fun checkForNewRepos() {
         if (isCheckingForNewRepos) return
-        val activeMode = resolveActiveMode(modeRepository.mode.value)
+        val activeMode = modeRepository.requireMode()
         val snapshot = _state.value
         val language = snapshot.selectedLanguage
 
@@ -238,7 +240,7 @@ class TopReposStateHolder(
      * screen writes to the cache and this pulls the change back. A no-op if nothing is cached.
      */
     fun syncFromCache() {
-        val activeMode = resolveActiveMode(modeRepository.mode.value)
+        val activeMode = modeRepository.requireMode()
         val language = _state.value.selectedLanguage
         launchInVisit {
             val cached = cacheRepository.load(language, activeMode) ?: return@launchInVisit
@@ -255,8 +257,7 @@ class TopReposStateHolder(
     }
 
     private fun load(language: LanguageFilter) {
-        // Defensive fallback only: DiscoverNavHost never shows this screen while the mode is null.
-        val activeMode = resolveActiveMode(modeRepository.mode.value)
+        val activeMode = modeRepository.requireMode()
 
         // Fresh load: reset the pagination errors but leave repoGroups as is until new data arrives,
         // so a language switch does not blank the screen behind a spinner.
@@ -297,8 +298,7 @@ class TopReposStateHolder(
     }
 
     private fun fetchPage(language: LanguageFilter, page: Int, isLoadMore: Boolean) {
-        // Defensive fallback only — see load().
-        val activeMode = resolveActiveMode(modeRepository.mode.value)
+        val activeMode = modeRepository.requireMode()
 
         launchInVisit {
             if (isLoadMore) {
