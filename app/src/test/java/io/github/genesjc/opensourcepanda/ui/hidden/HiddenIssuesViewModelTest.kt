@@ -4,7 +4,7 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesStorage
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.testutil.FakeApiTokenStorage
@@ -128,7 +128,7 @@ class HiddenIssuesViewModelTest {
     fun withATokenOnlyUntaggedIssuesAreListed() {
         val repository = HiddenIssuesRepository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
 
         val viewModel = createViewModel(repository)
 
@@ -139,7 +139,7 @@ class HiddenIssuesViewModelTest {
     fun withoutATokenOnlyDemoIssuesAreListed() {
         val repository = HiddenIssuesRepository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
         val noToken = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
 
         val viewModel = createViewModel(repository, noToken)
@@ -151,7 +151,7 @@ class HiddenIssuesViewModelTest {
     fun theListSwitchesWhenATokenIsAdded() {
         val repository = HiddenIssuesRepository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
         val tokens = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
         val viewModel = createViewModel(repository, tokens)
 
@@ -164,7 +164,7 @@ class HiddenIssuesViewModelTest {
     fun unhideAllOnlyTouchesTheDataInUse() {
         val repository = HiddenIssuesRepository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
         val viewModel = createViewModel(repository)
 
         viewModel.unhideAll()

@@ -4,7 +4,7 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksStorage
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.testutil.FakeApiTokenStorage
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
@@ -119,7 +119,7 @@ class BookmarksViewModelTest {
 
     @Test
     fun withATokenOnlyUntaggedBookmarksAreListed() {
-        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(tag = DEMO_TAG))))
+        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(origin = DataOrigin.DEMO))))
 
         assertEquals(listOf(1L), viewModel.bookmarks.value.map { it.id })
     }
@@ -127,7 +127,7 @@ class BookmarksViewModelTest {
     @Test
     fun withoutATokenOnlyDemoBookmarksAreListed() {
         val noToken = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
-        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(tag = DEMO_TAG))), noToken)
+        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(origin = DataOrigin.DEMO))), noToken)
 
         assertEquals(listOf(2L), viewModel.bookmarks.value.map { it.id })
     }
@@ -135,7 +135,7 @@ class BookmarksViewModelTest {
     @Test
     fun theListSwitchesWhenATokenIsAdded() {
         val tokens = ApiTokenRepository(FakeApiTokenStorage(), buildToken = "")
-        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(tag = DEMO_TAG))), tokens)
+        val (viewModel, _) = viewModelOver(FakeStorage(listOf(issue(1), issue(2).copy(origin = DataOrigin.DEMO))), tokens)
 
         tokens.setUserToken("token")
 

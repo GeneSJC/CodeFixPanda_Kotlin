@@ -1,6 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import org.junit.Assert.assertEquals
@@ -171,16 +171,16 @@ class ApiTokenRepositoryTest {
     // ---- which data is in use ----
 
     @Test
-    fun noTokenMeansTheDemoTag() {
-        assertEquals(DEMO_TAG, activeTagFor(""))
-        assertEquals(DEMO_TAG, ApiTokenRepository(FakeStorage(), buildToken = "").activeTag.value)
+    fun noTokenMeansDemoData() {
+        assertEquals(DataOrigin.DEMO, dataOriginFor(""))
+        assertEquals(DataOrigin.DEMO, ApiTokenRepository(FakeStorage(), buildToken = "").dataOrigin.value)
     }
 
     @Test
-    fun aTokenMeansNoTag() {
-        assertNull(activeTagFor("abc"))
-        assertNull(ApiTokenRepository(FakeStorage("user"), buildToken = "").activeTag.value)
-        assertNull(ApiTokenRepository(FakeStorage(), buildToken = "build").activeTag.value)
+    fun aTokenMeansGitHubData() {
+        assertEquals(DataOrigin.GITHUB, dataOriginFor("abc"))
+        assertEquals(DataOrigin.GITHUB, ApiTokenRepository(FakeStorage("user"), buildToken = "").dataOrigin.value)
+        assertEquals(DataOrigin.GITHUB, ApiTokenRepository(FakeStorage(), buildToken = "build").dataOrigin.value)
     }
 
     @Test
@@ -196,14 +196,14 @@ class ApiTokenRepositoryTest {
     }
 
     @Test
-    fun theTagFollowsTheTokenAsItIsSetAndCleared() {
+    fun theOriginFollowsTheTokenAsItIsSetAndCleared() {
         val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
 
         repository.setUserToken("abc")
-        assertNull(repository.activeTag.value)
+        assertEquals(DataOrigin.GITHUB, repository.dataOrigin.value)
 
         repository.setUserToken("")
-        assertEquals(DEMO_TAG, repository.activeTag.value)
+        assertEquals(DataOrigin.DEMO, repository.dataOrigin.value)
     }
 
     // ---- a demo started for the session ----

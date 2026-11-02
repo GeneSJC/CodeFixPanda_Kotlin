@@ -3,6 +3,7 @@ package io.github.genesjc.opensourcepanda.data
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -82,7 +83,7 @@ class HiddenIssuesRepository(
             repoFullName = issue.repoFullName,
             htmlUrl = issue.htmlUrl,
             hiddenAtMs = clock(),
-            tag = issue.tag,
+            origin = issue.origin,
         )
         publish(hiddenById + (issue.id to snapshot))
     }
@@ -92,9 +93,9 @@ class HiddenIssuesRepository(
         publish(hiddenById - issueId)
     }
 
-    /** Unhides every hidden issue carrying [tag] (null for real data), leaving other sources' entries alone. */
-    fun unhideAll(tag: String?) {
-        val remaining = hiddenById.filterValues { it.tag != tag }
+    /** Unhides every hidden issue from [origin], leaving the other origin's entries alone. */
+    fun unhideAll(origin: DataOrigin) {
+        val remaining = hiddenById.filterValues { it.origin != origin }
         if (remaining.size == hiddenById.size) return
         publish(remaining)
     }

@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
 import android.content.Context
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,7 +72,7 @@ class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
  * saved token applies without a rebuild, and ViewModels can react to a change. Both are updated
  * together in [setUserToken], so they cannot disagree with each other or with storage.
  *
- * It also answers which data is in use ([activeTag], [isDemo], [startDemo]). That is one decision
+ * It also answers which data is in use ([dataOrigin], [isDemo], [startDemo]). That is one decision
  * with the token, not a second job: a demo session blanks [effectiveToken] so the network client sends
  * nothing, and the flags are republished with it in [publish]. Moving them to their own class would
  * need flows derived from the token, and keeping three flags consistent is what this one place is for.
@@ -101,15 +101,15 @@ class ApiTokenRepository(
     /** The token to send to GitHub, or empty if there is none at all. */
     val effectiveToken: StateFlow<String> = _effectiveToken.asStateFlow()
 
-    private val _activeTag = MutableStateFlow(activeTagFor(_effectiveToken.value))
+    private val _dataOrigin = MutableStateFlow(dataOriginFor(_effectiveToken.value))
 
     /**
-     * The tag of the data in use: none with a token (real GitHub data), [DEMO_TAG] without one (demo
-     * data). The one fact that decides which saved items a screen lists. Updated with [effectiveToken].
+     * Where the data in use comes from: GitHub with a token, the demo data without one. The one fact that
+     * decides which saved items a screen lists. Updated with [effectiveToken].
      */
-    val activeTag: StateFlow<String?> = _activeTag.asStateFlow()
+    val dataOrigin: StateFlow<DataOrigin> = _dataOrigin.asStateFlow()
 
-    private val _isDemo = MutableStateFlow(_effectiveToken.value.isBlank())
+    private val _isDemo = MutableStateFlow(_dataOrigin.value == DataOrigin.DEMO)
 
     /** True while the demo data is in use (no token), for the banner. */
     val isDemo: StateFlow<Boolean> = _isDemo.asStateFlow()
@@ -150,11 +150,12 @@ class ApiTokenRepository(
     private fun publish() {
         val effective = if (demoOnly) "" else resolveEffectiveToken(_userToken.value, buildToken)
         _effectiveToken.value = effective
-        _activeTag.value = activeTagFor(effective)
-        _isDemo.value = effective.isBlank()
+        _dataOrigin.value = dataOriginFor(effective)
+        _isDemo.value = _dataOrigin.value == DataOrigin.DEMO
         _tokenSource.value = if (demoOnly) TokenSource.NONE else tokenSourceOf(_userToken.value, buildToken)
     }
 }
 
-/** No token means the demo data is in use; any token means the real data. */
-internal fun activeTagFor(effectiveToken: String): String? = if (effectiveToken.isBlank()) DEMO_TAG else null
+/** No token means the demo data is in use; any token means GitHub's data. */
+internal fun dataOriginFor(effectiveToken: String): DataOrigin =
+    if (effectiveToken.isBlank()) DataOrigin.DEMO else DataOrigin.GITHUB

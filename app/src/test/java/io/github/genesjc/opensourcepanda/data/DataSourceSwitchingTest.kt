@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
 import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -11,9 +12,9 @@ import org.junit.Test
 /** The switching data sources send each call to the demo or the real source according to the flag, read on every call. */
 class DataSourceSwitchingTest {
 
-    private class NamedApi(private val name: String) : IssueSearchApi {
+    private class NamedApi(private val origin: DataOrigin) : IssueSearchApi {
         override suspend fun searchIssues(query: String, perPage: Int, page: Int) = IssueSearchApiResponse(
-            code = 200, isSuccessful = true, body = IssueSearchResponseDto(totalCount = 0), rateLimit = null, tag = name,
+            code = 200, isSuccessful = true, body = IssueSearchResponseDto(totalCount = 0), rateLimit = null, origin = origin,
         )
 
         override suspend fun fetchRateLimit(): RateLimitInfo? = null
@@ -36,11 +37,11 @@ class DataSourceSwitchingTest {
     @Test
     fun searchGoesToTheSourceTheFlagPicksOnEveryCall() = runBlocking {
         var demo = true
-        val api = SwitchedIssueSearchApi(NamedApi("live"), NamedApi("demo"), { demo })
+        val api = SwitchedIssueSearchApi(NamedApi(DataOrigin.GITHUB), NamedApi(DataOrigin.DEMO), { demo })
 
-        assertEquals("demo", api.searchIssues("q", 30, 1).tag)
+        assertEquals(DataOrigin.DEMO, api.searchIssues("q", 30, 1).origin)
         demo = false
-        assertEquals("live", api.searchIssues("q", 30, 1).tag)
+        assertEquals(DataOrigin.GITHUB, api.searchIssues("q", 30, 1).origin)
     }
 
     @Test

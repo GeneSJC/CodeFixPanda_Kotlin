@@ -18,7 +18,7 @@ import org.koin.core.component.inject
  * The Hidden screen's interface to the hidden issues: the list to show,
  * and Unhide / Unhide all. What is saved and when is
  * HiddenIssuesRepository's job; the confirmation dialog for "Unhide
- * all" is presentational state and stays in the screen. Only the issues whose tag matches the data
+ * all" is presentational state and stays in the screen. Only the issues whose origin matches the data
  * in use are listed (demo issues hidden in demo mode stay out of the real list, and the reverse).
  *
  * The repository is a plain member that Koin supplies; a test registers
@@ -30,12 +30,12 @@ class HiddenIssuesViewModel : BaseViewModel() {
     private val tokenRepository: ApiTokenRepository by inject()
 
     /** Hidden issues of the data in use, most recently hidden first. */
-    val hiddenIssues: StateFlow<List<HiddenIssue>> = combine(repository.hiddenIssues, tokenRepository.activeTag) { hidden, tag ->
-        hidden.filter { it.tag == tag }
+    val hiddenIssues: StateFlow<List<HiddenIssue>> = combine(repository.hiddenIssues, tokenRepository.dataOrigin) { hidden, origin ->
+        hidden.filter { it.origin == origin }
     }.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        repository.hiddenIssues.value.filter { it.tag == tokenRepository.activeTag.value },
+        repository.hiddenIssues.value.filter { it.origin == tokenRepository.dataOrigin.value },
     )
 
     /** One-shot messages for the screen's Snackbar: a change to the hidden issues that could not be saved. */
@@ -46,6 +46,6 @@ class HiddenIssuesViewModel : BaseViewModel() {
     }
 
     fun unhideAll() {
-        repository.unhideAll(tokenRepository.activeTag.value)
+        repository.unhideAll(tokenRepository.dataOrigin.value)
     }
 }

@@ -1,6 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import kotlinx.coroutines.CoroutineStart
@@ -147,7 +147,7 @@ class HiddenIssuesRepositoryTest {
         repository.hide(issue(1))
         repository.hide(issue(2))
 
-        repository.unhideAll(tag = null)
+        repository.unhideAll(DataOrigin.GITHUB)
 
         assertTrue(repository.hiddenIds.value.isEmpty())
         assertTrue(repository.hiddenIssues.value.isEmpty())
@@ -157,25 +157,25 @@ class HiddenIssuesRepositoryTest {
     @Test
     fun unhideAllWhenNothingIsHiddenDoesNotWrite() {
         val storage = FakeStorage()
-        repository(storage).unhideAll(tag = null)
+        repository(storage).unhideAll(DataOrigin.GITHUB)
         assertEquals(0, storage.saveCount)
     }
 
     @Test
     fun hidingKeepsTheIssuesTag() {
         val repository = repository(FakeStorage())
-        repository.hide(issue(1).copy(tag = DEMO_TAG))
+        repository.hide(issue(1).copy(origin = DataOrigin.DEMO))
 
-        assertEquals(DEMO_TAG, repository.hiddenIssues.value.single().tag)
+        assertEquals(DataOrigin.DEMO, repository.hiddenIssues.value.single().origin)
     }
 
     @Test
     fun unhideAllLeavesEntriesWithAnotherTagAlone() {
         val repository = repository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
 
-        repository.unhideAll(tag = null)
+        repository.unhideAll(DataOrigin.GITHUB)
 
         assertEquals(listOf(2L), repository.hiddenIssues.value.map { it.id })
     }

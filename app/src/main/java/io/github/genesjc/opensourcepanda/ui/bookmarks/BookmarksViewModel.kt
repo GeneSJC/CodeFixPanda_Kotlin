@@ -16,7 +16,7 @@ import org.koin.core.component.inject
 
 /**
  * The Bookmarks screen's interface to the saved bookmarks: the list to
- * show. What is saved and when is BookmarksRepository's job. Only the bookmarks whose tag matches
+ * show. What is saved and when is BookmarksRepository's job. Only the bookmarks whose origin matches
  * the data in use are listed, so demo bookmarks and real bookmarks never appear together.
  *
  * The repository is a plain member that Koin supplies; a test registers
@@ -28,12 +28,12 @@ class BookmarksViewModel : BaseViewModel() {
     private val tokenRepository: ApiTokenRepository by inject()
 
     /** Bookmarked issues of the data in use, in the order they were saved. */
-    val bookmarks: StateFlow<List<Issue>> = combine(bookmarksRepository.bookmarks, tokenRepository.activeTag) { issues, tag ->
-        issues.filter { it.tag == tag }
+    val bookmarks: StateFlow<List<Issue>> = combine(bookmarksRepository.bookmarks, tokenRepository.dataOrigin) { issues, origin ->
+        issues.filter { it.origin == origin }
     }.stateIn(
         viewModelScope,
         SharingStarted.Eagerly,
-        bookmarksRepository.bookmarks.value.filter { it.tag == tokenRepository.activeTag.value },
+        bookmarksRepository.bookmarks.value.filter { it.origin == tokenRepository.dataOrigin.value },
     )
 
     /** One-shot messages for the screen's Snackbar: a bookmark change that could not be saved. */

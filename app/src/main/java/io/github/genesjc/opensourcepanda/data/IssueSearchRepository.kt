@@ -81,7 +81,7 @@ class IssueSearchRepository(
             _rateLimit.value = response.rateLimit
             IssueSearchResult.Success(
                 IssueSearchPage(
-                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue, tag = response.tag) },
+                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue, origin = response.origin) },
                     totalCount = body.totalCount,
                 ),
             )

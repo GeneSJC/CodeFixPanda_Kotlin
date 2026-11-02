@@ -102,7 +102,7 @@ class TopReposStateHolder(
         // Adding or removing a token switches between demo and real data, so what is listed is reloaded
         // (from the cache of the data now in use, else from its source).
         scope.launch {
-            tokenRepository.activeTag.drop(1).collect {
+            tokenRepository.dataOrigin.drop(1).collect {
                 if (!_state.value.needsTokenFix) load(_state.value.selectedLanguage)
             }
         }

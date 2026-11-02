@@ -6,7 +6,7 @@ import io.github.genesjc.opensourcepanda.data.ReadmeRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeResult
 import io.github.genesjc.opensourcepanda.data.repoIssuesQuery
 import io.github.genesjc.opensourcepanda.data.topReposQuery
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import kotlin.io.encoding.Base64
@@ -95,7 +95,7 @@ class DemoIssueSearchApiTest {
     fun theResponseCarriesTheDemoTagAndNoRateLimit() {
         val response = search(topReposQuery(gfi, LanguageFilter.ANY))
 
-        assertEquals(DEMO_TAG, response.tag)
+        assertEquals(DataOrigin.DEMO, response.origin)
         assertNull(response.rateLimit)
         assertNull(runBlocking { api.fetchRateLimit() })
     }
@@ -108,7 +108,7 @@ class DemoIssueSearchApiTest {
 
         val issues = (result as IssueSearchResult.Success).page.issues
         assertTrue(issues.isNotEmpty())
-        assertTrue(issues.all { it.tag == DEMO_TAG })
+        assertTrue(issues.all { it.origin == DataOrigin.DEMO })
     }
 
     @Test

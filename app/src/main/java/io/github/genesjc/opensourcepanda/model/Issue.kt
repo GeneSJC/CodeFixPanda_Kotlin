@@ -4,8 +4,8 @@ package io.github.genesjc.opensourcepanda.model
 /**
  * A single GitHub issue as the app displays it, mapped from the API response (see IssueMappers.kt).
  * repoDisplayTitle is a humanized repo name, a computed getter like repoFullName; see
- * RepoNameFormatting.kt for why it is an approximation. [tag] is null for real GitHub data and names
- * the source otherwise (DataTag.kt); it is saved with the issue, so a bookmark made on demo data stays
+ * RepoNameFormatting.kt for why it is an approximation. [origin] says whether it came from GitHub
+ * or from the demo data (DataOrigin.kt); it is saved with the issue, so a bookmark made on demo data stays
  * marked as demo.
  */
 data class Issue(
@@ -21,7 +21,7 @@ data class Issue(
     val updatedAtMs: Long? = null,
     /** Public GitHub URL for this issue — used by the "Open in GitHub" action. */
     val htmlUrl: String,
-    val tag: String? = null,
+    val origin: DataOrigin = DataOrigin.GITHUB,
     /** The issue's number in its repo (the "#89"); 0 for one saved before this was recorded. */
     val number: Int = 0,
     /** When the issue was opened (epoch millis); null if unknown or saved before this was recorded. */
