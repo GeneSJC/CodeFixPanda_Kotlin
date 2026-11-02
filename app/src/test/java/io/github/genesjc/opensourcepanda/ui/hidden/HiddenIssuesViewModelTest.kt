@@ -1,5 +1,6 @@
 package io.github.genesjc.opensourcepanda.ui.hidden
 
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesStorage
@@ -7,10 +8,17 @@ import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.testutil.FakeApiTokenStorage
+import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.MainDispatcherRule
 import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin
 import io.github.genesjc.opensourcepanda.testutil.testAppConfig
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -33,15 +41,32 @@ class HiddenIssuesViewModelTest {
             single { repository }
             single { tokens }
             single { testAppConfig() }
+            single<StringResolver> { FakeStringResolver }
         }
         return HiddenIssuesViewModel()
     }
 
     private class FakeStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
+        var failSaves = false
         override fun load(): List<HiddenIssue> = stored
-        override fun save(issues: List<HiddenIssue>) {
+        override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) {
+            if (failSaves) {
+                onFailure()
+                return
+            }
             stored = issues
         }
+    }
+
+    @Test
+    fun aFailedSaveBecomesASnackbarMessage() = runBlocking {
+        val repository = HiddenIssuesRepository(FakeStorage().apply { failSaves = true })
+        val viewModel = createViewModel(repository)
+        val message = async(start = CoroutineStart.UNDISPATCHED) { viewModel.snackbarEvents.first() }
+
+        repository.hide(issue(1))
+
+        assertEquals(FakeStringResolver(R.string.hidden_save_failed), withTimeout(1_000) { message.await() })
     }
 
     private fun issue(id: Long) = Issue(

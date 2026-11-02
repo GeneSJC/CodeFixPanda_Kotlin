@@ -1,13 +1,16 @@
 package io.github.genesjc.opensourcepanda.ui.hidden
 
 import androidx.lifecycle.viewModelScope
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.inject
 
@@ -34,6 +37,9 @@ class HiddenIssuesViewModel : BaseViewModel() {
         SharingStarted.Eagerly,
         repository.hiddenIssues.value.filter { it.tag == tokenRepository.activeTag.value },
     )
+
+    /** One-shot messages for the screen's Snackbar: a change to the hidden issues that could not be saved. */
+    val snackbarEvents: Flow<String> = repository.saveFailures.map { string(R.string.hidden_save_failed) }
 
     fun unhide(issueId: Long) {
         repository.unhide(issueId)

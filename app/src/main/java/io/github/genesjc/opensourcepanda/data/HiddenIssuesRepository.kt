@@ -5,6 +5,9 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,8 +25,8 @@ interface HiddenIssuesStorage {
     /** Every saved hidden issue, or an empty list if there are none (or the file is unreadable). */
     fun load(): List<HiddenIssue>
 
-    /** Replaces the saved list with [issues]. Best-effort: a failed write never throws. */
-    fun save(issues: List<HiddenIssue>)
+    /** Replaces the saved list with [issues] in the background. A failed write never throws; it calls [onFailure]. */
+    fun save(issues: List<HiddenIssue>, onFailure: () -> Unit)
 }
 
 /**
@@ -43,7 +46,7 @@ class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssues
 
     override fun load(): List<HiddenIssue> = list.load()
 
-    override fun save(issues: List<HiddenIssue>) = list.save(issues)
+    override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) = list.save(issues, onFailure)
 }
 
 /**
@@ -96,12 +99,20 @@ class HiddenIssuesRepository(
         publish(remaining)
     }
 
+    private val _saveFailures = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /**
+     * Emits each time a save to disk fails, so a screen can tell the user. The change stays in memory for this
+     * session; it is only lost if the app closes before a later save succeeds.
+     */
+    val saveFailures: SharedFlow<Unit> = _saveFailures.asSharedFlow()
+
     /** The one place state changes: update every view of it, then save. */
     private fun publish(newState: Map<Long, HiddenIssue>) {
         hiddenById = newState
         _hiddenIds.value = newState.keys.toSet()
         _hiddenIssues.value = sortedNewestFirst(newState)
-        storage.save(newState.values.toList())
+        storage.save(newState.values.toList()) { _saveFailures.tryEmit(Unit) }
     }
 
     private fun sortedNewestFirst(byId: Map<Long, HiddenIssue>): List<HiddenIssue> =

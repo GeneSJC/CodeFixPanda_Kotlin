@@ -4,6 +4,9 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,8 +23,8 @@ interface BookmarksStorage {
     /** Every saved bookmark, in saved order, or an empty list if there are none (or the file is unreadable). */
     fun load(): List<Issue>
 
-    /** Replaces the saved list with [issues]. Best-effort: a failed write never throws. */
-    fun save(issues: List<Issue>)
+    /** Replaces the saved list with [issues] in the background. A failed write never throws; it calls [onFailure]. */
+    fun save(issues: List<Issue>, onFailure: () -> Unit)
 }
 
 /**
@@ -40,7 +43,7 @@ class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorag
 
     override fun load(): List<Issue> = list.load()
 
-    override fun save(issues: List<Issue>) = list.save(issues)
+    override fun save(issues: List<Issue>, onFailure: () -> Unit) = list.save(issues, onFailure)
 }
 
 /**
@@ -76,11 +79,19 @@ class BookmarksRepository(private val storage: BookmarksStorage) {
         return nowBookmarked
     }
 
+    private val _saveFailures = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /**
+     * Emits each time a save to disk fails, so a screen can tell the user. The change stays in memory for this
+     * session; it is only lost if the app closes before a later save succeeds.
+     */
+    val saveFailures: SharedFlow<Unit> = _saveFailures.asSharedFlow()
+
     /** The one place state changes: update every view of it, then save. */
     private fun publish(newState: Map<Long, Issue>) {
         issuesById = newState
         _bookmarkedIds.value = newState.keys.toSet()
         _bookmarks.value = newState.values.toList()
-        storage.save(newState.values.toList())
+        storage.save(newState.values.toList()) { _saveFailures.tryEmit(Unit) }
     }
 }

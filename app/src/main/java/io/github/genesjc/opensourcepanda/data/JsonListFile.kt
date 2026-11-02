@@ -39,8 +39,11 @@ internal class JsonListFile<T>(
         emptyList()
     }
 
-    /** Saves [items] in the background. A failed write leaves the previous content in place and is logged. */
-    fun save(items: List<T>) {
+    /**
+     * Saves [items] in the background. A failed write leaves the previous content in place, is logged, and calls
+     * [onFailure] (on the writer thread) so the owner can tell the user.
+     */
+    fun save(items: List<T>, onFailure: () -> Unit) {
         writer.execute {
             var out: FileOutputStream? = null
             try {
@@ -50,6 +53,7 @@ internal class JsonListFile<T>(
             } catch (e: Exception) {
                 out?.let(atomicFile::failWrite)
                 Log.w(TAG, "The list could not be saved", e)
+                onFailure()
             }
         }
     }

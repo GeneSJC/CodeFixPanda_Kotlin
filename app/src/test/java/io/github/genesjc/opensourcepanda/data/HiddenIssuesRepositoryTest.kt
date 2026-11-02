@@ -3,6 +3,11 @@ package io.github.genesjc.opensourcepanda.data
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,9 +15,14 @@ import org.junit.Test
 class HiddenIssuesRepositoryTest {
 
     private class FakeStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
+        var failSaves = false
         var saveCount = 0
         override fun load(): List<HiddenIssue> = stored
-        override fun save(issues: List<HiddenIssue>) {
+        override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) {
+            if (failSaves) {
+                onFailure()
+                return
+            }
             stored = issues
             saveCount++
         }
@@ -33,6 +43,17 @@ class HiddenIssuesRepositoryTest {
 
     private fun repository(storage: FakeStorage = FakeStorage(), now: () -> Long = { 1_000L }) =
         HiddenIssuesRepository(storage, now)
+
+    @Test
+    fun aFailedSaveIsReportedAndTheChangeStaysInMemory() = runBlocking {
+        val repository = repository(FakeStorage().apply { failSaves = true })
+        val reported = async(start = CoroutineStart.UNDISPATCHED) { repository.saveFailures.first() }
+
+        repository.hide(issue(1))
+
+        withTimeout(1_000) { reported.await() }
+        assertTrue(1L in repository.hiddenIds.value)
+    }
 
     @Test
     fun startsEmptyWhenNothingIsSaved() {

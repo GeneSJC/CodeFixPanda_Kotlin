@@ -1,13 +1,16 @@
 package io.github.genesjc.opensourcepanda.ui.bookmarks
 
 import androidx.lifecycle.viewModelScope
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.inject
 
@@ -32,6 +35,9 @@ class BookmarksViewModel : BaseViewModel() {
         SharingStarted.Eagerly,
         bookmarksRepository.bookmarks.value.filter { it.tag == tokenRepository.activeTag.value },
     )
+
+    /** One-shot messages for the screen's Snackbar: a bookmark change that could not be saved. */
+    val snackbarEvents: Flow<String> = bookmarksRepository.saveFailures.map { string(R.string.bookmark_save_failed) }
 
     /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
     fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)

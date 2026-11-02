@@ -1,15 +1,23 @@
 package io.github.genesjc.opensourcepanda.ui.bookmarks
 
+import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksStorage
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.testutil.FakeApiTokenStorage
+import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.MainDispatcherRule
 import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin
 import io.github.genesjc.opensourcepanda.testutil.testAppConfig
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -25,8 +33,13 @@ class BookmarksViewModelTest {
     val stopKoin = StopKoinRule()
 
     private class FakeStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
+        var failSaves = false
         override fun load(): List<Issue> = stored
-        override fun save(issues: List<Issue>) {
+        override fun save(issues: List<Issue>, onFailure: () -> Unit) {
+            if (failSaves) {
+                onFailure()
+                return
+            }
             stored = issues
         }
     }
@@ -41,8 +54,20 @@ class BookmarksViewModelTest {
             single { repository }
             single { tokens }
             single { testAppConfig() }
+            single<StringResolver> { FakeStringResolver }
         }
         return BookmarksViewModel() to repository
+    }
+
+    @Test
+    fun aFailedSaveBecomesASnackbarMessage() = runBlocking {
+        val storage = FakeStorage().apply { failSaves = true }
+        val (viewModel, _) = viewModelOver(storage)
+        val message = async(start = CoroutineStart.UNDISPATCHED) { viewModel.snackbarEvents.first() }
+
+        viewModel.toggleBookmark(issue(1))
+
+        assertEquals(FakeStringResolver(R.string.bookmark_save_failed), withTimeout(1_000) { message.await() })
     }
 
     private fun issue(id: Long) = Issue(

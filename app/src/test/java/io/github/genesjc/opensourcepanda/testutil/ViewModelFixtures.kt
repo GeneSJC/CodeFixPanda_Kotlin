@@ -56,15 +56,25 @@ class FakeApiTokenStorage(var stored: String? = null) : ApiTokenStorage {
 }
 
 class FakeHiddenIssuesStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
+    var failSaves = false
     override fun load(): List<HiddenIssue> = stored
-    override fun save(issues: List<HiddenIssue>) {
+    override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) {
+        if (failSaves) {
+            onFailure()
+            return
+        }
         stored = issues
     }
 }
 
 class FakeBookmarksStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
+    var failSaves = false
     override fun load(): List<Issue> = stored
-    override fun save(issues: List<Issue>) {
+    override fun save(issues: List<Issue>, onFailure: () -> Unit) {
+        if (failSaves) {
+            onFailure()
+            return
+        }
         stored = issues
     }
 }
@@ -116,8 +126,10 @@ class ViewModelFixtures(
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
     val appConfig = testAppConfig()
     val adsController = FakeAdsController()
-    val hiddenIssuesRepository = HiddenIssuesRepository(FakeHiddenIssuesStorage())
-    val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
+    val hiddenIssuesStorage = FakeHiddenIssuesStorage()
+    val bookmarksStorage = FakeBookmarksStorage()
+    val hiddenIssuesRepository = HiddenIssuesRepository(hiddenIssuesStorage)
+    val bookmarksRepository = BookmarksRepository(bookmarksStorage)
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api)

@@ -11,6 +11,11 @@ import io.github.genesjc.opensourcepanda.testutil.issueDto
 import io.github.genesjc.opensourcepanda.testutil.repoGroupOf
 import io.github.genesjc.opensourcepanda.testutil.searchFailed
 import io.github.genesjc.opensourcepanda.testutil.searchOk
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -136,6 +141,30 @@ class RepoIssuesViewModelTest {
         f.modeRepository.setMode(null)
 
         assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
+    }
+
+    @Test
+    fun aBookmarkThatCannotBeSavedBecomesASnackbarMessage() = runBlocking {
+        val f = ViewModelFixtures()
+        f.bookmarksStorage.failSaves = true
+        val vm = viewModel(f)
+        val message = async(start = CoroutineStart.UNDISPATCHED) { vm.snackbarEvents.first() }
+
+        vm.toggleBookmark(repoGroupOf("octo", "repo", 1).issues.single())
+
+        assertEquals(s(R.string.bookmark_save_failed), withTimeout(1_000) { message.await() })
+    }
+
+    @Test
+    fun aHideThatCannotBeSavedBecomesASnackbarMessage() = runBlocking {
+        val f = ViewModelFixtures()
+        f.hiddenIssuesStorage.failSaves = true
+        val vm = viewModel(f)
+        val message = async(start = CoroutineStart.UNDISPATCHED) { vm.snackbarEvents.first() }
+
+        vm.hideIssue(repoGroupOf("octo", "repo", 1).issues.single())
+
+        assertEquals(s(R.string.hidden_save_failed), withTimeout(1_000) { message.await() })
     }
 
     @Test
