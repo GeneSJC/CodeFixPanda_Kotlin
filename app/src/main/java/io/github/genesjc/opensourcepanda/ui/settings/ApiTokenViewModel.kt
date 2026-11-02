@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.settings
 
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
-import io.github.genesjc.opensourcepanda.data.TokenSource
+import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.component.inject

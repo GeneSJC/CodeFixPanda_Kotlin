@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.config
 
 /**
  * The build-time constants the UI depends on, bundled into one plain

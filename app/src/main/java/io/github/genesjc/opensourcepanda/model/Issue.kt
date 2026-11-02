@@ -1,6 +1,5 @@
 package io.github.genesjc.opensourcepanda.model
 
-import io.github.genesjc.opensourcepanda.data.humanizeRepoName
 
 /**
  * A single GitHub issue as the app displays it, mapped from the API response (see IssueMappers.kt).

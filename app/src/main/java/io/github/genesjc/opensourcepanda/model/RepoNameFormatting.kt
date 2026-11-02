@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.model
 
 /**
  * Turns a repo slug ("github-readme-stats") into a readable title ("Github Readme Stats"). GitHub

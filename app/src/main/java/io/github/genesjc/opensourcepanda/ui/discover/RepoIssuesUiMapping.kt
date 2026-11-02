@@ -2,7 +2,7 @@ package io.github.genesjc.opensourcepanda.ui.discover
 
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.data.RepoIssuesState
-import io.github.genesjc.opensourcepanda.data.SearchFailure
+import io.github.genesjc.opensourcepanda.model.SearchFailure
 import io.github.genesjc.opensourcepanda.ui.StringResolver
 
 /**

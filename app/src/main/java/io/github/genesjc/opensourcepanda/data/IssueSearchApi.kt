@@ -1,5 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.network.GitHubApiService
 import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.CancellationException

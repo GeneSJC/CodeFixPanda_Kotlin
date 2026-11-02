@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.model
 
 /** Where a token currently in effect came from — shown in Settings so a user can tell which one the app is using. */
 enum class TokenSource {

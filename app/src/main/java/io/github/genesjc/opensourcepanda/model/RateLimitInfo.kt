@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.model
 
 /**
  * remaining/limit/used as reported by GitHub's Search API on its own

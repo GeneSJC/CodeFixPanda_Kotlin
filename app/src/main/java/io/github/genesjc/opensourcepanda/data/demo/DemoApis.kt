@@ -2,10 +2,10 @@ package io.github.genesjc.opensourcepanda.data.demo
 
 import io.github.genesjc.opensourcepanda.data.IssueSearchApi
 import io.github.genesjc.opensourcepanda.data.IssueSearchApiResponse
-import io.github.genesjc.opensourcepanda.data.RateLimitInfo
 import io.github.genesjc.opensourcepanda.data.ReadmeApi
 import io.github.genesjc.opensourcepanda.data.ReadmeApiResponse
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
 import kotlin.io.encoding.Base64

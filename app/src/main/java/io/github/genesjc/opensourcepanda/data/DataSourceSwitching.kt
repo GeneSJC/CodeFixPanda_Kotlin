@@ -1,5 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+
 /**
  * The data sources that can be real or demo, chosen on every call by [useDemo] (true when no token
  * is in use), because a token can be added or removed while the app runs. The repositories above

@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
+import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
 import io.github.genesjc.opensourcepanda.ui.components.TokenField
-import io.github.genesjc.opensourcepanda.data.TokenSource
 import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar

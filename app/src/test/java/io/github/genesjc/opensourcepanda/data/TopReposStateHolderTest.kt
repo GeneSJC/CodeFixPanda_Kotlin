@@ -2,7 +2,9 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
+import io.github.genesjc.opensourcepanda.model.SearchFailure
 import io.github.genesjc.opensourcepanda.testutil.ViewModelFixtures
 import io.github.genesjc.opensourcepanda.testutil.issueDto
 import io.github.genesjc.opensourcepanda.testutil.repoGroupOf

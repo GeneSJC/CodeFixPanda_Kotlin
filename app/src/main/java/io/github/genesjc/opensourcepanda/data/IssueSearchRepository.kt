@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

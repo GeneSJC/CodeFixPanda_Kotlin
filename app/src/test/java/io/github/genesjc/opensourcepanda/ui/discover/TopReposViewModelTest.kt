@@ -1,8 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.discover
 
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.data.AppConfig
-import io.github.genesjc.opensourcepanda.data.RateLimitInfo
+import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.data.ReadmeFetch
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupCacheEntry
 import io.github.genesjc.opensourcepanda.data.TOP_REPOS_PER_PAGE
@@ -10,6 +9,7 @@ import io.github.genesjc.opensourcepanda.data.cacheKeyFor
 import io.github.genesjc.opensourcepanda.data.topReposQuery
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.testutil.FakeReadmeSource
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.MainDispatcherRule

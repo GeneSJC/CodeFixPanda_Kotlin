@@ -39,7 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.data.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.ui.resetsInText
 import io.github.genesjc.opensourcepanda.ui.theme.RateLimitAmber
 import io.github.genesjc.opensourcepanda.ui.theme.RateLimitGreen

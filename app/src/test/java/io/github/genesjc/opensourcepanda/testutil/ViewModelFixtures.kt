@@ -1,9 +1,9 @@
 package io.github.genesjc.opensourcepanda.testutil
 
 import io.github.genesjc.opensourcepanda.ads.AdsController
+import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.ApiTokenStorage
-import io.github.genesjc.opensourcepanda.data.AppConfig
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksStorage
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
@@ -13,7 +13,6 @@ import io.github.genesjc.opensourcepanda.data.IssueModeStorage
 import io.github.genesjc.opensourcepanda.data.IssueSearchApi
 import io.github.genesjc.opensourcepanda.data.IssueSearchApiResponse
 import io.github.genesjc.opensourcepanda.data.IssueSearchRepository
-import io.github.genesjc.opensourcepanda.data.RateLimitInfo
 import io.github.genesjc.opensourcepanda.data.ReadmeFetch
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSource
@@ -26,6 +25,7 @@ import io.github.genesjc.opensourcepanda.data.toIssue
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.network.dto.IssueDto
 import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import io.github.genesjc.opensourcepanda.ui.StringResolver

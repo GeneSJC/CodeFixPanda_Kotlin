@@ -1,4 +1,4 @@
-package io.github.genesjc.opensourcepanda.data
+package io.github.genesjc.opensourcepanda.model
 
 /**
  * Why a search-backed request did not produce what it was asked for,

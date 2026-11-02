@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui
 
 import androidx.lifecycle.ViewModel
-import io.github.genesjc.opensourcepanda.data.AppConfig
+import io.github.genesjc.opensourcepanda.config.AppConfig
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

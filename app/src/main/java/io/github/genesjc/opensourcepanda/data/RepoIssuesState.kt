@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.Issue
+import io.github.genesjc.opensourcepanda.model.SearchFailure
 
 /**
  * The repo-issues data state: what the screen's list and refresh footer

@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.network.dto.IssueDto
 import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
 import kotlinx.coroutines.runBlocking
