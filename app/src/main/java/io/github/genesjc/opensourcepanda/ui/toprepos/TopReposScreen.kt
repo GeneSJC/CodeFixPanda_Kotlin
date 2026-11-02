@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.domain.filterHiddenIssues
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.ui.ads.AdBannerSlot
@@ -102,19 +100,17 @@ fun TopReposScreen(
     val adFreeUntilMs by viewModel.adFreeUntilMs.collectAsStateWithLifecycle()
     val canOfferAdFree by viewModel.canOfferAdFree.collectAsStateWithLifecycle()
     val activity = LocalContext.current.findActivity()
-    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
-    val hiddenGroups = filterHiddenIssues(uiState.repoGroups, hiddenIds)
+    val visibleGroups by viewModel.visibleRepoGroups.collectAsStateWithLifecycle()
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while the mode is null (see its own doc comment).
-    val mode by viewModel.mode.collectAsStateWithLifecycle()
-    val currentMode = resolveActiveMode(mode)
+    val currentMode by viewModel.activeMode.collectAsStateWithLifecycle()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // The list is placed differently in portrait and landscape, so it is defined once here.
     val repoList: @Composable (Modifier) -> Unit = { listModifier ->
         RepoListBody(
             uiState = uiState,
-            hiddenGroups = hiddenGroups,
+            visibleGroups = visibleGroups,
             snippets = viewModel.snippets,
             currentMode = currentMode,
             onRetry = viewModel::retry,
@@ -179,7 +175,7 @@ fun TopReposScreen(
                                 if (!isLandscape) {
                                     ModeTitle(
                                         mode = currentMode,
-                                        repoCount = hiddenGroups.size,
+                                        repoCount = visibleGroups.size,
                                         lastUpdatedAtMs = uiState.lastUpdatedAtMs,
                                         onRepoCountClick = { showInfoDialog = true },
                                         modifier = Modifier.fillMaxWidth(),
@@ -238,7 +234,7 @@ fun TopReposScreen(
                                     modifier = Modifier.padding(top = 8.dp),
                                 ) {
                                     RepoCountAndUpdated(
-                                        repoCount = hiddenGroups.size,
+                                        repoCount = visibleGroups.size,
                                         lastUpdatedAtMs = uiState.lastUpdatedAtMs,
                                         onCountClick = { showInfoDialog = true },
                                     )

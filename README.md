@@ -214,7 +214,7 @@ flowchart LR
 - 🔤 **Every user-facing word is a string resource.** Data layers report facts; the ViewModels turn them into wording.
 - 🧪 **Everything is testable without a device.** Data sources sit behind interfaces; tests register fakes with `restartKoin { single { fake } }`.
 - 🔐 **The token is encrypted at rest** (Android Keystore), masked on screen, and never leaves for anywhere but GitHub.
-- 🧭 **Navigation on named routes,** with the selected repo held as host state: no arguments to hand-build.
+- 🧭 **Navigation on named routes,** with the selected repo held by a ViewModel: no arguments to hand-build.
 
 <details>
 <summary><b>The full architecture notes: terms and decisions</b> (click to expand)</summary>
@@ -263,7 +263,7 @@ flowchart LR
   bookmarks and hidden issues carry a tag (`Issue.tag`, null for real data), and each mode lists only
   the entries whose tag matches the data in use.
 - **Navigation stays on string routes, by decision.** There are eight routes, each a named
-  constant, and none takes an argument; the selected repo is passed as host state, not through
+  constant, and none takes an argument; the selected repo is held by a ViewModel, not passed through
   the route. Type-safe routes (Navigation Compose 2.8+) would need the Kotlin serialization
   plugin and a second serialization library, and would add nothing here, because the usual
   weakness of string routes is hand-built arguments, which this app has none of. Considered and

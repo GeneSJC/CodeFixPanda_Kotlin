@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.modegate
 
 import io.github.genesjc.opensourcepanda.data.IssueModeRepository
+import io.github.genesjc.opensourcepanda.domain.needsModeGate
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,9 @@ class IssueModeViewModel : BaseViewModel() {
 
     /** The chosen mode, or null while none has been chosen yet (the gate screen is showing). */
     val mode: StateFlow<IssueLabelFilter?> = repository.mode
+
+    /** True while no mode has been chosen, meaning the app must start on the mode gate instead of Top Repos. */
+    fun isGateNeeded(): Boolean = needsModeGate(mode.value)
 
     /**
      * Called by Reset App: clears the chosen mode so the gate screen is

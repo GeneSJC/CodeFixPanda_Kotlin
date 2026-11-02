@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 internal fun RepoListBody(
     uiState: TopReposUiState,
-    hiddenGroups: List<RepoIssueGroup>,
+    visibleGroups: List<RepoIssueGroup>,
     snippets: StateFlow<Map<String, String?>>,
     currentMode: IssueLabelFilter,
     onRetry: () -> Unit,
@@ -84,7 +84,7 @@ internal fun RepoListBody(
                     }
                 }
             }
-            hiddenGroups.isEmpty() -> CenteredMessage(
+            visibleGroups.isEmpty() -> CenteredMessage(
                 text = stringResource(R.string.repo_list_empty, stringResource(currentMode.nameRes())),
             )
             else -> LazyColumn(
@@ -92,7 +92,7 @@ internal fun RepoListBody(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(hiddenGroups, key = { it.repoFullName }) { group ->
+                items(visibleGroups, key = { it.repoFullName }) { group ->
                     // The repo screen gets the raw group: it applies the hidden ids itself and needs every
                     // issue to show "all hidden" and to bring one back on Unhide.
                     RepoCard(

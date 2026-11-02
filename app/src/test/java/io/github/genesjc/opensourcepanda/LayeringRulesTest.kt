@@ -85,6 +85,17 @@ class LayeringRulesTest {
         )
     }
 
+    /** The network client knows nothing of repositories: it is handed what it needs (the token) as a function. */
+    @Test
+    fun networkClientImportsNothingFromData() {
+        val found = sources
+            .filter { it.path.startsWith("data/network/") }
+            .filter { s -> s.imports.any { it.startsWith("$base.data.") && !it.startsWith("$base.data.network.") } }
+            .map { it.path }
+            .toSet()
+        check("data/network", found)
+    }
+
     @Test
     fun stateHoldersKnowNoUiAndNoAndroid() {
         check(
@@ -107,15 +118,7 @@ class LayeringRulesTest {
             .filter { s -> s.imports.any { it.startsWith("$base.data.") || it.startsWith("$base.domain.") || it.startsWith("$base.state.") } }
             .map { it.path }
             .toSet()
-        check(
-            "composables",
-            found,
-            allowed = setOf(
-                "ui/navigation/DiscoverNavHost.kt",
-                "ui/repoissues/RepoIssuesScreen.kt",
-                "ui/toprepos/TopReposScreen.kt",
-            ),
-        )
+        check("composables", found)
     }
 
     @Test

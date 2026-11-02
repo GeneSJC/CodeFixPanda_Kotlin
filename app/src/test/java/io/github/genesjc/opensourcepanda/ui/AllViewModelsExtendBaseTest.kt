@@ -4,6 +4,7 @@ import io.github.genesjc.opensourcepanda.ui.ads.AdsViewModel
 import io.github.genesjc.opensourcepanda.ui.bookmarks.BookmarksViewModel
 import io.github.genesjc.opensourcepanda.ui.hidden.HiddenIssuesViewModel
 import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeViewModel
+import io.github.genesjc.opensourcepanda.ui.navigation.RepoSelectionViewModel
 import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
 import io.github.genesjc.opensourcepanda.ui.repoissues.RepoReadmeViewModel
 import io.github.genesjc.opensourcepanda.ui.settings.ApiTokenViewModel
@@ -36,6 +37,7 @@ class AllViewModelsExtendBaseTest {
             StartupSplashViewModel::class.java,
             AdsViewModel::class.java,
             WelcomeViewModel::class.java,
+            RepoSelectionViewModel::class.java,
         )
 
         viewModels.forEach { viewModel ->

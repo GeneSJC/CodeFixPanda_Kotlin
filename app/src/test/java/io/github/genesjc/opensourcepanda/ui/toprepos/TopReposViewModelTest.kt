@@ -205,7 +205,7 @@ class TopReposViewModelTest {
         val vm = viewModel(f)
 
         vm.onModeSelected(IssueLabelFilter.HELP_WANTED)
-        assertEquals(IssueLabelFilter.HELP_WANTED, vm.mode.value)
+        assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
 
         vm.onLanguageSelected(LanguageFilter.JAVA)
         assertEquals(LanguageFilter.JAVA, vm.uiState.value.selectedLanguage)
@@ -238,15 +238,16 @@ class TopReposViewModelTest {
     }
 
     @Test
-    fun hiddenIdsComeFromTheHiddenIssuesRepository() {
+    fun hiddenIssuesAreLeftOutOfTheVisibleGroupsButNotOutOfTheState() {
         val f = ViewModelFixtures()
-        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1), issueDto(2))) }
         val vm = viewModel(f)
-        assertTrue(vm.hiddenIds.value.isEmpty())
+        assertEquals(listOf(1L, 2L), vm.visibleRepoGroups.value.single().issues.map { it.id }.sorted())
 
         f.hiddenIssuesRepository.hide(repoGroupOf("octo", "repo", 1).issues.single())
 
-        assertEquals(setOf(1L), vm.hiddenIds.value)
+        assertEquals(listOf(2L), vm.visibleRepoGroups.value.single().issues.map { it.id })
+        assertEquals(2, vm.uiState.value.repoGroups.single().issues.size)
     }
 
     @Test

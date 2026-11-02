@@ -38,8 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.domain.filterHiddenIssuesFlat
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
@@ -85,15 +83,13 @@ fun RepoIssuesScreen(
     val coroutineScope = rememberCoroutineScope()
     // Hoisted so the list's scroll position is kept.
     val issueListState = rememberLazyListState()
-    val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsStateWithLifecycle()
     val issueHiddenMessage = stringResource(R.string.issue_hidden_message)
     val undoLabel = stringResource(R.string.action_undo)
-    val visibleIssues = filterHiddenIssuesFlat(uiState.issues, hiddenIds)
+    val visibleIssues by viewModel.visibleIssues.collectAsStateWithLifecycle()
 
     // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
-    val mode by viewModel.mode.collectAsStateWithLifecycle()
-    val activeMode = resolveActiveMode(mode)
+    val activeMode by viewModel.activeMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(repoGroup.repoFullName) {
         viewModel.loadIfNeeded(repoGroup)

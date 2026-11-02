@@ -2,7 +2,6 @@ package io.github.genesjc.opensourcepanda.data.network
 
 import com.squareup.moshi.Moshi
 import io.github.genesjc.opensourcepanda.BuildConfig
-import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -14,15 +13,17 @@ import retrofit2.converter.moshi.MoshiConverterFactory
  * app, created by the Koin module with the app-wide Moshi, so the
  * request converter and the cache files use the same adapters.
  *
- * The GitHub token comes from ApiTokenRepository: a token the user
- * entered in Settings if there is one, otherwise
- * BuildConfig.GITHUB_API_TOKEN, which is populated at build time from
+ * The GitHub token comes from [tokenProvider], which the Koin module backs with
+ * ApiTokenRepository: a token the user entered in Settings if there is one,
+ * otherwise BuildConfig.GITHUB_API_TOKEN, which is populated at build time from
  * local.properties (see app/build.gradle.kts) — never hardcoded here,
  * never committed to source control. It is read on every request, so a
- * token saved in Settings takes effect immediately, without a rebuild.
+ * token saved in Settings takes effect immediately, without a rebuild. The
+ * client takes a function and not the repository so the network package
+ * knows nothing about where tokens are kept.
  */
 class GitHubApiClient(
-    private val tokenRepository: ApiTokenRepository,
+    private val tokenProvider: () -> String,
     moshi: Moshi,
 ) {
 
@@ -31,7 +32,7 @@ class GitHubApiClient(
             .addHeader("Accept", "application/vnd.github+json")
             .addHeader("X-GitHub-Api-Version", "2022-11-28")
 
-        val token = tokenRepository.effectiveToken.value
+        val token = tokenProvider()
         if (token.isNotBlank()) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }

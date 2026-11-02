@@ -1,5 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.domain.cutAtWord
+import io.github.genesjc.opensourcepanda.domain.markdownToPlainText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,23 +91,9 @@ class ReadmeSnippetRepository(private val source: ReadmeSource) {
 }
 
 /**
- * Light markdown-to-plain-text cleanup: strips HTML tags (a README often opens with a centered
- * logo block), heading, list and quote markers, and collapses whitespace. A line that is only a
- * tag disappears; a line mixing a tag with text keeps the text. Truncates to SNIPPET_MAX_CHARS
- * at a word boundary and appends "…". Not a general markdown stripper.
+ * A README's text as the short plain preview on its card: [markdownToPlainText] (a README often opens
+ * with a centered logo block, which disappears), cut to SNIPPET_MAX_CHARS at a word boundary. Null when
+ * nothing readable is left, such as a README that is only markup.
  */
-fun buildReadmeSnippet(markdown: String): String? {
-    val htmlTag = Regex("<[^>]*>")
-    val plain = markdown
-        .lineSequence()
-        .map { it.replace(htmlTag, " ").trim().trimStart('#', '-', '*', '>').trim() }
-        .filter { it.isNotBlank() }
-        .joinToString(" ")
-        .trim()
-    if (plain.isBlank()) return null
-    if (plain.length <= SNIPPET_MAX_CHARS) return plain
-    val cut = plain.substring(0, SNIPPET_MAX_CHARS)
-    val lastSpace = cut.lastIndexOf(' ')
-    val trimmedCut = if (lastSpace > SNIPPET_MAX_CHARS / 2) cut.substring(0, lastSpace) else cut
-    return "$trimmedCut…"
-}
+fun buildReadmeSnippet(markdown: String): String? =
+    markdownToPlainText(markdown).takeIf { it.isNotBlank() }?.cutAtWord(SNIPPET_MAX_CHARS)
