@@ -12,6 +12,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.ui.components.LabelInfoDialog
+import io.github.genesjc.opensourcepanda.ui.components.RateLimitDialog
+
+/**
+ * Shows the dialog named by [open], or nothing when it is null. The screen owns which one is open; each
+ * dialog closes through [onDismiss]. Confirming the cache clear closes the dialog and then calls [onClearCache].
+ */
+@Composable
+internal fun TopReposDialogHost(
+    open: TopReposDialog?,
+    rateLimit: RateLimitInfo?,
+    hasToken: Boolean,
+    onOpenSettings: () -> Unit,
+    onClearCache: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    when (open) {
+        null -> Unit
+        TopReposDialog.RANKING_INFO -> RankingInfoDialog(onDismiss = onDismiss)
+        TopReposDialog.LABEL_INFO -> LabelInfoDialog(onDismiss = onDismiss)
+        TopReposDialog.RATE_LIMIT -> RateLimitDialog(info = rateLimit, onDismiss = onDismiss)
+        TopReposDialog.TOKEN_PROBLEM -> TokenProblemDialog(
+            tokenRejected = hasToken,
+            onOpenSettings = onOpenSettings,
+            onDismiss = onDismiss,
+        )
+        TopReposDialog.CLEAR_CACHE -> ClearCacheDialog(
+            onConfirm = {
+                onDismiss()
+                onClearCache()
+            },
+            onDismiss = onDismiss,
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
