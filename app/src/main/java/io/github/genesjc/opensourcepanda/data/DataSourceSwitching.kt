@@ -1,5 +1,7 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+
 /**
  * The data sources that can be real or demo, chosen on every call by [useDemo] (true when no token
  * is in use), because a token can be added or removed while the app runs. The repositories above
@@ -25,8 +27,8 @@ class SwitchedReadmeApi(
     private val useDemo: () -> Boolean,
 ) : ReadmeApi {
 
-    override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
-        (if (useDemo()) demo else live).getReadme(repoOwner, repoName)
+    override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse =
+        (if (useDemo()) demo else live).fetchReadme(repoOwner, repoName)
 }
 
 /** Reads and writes the real cache file, or the in-memory demo cache, so demo results never reach the file. */

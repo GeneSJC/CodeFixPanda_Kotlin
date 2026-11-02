@@ -1,6 +1,6 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
+import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,7 +14,7 @@ class ReadmeRepositoryTest {
     /** A fake API that returns one canned response (or throws) and counts calls. */
     private class FakeApi(private val answer: () -> ReadmeApiResponse) : ReadmeApi {
         var calls = 0
-        override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
+        override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
             calls++
             return answer()
         }

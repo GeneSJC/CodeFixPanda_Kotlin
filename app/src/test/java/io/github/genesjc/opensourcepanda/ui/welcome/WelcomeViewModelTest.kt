@@ -1,7 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.welcome
 
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
-import io.github.genesjc.opensourcepanda.data.TokenSource
+import io.github.genesjc.opensourcepanda.model.TokenSource
 import io.github.genesjc.opensourcepanda.testutil.FakeApiTokenStorage
 import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin

@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
-import io.github.genesjc.opensourcepanda.ui.nameRes
+import io.github.genesjc.opensourcepanda.ui.text.nameRes
 import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 
 /** The active mode's name on its own color, with an optional smaller [subtitle] under it (the language, on a repo's screen). */

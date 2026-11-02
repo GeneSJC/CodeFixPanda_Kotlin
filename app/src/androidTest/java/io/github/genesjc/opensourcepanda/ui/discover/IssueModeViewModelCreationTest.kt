@@ -6,6 +6,12 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.genesjc.opensourcepanda.ui.ads.AdsViewModel
+import io.github.genesjc.opensourcepanda.ui.bookmarks.BookmarksViewModel
+import io.github.genesjc.opensourcepanda.ui.hidden.HiddenIssuesViewModel
+import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeViewModel
+import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
+import io.github.genesjc.opensourcepanda.ui.repoissues.RepoReadmeViewModel
+import io.github.genesjc.opensourcepanda.ui.toprepos.TopReposViewModel
 import io.github.genesjc.opensourcepanda.ui.welcome.WelcomeViewModel
 import io.github.genesjc.opensourcepanda.ui.settings.ApiTokenViewModel
 import io.github.genesjc.opensourcepanda.ui.splash.StartupSplashViewModel

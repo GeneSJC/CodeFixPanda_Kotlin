@@ -1,9 +1,10 @@
 package io.github.genesjc.opensourcepanda.ui
 
-import io.github.genesjc.opensourcepanda.data.AppConfig
+import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.StopKoinRule
 import io.github.genesjc.opensourcepanda.testutil.restartKoin
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

@@ -1,9 +1,12 @@
 package io.github.genesjc.opensourcepanda.data
 
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueDto
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.domain.REPO_ISSUES_MAX_PER_PAGE
+import io.github.genesjc.opensourcepanda.domain.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
-import io.github.genesjc.opensourcepanda.network.dto.IssueDto
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

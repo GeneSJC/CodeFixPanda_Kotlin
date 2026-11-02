@@ -38,7 +38,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.ui.components.IndependentNotice
-import io.github.genesjc.opensourcepanda.ui.NEW_TOKEN_URL
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
 import io.github.genesjc.opensourcepanda.ui.theme.BrandSun
 import kotlinx.coroutines.launch

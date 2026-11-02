@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
-import io.github.genesjc.opensourcepanda.ui.nameRes
+import io.github.genesjc.opensourcepanda.ui.text.nameRes
 
 /**
  * The language filter chip row. `wrap` false (the default) is a single horizontally scrolling line;

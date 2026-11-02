@@ -2,12 +2,12 @@ package io.github.genesjc.opensourcepanda.data.demo
 
 import io.github.genesjc.opensourcepanda.data.IssueSearchApi
 import io.github.genesjc.opensourcepanda.data.IssueSearchApiResponse
-import io.github.genesjc.opensourcepanda.data.RateLimitInfo
 import io.github.genesjc.opensourcepanda.data.ReadmeApi
 import io.github.genesjc.opensourcepanda.data.ReadmeApiResponse
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
-import io.github.genesjc.opensourcepanda.network.dto.ReadmeDto
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -52,7 +52,7 @@ class DemoIssueSearchApi : IssueSearchApi {
 @OptIn(ExperimentalEncodingApi::class)
 class DemoReadmeApi : ReadmeApi {
 
-    override suspend fun getReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
+    override suspend fun fetchReadme(repoOwner: String, repoName: String): ReadmeApiResponse {
         val description = DemoData.repos.firstOrNull { it.name == repoName }?.description.orEmpty()
         val markdown = "# $repoName\n\n$description\n\nThis README is demo data, shown because no GitHub token is set. " +
             "Add a token in Settings to see real repositories and their READMEs.\n"

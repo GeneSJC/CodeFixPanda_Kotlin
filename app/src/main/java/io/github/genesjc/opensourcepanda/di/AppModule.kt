@@ -4,8 +4,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.github.genesjc.opensourcepanda.BuildConfig
 import io.github.genesjc.opensourcepanda.ads.AdsController
+import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
-import io.github.genesjc.opensourcepanda.data.AppConfig
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.GitHubIssueSearchApi
 import io.github.genesjc.opensourcepanda.data.GitHubReadmeApi
@@ -21,7 +21,6 @@ import io.github.genesjc.opensourcepanda.data.JsonFileRepoIssueGroupStorage
 import io.github.genesjc.opensourcepanda.data.ReadmeRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupRepository
-import io.github.genesjc.opensourcepanda.data.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.data.SharedPreferencesApiTokenStorage
 import io.github.genesjc.opensourcepanda.data.SharedPreferencesIssueModeStorage
 import io.github.genesjc.opensourcepanda.data.SharedPreferencesStartupSplashStorage
@@ -29,14 +28,15 @@ import io.github.genesjc.opensourcepanda.data.StartupSplashRepository
 import io.github.genesjc.opensourcepanda.data.SwitchedIssueSearchApi
 import io.github.genesjc.opensourcepanda.data.SwitchedReadmeApi
 import io.github.genesjc.opensourcepanda.data.SwitchedRepoIssueGroupStorage
-import io.github.genesjc.opensourcepanda.data.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.data.demo.DemoIssueSearchApi
 import io.github.genesjc.opensourcepanda.data.demo.DemoReadmeApi
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
+import io.github.genesjc.opensourcepanda.data.network.GitHubApiClient
 import io.github.genesjc.opensourcepanda.model.DEMO_TAG
-import io.github.genesjc.opensourcepanda.network.GitHubApiClient
-import io.github.genesjc.opensourcepanda.ui.ContextStringResolver
-import io.github.genesjc.opensourcepanda.ui.StringResolver
+import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
+import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
+import io.github.genesjc.opensourcepanda.ui.text.ContextStringResolver
+import io.github.genesjc.opensourcepanda.ui.text.StringResolver
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 

@@ -1,7 +1,8 @@
 package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
-import io.github.genesjc.opensourcepanda.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -49,9 +50,9 @@ class DataSourceSwitchingTest {
         val demoApi = ReadmeApi { _, _ -> ReadmeApiResponse(404, false, null) }
         val api = SwitchedReadmeApi(live, demoApi, { demo })
 
-        assertEquals(200, api.getReadme("o", "r").code)
+        assertEquals(200, api.fetchReadme("o", "r").code)
         demo = true
-        assertEquals(404, api.getReadme("o", "r").code)
+        assertEquals(404, api.fetchReadme("o", "r").code)
     }
 
     @Test
