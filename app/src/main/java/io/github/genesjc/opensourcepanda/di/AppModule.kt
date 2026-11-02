@@ -32,7 +32,6 @@ import io.github.genesjc.opensourcepanda.data.demo.DemoIssueSearchApi
 import io.github.genesjc.opensourcepanda.data.demo.DemoReadmeApi
 import io.github.genesjc.opensourcepanda.data.demo.InMemoryRepoIssueGroupStorage
 import io.github.genesjc.opensourcepanda.data.network.GitHubApiClient
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.text.ContextStringResolver
@@ -95,7 +94,7 @@ val appModule = module {
             SwitchedRepoIssueGroupStorage(
                 live = JsonFileRepoIssueGroupStorage(androidContext(), moshi = get()),
                 demo = InMemoryRepoIssueGroupStorage(),
-                useDemo = { tokens.activeTag.value == DEMO_TAG },
+                useDemo = { tokens.isDemo.value },
             ),
         )
     }
@@ -108,7 +107,7 @@ val appModule = module {
             api = SwitchedIssueSearchApi(
                 live = GitHubIssueSearchApi(get()),
                 demo = DemoIssueSearchApi(),
-                useDemo = { tokens.activeTag.value == DEMO_TAG },
+                useDemo = { tokens.isDemo.value },
             ),
         )
     }
@@ -118,7 +117,7 @@ val appModule = module {
             api = SwitchedReadmeApi(
                 live = GitHubReadmeApi(get()),
                 demo = DemoReadmeApi(),
-                useDemo = { tokens.activeTag.value == DEMO_TAG },
+                useDemo = { tokens.isDemo.value },
             ),
         )
     }

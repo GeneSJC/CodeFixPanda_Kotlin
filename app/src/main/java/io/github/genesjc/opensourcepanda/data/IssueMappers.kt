@@ -14,8 +14,12 @@ import java.util.TimeZone
  */
 fun IssueDto.toIssue(languageFilter: String?, tag: String? = null): Issue {
     val segments = repositoryUrl.trimEnd('/').split("/")
-    val owner = segments.getOrElse(segments.size - 2) { "" }
-    val name = segments.getOrElse(segments.size - 1) { "" }
+    val owner = segments.getOrNull(segments.size - 2)?.takeIf { it.isNotBlank() }
+    val name = segments.getOrNull(segments.size - 1)?.takeIf { it.isNotBlank() }
+    // GitHub always sends a repository URL. An item without a usable one cannot be shown, and the search then
+    // fails with this message instead of listing an issue under an empty repo name.
+    checkNotNull(owner) { "Issue $id has no repository owner in its repository_url: $repositoryUrl" }
+    checkNotNull(name) { "Issue $id has no repository name in its repository_url: $repositoryUrl" }
 
     return Issue(
         id = id,
