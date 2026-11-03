@@ -51,7 +51,7 @@ data class TopReposUiState(
      * GitHub returned a page with fewer than a full page's worth of
      * results (the actual end of this query's results), or the next
      * page would exceed the Search API's hard 1,000-result cap. See
-     * canRequestNextPage() (data/TopReposPaging.kt) for the exact check.
+     * canRequestNextPage() (domain/TopReposPaging.kt) for the exact check.
      */
     val canLoadMore: Boolean = true,
     /**

@@ -1,6 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.toprepos
 
 import androidx.compose.runtime.Composable
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.ui.splash.AppStartSplashScreen
 import io.github.genesjc.opensourcepanda.ui.splash.OrigamiSplashScreen
 import io.github.genesjc.opensourcepanda.ui.splash.ShapeStackSplashScreen
@@ -22,7 +23,7 @@ internal enum class AnimationReplay {
 
 /** Plays [animation] over the screen, then calls [onFinished]. [splashAnimation] is the configured launch animation. */
 @Composable
-internal fun AnimationReplayOverlay(animation: AnimationReplay, splashAnimation: String, onFinished: () -> Unit) {
+internal fun AnimationReplayOverlay(animation: AnimationReplay, splashAnimation: SplashAnimation, onFinished: () -> Unit) {
     when (animation) {
         AnimationReplay.ORIGAMI -> OrigamiSplashScreen(onFinished = onFinished)
         AnimationReplay.SHAPE_STACK -> ShapeStackSplashScreen(onFinished = onFinished)

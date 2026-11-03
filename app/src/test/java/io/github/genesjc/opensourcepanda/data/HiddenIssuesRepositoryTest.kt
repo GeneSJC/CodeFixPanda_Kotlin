@@ -1,8 +1,13 @@
 package io.github.genesjc.opensourcepanda.data
 
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,9 +15,14 @@ import org.junit.Test
 class HiddenIssuesRepositoryTest {
 
     private class FakeStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
+        var failSaves = false
         var saveCount = 0
         override fun load(): List<HiddenIssue> = stored
-        override fun save(issues: List<HiddenIssue>) {
+        override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) {
+            if (failSaves) {
+                onFailure()
+                return
+            }
             stored = issues
             saveCount++
         }
@@ -33,6 +43,26 @@ class HiddenIssuesRepositoryTest {
 
     private fun repository(storage: FakeStorage = FakeStorage(), now: () -> Long = { 1_000L }) =
         HiddenIssuesRepository(storage, now)
+
+    @Test
+    fun aFailureThatHappensBeforeAnyoneIsListeningIsStillReported() = runBlocking {
+        val repository = repository(FakeStorage().apply { failSaves = true })
+
+        repository.hide(issue(1))
+
+        withTimeout(1_000) { repository.saveFailures.first() }
+    }
+
+    @Test
+    fun aFailedSaveIsReportedAndTheChangeStaysInMemory() = runBlocking {
+        val repository = repository(FakeStorage().apply { failSaves = true })
+        val reported = async(start = CoroutineStart.UNDISPATCHED) { repository.saveFailures.first() }
+
+        repository.hide(issue(1))
+
+        withTimeout(1_000) { reported.await() }
+        assertTrue(1L in repository.hiddenIds.value)
+    }
 
     @Test
     fun startsEmptyWhenNothingIsSaved() {
@@ -126,7 +156,7 @@ class HiddenIssuesRepositoryTest {
         repository.hide(issue(1))
         repository.hide(issue(2))
 
-        repository.unhideAll(tag = null)
+        repository.unhideAll(DataOrigin.GITHUB)
 
         assertTrue(repository.hiddenIds.value.isEmpty())
         assertTrue(repository.hiddenIssues.value.isEmpty())
@@ -136,25 +166,25 @@ class HiddenIssuesRepositoryTest {
     @Test
     fun unhideAllWhenNothingIsHiddenDoesNotWrite() {
         val storage = FakeStorage()
-        repository(storage).unhideAll(tag = null)
+        repository(storage).unhideAll(DataOrigin.GITHUB)
         assertEquals(0, storage.saveCount)
     }
 
     @Test
     fun hidingKeepsTheIssuesTag() {
         val repository = repository(FakeStorage())
-        repository.hide(issue(1).copy(tag = DEMO_TAG))
+        repository.hide(issue(1).copy(origin = DataOrigin.DEMO))
 
-        assertEquals(DEMO_TAG, repository.hiddenIssues.value.single().tag)
+        assertEquals(DataOrigin.DEMO, repository.hiddenIssues.value.single().origin)
     }
 
     @Test
     fun unhideAllLeavesEntriesWithAnotherTagAlone() {
         val repository = repository(FakeStorage())
         repository.hide(issue(1))
-        repository.hide(issue(2).copy(tag = DEMO_TAG))
+        repository.hide(issue(2).copy(origin = DataOrigin.DEMO))
 
-        repository.unhideAll(tag = null)
+        repository.unhideAll(DataOrigin.GITHUB)
 
         assertEquals(listOf(2L), repository.hiddenIssues.value.map { it.id })
     }

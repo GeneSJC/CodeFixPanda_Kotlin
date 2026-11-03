@@ -99,7 +99,7 @@ internal fun RepoListBody(
                         group = group,
                         snippet = snippetsByRepo[group.repoFullName],
                         onShown = { onRepoCardShown(group) },
-                        onClick = { onRepoClick(rawGroupsByName[group.repoFullName] ?: group, uiState.selectedLanguage) },
+                        onClick = { onRepoClick(rawGroupsByName.getValue(group.repoFullName), uiState.selectedLanguage) },
                     )
                 }
                 item(key = "loadMoreFooter") {

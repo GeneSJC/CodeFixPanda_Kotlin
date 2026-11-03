@@ -4,8 +4,10 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import java.io.File
-import java.util.concurrent.Executors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,44 +23,27 @@ interface BookmarksStorage {
     /** Every saved bookmark, in saved order, or an empty list if there are none (or the file is unreadable). */
     fun load(): List<Issue>
 
-    /** Replaces the saved list with [issues]. Best-effort: a failed write never throws. */
-    fun save(issues: List<Issue>)
+    /** Replaces the saved list with [issues] in the background. A failed write never throws; it calls [onFailure]. */
+    fun save(issues: List<Issue>, onFailure: () -> Unit)
 }
 
 /**
  * A JSON file in private storage: a bookmark is a full Issue, not a primitive, so it needs real
- * serialization. The file name is unchanged, so earlier bookmarks survive. Writes run in order on
- * one background thread; a failed write is swallowed on purpose and never rolls back a toggle
- * the user already saw.
+ * serialization. The file name is unchanged, so earlier bookmarks survive. Reading and writing go
+ * through [JsonListFile], which writes atomically, in order, on one background thread.
  */
 class JsonFileBookmarksStorage(context: Context, moshi: Moshi) : BookmarksStorage {
 
-    private val file = File(context.applicationContext.filesDir, FILE_NAME)
-    private val writer = Executors.newSingleThreadExecutor()
-    private val adapter by lazy {
-        moshi.adapter<List<Issue>>(
-            Types.newParameterizedType(List::class.java, Issue::class.java),
-        )
-    }
+    private val list = JsonListFile(
+        file = File(context.applicationContext.filesDir, FILE_NAME),
+        adapterFactory = {
+            moshi.adapter<List<Issue>>(Types.newParameterizedType(List::class.java, Issue::class.java))
+        },
+    )
 
-    override fun load(): List<Issue> {
-        if (!file.exists()) return emptyList()
-        return try {
-            adapter.fromJson(file.readText()) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    override fun load(): List<Issue> = list.load()
 
-    override fun save(issues: List<Issue>) {
-        writer.execute {
-            try {
-                file.writeText(adapter.toJson(issues))
-            } catch (e: Exception) {
-                // Best-effort — see the class doc comment.
-            }
-        }
-    }
+    override fun save(issues: List<Issue>, onFailure: () -> Unit) = list.save(issues, onFailure)
 }
 
 /**
@@ -94,11 +79,21 @@ class BookmarksRepository(private val storage: BookmarksStorage) {
         return nowBookmarked
     }
 
+    private val saveFailureChannel = Channel<Unit>(Channel.BUFFERED)
+
+    /**
+     * Emits each time a save to disk fails, so a screen can tell the user. A failure is held until something
+     * collects it, so one that happens after the screen has gone is still reported by the next screen that
+     * listens. The change stays in memory for this session; it is only lost if the app closes before a later
+     * save succeeds.
+     */
+    val saveFailures: Flow<Unit> = saveFailureChannel.receiveAsFlow()
+
     /** The one place state changes: update every view of it, then save. */
     private fun publish(newState: Map<Long, Issue>) {
         issuesById = newState
         _bookmarkedIds.value = newState.keys.toSet()
         _bookmarks.value = newState.values.toList()
-        storage.save(newState.values.toList())
+        storage.save(newState.values.toList()) { saveFailureChannel.trySend(Unit) }
     }
 }

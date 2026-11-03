@@ -6,7 +6,7 @@ import io.github.genesjc.opensourcepanda.data.ReadmeApi
 import io.github.genesjc.opensourcepanda.data.ReadmeApiResponse
 import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
 import io.github.genesjc.opensourcepanda.data.network.dto.ReadmeDto
-import io.github.genesjc.opensourcepanda.model.DEMO_TAG
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -38,7 +38,7 @@ class DemoIssueSearchApi : IssueSearchApi {
             isSuccessful = true,
             body = IssueSearchResponseDto(totalCount = matches.size, items = items),
             rateLimit = null,
-            tag = DEMO_TAG,
+            origin = DataOrigin.DEMO,
         )
     }
 

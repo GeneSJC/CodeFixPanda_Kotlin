@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.ui
 
 import androidx.lifecycle.ViewModel
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.ui.text.StringResolver
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -31,7 +32,7 @@ abstract class BaseViewModel : ViewModel(), KoinComponent {
     val buildLabel: String get() = appConfig.buildLabel
 
     /** Which start animation plays at launch and for the "Play App Start Animation" replay. */
-    val splashAnimation: String get() = appConfig.splashAnimation
+    val splashAnimation: SplashAnimation get() = appConfig.splashAnimation
 
     /** True when the drawer lists every individual animation replay (a developer aid). */
     val showDetailedDrawerMenu: Boolean get() = appConfig.showDetailedDrawerMenu

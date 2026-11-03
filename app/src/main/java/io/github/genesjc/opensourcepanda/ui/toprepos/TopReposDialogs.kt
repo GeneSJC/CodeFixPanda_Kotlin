@@ -18,15 +18,15 @@ import io.github.genesjc.opensourcepanda.ui.components.RateLimitDialog
 
 /**
  * Shows the dialog named by [open], or nothing when it is null. The screen owns which one is open; each
- * dialog closes through [onDismiss]. Confirming the cache clear closes the dialog and then calls [onClearCache].
+ * dialog closes through [onDismiss]. Confirming the cache clear closes the dialog and then calls [onClearCacheConfirmed].
  */
 @Composable
-internal fun TopReposDialogHost(
+internal fun TopReposDialogs(
     open: TopReposDialog?,
     rateLimit: RateLimitInfo?,
     hasToken: Boolean,
     onOpenSettings: () -> Unit,
-    onClearCache: () -> Unit,
+    onClearCacheConfirmed: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     when (open) {
@@ -42,7 +42,7 @@ internal fun TopReposDialogHost(
         TopReposDialog.CLEAR_CACHE -> ClearCacheDialog(
             onConfirm = {
                 onDismiss()
-                onClearCache()
+                onClearCacheConfirmed()
             },
             onDismiss = onDismiss,
         )

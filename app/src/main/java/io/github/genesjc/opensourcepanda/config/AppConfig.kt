@@ -17,8 +17,8 @@ package io.github.genesjc.opensourcepanda.config
 data class AppConfig(
     /** "A.B", from buildLabelA/buildLabelB in app/build.gradle.kts. */
     val buildLabel: String,
-    /** Which start animation plays: "coin", "origami", "shapeStack" or "titleReveal". */
-    val splashAnimation: String,
+    /** Which start animation plays. */
+    val splashAnimation: SplashAnimation,
     /** Whether the drawer lists every individual animation replay (a dev aid) or the single end-user entry. */
     val showDetailedDrawerMenu: Boolean,
 )

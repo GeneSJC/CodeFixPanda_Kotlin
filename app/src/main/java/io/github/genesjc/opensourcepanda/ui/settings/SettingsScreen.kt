@@ -38,6 +38,7 @@ import io.github.genesjc.opensourcepanda.ui.components.TokenField
 import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
+import io.github.genesjc.opensourcepanda.ui.text.messageRes
 
 /**
  * Where a user supplies their own GitHub token; the build-time token exists only for someone
@@ -56,6 +57,7 @@ fun SettingsScreen(
     val savedToken by viewModel.userToken.collectAsStateWithLifecycle()
     val currentToken by viewModel.currentToken.collectAsStateWithLifecycle()
     val source by viewModel.tokenSource.collectAsStateWithLifecycle()
+    val storageProblem by viewModel.storageProblem.collectAsStateWithLifecycle()
     // The field starts with the token in use (masked), whether the user saved it or the build supplied it.
     var draft by rememberSaveable(currentToken) { mutableStateOf(currentToken) }
     var showHelp by rememberSaveable { mutableStateOf(false) }
@@ -101,6 +103,13 @@ fun SettingsScreen(
                         MaterialTheme.colorScheme.primary
                     },
                 )
+                storageProblem?.let { problem ->
+                    Text(
+                        stringResource(problem.messageRes()),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 TokenField(value = draft, onValueChange = { draft = it }, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(

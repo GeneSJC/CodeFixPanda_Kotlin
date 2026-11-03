@@ -88,8 +88,12 @@ fun RepoIssuesScreen(
     val undoLabel = stringResource(R.string.action_undo)
     val visibleIssues by viewModel.visibleIssues.collectAsStateWithLifecycle()
 
-    // Defensive fallback only: DiscoverNavHost ensures a mode is chosen before this screen.
     val activeMode by viewModel.activeMode.collectAsStateWithLifecycle()
+
+    // A change that could not be saved is reported here, as a message the user sees.
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message -> snackbarHostState.showSnackbar(message) }
+    }
 
     LaunchedEffect(repoGroup.repoFullName) {
         viewModel.loadIfNeeded(repoGroup)

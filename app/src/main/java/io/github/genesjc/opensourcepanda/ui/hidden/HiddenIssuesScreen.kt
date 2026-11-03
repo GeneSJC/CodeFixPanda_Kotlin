@@ -20,9 +20,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,11 +62,18 @@ fun HiddenIssuesScreen(
     val context = LocalContext.current
     val hiddenIssues by viewModel.hiddenIssues.collectAsStateWithLifecycle()
     var showUnhideAllConfirm by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // A change that could not be saved is reported here, as a message the user sees.
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message -> snackbarHostState.showSnackbar(message) }
+    }
 
     BrandSoftBackground {
         Scaffold(
             containerColor = Color.Transparent,
             modifier = modifier,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 BrandTopAppBar(
                     title = { Text(stringResource(R.string.hidden_title)) },

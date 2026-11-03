@@ -7,18 +7,20 @@ import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
 import io.github.genesjc.opensourcepanda.domain.filterHiddenIssues
-import io.github.genesjc.opensourcepanda.domain.resolveActiveMode
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.BaseViewModel
+import io.github.genesjc.opensourcepanda.ui.text.messageRes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
@@ -48,7 +50,10 @@ class TopReposViewModel : BaseViewModel() {
         .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.state.value.toUiState(string))
 
     /** One-shot messages for the screen's Snackbar, each delivered exactly once. */
-    val snackbarEvents: Flow<String> = stateHolder.events.map { it.toMessage(string) }
+    val snackbarEvents: Flow<String> = merge(
+        stateHolder.events.map { it.toMessage(string) },
+        tokenRepository.storageProblem.filterNotNull().map { string(it.messageRes()) },
+    )
 
     /**
      * The repo groups the screen lists: [uiState]'s groups with the issues the user hid taken out. A repo whose
@@ -93,12 +98,13 @@ class TopReposViewModel : BaseViewModel() {
     val hasToken: StateFlow<Boolean> = stateHolder.hasToken
 
     /**
-     * The mode the screen queries and draws with: the chosen Issue Mode, or the defensive fallback while none is
-     * chosen (which DiscoverNavHost prevents from ever being observed here; see IssueModeGateScreen).
+     * The mode the screen queries and draws with. This screen is only shown once a mode is chosen, so it starts
+     * with the chosen mode (a missing one is a bug and fails here). Reset App clears the mode while this screen is
+     * still leaving; a cleared mode is not passed on, so the screen keeps the last real one until it is gone.
      */
     val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode
-        .map { resolveActiveMode(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, resolveActiveMode(stateHolder.mode.value))
+        .filterNotNull()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateHolder.requireMode())
 
     /**
      * A repo card appeared on screen: load its README preview if it

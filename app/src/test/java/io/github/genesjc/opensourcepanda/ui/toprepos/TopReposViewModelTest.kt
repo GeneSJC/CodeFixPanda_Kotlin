@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.ui.toprepos
 
 import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ReadmeFetch
 import io.github.genesjc.opensourcepanda.data.RepoIssueGroupCacheEntry
 import io.github.genesjc.opensourcepanda.data.cacheKeyFor
@@ -10,6 +11,7 @@ import io.github.genesjc.opensourcepanda.domain.TOP_REPOS_PER_PAGE
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import io.github.genesjc.opensourcepanda.testutil.FakeReadmeSource
 import io.github.genesjc.opensourcepanda.testutil.FakeStringResolver
 import io.github.genesjc.opensourcepanda.testutil.MainDispatcherRule
@@ -224,6 +226,30 @@ class TopReposViewModelTest {
         assertEquals(2, f.api.calls.size)
     }
 
+    @Test
+    fun theActiveModeKeepsTheLastChosenModeWhenTheModeIsCleared() {
+        val f = ViewModelFixtures(mode = IssueLabelFilter.HELP_WANTED)
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        val vm = viewModel(f)
+
+        f.modeRepository.setMode(null)
+
+        assertEquals(IssueLabelFilter.HELP_WANTED, vm.activeMode.value)
+    }
+
+    @Test
+    fun aTokenThatCannotBeSavedBecomesASnackbarMessage() {
+        val f = ViewModelFixtures()
+        f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
+        val vm = viewModel(f)
+        f.tokenStorage.lastProblem = TokenStorageProblem.COULD_NOT_SAVE
+        f.tokenRepository.setUserToken("ghp_secret")
+
+        val message = runBlocking { vm.snackbarEvents.first() }
+
+        assertEquals(s(R.string.token_problem_could_not_save), message)
+    }
+
     // ---- pass-throughs for the repo cards ----
 
     @Test
@@ -254,11 +280,11 @@ class TopReposViewModelTest {
     fun configValuesComeFromTheAppConfig() {
         val f = ViewModelFixtures()
         f.api.handler = { _, _, _ -> searchOk(listOf(issueDto(1))) }
-        val config = AppConfig(buildLabel = "9.9", splashAnimation = "shapeStack", showDetailedDrawerMenu = true)
+        val config = AppConfig(buildLabel = "9.9", splashAnimation = SplashAnimation.SHAPE_STACK, showDetailedDrawerMenu = true)
         val vm = viewModel(f, config)
 
         assertEquals("9.9", vm.buildLabel)
-        assertEquals("shapeStack", vm.splashAnimation)
+        assertEquals(SplashAnimation.SHAPE_STACK, vm.splashAnimation)
         assertTrue(vm.showDetailedDrawerMenu)
     }
 }

@@ -171,6 +171,10 @@
     <string name="unbookmarked_message">Unbookmarked</string>
     <string name="version_label">Build %1$s</string>
     <string name="issue_hidden_message">Issue hidden</string>
+    <string name="token_problem_could_not_read">Your saved token couldn\'t be read (this can happen after restoring a phone), so it was removed. Please paste it again in Settings.</string>
+    <string name="token_problem_could_not_save">Your token couldn\'t be saved securely, so it will only work until you close the app.</string>
+    <string name="bookmark_save_failed">Couldn\'t save your bookmarks. Your last change may be lost when the app closes.</string>
+    <string name="hidden_save_failed">Couldn\'t save your hidden issues. Your last change may be lost when the app closes.</string>
     <string name="action_undo">Undo</string>
 
     <!-- Relative time. -->

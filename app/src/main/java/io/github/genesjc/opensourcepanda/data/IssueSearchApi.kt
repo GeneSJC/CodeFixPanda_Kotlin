@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.data.network.GitHubApiService
 import io.github.genesjc.opensourcepanda.data.network.dto.IssueSearchResponseDto
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -13,8 +14,8 @@ data class IssueSearchApiResponse(
     val isSuccessful: Boolean,
     val body: IssueSearchResponseDto?,
     val rateLimit: RateLimitInfo?,
-    /** The tag to put on the issues in [body] (see Issue.tag): null for real GitHub data. */
-    val tag: String? = null,
+    /** The origin to put on the issues in [body] (see Issue.origin). */
+    val origin: DataOrigin = DataOrigin.GITHUB,
 )
 
 /**

@@ -17,6 +17,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,6 +51,11 @@ fun RepoBookmarksScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val bookmarkedIssues by viewModel.bookmarks.collectAsStateWithLifecycle()
+
+    // A change that could not be saved is reported here, as a message the user sees.
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message -> snackbarHostState.showSnackbar(message) }
+    }
 
     BrandSoftBackground {
         Scaffold(

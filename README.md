@@ -260,8 +260,8 @@ flowchart LR
   data sources are switched on every call between the real ones and demo ones (sixteen invented repos across the five languages,
   every title marked "[Demo]", a "Demo data" chip on the list screens), so the repositories and state holders
   above them never know which answered. Entering a token switches to real data at once. Saved
-  bookmarks and hidden issues carry a tag (`Issue.tag`, null for real data), and each mode lists only
-  the entries whose tag matches the data in use.
+  bookmarks and hidden issues carry an origin (`Issue.origin`: GitHub or demo), and each mode lists only
+  the entries whose origin matches the data in use.
 - **Navigation stays on string routes, by decision.** There are eight routes, each a named
   constant, and none takes an argument; the selected repo is held by a ViewModel, not passed through
   the route. Type-safe routes (Navigation Compose 2.8+) would need the Kotlin serialization

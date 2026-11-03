@@ -1,23 +1,11 @@
 package io.github.genesjc.opensourcepanda.domain
 
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IssueModeRulesTest {
-
-    @Test
-    fun resolveActiveMode_returnsTheChosenMode() {
-        assertEquals(IssueLabelFilter.HELP_WANTED, resolveActiveMode(IssueLabelFilter.HELP_WANTED))
-        assertEquals(IssueLabelFilter.GOOD_FIRST_ISSUE, resolveActiveMode(IssueLabelFilter.GOOD_FIRST_ISSUE))
-    }
-
-    @Test
-    fun resolveActiveMode_fallsBackToTheDefaultWhenNoneChosen() {
-        assertEquals(DEFAULT_ISSUE_MODE, resolveActiveMode(null))
-    }
 
     @Test
     fun needsModeGate_isTrueOnlyWhileNoModeIsChosen() {

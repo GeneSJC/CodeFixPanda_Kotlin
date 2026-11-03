@@ -57,6 +57,14 @@ class IssueModeRepository(private val storage: IssueModeStorage) {
     private val _mode = MutableStateFlow(restore())
     val mode: StateFlow<IssueLabelFilter?> = _mode.asStateFlow()
 
+    /**
+     * The chosen mode, for code that only runs on a screen shown after the gate. A missing mode there is a bug in
+     * the flow (see DiscoverNavHost), so this fails with a clear message and does not invent a mode.
+     */
+    fun requireMode(): IssueLabelFilter = checkNotNull(_mode.value) {
+        "No issue mode is chosen, but a screen that needs one asked for it"
+    }
+
     /** Sets the mode (or clears it with null) and persists the change. */
     fun setMode(newMode: IssueLabelFilter?) {
         _mode.value = newMode

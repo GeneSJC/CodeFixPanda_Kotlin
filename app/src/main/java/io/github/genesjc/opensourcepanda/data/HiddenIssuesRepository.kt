@@ -3,10 +3,13 @@ package io.github.genesjc.opensourcepanda.data
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import io.github.genesjc.opensourcepanda.model.DataOrigin
 import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import java.io.File
-import java.util.concurrent.Executors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,45 +26,28 @@ interface HiddenIssuesStorage {
     /** Every saved hidden issue, or an empty list if there are none (or the file is unreadable). */
     fun load(): List<HiddenIssue>
 
-    /** Replaces the saved list with [issues]. Best-effort: a failed write never throws. */
-    fun save(issues: List<HiddenIssue>)
+    /** Replaces the saved list with [issues] in the background. A failed write never throws; it calls [onFailure]. */
+    fun save(issues: List<HiddenIssue>, onFailure: () -> Unit)
 }
 
 /**
  * A JSON file in private storage, the project's pattern for lists of objects (SharedPreferences
  * is for single values). The file name is unchanged, so issues hidden before the refactor are
- * still hidden. Writes run in order on one background thread, so two quick changes cannot land
- * out of order. A failed write is swallowed on purpose: it never rolls back what the user already
- * saw, like every other store.
+ * still hidden. Reading and writing go through [JsonListFile], which writes atomically, in order,
+ * on one background thread, so two quick changes cannot land out of order.
  */
 class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssuesStorage {
 
-    private val file = File(context.applicationContext.filesDir, FILE_NAME)
-    private val writer = Executors.newSingleThreadExecutor()
-    private val adapter by lazy {
-        moshi.adapter<List<HiddenIssue>>(
-            Types.newParameterizedType(List::class.java, HiddenIssue::class.java),
-        )
-    }
+    private val list = JsonListFile(
+        file = File(context.applicationContext.filesDir, FILE_NAME),
+        adapterFactory = {
+            moshi.adapter<List<HiddenIssue>>(Types.newParameterizedType(List::class.java, HiddenIssue::class.java))
+        },
+    )
 
-    override fun load(): List<HiddenIssue> {
-        if (!file.exists()) return emptyList()
-        return try {
-            adapter.fromJson(file.readText()) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    override fun load(): List<HiddenIssue> = list.load()
 
-    override fun save(issues: List<HiddenIssue>) {
-        writer.execute {
-            try {
-                file.writeText(adapter.toJson(issues))
-            } catch (e: Exception) {
-                // Best-effort — see the class doc comment.
-            }
-        }
-    }
+    override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) = list.save(issues, onFailure)
 }
 
 /**
@@ -97,7 +83,7 @@ class HiddenIssuesRepository(
             repoFullName = issue.repoFullName,
             htmlUrl = issue.htmlUrl,
             hiddenAtMs = clock(),
-            tag = issue.tag,
+            origin = issue.origin,
         )
         publish(hiddenById + (issue.id to snapshot))
     }
@@ -107,19 +93,29 @@ class HiddenIssuesRepository(
         publish(hiddenById - issueId)
     }
 
-    /** Unhides every hidden issue carrying [tag] (null for real data), leaving other sources' entries alone. */
-    fun unhideAll(tag: String?) {
-        val remaining = hiddenById.filterValues { it.tag != tag }
+    /** Unhides every hidden issue from [origin], leaving the other origin's entries alone. */
+    fun unhideAll(origin: DataOrigin) {
+        val remaining = hiddenById.filterValues { it.origin != origin }
         if (remaining.size == hiddenById.size) return
         publish(remaining)
     }
+
+    private val saveFailureChannel = Channel<Unit>(Channel.BUFFERED)
+
+    /**
+     * Emits each time a save to disk fails, so a screen can tell the user. A failure is held until something
+     * collects it, so one that happens after the screen has gone is still reported by the next screen that
+     * listens. The change stays in memory for this session; it is only lost if the app closes before a later
+     * save succeeds.
+     */
+    val saveFailures: Flow<Unit> = saveFailureChannel.receiveAsFlow()
 
     /** The one place state changes: update every view of it, then save. */
     private fun publish(newState: Map<Long, HiddenIssue>) {
         hiddenById = newState
         _hiddenIds.value = newState.keys.toSet()
         _hiddenIssues.value = sortedNewestFirst(newState)
-        storage.save(newState.values.toList())
+        storage.save(newState.values.toList()) { saveFailureChannel.trySend(Unit) }
     }
 
     private fun sortedNewestFirst(byId: Map<Long, HiddenIssue>): List<HiddenIssue> =

@@ -2,6 +2,7 @@ package io.github.genesjc.opensourcepanda.testutil
 
 import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.config.AppConfig
+import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.ApiTokenStorage
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
@@ -26,6 +27,7 @@ import io.github.genesjc.opensourcepanda.model.HiddenIssue
 import io.github.genesjc.opensourcepanda.model.Issue
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
+import io.github.genesjc.opensourcepanda.model.TokenStorageProblem
 import io.github.genesjc.opensourcepanda.state.RepoIssuesStateHolder
 import io.github.genesjc.opensourcepanda.state.TopReposStateHolder
 import io.github.genesjc.opensourcepanda.ui.repoissues.RepoIssuesViewModel
@@ -49,6 +51,7 @@ class FakeIssueModeStorage(var stored: String? = null) : IssueModeStorage {
 }
 
 class FakeApiTokenStorage(var stored: String? = null) : ApiTokenStorage {
+    override var lastProblem: TokenStorageProblem? = null
     override fun load(): String? = stored
     override fun save(token: String?) {
         stored = token
@@ -56,15 +59,25 @@ class FakeApiTokenStorage(var stored: String? = null) : ApiTokenStorage {
 }
 
 class FakeHiddenIssuesStorage(var stored: List<HiddenIssue> = emptyList()) : HiddenIssuesStorage {
+    var failSaves = false
     override fun load(): List<HiddenIssue> = stored
-    override fun save(issues: List<HiddenIssue>) {
+    override fun save(issues: List<HiddenIssue>, onFailure: () -> Unit) {
+        if (failSaves) {
+            onFailure()
+            return
+        }
         stored = issues
     }
 }
 
 class FakeBookmarksStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
+    var failSaves = false
     override fun load(): List<Issue> = stored
-    override fun save(issues: List<Issue>) {
+    override fun save(issues: List<Issue>, onFailure: () -> Unit) {
+        if (failSaves) {
+            onFailure()
+            return
+        }
         stored = issues
     }
 }
@@ -116,8 +129,10 @@ class ViewModelFixtures(
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
     val appConfig = testAppConfig()
     val adsController = FakeAdsController()
-    val hiddenIssuesRepository = HiddenIssuesRepository(FakeHiddenIssuesStorage())
-    val bookmarksRepository = BookmarksRepository(FakeBookmarksStorage())
+    val hiddenIssuesStorage = FakeHiddenIssuesStorage()
+    val bookmarksStorage = FakeBookmarksStorage()
+    val hiddenIssuesRepository = HiddenIssuesRepository(hiddenIssuesStorage)
+    val bookmarksRepository = BookmarksRepository(bookmarksStorage)
     val snippetRepository = ReadmeSnippetRepository(readmeSource)
     val cacheRepository = RepoIssueGroupRepository(cacheStorage, Dispatchers.Unconfined)
     val searchRepository = IssueSearchRepository(api)
@@ -164,7 +179,7 @@ class ViewModelFixtures(
 }
 
 /** A config for tests that do not care about its values. */
-fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = "coin", showDetailedDrawerMenu = false)
+fun testAppConfig() = AppConfig(buildLabel = "test", splashAnimation = SplashAnimation.COIN, showDetailedDrawerMenu = false)
 
 /** A search-API issue as GitHub would send it, in repo [owner]/[repo]. */
 fun issueDto(id: Long, owner: String = "octo", repo: String = "repo") = IssueDto(

@@ -1,6 +1,11 @@
 package io.github.genesjc.opensourcepanda.data
 
 import io.github.genesjc.opensourcepanda.model.Issue
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -9,9 +14,14 @@ import org.junit.Test
 class BookmarksRepositoryTest {
 
     private class FakeStorage(var stored: List<Issue> = emptyList()) : BookmarksStorage {
+        var failSaves = false
         var saveCount = 0
         override fun load(): List<Issue> = stored
-        override fun save(issues: List<Issue>) {
+        override fun save(issues: List<Issue>, onFailure: () -> Unit) {
+            if (failSaves) {
+                onFailure()
+                return
+            }
             stored = issues
             saveCount++
         }
@@ -29,6 +39,27 @@ class BookmarksRepositoryTest {
         updatedAtMs = null,
         htmlUrl = "https://github.com/octo/repo/issues/$id",
     )
+
+    @Test
+    fun aFailureThatHappensBeforeAnyoneIsListeningIsStillReported() = runBlocking {
+        val repository = BookmarksRepository(FakeStorage().apply { failSaves = true })
+
+        repository.toggle(issue(1))
+
+        withTimeout(1_000) { repository.saveFailures.first() }
+    }
+
+    @Test
+    fun aFailedSaveIsReportedAndTheChangeStaysInMemory() = runBlocking {
+        val storage = FakeStorage().apply { failSaves = true }
+        val repository = BookmarksRepository(storage)
+        val reported = async(start = CoroutineStart.UNDISPATCHED) { repository.saveFailures.first() }
+
+        repository.toggle(issue(1))
+
+        withTimeout(1_000) { reported.await() }
+        assertTrue(1L in repository.bookmarkedIds.value)
+    }
 
     @Test
     fun startsEmptyWhenNothingIsSaved() {

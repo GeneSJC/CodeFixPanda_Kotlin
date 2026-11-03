@@ -63,6 +63,8 @@ class IssueSearchRepository(
     suspend fun loadRateLimitIfUnknown() {
         if (_rateLimit.value != null) return
         val info = api.fetchRateLimit() ?: return
+        // Check again: this call waited for the network, and a search that finished meanwhile may have set fresher
+        // numbers, which this older lookup must not overwrite.
         if (_rateLimit.value == null) _rateLimit.value = info
     }
 
@@ -79,7 +81,7 @@ class IssueSearchRepository(
             _rateLimit.value = response.rateLimit
             IssueSearchResult.Success(
                 IssueSearchPage(
-                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue, tag = response.tag) },
+                    issues = body.items.map { it.toIssue(languageFilter = language.queryValue, origin = response.origin) },
                     totalCount = body.totalCount,
                 ),
             )

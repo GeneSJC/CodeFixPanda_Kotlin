@@ -107,7 +107,7 @@ fun TopReposScreen(
         onOpenBookmarks = onOpenBookmarks,
         onOpenHidden = onOpenHidden,
         onCheckForNewRepos = viewModel::checkForNewRepos,
-        onClearCache = { openDialog = TopReposDialog.CLEAR_CACHE },
+        onClearCacheRequested = { openDialog = TopReposDialog.CLEAR_CACHE },
         onOpenSettings = onOpenSettings,
         onOpenWelcome = onOpenWelcome,
         onResetApp = onResetApp,
@@ -157,12 +157,12 @@ fun TopReposScreen(
         }
     }
 
-    TopReposDialogHost(
+    TopReposDialogs(
         open = openDialog,
         rateLimit = rateLimit,
         hasToken = hasToken,
         onOpenSettings = onOpenSettings,
-        onClearCache = viewModel::clearCache,
+        onClearCacheConfirmed = viewModel::clearCache,
         onDismiss = { openDialog = null },
     )
 }

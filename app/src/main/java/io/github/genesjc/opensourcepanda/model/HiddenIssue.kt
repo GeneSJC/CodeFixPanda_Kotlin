@@ -11,6 +11,6 @@ data class HiddenIssue(
     val repoFullName: String,
     val htmlUrl: String,
     val hiddenAtMs: Long,
-    /** The tag of the issue when it was hidden (see Issue.tag). */
-    val tag: String? = null,
+    /** The origin of the issue when it was hidden (see Issue.origin). */
+    val origin: DataOrigin = DataOrigin.GITHUB,
 )
