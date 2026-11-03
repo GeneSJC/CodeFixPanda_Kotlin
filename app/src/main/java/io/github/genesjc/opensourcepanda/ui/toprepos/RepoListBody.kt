@@ -73,6 +73,7 @@ internal fun RepoListBody(
             ) {
                 CircularProgressIndicator()
             }
+
             uiState.errorMessage != null && uiState.repoGroups.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize().padding(24.dp),
                 contentAlignment = Alignment.Center,
@@ -102,6 +103,7 @@ internal fun RepoListBody(
                         onClick = { onRepoClick(rawGroupsByName.getValue(group.repoFullName), uiState.selectedLanguage) },
                     )
                 }
+
                 item(key = "loadMoreFooter") {
                     LoadMoreFooter(
                         isLoadingMore = uiState.isLoadingMore,
@@ -180,6 +182,7 @@ private fun RepoCard(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
+
                 if (!snippet.isNullOrBlank()) {
                     CardBadge(
                         icon = R.drawable.ic_chevron_down,
@@ -189,6 +192,7 @@ private fun RepoCard(
                     )
                 }
             }
+
             if (!snippet.isNullOrBlank()) {
                 Text(
                     snippet,
@@ -199,6 +203,7 @@ private fun RepoCard(
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
+
             // Opened, the card offers the way in as a button; closed, the whole card is still the way in.
             if (expanded && group.issues.isNotEmpty()) {
                 Button(onClick = onClick, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {

@@ -35,7 +35,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 56
-val buildLabelB = 4
+val buildLabelB = 5
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // docs/ads/README.md, which says where the working implementation is kept).
 
