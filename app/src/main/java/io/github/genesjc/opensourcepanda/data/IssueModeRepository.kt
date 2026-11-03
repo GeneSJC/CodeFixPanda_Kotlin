@@ -10,12 +10,9 @@ private const val PREFS_NAME = "issue_mode_prefs"
 private const val KEY_MODE = "mode"
 
 /**
- * Where the chosen Issue Mode is persisted, split out from
- * IssueModeRepository so the repository's own logic (restore on
- * construction, write on change, ignore an unrecognized stored value)
- * can be unit-tested with a plain in-memory fake — no Android Context
- * needed. The one real implementation is
- * SharedPreferencesIssueModeStorage below.
+ * Where the chosen Issue Mode is persisted; an interface so tests of the repository's logic (restore on
+ * construction, write on change, ignore an unrecognized stored value) can use an in-memory fake.
+ * The one real implementation is SharedPreferencesIssueModeStorage below.
  */
 interface IssueModeStorage {
     /** The stored enum name, or null if nothing has been saved (or it was cleared). */

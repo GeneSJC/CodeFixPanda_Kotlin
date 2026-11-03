@@ -33,10 +33,8 @@ data class RepoIssueGroupCacheEntry(
 fun cacheKeyFor(language: LanguageFilter, mode: IssueLabelFilter): String = "${language.name}|${mode.name}"
 
 /**
- * Where the cache is stored, split out so the repository's logic can be
- * unit-tested against a plain in-memory fake with no Android Context.
- * All three calls are blocking; the repository runs them off the main
- * thread.
+ * Where the cache is stored; an interface so tests can use an in-memory fake instead of an Android
+ * Context. All three calls are blocking: the repository runs them off the main thread.
  */
 interface RepoIssueGroupStorage {
     /** Every saved entry by key, or an empty map if there is none (or the file is unreadable). */
@@ -50,12 +48,10 @@ interface RepoIssueGroupStorage {
 }
 
 /**
- * A plain JSON file in app-private storage — ONE combined file (not one
- * per key): a single read/write per operation is simpler to reason about
- * and cheap at this size (a handful of language/mode combinations). A
- * JSON file and not Room, the same "avoid new persistence
- * infrastructure for a small, single-purpose cache" choice made before.
- * Takes the app-wide Moshi rather than building a second one.
+ * A plain JSON file in app-private storage: ONE combined file, not one per key, because a single
+ * read/write per operation is simpler and cheap at this size (a handful of language/mode pairs). A
+ * JSON file and not Room, to avoid new persistence infrastructure for a small cache. Takes the
+ * app-wide Moshi rather than building a second one.
  */
 class JsonFileRepoIssueGroupStorage(context: Context, moshi: Moshi) : RepoIssueGroupStorage {
 
