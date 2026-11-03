@@ -36,12 +36,8 @@ private const val MASCOT_REBOUND_X = 0.98f
 
 private val OFFSCREEN_OFFSET = 260.dp
 private val VERTICAL_RISE_OFFSET = 140.dp
-// How hard "Open" lurches when it stops. The reference prototype specified
-// "+28px, -4.5deg"; those were CSS pixels (roughly dp), but this was first
-// ported as 28 raw PIXELS — about 9dp on a typical 3x phone, which read as
-// barely there. Now in dp, and deliberately pushed well past the reference
-// (a bigger lurch, a harder tilt, and a small rebound back) so the stop is
-// an unmistakable bump.
+// How hard "Open" lurches when it stops: well past the reference prototype's +28dp / -4.5deg
+// (a bigger lurch, a harder tilt, a small rebound back) so the stop is an unmistakable bump.
 private val OPEN_OVERSHOOT = 44.dp
 private val OPEN_REBOUND = 10.dp
 private const val OPEN_OVERSHOOT_TILT_DEGREES = -8f

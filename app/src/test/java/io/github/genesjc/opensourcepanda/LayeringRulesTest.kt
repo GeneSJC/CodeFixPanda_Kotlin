@@ -209,6 +209,16 @@ class LayeringRulesTest {
         check("\"defensive fallback\" comments", found)
     }
 
+    /** A comment says what the code is and why; which release added it is the commit history's job and goes stale in the file. */
+    @Test
+    fun commentsCarryNoVersionMarkers() {
+        val found = sources
+            .filter { s -> s.text.lines().any { line -> COMMENT_LINE.containsMatchIn(line) && VERSION_MARKER.containsMatchIn(line) } }
+            .map { it.path }
+            .toSet()
+        check("version markers (v0.42 and the like) in comments", found)
+    }
+
     /** Small files are found by name and read in one sitting; a file this long is doing several jobs. */
     @Test
     fun filesStayUnderTheLineLimit() {
@@ -227,6 +237,8 @@ class LayeringRulesTest {
     private companion object {
         val EMPTY_CATCH = Regex("catch \\(\\w+: \\w+\\) \\{([^{}]*)\\}")
         val LINE_COMMENT = Regex("//[^\\n]*")
+        val COMMENT_LINE = Regex("^\\s*(//|/?\\*)")
+        val VERSION_MARKER = Regex("\\bv\\d+\\.\\d+")
         const val MAX_FILE_LINES = 600
         const val MAX_FUNCTION_LINES = 150
     }

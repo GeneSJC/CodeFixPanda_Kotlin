@@ -79,13 +79,8 @@ fun OpenSourcePandaTheme(
     // our actual theme renders; callers can still opt back into dynamic
     // color explicitly if desired.
     dynamicColor: Boolean = false,
-    // The active Issue Mode (v0.41), read at the root in MainActivity.kt
-    // through IssueModeViewModel, which observes the same
-    // IssueModeRepository state the mode menu on TopReposScreen writes
-    // to — see IssueModeRepository.kt. Null (no mode chosen
-    // yet) falls back to the original light/dark scheme exactly as
-    // before this CM — Mode is additive, not a replacement for the
-    // app's baseline theme.
+    // The active Issue Mode, read at the root in MainActivity through IssueModeViewModel. Null (no
+    // mode chosen yet) gives the plain light/dark scheme: a mode adds to the baseline theme.
     issueMode: IssueLabelFilter? = null,
     content: @Composable () -> Unit
 ) {

@@ -5,8 +5,7 @@ import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 /**
  * The small decisions the Issue Mode flow makes, pulled out of the
  * ViewModels and DiscoverNavHost as plain functions so each rule lives
- * in one place and can be unit-tested without Android or Compose. Each
- * one used to be an inline expression repeated at its call sites.
+ * in one place and can be unit-tested without Android or Compose.
  */
 
 /** True while no mode has been chosen, meaning the app must start on the mode gate instead of Top Repos. */

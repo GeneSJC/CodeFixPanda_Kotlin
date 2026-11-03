@@ -37,7 +37,7 @@ internal const val SPLASH_TEXT_SCALE = 1.7f
 private const val PANDA_BASE_FONT_SP = 20f
 private const val PANDA_BASE_LETTER_SPACING_SP = 4f
 
-/** "Open Source" is longer than the old two-word headline, so it is set smaller to fit a phone's width. */
+/** "Open Source" is a long headline, so it is set smaller to fit a phone's width. */
 private const val HEADLINE_FIT_FACTOR = 0.62f
 
 /**
