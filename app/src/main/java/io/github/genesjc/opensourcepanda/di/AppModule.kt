@@ -41,16 +41,12 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
- * The one place that says how the app's shared objects are built, bottom
- * layer first: shared plumbing, the repositories (data sources inside
- * them), then the state holders. Each `get()` is resolved by type, so a
- * class that is built here asks for what it needs in its constructor and
- * this file only has to say how to build it.
+ * The one place that says how the app's shared objects are built, bottom layer first: shared
+ * plumbing, the repositories (data sources inside them), then the state holders. Each `get()` is
+ * resolved by type.
  *
- * Every definition is a `single`: one app-wide instance of each. The
- * ViewModels are not listed here. A ViewModel is created per screen by the
- * default factory, and takes what it needs with `by inject()`, resolved
- * against this module.
+ * Every definition is a `single`: one app-wide instance. ViewModels are not listed: each screen's
+ * default factory creates its own, and it takes what it needs with `by inject()` against this module.
  */
 val appModule = module {
 

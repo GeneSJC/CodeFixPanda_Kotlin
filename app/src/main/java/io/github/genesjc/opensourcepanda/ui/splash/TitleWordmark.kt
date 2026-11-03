@@ -26,11 +26,9 @@ import androidx.compose.ui.unit.sp
 import io.github.genesjc.opensourcepanda.R
 
 /**
- * How much bigger every piece of splash text is than the Material
- * defaults it started from (70% larger), so the app name fills more of
- * the screen. Every size derived from the text (line heights, letter
- * spacing, gaps, the impact burst) is scaled by the same factor so the
- * wordmark keeps its original proportions.
+ * How much larger the splash text is than the Material defaults (70%), so the app name fills more of
+ * the screen. Every size derived from the text (line heights, letter spacing, gaps, the impact burst)
+ * is scaled by the same factor, so the wordmark keeps its proportions.
  */
 internal const val SPLASH_TEXT_SCALE = 1.7f
 

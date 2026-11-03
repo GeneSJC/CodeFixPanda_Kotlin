@@ -118,11 +118,8 @@ class TopReposViewModel : BaseViewModel() {
     fun onLanguageSelected(language: LanguageFilter) = stateHolder.selectLanguage(language)
 
     /**
-     * Handler for the two navigation-drawer items TopReposScreen offers
-     * ("Find Beginner-Friendly Issues" / "Find Projects Asking for Help"): a direct,
-     * in-place switch rather than navigating anywhere. See
-     * TopReposScreen's doc comment for the full reasoning, including why
-     * this is not a return to IssueModeGateScreen.
+     * Handler for the two drawer items "Find Beginner-Friendly Issues" and "Find Projects Asking for
+     * Help": an in-place switch, not a return to IssueModeGateScreen (see TopReposScreen).
      */
     fun onModeSelected(mode: IssueLabelFilter) = stateHolder.selectMode(mode)
 

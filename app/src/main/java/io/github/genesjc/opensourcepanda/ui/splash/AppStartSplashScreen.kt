@@ -9,7 +9,8 @@ import io.github.genesjc.opensourcepanda.config.SplashAnimation
  * MainActivity's cold-start splash calls it, and so does the "Play App Start Animation" menu entry,
  * so a replay can never drift from what a user actually saw. [playFullAnimation] false swaps in
  * TitleSettledSplashScreen, the title already settled and then the same burst and hold the full
- * animation ends with: a real launch passes false once the device has seen the full animation. The default, true, is what the replay uses.
+ * animation ends with: a real launch passes false once the device has seen the full animation. The
+ * default, true, is what the replay uses.
  */
 @Composable
 fun AppStartSplashScreen(onFinished: () -> Unit, animation: SplashAnimation, playFullAnimation: Boolean = true) {

@@ -34,11 +34,9 @@ interface GitHubApiService {
     suspend fun getRateLimit(): Response<RateLimitResponseDto>
 
     /**
-     * GitHub's Contents API, not Search — see ReadmeDto's own doc
-     * comment for the rate-limit and base64-encoding consequences of
-     * that. 404s when a repo genuinely has no README at the root of
-     * its default branch (RepoReadmeViewModel treats that as a real,
-     * expected outcome, not an error).
+     * GitHub's Contents API, not Search: see ReadmeDto for the rate-limit and base64 consequences.
+     * 404s when a repo has no README at the root of its default branch, which RepoReadmeViewModel
+     * treats as a real outcome, not an error.
      */
     @GET("repos/{owner}/{repo}/readme")
     suspend fun getReadme(

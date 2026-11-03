@@ -57,12 +57,9 @@ private val LightColorScheme = lightColorScheme(
 )
 
 /**
- * MODE CROSSFADE DURATION: how long switching Issue Mode takes to
- * visually settle into its new pastel scheme. A plain
- * animateColorAsState per color role, not a bespoke transition
- * sequence — this can happen repeatedly mid-session (unlike a splash,
- * a one-shot event), so it stays intentionally cheap: one tween per
- * color, no Animatable, nothing that keeps running once settled.
+ * How long switching Issue Mode takes to settle into its new scheme. A mode switch can happen
+ * repeatedly in a session (unlike a splash), so it stays cheap: one animateColorAsState tween per
+ * color role, and nothing keeps running once settled.
  */
 private const val MODE_TRANSITION_MS = 350
 
@@ -72,12 +69,8 @@ fun OpenSourcePandaTheme(
     // system made the app flip from a dark gate screen to a light Top Repos. Hardcoded false until
     // there is an in-app dark-mode preference.
     darkTheme: Boolean = false,
-    // Dynamic color (Android 12+) derives its palette from the device's
-    // wallpaper, which would silently override our brand colors below —
-    // that's why earlier screenshots showed a generic purple/gray look
-    // regardless of what Color.kt specified. Defaulting this to false so
-    // our actual theme renders; callers can still opt back into dynamic
-    // color explicitly if desired.
+    // Dynamic color (Android 12+) takes its palette from the wallpaper and would silently override our brand
+    // colors, so it is off by default; a caller can still turn it on.
     dynamicColor: Boolean = false,
     // The active Issue Mode, read at the root in MainActivity through IssueModeViewModel. Null (no
     // mode chosen yet) gives the plain light/dark scheme: a mode adds to the baseline theme.

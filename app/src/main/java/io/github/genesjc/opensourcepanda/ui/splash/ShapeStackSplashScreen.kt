@@ -50,6 +50,9 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
     val markAlpha = remember { Animatable(0f) }
     val nameAlpha = remember { Animatable(0f) }
 
+    // One script, top to bottom: each animateTo() suspends until that piece has finished appearing and each
+    // delay() is the hold before the next one, so the order of these lines is the order on screen.
+    // onFinished() runs after the last hold; leaving the screen early cancels the effect and skips it.
     LaunchedEffect(Unit) {
         shape1Progress.animateTo(1f, animationSpec = tween(APPEAR_MS))
         delay(HOLD_MS)
@@ -126,10 +129,8 @@ fun ShapeStackSplashScreen(onFinished: () -> Unit) {
 }
 
 /**
- * A single static (non-folding) triangle, fading and growing in from
- * progress=0 to progress=1. rotationDegrees is a fixed cosmetic tilt,
- * not animated — safe on its own since nothing else rotates on the same
- * layer at the same time.
+ * A single static (non-folding) triangle, fading and growing in from progress=0 to progress=1.
+ * rotationDegrees is a fixed tilt, not animated, so nothing else rotates on its layer.
  */
 @Composable
 private fun StackedTriangle(

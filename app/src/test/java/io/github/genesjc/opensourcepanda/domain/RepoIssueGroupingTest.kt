@@ -8,9 +8,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers the exact properties the v0.49 "Cache-Preserving Refresh" plan
- * cares about for checkForNewRepos() (see TopReposViewModel's own doc
- * comment): a repo/issue count that never shrinks from this update, a
+ * Covers the properties checkForNewRepos() depends on (see TopReposStateHolder's
+ * doc comment): a repo/issue count that never shrinks from this update, a
  * new repo getting added, a new issue appending to an existing repo,
  * and an already-present issue's fields getting replaced — the whole
  * reason this function exists instead of reusing addIssuesToRepoGroups(),

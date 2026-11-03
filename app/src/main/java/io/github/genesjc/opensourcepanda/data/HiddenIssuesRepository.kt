@@ -16,12 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 private const val FILE_NAME = "hidden_issues.json"
 
-/**
- * Where the hidden issues are persisted, split out from
- * HiddenIssuesRepository so the repository's logic can be unit-tested
- * against a plain in-memory fake with no Android Context — same shape
- * as IssueModeStorage and ApiTokenStorage.
- */
+/** Where the hidden issues are persisted; an interface so tests can use an in-memory fake instead of an Android Context. */
 interface HiddenIssuesStorage {
     /** Every saved hidden issue, or an empty list if there are none (or the file is unreadable). */
     fun load(): List<HiddenIssue>
@@ -32,9 +27,8 @@ interface HiddenIssuesStorage {
 
 /**
  * A JSON file in private storage, the project's pattern for lists of objects (SharedPreferences
- * is for single values). The file name is unchanged, so issues hidden before the refactor are
- * still hidden. Reading and writing go through [JsonListFile], which writes atomically, in order,
- * on one background thread, so two quick changes cannot land out of order.
+ * is for single values). Reading and writing go through [JsonListFile], which writes atomically,
+ * in order, on one background thread, so two quick changes cannot land out of order.
  */
 class JsonFileHiddenIssuesStorage(context: Context, moshi: Moshi) : HiddenIssuesStorage {
 

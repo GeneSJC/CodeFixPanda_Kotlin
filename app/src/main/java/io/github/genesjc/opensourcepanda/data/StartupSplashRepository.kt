@@ -5,12 +5,7 @@ import android.content.Context
 private const val PREFS_NAME = "startup_splash_prefs"
 private const val KEY_FULL_ANIMATION_SEEN = "full_animation_seen"
 
-/**
- * Where "has this device already seen the full start animation" is
- * persisted, split out from StartupSplashRepository so the repository
- * can be unit-tested against a plain in-memory fake with no Android
- * Context — same shape as IssueModeStorage.
- */
+/** Where "has this device already seen the full start animation" is persisted; an interface so tests can use an in-memory fake. */
 interface StartupSplashStorage {
     fun hasSeenFullAnimation(): Boolean
     fun markFullAnimationSeen()

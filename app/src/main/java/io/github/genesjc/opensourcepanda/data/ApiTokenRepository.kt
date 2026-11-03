@@ -29,12 +29,7 @@ fun tokenSourceOf(userToken: String, buildToken: String): TokenSource = when {
     else -> TokenSource.NONE
 }
 
-/**
- * Where the token the user typed is persisted, split out from
- * ApiTokenRepository so the repository can be unit-tested against a
- * plain in-memory fake with no Android Context — same shape as
- * IssueModeStorage.
- */
+/** Where the token the user typed is persisted; an interface so tests can use an in-memory fake instead of an Android Context. */
 interface ApiTokenStorage {
     /** The saved token, or null if none has been saved (or it was cleared). */
     fun load(): String?

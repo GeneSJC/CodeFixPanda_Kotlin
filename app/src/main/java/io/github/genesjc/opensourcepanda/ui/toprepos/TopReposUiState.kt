@@ -26,27 +26,21 @@ data class TopReposUiState(
      */
     val currentPage: Int = 1,
     /**
-     * True while a Load More fetch is in flight — deliberately
-     * separate from isLoading, which gates the FULL-SCREEN spinner for
-     * the very first load. Load More shows its own small footer
-     * indicator instead, so the already-visible list never disappears
-     * behind a spinner just because more is being fetched underneath.
+     * True while a Load More fetch is in flight. Separate from isLoading, which gates the full-screen
+     * spinner of the first load: Load More shows a small footer indicator, so the visible list never
+     * disappears behind a spinner while more is fetched.
      */
     val isLoadingMore: Boolean = false,
     /**
-     * False once there's genuinely nothing further to fetch — either
-     * GitHub returned a page with fewer than a full page's worth of
-     * results (the actual end of this query's results), or the next
-     * page would exceed the Search API's hard 1,000-result cap. See
-     * canRequestNextPage() (domain/TopReposPaging.kt) for the exact check.
+     * False once there is nothing further to fetch: GitHub returned less than a full page (the end of
+     * this query's results), or the next page would pass the Search API's 1,000-result cap. See
+     * canRequestNextPage() (domain/TopReposPaging.kt).
      */
     val canLoadMore: Boolean = true,
     /**
-     * Set when a Load More fetch fails — deliberately NOT reusing
-     * errorMessage (which is scoped to "the whole list failed to
-     * load"). A failed Load More leaves the existing list exactly as
-     * it was; only the footer reflects the failure, with its own retry
-     * affordance (TopReposViewModel.retryLoadMore()).
+     * Set when a Load More fetch fails. Not errorMessage, which means "the whole list failed to
+     * load": a failed Load More leaves the list as it was, and only the footer reflects it, with its
+     * own retry (TopReposViewModel.retryLoadMore()).
      */
     val loadMoreError: String? = null,
     /**

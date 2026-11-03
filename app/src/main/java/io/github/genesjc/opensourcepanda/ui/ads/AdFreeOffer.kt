@@ -70,6 +70,8 @@ private fun TextStyle.scaled(): TextStyle = copy(
 @Composable
 private fun rememberNowMillis(untilMs: Long): Long {
     var nowMs by remember(untilMs) { mutableLongStateOf(System.currentTimeMillis()) }
+    // Ticks only while the end time is still ahead; once it passes, the loop ends and no timer keeps
+    // running. Keyed on untilMs, so a new end time restarts the countdown.
     LaunchedEffect(untilMs) {
         while (nowMs < untilMs) {
             delay(COUNTDOWN_TICK_MS)
