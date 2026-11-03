@@ -223,6 +223,47 @@ class LayeringRulesTest {
         check("version markers (v0.42 and the like) in comments", found)
     }
 
+    /**
+     * A statement that ends in a closing brace is followed by a blank line before the next statement at the same
+     * level, so blocks do not run into the code after them. Not required before else, catch or finally, before
+     * a line that closes an outer block, before a line that continues the expression, or between the branches
+     * of a when.
+     */
+    @Test
+    fun aBlankLineFollowsEveryClosingBrace() {
+        val testRoot = listOf(File("src/test/java"), File("app/src/test/java")).first { it.isDirectory }
+        val found = sources.flatMap { blankLineViolations(it.path, it.text) } +
+            testRoot.walk().filter { it.extension == "kt" }
+                .flatMap { blankLineViolations("test/" + it.relativeTo(testRoot).invariantSeparatorsPath, it.readText()) }
+                .toList()
+        check("closing brace without a blank line after it", found.toSet())
+    }
+
+    /** The `path:line` of each closing brace that is followed straight away by a sibling statement. */
+    private fun blankLineViolations(path: String, text: String): List<String> {
+        val lines = text.lines()
+        val found = mutableListOf<String>()
+        var inRawString = false
+        for (i in 0 until lines.size - 1) {
+            val line = lines[i]
+            if (line.split("\"\"\"").size % 2 == 0) {
+                inRawString = !inRawString
+                continue
+            }
+
+            if (inRawString || line.trim() !in CLOSING_BRACES) continue
+            val next = lines[i + 1]
+            val nextText = next.trim()
+            if (nextText.isEmpty() || next.indentWidth() != line.indentWidth()) continue
+            if (CONTINUES_STATEMENT.containsMatchIn(nextText) || WHEN_BRANCH.containsMatchIn(nextText)) continue
+            found += "$path:${i + 1}"
+        }
+
+        return found
+    }
+
+    private fun String.indentWidth() = length - trimStart().length
+
     /** Small files are found by name and read in one sitting; a file this long is doing several jobs. */
     @Test
     fun filesStayUnderTheLineLimit() {
@@ -242,6 +283,9 @@ class LayeringRulesTest {
         val EMPTY_CATCH = Regex("catch \\(\\w+: \\w+\\) \\{([^{}]*)\\}")
         val LINE_COMMENT = Regex("//[^\\n]*")
         val COMMENT_LINE = Regex("^\\s*(//|/?\\*)")
+        val CLOSING_BRACES = setOf("}", "})")
+        val CONTINUES_STATEMENT = Regex("^(\\}|\\)|\\]|else\\b|catch\\b|finally\\b|\\.|\\?:|\\?\\.|&&|\\|\\||->|,|\\+|-\\s)")
+        val WHEN_BRANCH = Regex("^(?:[\\w.\"'()\\[\\]<>!:\\- ,]+|else)\\s*->")
         val VERSION_MARKER = Regex("\\bv\\d+\\.\\d+")
         const val MAX_FILE_LINES = 600
         const val MAX_FUNCTION_LINES = 150
