@@ -51,13 +51,8 @@ class MainActivity : ComponentActivity() {
                         splashViewModel.onSplashFinished()
                         showSplash = false
                     }
-                    // Which splash plays, and with what parameters, lives
-                    // in ONE place now — AppStartSplashScreen.kt — rather
-                    // than switching on BuildConfig.SPLASH_ANIMATION here
-                    // directly, so the "production" flavor's "Play App
-                    // Start Animation" replay (see TopReposScreen.kt) can
-                    // never drift from what a real user actually sees at
-                    // launch.
+                    // AppStartSplashScreen picks the splash, so the drawer's "Play App Start Animation"
+                    // replay (AnimationReplay.kt) cannot drift from what a user sees at launch.
                     AppStartSplashScreen(
                         onFinished = onFinished,
                         animation = splashViewModel.splashAnimation,

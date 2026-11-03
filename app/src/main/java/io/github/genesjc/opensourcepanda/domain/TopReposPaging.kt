@@ -7,11 +7,9 @@ const val TOP_REPOS_PER_PAGE = 30
 const val REPO_ISSUES_MAX_PER_PAGE = 100
 
 /**
- * GitHub's Search API hard cap — it will not return results past this
- * point for any query, however many actually match (this is a
- * documented GitHub limitation, not something this app imposes).
- * canRequestNextPage() uses this to stop offering Load More before a
- * request would fail, rather than surfacing that as an error.
+ * GitHub's documented Search API cap: no results come back past this point however many match, so it
+ * is not a limit this app chose. canRequestNextPage() uses it to stop offering Load More before a
+ * request would fail.
  */
 internal const val SEARCH_API_RESULT_CAP = 1000
 
