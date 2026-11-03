@@ -45,13 +45,13 @@ private fun NavController.popBackStackDebounced() {
 
 /**
  * Navigation for the Discover flow: the welcome, the mode gate, Top Repos, a repo's issues, bookmarks,
- * hidden issues and settings. It uses Navigation Compose for real system Back support.
- * The gate is a real start destination inside this NavHost, not an early return outside it:
- * outside, Top Repos was the only entry on the back stack and Back closed the app. The start
- * destination is computed once: the gate if no mode is chosen yet, otherwise Top Repos.
- * The selected repo group and language are held by RepoSelectionViewModel, not passed through
- * the route; if the back stack is restored without them (the process was killed), the repo
- * screen's route returns to Top Repos. "Reset App" clears the mode and pops the whole back stack, so the gate is not
+ * hidden issues and settings, on Navigation Compose for real system Back support.
+ * The gate is a start destination inside this NavHost, not an early return outside it: outside, Top
+ * Repos would be the only back-stack entry and Back would close the app. The start destination is
+ * computed once: the gate if no mode is chosen yet, otherwise Top Repos.
+ * The selected repo group and language are held by RepoSelectionViewModel, not passed through the
+ * route; if the back stack is restored without them (the process was killed), the repo screen's route
+ * returns to Top Repos. "Reset App" clears the mode and pops the whole back stack, so the gate is not
  * duplicated. More in docs/design-notes.md, "Navigation".
  */
 @Composable

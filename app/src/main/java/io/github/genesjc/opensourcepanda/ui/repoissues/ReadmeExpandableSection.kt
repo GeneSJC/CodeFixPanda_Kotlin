@@ -48,8 +48,7 @@ import io.github.genesjc.opensourcepanda.ui.theme.LocalModeDecor
 import io.noties.markwon.Markwon
 
 /**
- * The README as an inline expand/collapse widget; it replaced a separate full-screen destination,
- * which became redundant. It uses RepoReadmeViewModel, which loads the first time the widget is
+ * The README as an inline expand/collapse widget. It uses RepoReadmeViewModel, which loads the first time the widget is
  * expanded and not on screen entry, so no API call is spent before the user asks. Rendered by
  * Markwon in a wrapped TextView (AndroidView), since Markwon has no first-party Compose API. The
  * 2-second expand/collapse and the matching chevron rotation are a deliberate slow "hero" moment,
@@ -135,12 +134,8 @@ fun ReadmeExpandableBody(
 
 @Composable
 private fun ReadmeBody(uiState: RepoReadmeUiState, repoFullName: String) {
-    // Opaque background (not just fillMaxHeight) — this renders as an
-    // OVERLAY on top of the issue list now (see RepoIssuesScreen's own
-    // doc comment, "README FULL-HEIGHT EXPAND, v2"), so whatever
-    // portion of it is currently visible during the expand/collapse
-    // animation needs to fully occlude the list underneath, not let it
-    // show through.
+    // Opaque, not just fillMaxHeight: this is an overlay on the issue list (see RepoIssuesScreen), so
+    // whatever part is visible mid-animation must fully hide the list underneath.
     Box(
         modifier = Modifier
             .fillMaxWidth()

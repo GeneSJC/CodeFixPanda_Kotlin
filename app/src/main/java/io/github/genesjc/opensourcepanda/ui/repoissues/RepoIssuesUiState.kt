@@ -10,11 +10,9 @@ import io.github.genesjc.opensourcepanda.model.Issue
 data class RepoIssuesUiState(
     val issues: List<Issue> = emptyList(),
     /**
-     * True while the one-shot complete fetch is in flight. Deliberately
-     * separate from anything resembling a full-screen loading state —
-     * the issues already shown (from RepoIssueGroup, zero-cost, or a
-     * previous refresh) stay visible the whole time; only the footer
-     * reflects this.
+     * True while the one-shot complete fetch is in flight. Not a full-screen loading state: the issues
+     * already shown (from the group, or a previous refresh) stay visible throughout; only the footer
+     * reflects it.
      */
     val isRefreshing: Boolean = false,
     /**
@@ -26,10 +24,8 @@ data class RepoIssuesUiState(
     /** When the last successful refresh completed — drives the result line's "checked X ago". Null until hasRefreshed is first true. */
     val lastRefreshedAtMs: Long? = null,
     /**
-     * Set when a refresh fails — deliberately NOT touching `issues`,
-     * matching Top Repos' loadMoreError: a failed refresh leaves
-     * whatever was already shown exactly as it was; only the footer
-     * reflects the failure, with its own retry affordance.
+     * Set when a refresh fails. It does not touch `issues`, like a failed Load More on Top Repos: what
+     * was already shown stays as it was, and only the footer reflects the failure, with its own retry.
      */
     val refreshError: String? = null,
 )
