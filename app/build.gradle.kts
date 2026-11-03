@@ -1,5 +1,13 @@
 import java.io.FileInputStream
 import java.util.Properties
+import javax.inject.Inject
+import org.gradle.api.DefaultTask
+import org.gradle.api.flow.FlowAction
+import org.gradle.api.flow.FlowParameters
+import org.gradle.api.flow.FlowScope
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.TaskAction
 
 plugins {
     alias(libs.plugins.android.application)
@@ -26,8 +34,8 @@ val localProperties = Properties().apply {
 // pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
-val buildLabelA = 52
-val buildLabelB = 5
+val buildLabelA = 53
+val buildLabelB = 1
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // docs/ads-restore.md, and the tag ads-parked-2026-10-27 that holds the working implementation).
 
@@ -163,29 +171,61 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
-// Prints the build label ("Build A.B", the same text the app shows in its
-// drawer) as the last output of a build or test run, so the version can be
-// read straight off the console without opening the app. A finalizer
-// task, so it also prints when the build fails. Gradle's own "BUILD
-// SUCCESSFUL" summary line comes after it; this is the last task output.
+// The build label ("A.B", the same text the app shows in its drawer) is printed twice per build, framed
+// as "=== Build A.B ===": at the start, so it is on screen without scrolling, and again as the very last
+// output, so it still shows when the build stops early. Both read buildLabelA/buildLabelB above, which
+// stay the one source of truth; the app gets the same value through BuildConfig.
 //
-// The label is copied into a local String first: the task action must not
-// reach back into this script's properties, which the configuration cache
-// (enabled in gradle.properties) cannot store.
-val printBuildLabel = tasks.register("printBuildLabel") {
-    val label = "Build $buildLabelA.$buildLabelB"
-    doLast {
+// The label is copied into a String first: a task action or flow action must not reach back into this
+// script's properties, which the configuration cache (enabled in gradle.properties) cannot store.
+val buildLabelLine = "=== Build $buildLabelA.$buildLabelB ==="
+
+abstract class PrintBuildLabelAtStart : DefaultTask() {
+    @get:Input
+    abstract val line: Property<String>
+
+    @TaskAction
+    fun print() {
         println()
-        println(label)
+        println(line.get())
     }
 }
 
-tasks.matching { it.name in setOf("assembleDebug", "assembleRelease", "installDebug", "testDebugUnitTest") }
-    .configureEach { finalizedBy(printBuildLabel) }
+// Every Android build runs preBuild first, so hooking it puts the label near the top of every build.
+val printBuildLabelAtStart = tasks.register<PrintBuildLabelAtStart>("printBuildLabel") {
+    line.set(buildLabelLine)
+}
+tasks.configureEach {
+    if (name == "preBuild") dependsOn(printBuildLabelAtStart)
+}
+
+// Gradle's build-finished hook runs after all tasks, on success or failure, so the label is the last
+// line before "BUILD SUCCESSFUL" or "BUILD FAILED", and it works with the configuration cache (the older
+// gradle.buildFinished callback does not).
+abstract class PrintBuildLabelAtEnd : FlowAction<PrintBuildLabelAtEnd.Params> {
+    interface Params : FlowParameters {
+        @get:Input
+        val line: Property<String>
+    }
+
+    override fun execute(parameters: Params) {
+        println()
+        println(parameters.line.get())
+    }
+}
+
+interface InjectedFlow {
+    @get:Inject
+    val flowScope: FlowScope
+}
+
+objects.newInstance<InjectedFlow>().flowScope.always(PrintBuildLabelAtEnd::class.java) {
+    parameters.line.set(buildLabelLine)
+}
 
 // Android Studio's Run and Build use the selected variant's own tasks (for example
-// installCommercialDebug), not the aggregate ones above, so each variant gets its own line naming
-// the variant, e.g. "Build 34.2 (commercialDebug)". That is how to confirm which variant just ran.
+// installCommercialDebug), so each variant also gets a line naming it, e.g. "Build 34.2 (commercialDebug)".
+// That is how to confirm which variant just ran.
 for (flavor in listOf("Foss", "Commercial")) {
     for (type in listOf("Debug", "Release")) {
         val variant = "${flavor.replaceFirstChar { it.lowercase() }}$type"
