@@ -77,7 +77,11 @@ class TopReposStateHolder(
         .map { it.isNotBlank() }
         .stateIn(scope, SharingStarted.Eagerly, tokenRepository.effectiveToken.value.isNotBlank())
 
-    /** Guards checkForNewRepos() against overlapping calls. */
+    /**
+     * Guards checkForNewRepos() against overlapping calls. A plain flag is enough: it is set and cleared only
+     * inside the visit's coroutines, which all run on the main thread (AppScope), and a second tap before
+     * the first finishes is the case it exists for.
+     */
     private var isCheckingForNewRepos = false
 
     /** Parent of everything one visit to the screen starts; open() cancels it and starts a new one. */
@@ -243,6 +247,7 @@ class TopReposStateHolder(
         val activeMode = modeRepository.requireMode()
         val language = _state.value.selectedLanguage
         launchInVisit {
+            // The cache is read off the main thread, so the state is updated only after it answers.
             val cached = cacheRepository.load(language, activeMode) ?: return@launchInVisit
             _state.update {
                 it.copy(
@@ -385,6 +390,10 @@ class TopReposStateHolder(
         }
     }
 
+    /**
+     * Runs [block] under the current visit. open() cancels the visit, so a load still waiting on the network
+     * from the previous visit is stopped before it can write its result into the fresh state.
+     */
     private fun launchInVisit(block: suspend () -> Unit) {
         scope.launch(visitJob) { block() }
     }

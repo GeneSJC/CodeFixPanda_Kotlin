@@ -51,8 +51,10 @@ class GitHubIssueSearchApi(private val service: GitHubApiService) : IssueSearchA
                 val body = response.body()
                 if (response.isSuccessful && body != null) body.toSearchRateLimitInfo() else null
             } catch (e: CancellationException) {
+                // Rethrown so cancelling the caller still cancels this call; only real failures become "unknown".
                 throw e
             } catch (e: Exception) {
+                // The numbers are an extra: a failed lookup means "not known yet", and the caller keeps what it had.
                 null
             }
         }

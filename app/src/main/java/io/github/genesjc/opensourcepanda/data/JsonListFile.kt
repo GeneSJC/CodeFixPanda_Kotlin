@@ -47,6 +47,8 @@ internal class JsonListFile<T>(
         writer.execute {
             var out: FileOutputStream? = null
             try {
+                // The new content goes to a fresh file and replaces the old one only at finishWrite(), so a
+                // crash anywhere before that leaves the previous list intact.
                 out = atomicFile.startWrite()
                 out.write(adapter.toJson(items).toByteArray(Charsets.UTF_8))
                 atomicFile.finishWrite(out)

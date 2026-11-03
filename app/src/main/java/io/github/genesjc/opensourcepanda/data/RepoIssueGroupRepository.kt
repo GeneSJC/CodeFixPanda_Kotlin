@@ -105,6 +105,9 @@ class RepoIssueGroupRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
+    // Save and replaceRepoGroup each read the whole file, change one entry and write the whole file back. Two
+    // of them overlapping would both read the same old file and the later write would drop the earlier change,
+    // so every call takes this lock, which suspends a second caller until the first has finished writing.
     private val lock = Mutex()
 
     suspend fun load(language: LanguageFilter, mode: IssueLabelFilter): RepoIssueGroupCacheEntry? =
