@@ -88,6 +88,7 @@ class RepoIssuesStateHolder(
                     is IssueSearchResult.Success -> {
                         val completeIssues = result.page.issues
                         val refreshedAtMs = System.currentTimeMillis()
+
                         _state.update {
                             it.copy(
                                 issues = completeIssues,

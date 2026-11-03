@@ -23,6 +23,7 @@ fun ModePill(
     subtitle: String? = null,
 ) {
     val scheme = mode.colorScheme()
+
     Box(
         modifier = modifier
             .background(scheme.primary, RoundedCornerShape(8.dp))

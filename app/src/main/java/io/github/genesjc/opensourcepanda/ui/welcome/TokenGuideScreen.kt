@@ -110,6 +110,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun TokenGuideStepPage(step: TokenGuideStep) {
     val uriHandler = LocalUriHandler.current
+
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -163,6 +164,7 @@ private fun ScreenshotSlot(caption: String) {
 @Composable
 private fun PageDots(count: Int, current: Int) {
     val description = stringResource(R.string.welcome_page_description, current + 1, count)
+
     Row(
         modifier = Modifier.fillMaxWidth().padding(8.dp).semantics { contentDescription = description },
         horizontalArrangement = Arrangement.Center,

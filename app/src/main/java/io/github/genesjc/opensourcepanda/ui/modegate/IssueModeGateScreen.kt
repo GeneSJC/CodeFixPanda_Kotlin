@@ -53,6 +53,7 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
     val infoLabel = stringResource(R.string.label_info_title)
+
     OpenSourcePandaTheme(issueMode = null) {
         BrandSoftBackground {
             Scaffold(

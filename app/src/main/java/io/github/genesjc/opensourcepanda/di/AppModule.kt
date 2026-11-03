@@ -86,6 +86,7 @@ val appModule = module {
     // The cache is the real file with a token, an in-memory copy without one (demo data).
     single {
         val tokens = get<ApiTokenRepository>()
+
         RepoIssueGroupRepository(
             SwitchedRepoIssueGroupStorage(
                 live = JsonFileRepoIssueGroupStorage(androidContext(), moshi = get()),
@@ -99,6 +100,7 @@ val appModule = module {
     // on every call because a token can be added or removed while the app runs.
     single {
         val tokens = get<ApiTokenRepository>()
+
         IssueSearchRepository(
             api = SwitchedIssueSearchApi(
                 live = GitHubIssueSearchApi(get()),
@@ -110,6 +112,7 @@ val appModule = module {
 
     single {
         val tokens = get<ApiTokenRepository>()
+
         ReadmeRepository(
             api = SwitchedReadmeApi(
                 live = GitHubReadmeApi(get()),

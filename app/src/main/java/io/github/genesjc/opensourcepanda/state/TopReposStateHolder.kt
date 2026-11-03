@@ -200,6 +200,7 @@ class TopReposStateHolder(
                             currentPageAtCommit = current.currentPage
                             canLoadMoreAtCommit = current.canLoadMore
                             previousUpdatedAtMs = current.lastUpdatedAtMs
+
                             current.copy(
                                 repoGroups = repoGroups,
                                 totalIssueCount = totalCount,
@@ -249,9 +250,11 @@ class TopReposStateHolder(
     fun syncFromCache() {
         val activeMode = modeRepository.requireMode()
         val language = _state.value.selectedLanguage
+
         launchInVisit {
             // The cache is read off the main thread, so the state is updated only after it answers.
             val cached = cacheRepository.load(language, activeMode) ?: return@launchInVisit
+
             _state.update {
                 it.copy(
                     repoGroups = cached.repoGroups,
@@ -335,6 +338,7 @@ class TopReposStateHolder(
                             }
 
                             newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
+
                             state.copy(
                                 repoGroups = repoGroups,
                                 isLoading = false,
@@ -368,6 +372,7 @@ class TopReposStateHolder(
                         // "no token" from "a token that does not work".
                         val failure = SearchFailure.Http(result.code)
                         val isTokenRejected = result.code == 401
+
                         _state.update {
                             if (isLoadMore) {
                                 it.copy(isLoadingMore = false, loadMoreFailure = failure)
@@ -389,6 +394,7 @@ class TopReposStateHolder(
     /** A load or Load More that failed before GitHub answered: held for the list (the initial load) or the footer (Load More). */
     private fun showLoadFailure(isLoadMore: Boolean, detail: String?) {
         val failure = SearchFailure.Failed(detail)
+
         _state.update {
             if (isLoadMore) {
                 it.copy(isLoadingMore = false, loadMoreFailure = failure)

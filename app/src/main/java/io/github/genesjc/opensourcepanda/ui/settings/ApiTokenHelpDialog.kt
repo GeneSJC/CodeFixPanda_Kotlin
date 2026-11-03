@@ -30,6 +30,7 @@ import io.github.genesjc.opensourcepanda.ui.welcome.NEW_TOKEN_URL
 @Composable
 fun ApiTokenHelpDialog(onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.token_help_title)) },

@@ -54,6 +54,7 @@ internal fun branchGlyphUnitForHeight(heightPx: Float): Float = heightPx / (BRAN
 internal fun BranchGlyph(height: Dp, modifier: Modifier = Modifier) {
     val outlinedWidth = BRANCH_GLYPH_WIDTH + OUTLINE_UNITS * 2
     val outlinedHeight = BRANCH_GLYPH_HEIGHT + OUTLINE_UNITS * 2
+
     Canvas(modifier = modifier.height(height).aspectRatio(outlinedWidth / outlinedHeight)) {
         drawBranchGlyph(branchGlyphUnitForHeight(size.height))
     }

@@ -95,6 +95,7 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
             // The title fades in piece by piece (not as one layer), so the burst behind the panda is not
             // dimmed by the fade.
             val fade = Modifier.graphicsLayer { alpha = titleAlpha.value }
+
             TitleWordmark(
                 openModifier = fade,
                 sourceModifier = fade,

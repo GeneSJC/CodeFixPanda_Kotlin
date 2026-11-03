@@ -81,6 +81,7 @@ fun DiscoverNavHost(
     ) {
         composable(ROUTE_WELCOME) {
             val next = if (issueModeViewModel.isGateNeeded()) ROUTE_ISSUE_MODE_GATE else ROUTE_TOP_REPOS
+
             WelcomeScreen(
                 onOpenGuide = { navController.navigate(ROUTE_TOKEN_GUIDE) },
                 onTokenSaved = {

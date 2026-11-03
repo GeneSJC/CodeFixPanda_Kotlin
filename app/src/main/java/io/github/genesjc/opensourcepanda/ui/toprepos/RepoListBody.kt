@@ -65,6 +65,7 @@ internal fun RepoListBody(
     // Observed here, not in the screen, so only the list recomposes as README previews arrive.
     val snippetsByRepo by snippets.collectAsStateWithLifecycle()
     val rawGroupsByName = remember(uiState.repoGroups) { uiState.repoGroups.associateBy { it.repoFullName } }
+
     Box(modifier = modifier) {
         when {
             uiState.isLoading && uiState.repoGroups.isEmpty() -> Box(

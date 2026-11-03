@@ -107,6 +107,7 @@ private const val RATE_WIDGET_RULE_ALPHA = 0.45f
 internal fun DemoWidget(onClick: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(RATE_WIDGET_CORNER)
     val tapModifier = if (onClick != null) modifier.clip(shape).clickable(onClick = onClick) else modifier
+
     Surface(
         shape = shape,
         color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -163,6 +164,7 @@ internal fun DemoChip(onClick: (() -> Unit)? = null, modifier: Modifier = Modifi
 private fun RateLimitMeterIcon(modifier: Modifier = Modifier, scale: Float = 1f) {
     val needleColor = MaterialTheme.colorScheme.onSecondaryContainer
     val description = stringResource(R.string.rate_limit_meter_description)
+
     Canvas(
         modifier = modifier
             .size(width = (24 * scale).dp, height = (15 * scale).dp)
@@ -270,6 +272,7 @@ private fun RateLimitDial(info: RateLimitInfo, modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
     ) {
         val gaugeDescription = stringResource(R.string.rate_limit_gauge_description, info.remaining, info.limit)
+
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()

@@ -40,6 +40,7 @@ internal fun BrandTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val decor = LocalModeDecor.current
+
     TopAppBar(
         title = title,
         modifier = modifier.background(Brush.verticalGradient(listOf(decor.headerTop, decor.headerBottom))),
@@ -84,6 +85,7 @@ internal fun BrandHeader(
     trailing: @Composable ColumnScope.() -> Unit,
 ) {
     val decor = LocalModeDecor.current
+
     CompositionLocalProvider(LocalContentColor provides BrandOnOrange) {
         Row(
             modifier = modifier

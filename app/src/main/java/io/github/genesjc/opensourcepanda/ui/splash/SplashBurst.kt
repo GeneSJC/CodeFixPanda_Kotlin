@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 @Composable
 internal fun BoxScope.SplashBurst(radius: Dp, burstScale: () -> Float, burstAlpha: () -> Float) {
     val color = MaterialTheme.colorScheme.primary
+
     Spacer(
         modifier = Modifier.matchParentSize().drawBehind {
             val a = burstAlpha()

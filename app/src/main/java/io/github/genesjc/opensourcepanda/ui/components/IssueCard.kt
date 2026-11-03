@@ -200,6 +200,7 @@ internal fun CardBadge(
     highlighted: Boolean = false,
 ) {
     val shape = RoundedCornerShape(10.dp)
+
     Surface(
         shape = shape,
         color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondaryContainer,

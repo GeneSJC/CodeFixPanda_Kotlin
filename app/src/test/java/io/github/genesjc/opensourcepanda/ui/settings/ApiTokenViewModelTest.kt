@@ -25,6 +25,7 @@ class ApiTokenViewModelTest {
 
     private fun viewModel(storage: FakeStorage = FakeStorage(), buildToken: String = ""): ApiTokenViewModel {
         val repository = ApiTokenRepository(storage, buildToken)
+
         restartKoin {
             single { repository }
             single { testAppConfig() }
