@@ -1,8 +1,9 @@
 # Bringing ads back: the restore guide
 
-Ads are **parked**: no build of this app contains the ads SDK, and none of the code that depends on it. This
-guide is the way back. It is written so that a developer who has never seen the ads code can restore it, and so
-that nothing has to be re-implemented or reverse-engineered. Read `docs/ads-architecture.md` first if you want to
+Ads are **parked**: no build of this app contains the ads SDK, and none of the code that talks to it, not even the
+small SDK-free hooks. Start at [`README.md`](README.md) in this folder for what the layer is worth and the setup it
+needs. This guide is the way back. It is written so that a developer who has never seen the ads code can restore it, and so
+that nothing has to be re-implemented or reverse-engineered. Read `docs/ads/architecture.md` first if you want to
 understand how the ads layer works; this document is the procedure.
 
 ## 0. Where the working implementation is
@@ -12,13 +13,20 @@ understand how the ads layer works; this document is the procedure.
 | **The mainline archive** | commit `9d61e0f1fd0814f68d8061cd24698bb069d6e70d` on `develop` (the merge of PR #37) | The last commit with the complete working ads layer: real controller, consent, banner, rewarded video and ad-free hour. It is part of `develop`'s history, so it stays reachable for as long as `develop` exists. **This is the primary source for the steps below.** |
 | **The tag, a superset** | tag `ads-parked-2026-10-27`, commit `da3ac8725721cc88af0b447ac0fbc6753baa4150` | The same implementation plus two things built afterwards and never merged: the **ads kit** (`scripts/export-ads-kit.sh`, which packages the ads code for another project) and the **ads switch** (`adsEnabled`, which binds a do-nothing controller while keeping the SDK in the build). Use it only if you want those. Check it exists: `git tag -l 'ads-parked*'`. |
 
+Two more places matter now that the SDK-free hooks have been removed from the code too:
+
+| What | Where | Notes |
+|---|---|---|
+| **The hooks, as they were** | tag `ads-seam-2026-11-03`, commit `4d8c7f6c49a20d24e55f1103cb04bc6bf61a3ce5` | `develop` just before the clean-out: the `AdsController` interface, `NoAdsController`, `AdBannerSlot`, `AdFreeOfferLine`, `AdsViewModel`, the ViewModel flows, the menu entries, both flavors' stub modules and banners, and the tests. These docs were at `docs/ads-*.md` then. |
+| **The clean-out commit** | `0428e36eb21242a44985f2e81e83f05e424c8125` (Build 54.2) | The single commit that removed the hooks and their uses. `git show` it to see the exact edit; `git revert --no-commit` it to re-apply the inverse (step 1a). |
+
 Look inside before you start: `git show --stat 9d61e0f1fd0814f68d8061cd24698bb069d6e70d` and `git ls-tree -r --name-only 9d61e0f1fd0814f68d8061cd24698bb069d6e70d | grep -iE 'ads|AdBanner|AdFree'`.
 
 **Copy files out; do not merge.** By the time ads come back, `develop` will have moved on, and a merge would
 conflict across many files. Restoring is a copy of self-contained files, a few build blocks, and a re-check of the
 integration points (section 4).
 
-## 1. What was parked, and what stayed
+## 1. What was parked
 
 **Removed from every build (restore these).** The paths below are as they are in the archive, which predates the package rename (the code package was `io.github.genesjc.githubissuefinder` then and is `io.github.genesjc.opensourcepanda` now). Step 3.2 moves the files into the current package.
 
@@ -36,12 +44,15 @@ integration points (section 4).
 | Backup rules | `app/src/main/res/xml/backup_rules.xml`, `data_extraction_rules.xml` | Exclude `ad_free_prefs.xml` (appendix A) |
 | Clean-build check | `scripts/check-foss-clean.sh` and a CI step | Proves the open build has no ads software, with a positive control on the commercial build. Parking replaced it with `scripts/check-no-ads-sdk.sh` (section 3, step 8) |
 
-**Kept in the code (SDK-free hooks; nothing to restore):** the `AdsController` interface and `NoAdsController`
-(`ads/`), `AdsViewModel`, `AdBannerSlot` and `AdFreeOfferLine` (`ui/ads/`), the ViewModel flows
-(`canShowAds`, `adFreeUntilMs`, `canOfferAdFree`, `privacyOptionsRequired`), the banner slots in the Top Repos and
-repo-issues screens, the offer line in both title bars, the ad-free and privacy entries in the Top Repos menu, the
-`adsAreLive` marker in the version label, the foss flavor's own `AdsModule` and `AdBanner`, and the strings the hooks use
-(`action_hide_ads`, `ad_free_remaining`, `menu_privacy_options`).
+**Also removed, in the clean-out (restore these first; step 1a):** the SDK-free hooks that had stayed in the code while ads
+were parked: the `AdsController` interface and `NoAdsController` (`ads/`), `AdsViewModel`, `AdBannerSlot` and
+`AdFreeOfferLine` (`ui/ads/`), the ViewModel flows (`canShowAds`, `adFreeUntilMs`, `canOfferAdFree`,
+`privacyOptionsRequired`) in the Top Repos and repo-issues ViewModels, the banner slots and the offer line in both
+screens, the ad-free and privacy entries in the Top Repos menu, the `adsAreLive` marker ("LIVE ADS") in the version
+label, the `adsModule` loaded by the application's Koin start-up, the `adsViewModel.start(this)` call in `MainActivity`,
+both flavors' own `AdsModule` and `AdBanner` stubs, `FakeAdsController` and the tests of the hooks, and the strings
+the hooks used (`action_hide_ads`, `ad_free_remaining`, `menu_privacy_options`). Their paths in the seam tag use the
+current package, so no renaming is needed for them.
 
 ## 2. Prerequisites: finish these before going live
 
@@ -56,13 +67,22 @@ Restoring the code and building with **test ads** needs none of them. Going live
 4. **Three real ad ids** from the ad account (app id, banner unit, rewarded unit), to keep as private properties, never
    in a committed file.
 5. **Test devices** registered in the ad console for everyone who will run a build.
-6. Read `docs/ads-testing-rules.md`: never tap your own live ads, never ask anyone to.
+6. Read `docs/ads/testing-rules.md`: never tap your own live ads, never ask anyone to.
 
 ## 3. The restore, step by step
 
 Work on a branch from the latest `develop`, one step per commit, and build after each of steps 2 to 7.
 
 1. **Branch.** `git checkout -b feature-set/adsRestore origin/develop`
+   1a. **Re-apply the clean-out in reverse.** It was one commit, so the hooks, their uses in the screens, ViewModels, Koin and
+   `MainActivity`, the strings and the tests all come back together:
+```
+git revert --no-commit 0428e36eb21242a44985f2e81e83f05e424c8125
+```
+   `develop` will have moved, so expect conflicts in the files the clean-out touched (the two ViewModels, the Top Repos and
+   repo-issues screens, the drawer, `AppModule`). Resolve each by keeping today's code and re-adding the ad lines shown by
+   `git show 0428e36eb21242a44985f2e81e83f05e424c8125`. Keep today's build-label values in `app/build.gradle.kts` (do not
+   take the old label). The two stub files this brings back in `src/commercial` are overwritten by step 2.
 2. **Copy the files** out of the mainline archive (overwriting the two parked stubs):
 ```
 git checkout 9d61e0f1fd0814f68d8061cd24698bb069d6e70d -- \
@@ -101,8 +121,8 @@ git add -A app/src/commercial app/src/testCommercial
    clean and the commercial build to contain the libraries.)
 9. **Update the docs.** Replace the "Ads are parked" notes in `README.md` and `docs/design-notes.md` with a description of
    the live ads layer (the old text is in `git show 9d61e0f1fd0814f68d8061cd24698bb069d6e70d:docs/design-notes.md`, sections "Advertising" and
-   "Ad-free offer"). Keep `docs/ads-architecture.md`, and update the comments that say ads are parked in
-   `AdsController.kt`, `NoAdsController.kt` and the foss `AdsModule.kt`.
+   "Ad-free offer"). Update the status line at the top of `docs/ads/README.md`, keep `docs/ads/architecture.md`, and update the
+   comments that say ads are parked in `AdsController.kt`, `NoAdsController.kt` and the foss `AdsModule.kt`.
 10. **Bump the build label** in the same commit as the work.
 
 **Optional, from the tag (only if you want them):** the **ads switch** (`adsEnabled`, off by default) and the **kit export**.
@@ -114,7 +134,7 @@ The switch is not needed for ads to work; skip it unless you want a way to keep 
 
 `develop` has moved since the archive. Before the first build, check:
 
-- **The interface.** Compare `ads/AdsController.kt` with the restored controller: every member the controller overrides must
+- **The interface.** Compare the restored `ads/AdsController.kt` (step 1a) with the restored controller: every member the controller overrides must
   still exist, with the same types. If a member was added or removed, update the controller, `NoAdsController` and
   `FakeAdsController` together.
 - **The hooks in each screen.** Each screen that carried a banner or the offer line still calls `AdBannerSlot(visible = canShowAds, ...)`

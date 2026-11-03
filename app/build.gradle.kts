@@ -35,9 +35,9 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 54
-val buildLabelB = 2
+val buildLabelB = 3
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
-// docs/ads-restore.md, and the tag ads-parked-2026-10-27 that holds the working implementation).
+// docs/ads/README.md, which says where the working implementation is kept).
 
 /** A private property: a Gradle property (-P or the user-level gradle.properties), else local.properties. */
 fun privateProperty(name: String): String? =
@@ -159,7 +159,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
-    // The ads SDK is parked (docs/ads-restore.md): no build contains it. scripts/check-no-ads-sdk.sh checks that.
+    // The ads SDK is parked (docs/ads/README.md): no build contains it. scripts/check-no-ads-sdk.sh checks that.
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)
