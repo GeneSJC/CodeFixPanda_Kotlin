@@ -23,6 +23,7 @@ class HiddenIssuesRepositoryTest {
                 onFailure()
                 return
             }
+
             stored = issues
             saveCount++
         }

@@ -69,11 +69,14 @@ class LayeringRulesTest {
                                 depth--
                             }
                         }
+
                         if (opened && depth <= 0) break
                         end++
                     }
+
                     if (opened && !expressionBody) found += name to (end - start + 1)
                 }
+
                 return found
             }
 
@@ -220,6 +223,97 @@ class LayeringRulesTest {
         check("version markers (v0.42 and the like) in comments", found)
     }
 
+    /**
+     * A statement that ends in a closing brace is followed by a blank line before the next statement at the same
+     * level, so blocks do not run into the code after them. Not required before else, catch or finally, before
+     * a line that closes an outer block, before a line that continues the expression, or between the branches
+     * of a when.
+     */
+    @Test
+    fun aBlankLineFollowsEveryClosingBrace() {
+        val testRoot = listOf(File("src/test/java"), File("app/src/test/java")).first { it.isDirectory }
+        val found = sources.flatMap { blankLineViolations(it.path, it.text) } +
+            testRoot.walk().filter { it.extension == "kt" }
+                .flatMap { blankLineViolations("test/" + it.relativeTo(testRoot).invariantSeparatorsPath, it.readText()) }
+                .toList()
+        check("closing brace without a blank line after it", found.toSet())
+    }
+
+    /**
+     * Setup (declarations and assignments) is set apart from a call that opens a block by a blank line, so the
+     * big block reads as its own unit. An if, when, for or return is not such a call: it stays next to the
+     * variable it tests.
+     */
+    @Test
+    fun aBlankLineSeparatesSetupFromABlockOpeningCall() {
+        val testRoot = listOf(File("src/test/java"), File("app/src/test/java")).first { it.isDirectory }
+        val found = sources.flatMap { setupBeforeBlockViolations(it.path, it.text) } +
+            testRoot.walk().filter { it.extension == "kt" }
+                .flatMap { setupBeforeBlockViolations("test/" + it.relativeTo(testRoot).invariantSeparatorsPath, it.readText()) }
+                .toList()
+        check("setup directly above a block-opening call", found.toSet())
+    }
+
+    /** The `path:line` of each setup line that is followed straight away by a call that opens a block. */
+    private fun setupBeforeBlockViolations(path: String, text: String): List<String> {
+        val lines = text.lines()
+        val found = mutableListOf<String>()
+        var inRawString = false
+        for (i in 0 until lines.size - 1) {
+            val line = lines[i]
+            if (line.split("\"\"\"").size % 2 == 0) {
+                inRawString = !inRawString
+                continue
+            }
+
+            if (inRawString) continue
+            val setup = line.trim()
+            val next = lines[i + 1]
+            val nextText = next.trim()
+            if (setup.isEmpty() || nextText.isEmpty() || setup.startsWith("//") || setup.startsWith("/*") || setup.startsWith("*")) continue
+            val indent = line.indentWidth()
+            if (indent < 4 || next.indentWidth() != indent) continue
+            if (isSetup(setup) && BLOCK_OPENING_CALL.matches(nextText)) found += "$path:${i + 1}"
+        }
+
+        return found
+    }
+
+    /** A complete one-line declaration or assignment. */
+    private fun isSetup(line: String): Boolean {
+        if (!(SETUP_DECLARATION.containsMatchIn(line) || SETUP_ASSIGNMENT.containsMatchIn(line))) return false
+        if (line.endsWith("{") || line.endsWith("(") || line.endsWith(",")) return false
+        val code = line.replace(QUOTED_TEXT, "\"\"").substringBefore("//")
+        return code.count { it == '(' } == code.count { it == ')' } &&
+            code.count { it == '{' } == code.count { it == '}' } &&
+            code.count { it == '[' } == code.count { it == ']' }
+    }
+
+    /** The `path:line` of each closing brace that is followed straight away by a sibling statement. */
+    private fun blankLineViolations(path: String, text: String): List<String> {
+        val lines = text.lines()
+        val found = mutableListOf<String>()
+        var inRawString = false
+        for (i in 0 until lines.size - 1) {
+            val line = lines[i]
+            if (line.split("\"\"\"").size % 2 == 0) {
+                inRawString = !inRawString
+                continue
+            }
+
+            if (inRawString || line.trim() !in CLOSING_BRACES) continue
+            val next = lines[i + 1]
+            val nextText = next.trim()
+            if (nextText.isEmpty() || next.indentWidth() != line.indentWidth()) continue
+            if (CONTINUES_STATEMENT.containsMatchIn(nextText) || WHEN_BRANCH.containsMatchIn(nextText)) continue
+            found += "$path:${i + 1}"
+        }
+
+        return found
+    }
+
+    private fun String.indentWidth() = length - trimStart().length
+
     /** Small files are found by name and read in one sitting; a file this long is doing several jobs. */
     @Test
     fun filesStayUnderTheLineLimit() {
@@ -239,6 +333,14 @@ class LayeringRulesTest {
         val EMPTY_CATCH = Regex("catch \\(\\w+: \\w+\\) \\{([^{}]*)\\}")
         val LINE_COMMENT = Regex("//[^\\n]*")
         val COMMENT_LINE = Regex("^\\s*(//|/?\\*)")
+        val CLOSING_BRACES = setOf("}", "})")
+        const val NOT_A_CALL = "(?!(?:if|when|for|while|try|return|else|do|catch|finally|val|var|fun|class|object|throw|break|continue|import|package|super|this)\\b)"
+        val SETUP_DECLARATION = Regex("^(?:(?:private|internal|public|const|lateinit|override)\\s+)*(?:val|var)\\s")
+        val SETUP_ASSIGNMENT = Regex("^[A-Za-z_][\\w.]*\\s*(?:[-+*/]?=)\\s*[^=]")
+        val BLOCK_OPENING_CALL = Regex("${NOT_A_CALL}[A-Za-z_][\\w.]*(?:<[^>]*>)?(?:\\(.*\\))?\\s*\\{|${NOT_A_CALL}[A-Za-z_][\\w.]*(?:<[^>]*>)?\\(")
+        val QUOTED_TEXT = Regex("\"(?:[^\"\\\\]|\\\\.)*\"")
+        val CONTINUES_STATEMENT = Regex("^(\\}|\\)|\\]|else\\b|catch\\b|finally\\b|\\.|\\?:|\\?\\.|&&|\\|\\||->|,|\\+|-\\s)")
+        val WHEN_BRANCH = Regex("^(?:[\\w.\"'()\\[\\]<>!:\\- ,]+|else)\\s*->")
         val VERSION_MARKER = Regex("\\bv\\d+\\.\\d+")
         const val MAX_FILE_LINES = 600
         const val MAX_FUNCTION_LINES = 150

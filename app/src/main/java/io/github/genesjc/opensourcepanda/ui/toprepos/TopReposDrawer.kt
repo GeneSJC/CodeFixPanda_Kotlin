@@ -93,6 +93,7 @@ internal fun TopReposDrawer(
                         VersionLabel(label = buildLabel)
                         IndependentNotice(textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
                     }
+
                     HorizontalDivider()
                     DrawerSection(header = stringResource(R.string.menu_section_repo_management), background = DrawerSectionRepoManagement) {
                         Item(stringResource(R.string.menu_bookmarks)) { onOpenBookmarks() }
@@ -105,6 +106,7 @@ internal fun TopReposDrawer(
                         // No confirmation: nothing is destroyed. Clears the mode and returns to the gate screen.
                         Item(stringResource(R.string.menu_reset_app)) { onResetApp() }
                     }
+
                     HorizontalDivider()
                     DrawerSection(header = stringResource(R.string.menu_section_find_issues), background = DrawerSectionFindIssues) {
                         Item(
@@ -117,6 +119,7 @@ internal fun TopReposDrawer(
                         ) { onSelectMode(IssueLabelFilter.HELP_WANTED) }
                         Item(stringResource(R.string.menu_about_issue_types)) { onAboutIssueTypes() }
                     }
+
                     HorizontalDivider()
                     DrawerSection(header = stringResource(R.string.menu_section_sandbox), background = DrawerSectionSandbox) {
                         // Detailed menu: one entry per animation (a dev aid). Otherwise a single "Play App Start Animation".

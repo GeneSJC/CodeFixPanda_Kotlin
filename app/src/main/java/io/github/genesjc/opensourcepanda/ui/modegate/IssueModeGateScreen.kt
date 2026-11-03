@@ -53,6 +53,7 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
     val infoLabel = stringResource(R.string.label_info_title)
+
     OpenSourcePandaTheme(issueMode = null) {
         BrandSoftBackground {
             Scaffold(
@@ -94,6 +95,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                                     .padding(horizontal = INFO_ICON_SIDE_PADDING, vertical = 8.dp),
                             )
                         }
+
                         // The two choices side by side, equally wide and as tall as the taller one.
                         Row(
                             modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
@@ -111,6 +113,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
                 }
             }
         }
+
         if (showInfo) {
             LabelInfoDialog(onDismiss = { showInfo = false })
         }
@@ -124,6 +127,7 @@ private fun ModeButton(mode: IssueLabelFilter, onSelect: () -> Unit, modifier: M
     val nameStyle = MaterialTheme.typography.titleMedium.let {
         it.copy(fontSize = it.fontSize * MODE_BUTTON_TEXT_SCALE, lineHeight = it.lineHeight * MODE_BUTTON_TEXT_SCALE)
     }
+
     // The icon above the name, both centered; a long name wraps onto a second line.
     Surface(
         onClick = onSelect,

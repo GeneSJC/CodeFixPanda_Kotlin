@@ -36,6 +36,7 @@ class GitHubIssueSearchApi(private val service: GitHubApiService) : IssueSearchA
     override suspend fun searchIssues(query: String, perPage: Int, page: Int): IssueSearchApiResponse =
         withContext(Dispatchers.IO) {
             val response = service.searchIssues(query = query, perPage = perPage, page = page)
+
             IssueSearchApiResponse(
                 code = response.code(),
                 isSuccessful = response.isSuccessful,

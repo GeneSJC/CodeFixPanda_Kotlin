@@ -36,6 +36,7 @@ fun TokenField(
     toggleColor: Color = Color.Unspecified,
 ) {
     var shown by rememberSaveable { mutableStateOf(false) }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,

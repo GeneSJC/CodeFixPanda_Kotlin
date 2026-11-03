@@ -35,6 +35,7 @@ private val GAP = 10.dp
 @Composable
 internal fun BrandTitleBand(modifier: Modifier = Modifier) {
     val appName = stringResource(R.string.app_name)
+
     Row(
         modifier = modifier
             .fillMaxWidth()

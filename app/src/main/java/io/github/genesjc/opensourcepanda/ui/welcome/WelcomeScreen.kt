@@ -92,34 +92,7 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                // Decorative: the title below already says what this is.
-                Image(
-                    painter = painterResource(R.drawable.panda_mark),
-                    contentDescription = null,
-                    modifier = Modifier.height(140.dp),
-                )
-                // "Welcome to" is smaller and lighter so the app's name stands out on its own.
-                Text(
-                    stringResource(R.string.welcome_title_intro),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = BrandOnOrangeSoft,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                Text(
-                    stringResource(R.string.welcome_title_name),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandOnOrange,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    stringResource(R.string.welcome_message),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = BrandOnOrangeSoft,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
-                )
+                WelcomeIntro()
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
                         onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
@@ -129,6 +102,7 @@ fun WelcomeScreen(
                     ) {
                         Text(stringResource(R.string.action_get_token), style = actionTextStyle)
                     }
+
                     Spacer(modifier = Modifier.width(12.dp))
                     TextButton(onClick = onOpenGuide, modifier = Modifier.weight(1f)) {
                         Text(
@@ -139,6 +113,7 @@ fun WelcomeScreen(
                         )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(12.dp))
                 TokenField(
                     value = tokenDraft,
@@ -169,6 +144,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.action_save), style = actionTextStyle)
                 }
+
                 // Always shown, greyed out while the user has no saved token to remove. A token built into a debug
                 // build is not stored by the app and cannot be removed here, which the note below says.
                 TextButton(
@@ -185,6 +161,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.settings_remove_token), style = actionTextStyle)
                 }
+
                 if (tokenSource == TokenSource.BUILD) {
                     Text(
                         stringResource(R.string.token_remove_unavailable_build),
@@ -193,6 +170,7 @@ fun WelcomeScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
+
                 TextButton(
                     onClick = {
                         viewModel.tryDemo()
@@ -202,8 +180,42 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = BrandOnOrangeSoft)
                 }
+
                 IndependentNotice(color = BrandOnOrangeSoft, modifier = Modifier.padding(top = 16.dp))
             }
         }
     }
+}
+
+/** The panda, the title and the welcome message above the token controls. */
+@Composable
+private fun WelcomeIntro() {
+    // Decorative: the title below already says what this is.
+    Image(
+        painter = painterResource(R.drawable.panda_mark),
+        contentDescription = null,
+        modifier = Modifier.height(140.dp),
+    )
+    // "Welcome to" is smaller and lighter so the app's name stands out on its own.
+    Text(
+        stringResource(R.string.welcome_title_intro),
+        style = MaterialTheme.typography.titleMedium,
+        color = BrandOnOrangeSoft,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 8.dp),
+    )
+    Text(
+        stringResource(R.string.welcome_title_name),
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold,
+        color = BrandOnOrange,
+        textAlign = TextAlign.Center,
+    )
+    Text(
+        stringResource(R.string.welcome_message),
+        style = MaterialTheme.typography.bodyLarge,
+        color = BrandOnOrangeSoft,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
+    )
 }

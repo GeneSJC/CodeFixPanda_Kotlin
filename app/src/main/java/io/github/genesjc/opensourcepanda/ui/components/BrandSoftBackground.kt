@@ -37,6 +37,7 @@ private const val SOFT_GLYPH_MAX_ALPHA = 0.6f
 @Composable
 internal fun BrandSoftBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     val decor = LocalModeDecor.current
+
     GlyphBackdrop(
         gradient = listOf(decor.backdropTop, decor.backdropBottom),
         glyphFill = decor.backdropGlyph,
@@ -79,9 +80,11 @@ internal fun GlyphBackdrop(
                 .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
         ) {
             val unit = size.height * glyphHeightFraction / BRANCH_GLYPH_HEIGHT
+
             translate(left = size.width * glyphShiftX, top = size.height * GLYPH_SHIFT_Y) {
                 drawBranchGlyph(unit, fill = glyphFill, outlined = outlined)
             }
+
             // Keeps only as much of the glyph as the fade lets through (only the mask's alpha counts).
             drawRect(
                 brush = Brush.linearGradient(
@@ -94,6 +97,7 @@ internal fun GlyphBackdrop(
                 blendMode = BlendMode.DstIn,
             )
         }
+
         content()
     }
 }

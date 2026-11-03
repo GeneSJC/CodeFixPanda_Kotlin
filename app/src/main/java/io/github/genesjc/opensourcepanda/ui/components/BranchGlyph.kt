@@ -54,6 +54,7 @@ internal fun branchGlyphUnitForHeight(heightPx: Float): Float = heightPx / (BRAN
 internal fun BranchGlyph(height: Dp, modifier: Modifier = Modifier) {
     val outlinedWidth = BRANCH_GLYPH_WIDTH + OUTLINE_UNITS * 2
     val outlinedHeight = BRANCH_GLYPH_HEIGHT + OUTLINE_UNITS * 2
+
     Canvas(modifier = modifier.height(height).aspectRatio(outlinedWidth / outlinedHeight)) {
         drawBranchGlyph(branchGlyphUnitForHeight(size.height))
     }
@@ -68,6 +69,7 @@ private fun DrawScope.drawGlyphPass(unit: Float, color: Color, extra: Float) {
         moveTo(at(BRANCH.first()).x, at(BRANCH.first()).y)
         BRANCH.drop(1).forEach { lineTo(at(it).x, at(it).y) }
     }
+
     drawPath(branch, color, style = stroke)
     NODES.forEach { drawCircle(color, radius = (NODE_RADIUS + extra / 2) * unit, center = at(it)) }
 }

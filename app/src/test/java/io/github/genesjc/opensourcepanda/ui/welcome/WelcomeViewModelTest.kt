@@ -21,10 +21,12 @@ class WelcomeViewModelTest {
 
     private fun viewModel(buildToken: String = ""): WelcomeViewModel {
         val tokens = ApiTokenRepository(tokenStorage, buildToken)
+
         restartKoin {
             single { tokens }
             single { testAppConfig() }
         }
+
         return WelcomeViewModel()
     }
 

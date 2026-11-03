@@ -27,6 +27,7 @@ class BaseViewModelTest {
             single { config }
             single<StringResolver> { FakeStringResolver }
         }
+
         return TestViewModel()
     }
 

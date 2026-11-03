@@ -22,6 +22,7 @@ class RepoIssueGroupRepositoryTest {
             data = all
             writes++
         }
+
         override fun clear() {
             data = emptyMap()
             clears++

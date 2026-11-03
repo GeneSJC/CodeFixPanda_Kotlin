@@ -55,6 +55,7 @@ val appModule = module {
         val tokens = get<ApiTokenRepository>()
         GitHubApiClient(tokenProvider = { tokens.effectiveToken.value }, moshi = get())
     }
+
     single { get<GitHubApiClient>().api }
 
     // Resolves string resources for the wording ViewModels build.
@@ -77,6 +78,7 @@ val appModule = module {
             BuildConfig.GITHUB_API_TOKEN,
         )
     }
+
     single { IssueModeRepository(SharedPreferencesIssueModeStorage(androidContext())) }
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
     single { BookmarksRepository(JsonFileBookmarksStorage(androidContext(), moshi = get())) }
@@ -84,6 +86,7 @@ val appModule = module {
     // The cache is the real file with a token, an in-memory copy without one (demo data).
     single {
         val tokens = get<ApiTokenRepository>()
+
         RepoIssueGroupRepository(
             SwitchedRepoIssueGroupStorage(
                 live = JsonFileRepoIssueGroupStorage(androidContext(), moshi = get()),
@@ -97,6 +100,7 @@ val appModule = module {
     // on every call because a token can be added or removed while the app runs.
     single {
         val tokens = get<ApiTokenRepository>()
+
         IssueSearchRepository(
             api = SwitchedIssueSearchApi(
                 live = GitHubIssueSearchApi(get()),
@@ -105,8 +109,10 @@ val appModule = module {
             ),
         )
     }
+
     single {
         val tokens = get<ApiTokenRepository>()
+
         ReadmeRepository(
             api = SwitchedReadmeApi(
                 live = GitHubReadmeApi(get()),
@@ -115,6 +121,7 @@ val appModule = module {
             ),
         )
     }
+
     single { ReadmeSnippetRepository(GitHubReadmeSource(get())) }
 
     // State holders.
@@ -126,6 +133,7 @@ val appModule = module {
             searchRepository = get(),
         )
     }
+
     single {
         RepoIssuesStateHolder(
             modeRepository = get(),

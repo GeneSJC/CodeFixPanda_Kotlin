@@ -40,6 +40,7 @@ class BookmarksViewModelTest {
                 onFailure()
                 return
             }
+
             stored = issues
         }
     }
@@ -50,12 +51,14 @@ class BookmarksViewModelTest {
         tokens: ApiTokenRepository = ApiTokenRepository(FakeApiTokenStorage("token"), buildToken = ""),
     ): Pair<BookmarksViewModel, BookmarksRepository> {
         val repository = BookmarksRepository(storage)
+
         restartKoin {
             single { repository }
             single { tokens }
             single { testAppConfig() }
             single<StringResolver> { FakeStringResolver }
         }
+
         return BookmarksViewModel() to repository
     }
 

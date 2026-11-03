@@ -24,6 +24,7 @@ fun OpenSourcePandaApp() {
     // Null (no mode chosen yet) gives the plain light/dark scheme.
     val issueModeViewModel: IssueModeViewModel = viewModel()
     val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
+
     OpenSourcePandaTheme(issueMode = issueMode) {
         // For this launch only (StartupSplashViewModel decides which splash plays, per device).
         // Survives rotation because MainActivity is not recreated on it (android:configChanges).
@@ -32,6 +33,7 @@ fun OpenSourcePandaApp() {
             DiscoverNavHost()
             return@OpenSourcePandaTheme
         }
+
         StartupSplash(onFinished = { hasShownSplash = true })
     }
 }

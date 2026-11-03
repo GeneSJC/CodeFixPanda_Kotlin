@@ -84,6 +84,7 @@ internal fun IssueCardActions(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
             CardBadge(
                 icon = R.drawable.ic_link,
                 contentDescription = stringResource(R.string.action_copy_link),
@@ -93,6 +94,7 @@ internal fun IssueCardActions(
                 },
             )
         }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -106,6 +108,7 @@ internal fun IssueCardActions(
                     modifier = Modifier.weight(1f),
                 )
             }
+
             ActionButton(
                 icon = R.drawable.ic_share,
                 label = stringResource(R.string.action_share),
@@ -118,6 +121,7 @@ internal fun IssueCardActions(
                             "${issue.repoFullName}: ${issue.title}\n${issue.htmlUrl}",
                         )
                     }
+
                     context.startActivity(Intent.createChooser(shareIntent, shareChooserTitle))
                 },
                 modifier = Modifier.weight(1f),
@@ -147,6 +151,7 @@ private fun ActionButton(
     highlighted: Boolean = false,
 ) {
     val shape = RoundedCornerShape(10.dp)
+
     Surface(
         shape = shape,
         color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface,

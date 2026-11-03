@@ -26,6 +26,7 @@ internal fun TokenProblemDialog(
     onDismiss: () -> Unit,
 ) {
     var showHelp by remember { mutableStateOf(false) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {

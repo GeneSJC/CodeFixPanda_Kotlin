@@ -52,6 +52,7 @@ internal fun SplashBackground(modifier: Modifier = Modifier, content: @Composabl
             )
             drawBranchGlyph(unit)
         }
+
         content()
     }
 }

@@ -35,6 +35,7 @@ internal fun RepoCountChip(repoCount: Int, modifier: Modifier = Modifier, onClic
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
+
     val shape = RoundedCornerShape(12.dp)
     // Tappable through clickable and not Surface(onClick), which would pad the chip out to Material's 48 dp touch target.
     val tapModifier = if (onClick != null) modifier.clip(shape).clickable(onClick = onClick) else modifier
@@ -75,6 +76,7 @@ internal fun ModeTitle(
     val style = MaterialTheme.typography.labelLarge.let {
         it.copy(fontSize = it.fontSize * TITLE_TEXT_SCALE, lineHeight = it.lineHeight * TITLE_TEXT_SCALE)
     }
+
     Column(
         modifier = modifier
             .background(BrandOnOrange.copy(alpha = TITLE_PILL_ALPHA), RoundedCornerShape(8.dp))

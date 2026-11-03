@@ -24,6 +24,7 @@ fun IndependentNotice(
     val noticeStyle = MaterialTheme.typography.labelSmall.let {
         it.copy(fontSize = it.fontSize * 1.5f, lineHeight = it.lineHeight * 1.5f)
     }
+
     Text(
         stringResource(R.string.independent_notice),
         style = noticeStyle,

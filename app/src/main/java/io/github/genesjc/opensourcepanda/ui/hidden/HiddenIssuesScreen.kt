@@ -133,6 +133,7 @@ fun HiddenIssuesScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
+
                                 TextButton(onClick = { viewModel.unhide(hidden.id) }) {
                                     Text(stringResource(R.string.hidden_unhide))
                                 }

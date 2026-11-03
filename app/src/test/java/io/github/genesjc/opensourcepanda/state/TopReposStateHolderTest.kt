@@ -143,6 +143,7 @@ class TopReposStateHolderTest {
         f.api.handler = { _, _, page ->
             if (page == 1) searchOk(fullPage("a", "one", 1), total = 200) else searchOk(listOf(issueDto(500, "b", "two")), total = 200)
         }
+
         val stateHolder = opened(f)
         assertTrue(stateHolder.state.value.canLoadMore)
 

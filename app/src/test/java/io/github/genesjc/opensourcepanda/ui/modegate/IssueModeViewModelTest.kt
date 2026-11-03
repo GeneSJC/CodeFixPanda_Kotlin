@@ -23,6 +23,7 @@ class IssueModeViewModelTest {
             single { repository }
             single { testAppConfig() }
         }
+
         return IssueModeViewModel()
     }
 

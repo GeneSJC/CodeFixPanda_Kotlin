@@ -153,6 +153,7 @@ private fun StackedTriangle(
             lineTo(size.width / 2f, size.height)
             close()
         }
+
         drawPath(path, color = color)
     }
 }

@@ -95,6 +95,7 @@ internal fun RepoIssueList(
                 )
             }
         }
+
         item(key = "refreshThisRepoFooter") {
             RefreshThisRepoFooter(
                 isRefreshing = uiState.isRefreshing,
@@ -155,11 +156,13 @@ private fun RefreshThisRepoFooter(
                 } else {
                     pluralStringResource(R.plurals.repo_issues_all_open, currentIssueCount, currentIssueCount)
                 }
+
                 val statusLine = if (lastRefreshedAtMs != null) {
                     stringResource(R.string.repo_issues_status_checked, statusText, relativeTimeText(lastRefreshedAtMs))
                 } else {
                     statusText
                 }
+
                 Text(
                     statusLine,
                     style = MaterialTheme.typography.bodySmall,
@@ -168,9 +171,11 @@ private fun RefreshThisRepoFooter(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
             }
+
             Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.repo_issues_refresh))
             }
+
             Text(
                 stringResource(R.string.repo_issues_refresh_cost),
                 style = MaterialTheme.typography.labelSmall,

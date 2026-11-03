@@ -109,6 +109,7 @@ fun IssueCard(
                         )
                     }
                 }
+
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (showExternalLinkIndicator) {
                         CardBadge(
@@ -117,6 +118,7 @@ fun IssueCard(
                             onClick = onClick,
                         )
                     }
+
                     CardBadge(
                         icon = R.drawable.ic_chevron_down,
                         contentDescription = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand),
@@ -160,6 +162,7 @@ fun IssueCard(
                             modifier = Modifier.padding(top = 10.dp),
                         )
                     }
+
                     IssueCardActions(
                         issue = issue,
                         isBookmarked = isBookmarked,
@@ -197,6 +200,7 @@ internal fun CardBadge(
     highlighted: Boolean = false,
 ) {
     val shape = RoundedCornerShape(10.dp)
+
     Surface(
         shape = shape,
         color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondaryContainer,

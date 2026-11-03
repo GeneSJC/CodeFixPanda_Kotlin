@@ -65,6 +65,7 @@ class FakeHiddenIssuesStorage(var stored: List<HiddenIssue> = emptyList()) : Hid
             onFailure()
             return
         }
+
         stored = issues
     }
 }
@@ -77,6 +78,7 @@ class FakeBookmarksStorage(var stored: List<Issue> = emptyList()) : BookmarksSto
             onFailure()
             return
         }
+
         stored = issues
     }
 }
@@ -86,6 +88,7 @@ class FakeRepoIssueGroupStorage(var data: Map<String, RepoIssueGroupCacheEntry> 
     override fun writeAll(all: Map<String, RepoIssueGroupCacheEntry>) {
         data = all
     }
+
     override fun clear() {
         data = emptyMap()
     }
@@ -157,6 +160,7 @@ class ViewModelFixtures(
             single { config }
             single<StringResolver> { FakeStringResolver }
         }
+
         return TopReposViewModel()
     }
 
@@ -170,6 +174,7 @@ class ViewModelFixtures(
             single { appConfig }
             single<StringResolver> { FakeStringResolver }
         }
+
         return RepoIssuesViewModel()
     }
 }
