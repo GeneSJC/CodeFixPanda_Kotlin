@@ -147,6 +147,7 @@ internal fun DemoChip(onClick: (() -> Unit)? = null, modifier: Modifier = Modifi
             ),
         )
     }
+
     val shape = RoundedCornerShape((12 * RATE_LIMIT_CHIP_SCALE).dp)
     val color = MaterialTheme.colorScheme.tertiaryContainer
     val tapModifier = if (onClick != null) chipModifier.clip(shape).clickable(onClick = onClick) else chipModifier

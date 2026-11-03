@@ -68,6 +68,7 @@ private fun DrawScope.drawGlyphPass(unit: Float, color: Color, extra: Float) {
         moveTo(at(BRANCH.first()).x, at(BRANCH.first()).y)
         BRANCH.drop(1).forEach { lineTo(at(it).x, at(it).y) }
     }
+
     drawPath(branch, color, style = stroke)
     NODES.forEach { drawCircle(color, radius = (NODE_RADIUS + extra / 2) * unit, center = at(it)) }
 }

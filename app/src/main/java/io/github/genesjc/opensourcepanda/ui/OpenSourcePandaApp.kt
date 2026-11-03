@@ -32,6 +32,7 @@ fun OpenSourcePandaApp() {
             DiscoverNavHost()
             return@OpenSourcePandaTheme
         }
+
         StartupSplash(onFinished = { hasShownSplash = true })
     }
 }

@@ -44,6 +44,7 @@ fun LabelInfoDialog(onDismiss: () -> Unit) {
                         modifier = Modifier.padding(top = 2.dp, bottom = 12.dp),
                     )
                 }
+
                 Text(
                     stringResource(R.string.label_info_footer),
                     style = MaterialTheme.typography.bodySmall,

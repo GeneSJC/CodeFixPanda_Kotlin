@@ -82,6 +82,7 @@ internal fun GlyphBackdrop(
             translate(left = size.width * glyphShiftX, top = size.height * GLYPH_SHIFT_Y) {
                 drawBranchGlyph(unit, fill = glyphFill, outlined = outlined)
             }
+
             // Keeps only as much of the glyph as the fade lets through (only the mask's alpha counts).
             drawRect(
                 brush = Brush.linearGradient(
@@ -94,6 +95,7 @@ internal fun GlyphBackdrop(
                 blendMode = BlendMode.DstIn,
             )
         }
+
         content()
     }
 }
