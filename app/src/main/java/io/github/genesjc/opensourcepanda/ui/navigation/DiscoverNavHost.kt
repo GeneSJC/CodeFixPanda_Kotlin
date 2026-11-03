@@ -96,9 +96,11 @@ fun DiscoverNavHost(
                 onTryDemo = { navController.navigate(next) { launchSingleTop = true } },
             )
         }
+
         composable(ROUTE_TOKEN_GUIDE) {
             TokenGuideScreen(onBack = { navController.popBackStackDebounced() })
         }
+
         composable(ROUTE_ISSUE_MODE_GATE) {
             IssueModeGateScreen(
                 onModeSelected = { mode ->
@@ -107,6 +109,7 @@ fun DiscoverNavHost(
                 },
             )
         }
+
         composable(ROUTE_TOP_REPOS) {
             TopReposScreen(
                 onRepoClick = { group, language ->
@@ -126,6 +129,7 @@ fun DiscoverNavHost(
                 },
             )
         }
+
         composable(ROUTE_REPO_ISSUES) {
             val current = selection
             if (current != null) {
@@ -141,12 +145,15 @@ fun DiscoverNavHost(
                 LaunchedEffect(Unit) { navController.popBackStack() }
             }
         }
+
         composable(ROUTE_REPO_BOOKMARKS) {
             RepoBookmarksScreen(onBack = { navController.popBackStackDebounced() })
         }
+
         composable(ROUTE_HIDDEN_ISSUES) {
             HiddenIssuesScreen(onBack = { navController.popBackStackDebounced() })
         }
+
         composable(ROUTE_SETTINGS) {
             SettingsScreen(onBack = { navController.popBackStackDebounced() })
         }

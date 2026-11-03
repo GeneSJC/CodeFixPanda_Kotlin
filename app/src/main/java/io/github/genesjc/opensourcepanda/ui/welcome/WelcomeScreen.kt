@@ -129,6 +129,7 @@ fun WelcomeScreen(
                     ) {
                         Text(stringResource(R.string.action_get_token), style = actionTextStyle)
                     }
+
                     Spacer(modifier = Modifier.width(12.dp))
                     TextButton(onClick = onOpenGuide, modifier = Modifier.weight(1f)) {
                         Text(
@@ -139,6 +140,7 @@ fun WelcomeScreen(
                         )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(12.dp))
                 TokenField(
                     value = tokenDraft,
@@ -169,6 +171,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.action_save), style = actionTextStyle)
                 }
+
                 // Always shown, greyed out while the user has no saved token to remove. A token built into a debug
                 // build is not stored by the app and cannot be removed here, which the note below says.
                 TextButton(
@@ -185,6 +188,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.settings_remove_token), style = actionTextStyle)
                 }
+
                 if (tokenSource == TokenSource.BUILD) {
                     Text(
                         stringResource(R.string.token_remove_unavailable_build),
@@ -193,6 +197,7 @@ fun WelcomeScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
+
                 TextButton(
                     onClick = {
                         viewModel.tryDemo()
@@ -202,6 +207,7 @@ fun WelcomeScreen(
                 ) {
                     Text(stringResource(R.string.welcome_try_demo), style = actionTextStyle, color = BrandOnOrangeSoft)
                 }
+
                 IndependentNotice(color = BrandOnOrangeSoft, modifier = Modifier.padding(top = 16.dp))
             }
         }

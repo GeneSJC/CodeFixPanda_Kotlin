@@ -83,6 +83,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
                         TokenGuideStepPage(tokenGuideSteps[page])
                     }
+
                     PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
                     IndependentNotice(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
                     Row(
