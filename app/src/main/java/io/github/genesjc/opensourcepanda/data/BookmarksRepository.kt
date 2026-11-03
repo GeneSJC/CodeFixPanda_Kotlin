@@ -4,9 +4,9 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.github.genesjc.opensourcepanda.model.Issue
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,19 +79,21 @@ class BookmarksRepository(private val storage: BookmarksStorage) {
         return nowBookmarked
     }
 
-    private val _saveFailures = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val saveFailureChannel = Channel<Unit>(Channel.BUFFERED)
 
     /**
-     * Emits each time a save to disk fails, so a screen can tell the user. The change stays in memory for this
-     * session; it is only lost if the app closes before a later save succeeds.
+     * Emits each time a save to disk fails, so a screen can tell the user. A failure is held until something
+     * collects it, so one that happens after the screen has gone is still reported by the next screen that
+     * listens. The change stays in memory for this session; it is only lost if the app closes before a later
+     * save succeeds.
      */
-    val saveFailures: SharedFlow<Unit> = _saveFailures.asSharedFlow()
+    val saveFailures: Flow<Unit> = saveFailureChannel.receiveAsFlow()
 
     /** The one place state changes: update every view of it, then save. */
     private fun publish(newState: Map<Long, Issue>) {
         issuesById = newState
         _bookmarkedIds.value = newState.keys.toSet()
         _bookmarks.value = newState.values.toList()
-        storage.save(newState.values.toList()) { _saveFailures.tryEmit(Unit) }
+        storage.save(newState.values.toList()) { saveFailureChannel.trySend(Unit) }
     }
 }

@@ -45,6 +45,15 @@ class HiddenIssuesRepositoryTest {
         HiddenIssuesRepository(storage, now)
 
     @Test
+    fun aFailureThatHappensBeforeAnyoneIsListeningIsStillReported() = runBlocking {
+        val repository = repository(FakeStorage().apply { failSaves = true })
+
+        repository.hide(issue(1))
+
+        withTimeout(1_000) { repository.saveFailures.first() }
+    }
+
+    @Test
     fun aFailedSaveIsReportedAndTheChangeStaysInMemory() = runBlocking {
         val repository = repository(FakeStorage().apply { failSaves = true })
         val reported = async(start = CoroutineStart.UNDISPATCHED) { repository.saveFailures.first() }

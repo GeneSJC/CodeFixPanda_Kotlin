@@ -41,6 +41,15 @@ class BookmarksRepositoryTest {
     )
 
     @Test
+    fun aFailureThatHappensBeforeAnyoneIsListeningIsStillReported() = runBlocking {
+        val repository = BookmarksRepository(FakeStorage().apply { failSaves = true })
+
+        repository.toggle(issue(1))
+
+        withTimeout(1_000) { repository.saveFailures.first() }
+    }
+
+    @Test
     fun aFailedSaveIsReportedAndTheChangeStaysInMemory() = runBlocking {
         val storage = FakeStorage().apply { failSaves = true }
         val repository = BookmarksRepository(storage)
