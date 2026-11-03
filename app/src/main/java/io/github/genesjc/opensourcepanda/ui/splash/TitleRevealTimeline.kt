@@ -12,12 +12,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Stage durations, in ms, carried over verbatim from the reference web
-// animation's own 0/28/38/50/62/100% breakpoints against its 3200ms
-// timeline — kept as exact-feeling numbers rather than rounded ones so
-// this stays directly comparable against that source if it's revisited.
-// These are the BASE (1x) durations; TitleRevealTimeline's
-// speedMultiplier param scales them when it is built — see its doc comment.
+// Stage durations in ms, taken as they are from the reference web animation's 0/28/38/50/62/100%
+// breakpoints against its 3200ms timeline, unrounded so they stay comparable with that source.
+// These are the BASE (1x) durations; TitleRevealTimeline's speedMultiplier scales them.
 private const val OPEN_BASE_DURATION_MS = 896
 private const val SOURCE_BASE_DURATION_MS = 320
 private const val PANDA_BASE_DURATION_MS = 384
@@ -75,12 +72,10 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
     // below start settling.
     private val sourceImpactOffsetMs = (sourceDurationMs * 0.55).toInt()
 
-    // Every animated value STARTS where its animation begins: "Open" off to the left, "Source" off to the
-    // right, the rising words below, not at its final resting position. They used to start at the resting
-    // position (0) and only be moved off-screen by a snapTo() inside the effect that plays the timeline,
-    // which runs after the first frame has already been drawn; on a slow cold start (a fresh install) that
-    // first frame could sit on screen for a noticeable time, showing the finished title, before it jumped to
-    // blank and the animation began.
+    // Every animated value STARTS where its animation begins ("Open" off to the left, "Source" off to the
+    // right, the rising words below), not at its resting position. Starting at rest and moving off-screen
+    // with snapTo() inside the effect that plays the timeline would draw one frame of the finished title
+    // first, and on a slow cold start (a fresh install) that frame can stay up for a noticeable time.
     private val offscreenPx = with(density) { OFFSCREEN_OFFSET.toPx() }
     private val riseOffsetPx = with(density) { VERTICAL_RISE_OFFSET.toPx() }
     private val openOvershootPx = with(density) { OPEN_OVERSHOOT.toPx() }
@@ -113,8 +108,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
 
     /**
      * "Open": screech in from off-left, overshoot forward past its resting spot, then ease back: the
-     * lurch-forward-then-back Gene specifically called out, quantified by the reference's own "+28px, -4.5°
-     * tilt, simulating high-inertia braking" spec.
+     * reference's "+28px, -4.5° tilt, simulating high-inertia braking".
      */
     private fun CoroutineScope.launchOpen() {
         launch {

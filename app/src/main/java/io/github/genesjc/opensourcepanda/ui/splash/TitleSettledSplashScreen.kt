@@ -40,8 +40,8 @@ private const val BURST_HOLD_FRACTION = 0.45
 
 /**
  * The short splash for every launch after the first: the title screen, panda included, as the full
- * animation leaves it once settled, fading in until the burst ends, and on its own for [TITLE_ONLY_MS] before the burst, then the same "sonic boom" burst and hold
- * that animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
+ * animation leaves it once settled. It fades in, stays on its own for [TITLE_ONLY_MS], then plays the
+ * same "sonic boom" burst and hold that the full animation ends with, at the 0.5x speed it uses at launch. This is an independent copy of
  * that ending, not shared code, so the first-launch animation is never at risk from changes here.
  * Like the original it lets two frames go by before starting, since the first frame of a cold start
  * can be slow. Pinned to the brand palette, because the splash is the
@@ -83,6 +83,8 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
             )
         }
 
+        // The fade and the burst above run in their own coroutines, so this one only waits out the hold
+        // and then ends the splash; onFinished() is not reached if the screen is left first.
         delay(holdMs - END_TRIM_MS)
         onFinished()
     }

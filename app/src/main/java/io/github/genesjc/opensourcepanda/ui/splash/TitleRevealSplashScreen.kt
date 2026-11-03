@@ -38,12 +38,9 @@ fun TitleRevealSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 1f)
     var started by remember { mutableStateOf(false) }
 
     LaunchedEffect(timeline) {
-        // Let the first couple of frames go by (drawing the blank screen)
-        // BEFORE starting any timer or animation. On a cold start the
-        // first frame can be very slow (class loading, first-time Compose
-        // set-up); starting the timeline inside that hitch would make the
-        // opening of the animation stutter. After these two frames the
-        // screen is up and the timeline starts smoothly.
+        // Let two blank frames go by BEFORE starting any timer or animation: the first frame of a cold start
+        // can be very slow (class loading, first-time Compose set-up), and a timeline started inside that
+        // hitch would stutter its opening.
         withFrameNanos { }
         withFrameNanos { }
         started = true
