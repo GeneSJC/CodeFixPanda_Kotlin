@@ -239,6 +239,56 @@ class LayeringRulesTest {
         check("closing brace without a blank line after it", found.toSet())
     }
 
+    /**
+     * Setup (declarations and assignments) is set apart from a call that opens a block by a blank line, so the
+     * big block reads as its own unit. An if, when, for or return is not such a call: it stays next to the
+     * variable it tests.
+     */
+    @Test
+    fun aBlankLineSeparatesSetupFromABlockOpeningCall() {
+        val testRoot = listOf(File("src/test/java"), File("app/src/test/java")).first { it.isDirectory }
+        val found = sources.flatMap { setupBeforeBlockViolations(it.path, it.text) } +
+            testRoot.walk().filter { it.extension == "kt" }
+                .flatMap { setupBeforeBlockViolations("test/" + it.relativeTo(testRoot).invariantSeparatorsPath, it.readText()) }
+                .toList()
+        check("setup directly above a block-opening call", found.toSet())
+    }
+
+    /** The `path:line` of each setup line that is followed straight away by a call that opens a block. */
+    private fun setupBeforeBlockViolations(path: String, text: String): List<String> {
+        val lines = text.lines()
+        val found = mutableListOf<String>()
+        var inRawString = false
+        for (i in 0 until lines.size - 1) {
+            val line = lines[i]
+            if (line.split("\"\"\"").size % 2 == 0) {
+                inRawString = !inRawString
+                continue
+            }
+
+            if (inRawString) continue
+            val setup = line.trim()
+            val next = lines[i + 1]
+            val nextText = next.trim()
+            if (setup.isEmpty() || nextText.isEmpty() || setup.startsWith("//") || setup.startsWith("/*") || setup.startsWith("*")) continue
+            val indent = line.indentWidth()
+            if (indent < 4 || next.indentWidth() != indent) continue
+            if (isSetup(setup) && BLOCK_OPENING_CALL.matches(nextText)) found += "$path:${i + 1}"
+        }
+
+        return found
+    }
+
+    /** A complete one-line declaration or assignment. */
+    private fun isSetup(line: String): Boolean {
+        if (!(SETUP_DECLARATION.containsMatchIn(line) || SETUP_ASSIGNMENT.containsMatchIn(line))) return false
+        if (line.endsWith("{") || line.endsWith("(") || line.endsWith(",")) return false
+        val code = line.replace(QUOTED_TEXT, "\"\"").substringBefore("//")
+        return code.count { it == '(' } == code.count { it == ')' } &&
+            code.count { it == '{' } == code.count { it == '}' } &&
+            code.count { it == '[' } == code.count { it == ']' }
+    }
+
     /** The `path:line` of each closing brace that is followed straight away by a sibling statement. */
     private fun blankLineViolations(path: String, text: String): List<String> {
         val lines = text.lines()
@@ -284,6 +334,11 @@ class LayeringRulesTest {
         val LINE_COMMENT = Regex("//[^\\n]*")
         val COMMENT_LINE = Regex("^\\s*(//|/?\\*)")
         val CLOSING_BRACES = setOf("}", "})")
+        const val NOT_A_CALL = "(?!(?:if|when|for|while|try|return|else|do|catch|finally|val|var|fun|class|object|throw|break|continue|import|package|super|this)\\b)"
+        val SETUP_DECLARATION = Regex("^(?:(?:private|internal|public|const|lateinit|override)\\s+)*(?:val|var)\\s")
+        val SETUP_ASSIGNMENT = Regex("^[A-Za-z_][\\w.]*\\s*(?:[-+*/]?=)\\s*[^=]")
+        val BLOCK_OPENING_CALL = Regex("${NOT_A_CALL}[A-Za-z_][\\w.]*(?:<[^>]*>)?(?:\\(.*\\))?\\s*\\{|${NOT_A_CALL}[A-Za-z_][\\w.]*(?:<[^>]*>)?\\(")
+        val QUOTED_TEXT = Regex("\"(?:[^\"\\\\]|\\\\.)*\"")
         val CONTINUES_STATEMENT = Regex("^(\\}|\\)|\\]|else\\b|catch\\b|finally\\b|\\.|\\?:|\\?\\.|&&|\\|\\||->|,|\\+|-\\s)")
         val WHEN_BRANCH = Regex("^(?:[\\w.\"'()\\[\\]<>!:\\- ,]+|else)\\s*->")
         val VERSION_MARKER = Regex("\\bv\\d+\\.\\d+")
