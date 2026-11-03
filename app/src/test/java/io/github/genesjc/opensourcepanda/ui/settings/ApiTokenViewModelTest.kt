@@ -29,6 +29,7 @@ class ApiTokenViewModelTest {
             single { repository }
             single { testAppConfig() }
         }
+
         return ApiTokenViewModel()
     }
 

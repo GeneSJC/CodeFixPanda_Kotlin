@@ -69,11 +69,14 @@ class LayeringRulesTest {
                                 depth--
                             }
                         }
+
                         if (opened && depth <= 0) break
                         end++
                     }
+
                     if (opened && !expressionBody) found += name to (end - start + 1)
                 }
+
                 return found
             }
 

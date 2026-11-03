@@ -20,6 +20,7 @@ class StartupSplashViewModelTest {
             single { repository }
             single { testAppConfig() }
         }
+
         return StartupSplashViewModel()
     }
 

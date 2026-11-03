@@ -22,6 +22,7 @@ class BookmarksRepositoryTest {
                 onFailure()
                 return
             }
+
             stored = issues
             saveCount++
         }

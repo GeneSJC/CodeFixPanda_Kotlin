@@ -27,6 +27,7 @@ class DataSourceSwitchingTest {
         override fun writeAll(all: Map<String, RepoIssueGroupCacheEntry>) {
             entries = all
         }
+
         override fun clear() {
             cleared = true
         }

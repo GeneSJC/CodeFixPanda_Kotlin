@@ -43,6 +43,7 @@ class HiddenIssuesViewModelTest {
             single { testAppConfig() }
             single<StringResolver> { FakeStringResolver }
         }
+
         return HiddenIssuesViewModel()
     }
 
@@ -54,6 +55,7 @@ class HiddenIssuesViewModelTest {
                 onFailure()
                 return
             }
+
             stored = issues
         }
     }

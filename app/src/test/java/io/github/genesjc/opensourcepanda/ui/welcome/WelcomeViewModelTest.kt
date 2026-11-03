@@ -25,6 +25,7 @@ class WelcomeViewModelTest {
             single { tokens }
             single { testAppConfig() }
         }
+
         return WelcomeViewModel()
     }
 

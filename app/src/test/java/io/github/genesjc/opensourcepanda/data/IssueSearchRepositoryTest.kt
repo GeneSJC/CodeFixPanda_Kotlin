@@ -26,6 +26,7 @@ class IssueSearchRepositoryTest {
             calls += Triple(query, perPage, page)
             return search()
         }
+
         override suspend fun fetchRateLimit(): RateLimitInfo? {
             rateLimitCalls++
             return rateLimit

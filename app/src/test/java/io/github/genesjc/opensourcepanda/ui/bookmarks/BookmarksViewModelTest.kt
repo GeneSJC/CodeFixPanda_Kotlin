@@ -40,6 +40,7 @@ class BookmarksViewModelTest {
                 onFailure()
                 return
             }
+
             stored = issues
         }
     }
@@ -56,6 +57,7 @@ class BookmarksViewModelTest {
             single { testAppConfig() }
             single<StringResolver> { FakeStringResolver }
         }
+
         return BookmarksViewModel() to repository
     }
 
