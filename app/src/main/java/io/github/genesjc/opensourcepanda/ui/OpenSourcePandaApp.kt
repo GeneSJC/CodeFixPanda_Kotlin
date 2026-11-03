@@ -13,7 +13,8 @@ import io.github.genesjc.opensourcepanda.ui.splash.StartupSplash
 import io.github.genesjc.opensourcepanda.ui.theme.OpenSourcePandaTheme
 
 /**
- * The root of the UI, what MainActivity hands to setContent: the whole app inside the theme of the chosen Issue Mode.
+ * The root of the UI, what MainActivity hands to setContent: the whole app inside the theme of the chosen
+ * Issue Mode, showing the start splash first and the app once it has finished.
  */
 @Composable
 fun OpenSourcePandaApp() {
@@ -24,18 +25,13 @@ fun OpenSourcePandaApp() {
     val issueModeViewModel: IssueModeViewModel = viewModel()
     val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
     OpenSourcePandaTheme(issueMode = issueMode) {
-        StartupGate()
-    }
-}
-
-/** The start splash until it finishes, then the Discover flow. */
-@Composable
-private fun StartupGate() {
-    // Survives rotation because MainActivity is not recreated on it (android:configChanges).
-    var showSplash by remember { mutableStateOf(true) }
-    if (showSplash) {
-        StartupSplash(onFinished = { showSplash = false })
-    } else {
-        DiscoverNavHost()
+        // For this launch only (StartupSplashViewModel decides which splash plays, per device).
+        // Survives rotation because MainActivity is not recreated on it (android:configChanges).
+        var hasShownSplash by remember { mutableStateOf(false) }
+        if (hasShownSplash) {
+            DiscoverNavHost()
+            return@OpenSourcePandaTheme
+        }
+        StartupSplash(onFinished = { hasShownSplash = true })
     }
 }

@@ -8,7 +8,7 @@ import io.github.genesjc.opensourcepanda.ui.OpenSourcePandaApp
 
 /**
  * The manifest's android:configChanges stops the system from recreating this Activity on rotation.
- * Recreation reset `showSplash` (replaying the start animation on a running app) and was the
+ * Recreation reset `hasShownSplash` (replaying the start animation on a running app) and was the
  * suspected cause of a white screen after rotating to landscape. With it, Compose just recomposes
  * in place, which is how TopReposScreen's landscape detection expects to work.
  */
