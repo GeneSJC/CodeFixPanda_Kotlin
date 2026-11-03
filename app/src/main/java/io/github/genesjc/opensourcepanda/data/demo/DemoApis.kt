@@ -32,6 +32,7 @@ class DemoIssueSearchApi : IssueSearchApi {
                 (language == null || demo.language == language) &&
                 (repo == null || demo.repoFullName == repo)
         }
+
         val items = matches.drop((page - 1) * perPage).take(perPage).map { it.dto }
         return IssueSearchApiResponse(
             code = 200,

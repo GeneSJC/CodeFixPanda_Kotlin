@@ -78,6 +78,7 @@ class IssueSearchRepository(
                     rateLimited = response.code == 403 && response.rateLimit?.remaining == 0,
                 )
             }
+
             _rateLimit.value = response.rateLimit
             IssueSearchResult.Success(
                 IssueSearchPage(

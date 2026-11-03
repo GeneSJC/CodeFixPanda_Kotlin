@@ -96,6 +96,7 @@ class RepoIssuesStateHolder(
                                 lastRefreshedAtMs = refreshedAtMs,
                             )
                         }
+
                         cacheRepository.replaceRepoGroup(
                             language = language,
                             mode = activeMode,

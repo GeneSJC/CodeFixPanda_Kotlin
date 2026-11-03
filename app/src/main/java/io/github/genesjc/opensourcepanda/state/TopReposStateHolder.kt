@@ -103,6 +103,7 @@ class TopReposStateHolder(
                 }
             }
         }
+
         // Adding or removing a token switches between demo and real data, so what is listed is reloaded
         // (from the cache of the data now in use, else from its source).
         scope.launch {
@@ -123,6 +124,7 @@ class TopReposStateHolder(
         while (eventChannel.tryReceive().isSuccess) {
             // Drain events nobody collected from the previous visit.
         }
+
         load(_state.value.selectedLanguage)
     }
 
@@ -204,6 +206,7 @@ class TopReposStateHolder(
                                 lastUpdatedAtMs = fetchedAtMs,
                             )
                         }
+
                         cacheRepository.save(
                             language = language,
                             mode = activeMode,
@@ -288,6 +291,7 @@ class TopReposStateHolder(
                         isLoading = false,
                     )
                 }
+
                 // A cache hit never touches the network, so nothing has
                 // told the search repository the rate limit yet this session.
                 refreshRateLimitIfUnknown()
@@ -311,6 +315,7 @@ class TopReposStateHolder(
             } else {
                 _state.update { it.copy(isLoading = true, loadFailure = null) }
             }
+
             try {
                 when (val result = searchRepository.searchTopRepos(activeMode, language, page)) {
                     is IssueSearchResult.Success -> {
@@ -328,6 +333,7 @@ class TopReposStateHolder(
                             } else {
                                 groupByRepo(newIssues)
                             }
+
                             newCanLoadMore = canRequestNextPage(fetchedThisPage = newIssues.size, justFetchedPage = page)
                             state.copy(
                                 repoGroups = repoGroups,
@@ -340,6 +346,7 @@ class TopReposStateHolder(
                                 tokenRejected = false,
                             )
                         }
+
                         cacheRepository.save(
                             language = language,
                             mode = activeMode,
@@ -356,6 +363,7 @@ class TopReposStateHolder(
                             eventChannel.trySend(TopReposEvent.RateLimited)
                             return@launchInVisit
                         }
+
                         // 401 means GitHub rejected the configured token. Surfaced as tokenRejected so the chip can tell
                         // "no token" from "a token that does not work".
                         val failure = SearchFailure.Http(result.code)

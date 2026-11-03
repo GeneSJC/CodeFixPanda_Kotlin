@@ -49,6 +49,7 @@ fun parseGitHubTimestamp(isoTimestamp: String): Long? = try {
     val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
+
     format.parse(isoTimestamp)?.time
 } catch (e: Exception) {
     null

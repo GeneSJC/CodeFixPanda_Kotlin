@@ -55,6 +55,7 @@ val appModule = module {
         val tokens = get<ApiTokenRepository>()
         GitHubApiClient(tokenProvider = { tokens.effectiveToken.value }, moshi = get())
     }
+
     single { get<GitHubApiClient>().api }
 
     // Resolves string resources for the wording ViewModels build.
@@ -77,6 +78,7 @@ val appModule = module {
             BuildConfig.GITHUB_API_TOKEN,
         )
     }
+
     single { IssueModeRepository(SharedPreferencesIssueModeStorage(androidContext())) }
     single { StartupSplashRepository(SharedPreferencesStartupSplashStorage(androidContext())) }
     single { BookmarksRepository(JsonFileBookmarksStorage(androidContext(), moshi = get())) }
@@ -105,6 +107,7 @@ val appModule = module {
             ),
         )
     }
+
     single {
         val tokens = get<ApiTokenRepository>()
         ReadmeRepository(
@@ -115,6 +118,7 @@ val appModule = module {
             ),
         )
     }
+
     single { ReadmeSnippetRepository(GitHubReadmeSource(get())) }
 
     // State holders.
@@ -126,6 +130,7 @@ val appModule = module {
             searchRepository = get(),
         )
     }
+
     single {
         RepoIssuesStateHolder(
             modeRepository = get(),

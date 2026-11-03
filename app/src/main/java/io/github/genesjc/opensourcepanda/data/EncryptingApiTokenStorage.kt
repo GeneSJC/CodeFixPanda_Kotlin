@@ -36,6 +36,7 @@ class EncryptingApiTokenStorage(
             delegate.save(null)
             problem = TokenStorageProblem.COULD_NOT_READ
         }
+
         return plain
     }
 
@@ -46,6 +47,7 @@ class EncryptingApiTokenStorage(
             problem = TokenStorageProblem.COULD_NOT_SAVE
             return
         }
+
         delegate.save(sealed)
         problem = null
     }

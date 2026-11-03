@@ -34,6 +34,7 @@ fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Iss
             newIssueCount++
             return@forEach
         }
+
         val existingIndex = current.issues.indexOfFirst { it.id == issue.id }
         if (existingIndex == -1) {
             byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
@@ -44,6 +45,7 @@ fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Iss
             )
         }
     }
+
     val newRepoCount = byRepo.keys.count { it !in preexistingRepoNames }
     return RepoGroupUpdate(
         repoGroups = byRepo.values.sortedByDescending { it.matchCount },
@@ -84,5 +86,6 @@ fun addIssuesToRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Issue>
             byRepo[issue.repoFullName] = current.copy(issues = current.issues + issue)
         }
     }
+
     return byRepo.values.sortedByDescending { it.matchCount }
 }
