@@ -18,6 +18,7 @@ fun AppStartSplashScreen(onFinished: () -> Unit, animation: SplashAnimation, pla
         TitleSettledSplashScreen(onFinished = onFinished)
         return
     }
+
     when (animation) {
         SplashAnimation.COIN -> SplashScreen(onFinished = onFinished)
         SplashAnimation.ORIGAMI -> OrigamiSplashScreen(onFinished = onFinished)

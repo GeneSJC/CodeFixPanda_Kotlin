@@ -71,6 +71,7 @@ fun TitleSettledSplashScreen(onFinished: () -> Unit, speedMultiplier: Float = 0.
         launch {
             burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
         }
+
         launch {
             burstAlpha.animateTo(
                 targetValue = 0f,

@@ -107,6 +107,7 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
                         lineTo(0f, size.height)
                         close()
                     }
+
                     drawPath(path, color = primary)
                 }
 
@@ -122,6 +123,7 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
                         lineTo(size.width, size.height)
                         close()
                     }
+
                     drawPath(path, color = primaryDim)
                 }
 
@@ -142,6 +144,7 @@ fun OrigamiSplashScreen(onFinished: () -> Unit) {
                         lineTo(0f, size.height)
                         close()
                     }
+
                     drawPath(path, color = primary)
                 }
 

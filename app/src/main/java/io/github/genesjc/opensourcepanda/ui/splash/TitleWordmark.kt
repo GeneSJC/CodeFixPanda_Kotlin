@@ -95,6 +95,7 @@ internal fun TitleWordmark(
                 modifier = Modifier.height(MASCOT_HEIGHT).then(mascotModifier),
             )
         }
+
         Spacer(modifier = Modifier.height((8 * SPLASH_TEXT_SCALE).dp))
         Row {
             Text(
@@ -113,6 +114,7 @@ internal fun TitleWordmark(
                 modifier = sourceModifier,
             )
         }
+
         Spacer(modifier = Modifier.height((8 * SPLASH_TEXT_SCALE).dp))
         Text(
             "PANDA",

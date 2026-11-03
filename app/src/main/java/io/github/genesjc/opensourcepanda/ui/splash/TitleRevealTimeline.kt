@@ -124,6 +124,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
                 },
             )
         }
+
         launch {
             openRotation.animateTo(
                 targetValue = 0f,
@@ -171,6 +172,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
             launch {
                 burstScale.animateTo(BURST_MAX_SCALE, tween(burstDurationMs, easing = FastOutSlowInEasing))
             }
+
             burstAlpha.animateTo(
                 targetValue = 0f,
                 animationSpec = keyframes {
@@ -191,6 +193,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
             launch {
                 pandaOffsetY.animateTo(0f, tween(pandaDurationMs, easing = FastOutSlowInEasing))
             }
+
             pandaAlpha.animateTo(1f, tween(pandaDurationMs))
         }
     }
@@ -202,6 +205,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
             launch {
                 mascotAlpha.animateTo(1f, tween((mascotDropMs * 0.3f).toInt()))
             }
+
             mascotOffsetY.animateTo(0f, tween(mascotDropMs, easing = FastOutLinearInEasing))
             launch {
                 mascotScaleY.animateTo(
@@ -215,6 +219,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
                     },
                 )
             }
+
             mascotScaleX.animateTo(
                 targetValue = 1f,
                 animationSpec = keyframes {
