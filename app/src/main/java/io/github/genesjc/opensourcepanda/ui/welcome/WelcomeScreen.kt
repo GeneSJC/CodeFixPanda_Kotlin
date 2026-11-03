@@ -92,34 +92,7 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                // Decorative: the title below already says what this is.
-                Image(
-                    painter = painterResource(R.drawable.panda_mark),
-                    contentDescription = null,
-                    modifier = Modifier.height(140.dp),
-                )
-                // "Welcome to" is smaller and lighter so the app's name stands out on its own.
-                Text(
-                    stringResource(R.string.welcome_title_intro),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = BrandOnOrangeSoft,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                Text(
-                    stringResource(R.string.welcome_title_name),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = BrandOnOrange,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    stringResource(R.string.welcome_message),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = BrandOnOrangeSoft,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
-                )
+                WelcomeIntro()
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
                         onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
@@ -212,4 +185,37 @@ fun WelcomeScreen(
             }
         }
     }
+}
+
+/** The panda, the title and the welcome message above the token controls. */
+@Composable
+private fun WelcomeIntro() {
+    // Decorative: the title below already says what this is.
+    Image(
+        painter = painterResource(R.drawable.panda_mark),
+        contentDescription = null,
+        modifier = Modifier.height(140.dp),
+    )
+    // "Welcome to" is smaller and lighter so the app's name stands out on its own.
+    Text(
+        stringResource(R.string.welcome_title_intro),
+        style = MaterialTheme.typography.titleMedium,
+        color = BrandOnOrangeSoft,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 8.dp),
+    )
+    Text(
+        stringResource(R.string.welcome_title_name),
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold,
+        color = BrandOnOrange,
+        textAlign = TextAlign.Center,
+    )
+    Text(
+        stringResource(R.string.welcome_message),
+        style = MaterialTheme.typography.bodyLarge,
+        color = BrandOnOrangeSoft,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
+    )
 }
