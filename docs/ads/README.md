@@ -88,6 +88,34 @@ Restoring the code and building with **test ads** needs none of this. Going live
 
 The step-by-step commands, the removed Gradle blocks and the full test plan are in [`restore.md`](restore.md).
 
+## Dependency injection (Koin): how ads were wired in
+
+Shared code never knew which build it was in. It asked Koin for an `AdsController` and used the answer. The wiring:
+
+- **One module per flavor, same name and package.** Each flavor had its own file `ads/AdsModule.kt` declaring
+  `val adsModule = module { ... }`, in `src/foss` and `src/commercial`. The shared code imports `ads.adsModule`, and
+  whichever flavor is being built supplies it, so there is no `if` anywhere.
+  - **foss:** `single<AdsController> { NoAdsController() }`, the do-nothing implementation.
+  - **commercial, the real one:**
+    `single { AdFreePeriod(SharedPreferencesAdFreeStorage(androidContext())) }` and
+    `single<AdsController> { AdMobAdsController(androidContext(), get()) }`. The controller takes the application context
+    and the ad-free period, which Koin resolves with `get()`.
+- **Loaded at start-up.** `OpenSourcePandaApplication.onCreate` calls `startKoin { androidContext(...); modules(appModule, adsModule) }`,
+  so the ads module sits next to the app module. An Application is created once per process, so the container starts once.
+- **Used through `by inject()`.** `BaseViewModel` is a `KoinComponent`, so the Top Repos and repo-issues ViewModels each declared
+  `private val adsController: AdsController by inject()` and exposed its flows (`canShowAds`, `adFreeUntilMs`,
+  `canOfferAdFree`, plus `privacyOptionsRequired` on Top Repos) to their screens. A small `AdsViewModel` held the one start call.
+  `AppModule` also read `get<AdsController>().adsAreLive` to add "LIVE ADS" to the build label.
+- **Tests swap it with a fake.** `ViewModelFixtures` registered `single<AdsController> { adsController }` (a `FakeAdsController`
+  whose flags the test sets) in `restartKoin`, so ViewModel tests never touched a real controller.
+- **Start-up.** `adsViewModel.start(this)` was a bare line in `MainActivity.onCreate`. The consent form needs an Activity, so the call
+  cannot move into `Application`, but when restoring, put it inside a named app-start routine that the Activity calls (as the
+  start splash now is, in `OpenSourcePandaApp`), not back as a loose line.
+
+Restoring this wiring is step 1a of [`restore.md`](restore.md): reverting the clean-out commit brings back the `AppModule` and
+`OpenSourcePandaApplication` edits, the `by inject()` fields and the test fixtures together, and step 2 brings back the real
+commercial module.
+
 ## Convention: parking a feature
 
 When a feature is taken out of the code but may come back, it is not deleted and it is not hidden in a tag alone:
