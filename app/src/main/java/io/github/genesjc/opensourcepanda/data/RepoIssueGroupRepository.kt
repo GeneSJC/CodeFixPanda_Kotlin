@@ -105,6 +105,9 @@ class RepoIssueGroupRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
 
+    // Save and replaceRepoGroup each read the whole file, change one entry and write the whole file back. Two
+    // of them overlapping would both read the same old file and the later write would drop the earlier change,
+    // so every call takes this lock, which suspends a second caller until the first has finished writing.
     private val lock = Mutex()
 
     suspend fun load(language: LanguageFilter, mode: IssueLabelFilter): RepoIssueGroupCacheEntry? =
@@ -137,12 +140,10 @@ class RepoIssueGroupRepository(
     }
 
     /**
-     * v0.50 ("Refresh this repo" write-back): writes ONE repo's refreshed
-     * group back into the entry it came from, so Top Repos shows the
-     * updated match count (or drops the repo, if it has none left)
-     * without a second network call. Keeps the entry's original
-     * fetchedAtMs on purpose: a single-repo refresh is not a list-level
-     * fetch and shouldn't make the whole list look fresher than it is.
+     * Writes ONE repo's refreshed group back into the entry it came from, so Top Repos shows the
+     * updated match count (or drops the repo, if it has none left) without a second network call.
+     * Keeps the entry's original fetchedAtMs on purpose: a single-repo refresh is not a list-level
+     * fetch and must not make the whole list look fresher than it is.
      * Does nothing if there is no entry for this (language, mode).
      */
     suspend fun replaceRepoGroup(

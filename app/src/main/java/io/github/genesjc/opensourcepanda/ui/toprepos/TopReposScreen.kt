@@ -29,15 +29,14 @@ import kotlinx.coroutines.launch
  * The Top Repos screen: the repos with the most open issues for the active Issue Mode
  * (good first issue or help wanted), filtered by language, with a manual Load More.
  *
- * Portrait stacks the language row above the list. Landscape puts the mode, repo count
- * and language picker in a narrow left rail so the card list gets the full height.
- * Hidden issues are filtered at display time; the raw data stays in uiState, and the
- * repo screen receives the raw group. The navigation drawer (opened from the menu icon) holds navigation, the two
- * mode switches and, in dev builds, the animation replays.
+ * Portrait stacks the language row above the list; landscape moves the mode, repo count and
+ * language picker into a left rail so the cards get the full height. Hidden issues are filtered at
+ * display time: uiState keeps the raw data and the repo screen receives the raw group. The drawer
+ * holds navigation, the two mode switches and, in dev builds, the animation replays.
  *
- * Deliberately not a mode dropdown in the title: the mode is one whole-app choice made
- * at the gate screen. The two "Find ..." menu items are hardcoded, so a third mode
- * means editing them. More in docs/design-notes.md, "Top Repos screen".
+ * Not a mode dropdown in the title: the mode is one whole-app choice made at the gate screen. The
+ * two "Find ..." menu items are hardcoded, so a third mode means editing them.
+ * More in docs/design-notes.md, "Top Repos screen".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

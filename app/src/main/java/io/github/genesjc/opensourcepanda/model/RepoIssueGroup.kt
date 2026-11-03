@@ -15,6 +15,6 @@ data class RepoIssueGroup(
     val repoDisplayTitle: String,
     val issues: List<Issue>,
 ) {
-    /** Number of matching issues in THIS fetched batch — the ranking signal for v0.42 (see TopReposStateHolder). */
+    /** Number of matching issues in THIS fetched batch; the ranking signal (see TopReposStateHolder). */
     val matchCount: Int get() = issues.size
 }

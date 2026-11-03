@@ -9,18 +9,13 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
- * Builds the Retrofit service for GitHub's REST API. One instance for the
- * app, created by the Koin module with the app-wide Moshi, so the
- * request converter and the cache files use the same adapters.
+ * Builds the Retrofit service for GitHub's REST API: one instance for the app, made by the Koin
+ * module with the app-wide Moshi, so requests and the cache files share the same adapters.
  *
- * The GitHub token comes from [tokenProvider], which the Koin module backs with
- * ApiTokenRepository: a token the user entered in Settings if there is one,
- * otherwise BuildConfig.GITHUB_API_TOKEN, which is populated at build time from
- * local.properties (see app/build.gradle.kts) — never hardcoded here,
- * never committed to source control. It is read on every request, so a
- * token saved in Settings takes effect immediately, without a rebuild. The
- * client takes a function and not the repository so the network package
- * knows nothing about where tokens are kept.
+ * The token comes from [tokenProvider]: the one the user entered in Settings, else
+ * BuildConfig.GITHUB_API_TOKEN (filled from local.properties at build time, never committed). It is
+ * read on every request, so a token saved in Settings applies at once, without a rebuild. The client
+ * takes a function, not the repository, so the network package knows nothing about where tokens live.
  */
 class GitHubApiClient(
     private val tokenProvider: () -> String,

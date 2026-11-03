@@ -34,14 +34,10 @@ class MainActivity : ComponentActivity() {
         // Consent, then advertising, in the commercial build; nothing in the open build.
         adsViewModel.start(this)
         setContent {
-            // App-wide Issue Mode (v0.41): observed through
-            // IssueModeViewModel at this single root theme call, which
-            // wraps the whole app — splash and the Discover flow alike.
-            // viewModel() here is Activity-scoped, so DiscoverNavHost's
-            // own viewModel() call gets this same instance and the
-            // theme updates the moment the gate screen's choice lands.
-            // Null (no mode chosen yet) falls back to the original
-            // light/dark scheme unchanged.
+            // The Issue Mode themes the whole app, splash included, so it is observed here at the root.
+            // viewModel() is Activity-scoped: DiscoverNavHost's own viewModel() call gets this same
+            // instance, so the theme changes the moment the mode gate's choice lands.
+            // Null (no mode chosen yet) gives the plain light/dark scheme.
             val issueModeViewModel: IssueModeViewModel = viewModel()
             val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
             OpenSourcePandaTheme(issueMode = issueMode) {

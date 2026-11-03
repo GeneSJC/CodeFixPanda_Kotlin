@@ -53,13 +53,9 @@ fun updateIssuesInRepoGroups(existing: List<RepoIssueGroup>, newIssues: List<Iss
 }
 
 /**
- * Groups already-fetched issues by parent repo and sorts the
- * resulting groups by match count, descending — the v0.42 ranking
- * signal (see TopReposStateHolder's class comment for why this replaces the old
- * composite score). No artificial cap on the number of groups
- * shown — whatever groups form from the page(s) fetched so far are
- * all shown, which bounds card count naturally without a separate
- * constant to keep in sync.
+ * Groups already-fetched issues by parent repo and sorts the groups by match count, descending:
+ * the ranking signal. There is no cap on the number of groups; every group formed from the pages
+ * fetched so far is shown, which bounds the card count without a constant to keep in sync.
  */
 fun groupByRepo(issues: List<Issue>): List<RepoIssueGroup> =
     addIssuesToRepoGroups(emptyList(), issues)

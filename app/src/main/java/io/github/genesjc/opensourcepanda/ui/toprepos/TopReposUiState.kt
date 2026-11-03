@@ -13,29 +13,16 @@ data class TopReposUiState(
      * does not work from a failed load.
      */
     val tokenRejected: Boolean = false,
-    /** Same LanguageFilter enum Feed uses (v0.8) — shared, not a second set of options. */
+    /** The language the list is for; the same LanguageFilter options the rest of the app uses. */
     val selectedLanguage: LanguageFilter = LanguageFilter.KOTLIN,
     /**
-     * Total matching ISSUES GitHub reports for the current query
-     * (v0.42) — not a repo count. Mirrors Feed's totalResultCount;
-     * shown so "here are the top N repos with matches" has an honest
-     * "out of M total matching issues" frame, same transparency
-     * instinct the old ranking dialog had for its scoring formula.
+     * Total matching ISSUES GitHub reports for the current query, not a repo count. Shown so
+     * "the top N repos with matches" has an honest "out of M matching issues" frame.
      */
     val totalIssueCount: Int = 0,
-    // cooldownSecondsRemaining REMOVED in v0.42 — the old 60-second
-    // cooldown existed because one load cost ~21 Search API calls (1
-    // repo search + 20 per-repo annotation checks), so a second load
-    // within 60s already risked the 30/min cap. This screen's ENTIRE
-    // load is now a single issue-search call — a genuine architectural
-    // side benefit of the pipeline swap, not something separately
-    // decided. See TopReposStateHolder's class comment.
-
     /**
-     * v0.43 (pagination): which page of the current query has been
-     * fetched so far — 1 immediately after the initial load(), Load
-     * More increments it. Reset to 1 on every fresh load() (language
-     * or mode switch, or retry()).
+     * Which page of the current query has been fetched so far: 1 after the initial load, and Load
+     * More increments it. Reset to 1 on every fresh load (language or mode switch, or retry).
      */
     val currentPage: Int = 1,
     /**

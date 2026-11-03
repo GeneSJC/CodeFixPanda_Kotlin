@@ -1,18 +1,14 @@
 package io.github.genesjc.opensourcepanda.config
 
 /**
- * The build-time constants the UI depends on, bundled into one plain
- * immutable object. A view never reads BuildConfig itself: it gets these
- * values from its ViewModel (see BaseViewModel), so the build system
- * stays on the far side of one crossing point, the Koin module, which
- * reads BuildConfig once to build this object.
+ * The build-time constants the UI depends on, as one plain immutable object. A view never reads
+ * BuildConfig: it gets these from its ViewModel (see BaseViewModel), and the Koin module reads
+ * BuildConfig once to build this object.
  *
- * Why include [buildLabel] even though it is display-only: one rule
- * ("views never read BuildConfig") is easier to follow
- * than a rule with a carve-out, and the cost is one forwarding getter.
+ * [buildLabel] is display-only but included anyway: "views never read BuildConfig" is easier to
+ * follow without a carve-out, and it costs one forwarding getter.
  *
- * A test builds its own [AppConfig], for example one with the drawer flag
- * switched on, with no rebuild.
+ * A test builds its own [AppConfig] (say, with the drawer flag on) with no rebuild.
  */
 data class AppConfig(
     /** "A.B", from buildLabelA/buildLabelB in app/build.gradle.kts. */
