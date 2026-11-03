@@ -1,9 +1,9 @@
 # How the ads layer works (architecture)
 
-This describes the ads layer as it was when it last ran, so that it can be understood, restored and extended. The
-code is parked (see `docs/ads-restore.md` for where it is and how to bring it back); the SDK-free hooks described
-here are still in the code. Behaviour rules for people (testing, never tapping live ads) are in
-`docs/ads-testing-rules.md`.
+This describes the ads layer as it was when it last ran, so that it can be understood, restored and extended. None of
+it is in the code now (see [`README.md`](README.md) in this folder for where it is kept and [`restore.md`](restore.md) for
+how to bring it back); the file paths below are where the pieces lived. Behaviour rules for people (testing, never
+tapping live ads) are in [`testing-rules.md`](testing-rules.md).
 
 ## 1. Principles
 
@@ -147,7 +147,7 @@ instead of jumping.
 2. Implement it in `AdMobAdsController` (or a helper in `src/commercial`), recomputing through `publish()`. Use a sample unit in
    non-production builds and a new `admob...UnitId` property for production, added to the production guard.
 3. Expose it through the screen ViewModels and use it from the composables; no SDK type crosses into main.
-4. Word it as time or benefit, never as a request to tap or view an ad. Add it to `docs/ads-testing-rules.md`.
+4. Word it as time or benefit, never as a request to tap or view an ad. Add it to `docs/ads/testing-rules.md`.
 5. Run the clean-build check and both flavors' tests.
 
 **Replace the provider, or remove ads.** Re-implement `AdsController` and `AdBanner` in `src/commercial` for the new provider, change the
@@ -174,4 +174,4 @@ changes: that is the test that the isolation still holds. To remove ads, bind `N
 - The SDK starts only after consent allows it, and off the main thread.
 - The ad-free offer is opt-in, worded only as time without ads, and the period starts only when the reward is earned.
 - The banner's height is reserved, and a network failure shows plain muted text.
-- The publishing checklist in `docs/ads-testing-rules.md` is complete before any live release.
+- The publishing checklist in `docs/ads/testing-rules.md` is complete before any live release.

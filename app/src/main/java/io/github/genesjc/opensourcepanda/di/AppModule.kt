@@ -3,7 +3,6 @@ package io.github.genesjc.opensourcepanda.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.github.genesjc.opensourcepanda.BuildConfig
-import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
@@ -62,12 +61,10 @@ val appModule = module {
     single<StringResolver> { ContextStringResolver(androidContext()) }
 
     // Build-time constants: the one place BuildConfig is read.
-    // The label names the flavor too, so the drawer shows which build is running (foss or commercial), and
-    // says LIVE ADS when the build can serve real ads, so a live build is never mistaken for a test one.
+    // The label names the flavor too, so the drawer shows which build is running (foss or commercial).
     single {
-        val live = if (get<AdsController>().adsAreLive) ", LIVE ADS" else ""
         AppConfig(
-            "${BuildConfig.BUILD_LABEL} (${BuildConfig.FLAVOR}$live)",
+            "${BuildConfig.BUILD_LABEL} (${BuildConfig.FLAVOR})",
             SplashAnimation.fromConfigName(BuildConfig.SPLASH_ANIMATION),
             BuildConfig.SHOW_DETAILED_DRAWER_MENU,
         )

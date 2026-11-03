@@ -295,19 +295,12 @@ steps in a short guide, and has a box to paste the token. "Try the demo" opens s
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
 More in `docs/design-notes.md`, "Token storage".
 
-**Ads are parked.** No build of this app contains an ads SDK, or any code that depends on one. The ads layer (Google's consent
-flow, an AdMob banner, and a rewarded video that buys an hour without the banner) was built and merged, then taken out of the
-build because the ad account, privacy and consent work behind it is not finished.
+**Ads are parked, on purpose.** No build of this app contains an ads SDK, or any code that talks to one. A working,
+tested ads layer (Google's consent flow, an AdMob banner, and a rewarded video that buys an hour without the banner) is
+kept in the repository's history and written up in [`docs/ads/`](docs/ads/README.md): what it does, where each piece lives
+(two tags and a commit), the setup it needs, and how to bring it back. Restoring is a copy of files out of the history, not
+a merge.
 
-- **Where the working code is.** In `develop`'s history at commit `9d61e0f` (the merge of PR #37), and, with
-  two extras built afterwards, in the tag `ads-parked-2026-10-27`.
-- **How to bring it back.** [`docs/ads-restore.md`](docs/ads-restore.md) is the step-by-step restore guide, with
-  every removed build block written out in full. [`docs/ads-architecture.md`](docs/ads-architecture.md) explains
-  how the layer works, and [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) holds the rules for when it is
-  live. Restoring is a copy of self-contained files, not a merge.
-- **What stays in the code.** The small SDK-free hooks: the `AdsController` interface and the do-nothing
-  `NoAdsController`, the banner slot, the ad-free offer line and the ViewModel flows. They never show anything while
-  ads are parked.
 - **Checked by CI.** `scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
   its merged manifest.
 
@@ -368,9 +361,7 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 | Read | To learn |
 |---|---|
 | [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
-| [`docs/ads-restore.md`](docs/ads-restore.md) | How to bring the parked ads layer back, step by step |
-| [`docs/ads-architecture.md`](docs/ads-architecture.md) | How the ads layer works, including the ad-free hour |
-| [`docs/ads-testing-rules.md`](docs/ads-testing-rules.md) | The rules for testing and shipping ads safely |
+| [`docs/ads/README.md`](docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
 
 <a id="status"></a>

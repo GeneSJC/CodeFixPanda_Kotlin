@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,11 +40,8 @@ import io.github.genesjc.opensourcepanda.R
 import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
-import io.github.genesjc.opensourcepanda.ui.ads.AdBannerSlot
-import io.github.genesjc.opensourcepanda.ui.ads.AdFreeOfferLine
 import io.github.genesjc.opensourcepanda.ui.components.DemoChip
 import io.github.genesjc.opensourcepanda.ui.components.ModePill
-import io.github.genesjc.opensourcepanda.ui.findActivity
 import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
 import io.github.genesjc.opensourcepanda.ui.components.BrandTopAppBar
@@ -74,9 +70,6 @@ fun RepoIssuesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
-    val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
-    val adFreeUntilMs by viewModel.adFreeUntilMs.collectAsStateWithLifecycle()
-    val canOfferAdFree by viewModel.canOfferAdFree.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var readmeExpanded by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -104,19 +97,9 @@ fun RepoIssuesScreen(
             containerColor = Color.Transparent,
             modifier = modifier,
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = { AdBannerSlot(visible = canShowAds, modifier = Modifier.navigationBarsPadding()) },
             topBar = {
                 BrandTopAppBar(
-                    title = {
-                        Column {
-                            Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge)
-                            AdFreeOfferLine(
-                                adFreeUntilMs = adFreeUntilMs,
-                                canOffer = canOfferAdFree,
-                                onOffer = { context.findActivity()?.let(viewModel::onAdFreeOffer) },
-                            )
-                        }
-                    },
+                    title = { Text(repoGroup.repoDisplayTitle, style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
                         BrandBarIconButton(onClick = onBack) {
                             Icon(

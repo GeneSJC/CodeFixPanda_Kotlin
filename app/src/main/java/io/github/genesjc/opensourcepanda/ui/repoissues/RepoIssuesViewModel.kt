@@ -1,9 +1,7 @@
 package io.github.genesjc.opensourcepanda.ui.repoissues
 
-import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import io.github.genesjc.opensourcepanda.R
-import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.BookmarksRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
@@ -38,7 +36,6 @@ class RepoIssuesViewModel : BaseViewModel() {
     private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
     private val bookmarksRepository: BookmarksRepository by inject()
     private val tokenRepository: ApiTokenRepository by inject()
-    private val adsController: AdsController by inject()
 
     init {
         stateHolder.open()
@@ -50,18 +47,6 @@ class RepoIssuesViewModel : BaseViewModel() {
 
     /** True while the demo data is shown (no token), for the banner. */
     val isDemo: StateFlow<Boolean> = tokenRepository.isDemo
-
-    /** True when an ad may be shown on this screen (always false in the open build). */
-    val canShowAds: StateFlow<Boolean> = adsController.canShowAds
-
-    /** When the ad-free period ends (epoch milliseconds), or 0; always 0 in the open build. */
-    val adFreeUntilMs: StateFlow<Long> = adsController.adFreeUntilMs
-
-    /** True when the user can be offered the ad-free period now (never in the open build). */
-    val canOfferAdFree: StateFlow<Boolean> = adsController.canOfferAdFree
-
-    /** Plays the rewarded video behind the ad-free offer. The Activity is used for this call only. */
-    fun onAdFreeOffer(activity: Activity) = adsController.showAdFreeOffer(activity)
 
     /** The mode the screen draws with. Like Top Repos, it starts with the chosen mode and ignores a cleared one (Reset App). */
     val activeMode: StateFlow<IssueLabelFilter> = stateHolder.mode

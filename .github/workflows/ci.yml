@@ -41,7 +41,7 @@ jobs:
       - name: Compile (debug)
         run: ./gradlew assembleFossDebug assembleCommercialDebug --stacktrace
 
-      # Proves neither flavor contains advertising software (ads are parked; see docs/ads-restore.md).
+      # Proves neither flavor contains advertising software (ads are parked; see docs/ads/README.md).
       # See scripts/check-no-ads-sdk.sh.
       - name: Builds contain no ads software
         run: ./scripts/check-no-ads-sdk.sh
