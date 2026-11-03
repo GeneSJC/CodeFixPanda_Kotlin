@@ -16,12 +16,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
-import io.github.genesjc.opensourcepanda.ui.findActivity
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -59,11 +57,6 @@ fun TopReposScreen(
     val rateLimit by viewModel.rateLimit.collectAsStateWithLifecycle()
     val hasToken by viewModel.hasToken.collectAsStateWithLifecycle()
     val isDemo by viewModel.isDemo.collectAsStateWithLifecycle()
-    val privacyOptionsRequired by viewModel.privacyOptionsRequired.collectAsStateWithLifecycle()
-    val canShowAds by viewModel.canShowAds.collectAsStateWithLifecycle()
-    val adFreeUntilMs by viewModel.adFreeUntilMs.collectAsStateWithLifecycle()
-    val canOfferAdFree by viewModel.canOfferAdFree.collectAsStateWithLifecycle()
-    val activity = LocalContext.current.findActivity()
     val visibleGroups by viewModel.visibleRepoGroups.collectAsStateWithLifecycle()
     // Guaranteed non-null: DiscoverNavHost never renders this screen
     // while the mode is null (see its own doc comment).
@@ -110,10 +103,6 @@ fun TopReposScreen(
         onOpenSettings = onOpenSettings,
         onOpenWelcome = onOpenWelcome,
         onResetApp = onResetApp,
-        showPrivacyOptions = privacyOptionsRequired,
-        onPrivacyOptions = { activity?.let(viewModel::onPrivacyOptions) },
-        showAdFreeOffer = canOfferAdFree,
-        onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
         onSelectMode = viewModel::onModeSelected,
         onAboutIssueTypes = { openDialog = TopReposDialog.LABEL_INFO },
         onReplay = { replayAnimation = it },
@@ -125,7 +114,6 @@ fun TopReposScreen(
                 currentMode = currentMode,
                 isLandscape = isLandscape,
                 snackbarHostState = snackbarHostState,
-                adBannerVisible = canShowAds,
                 onMenuClick = { scope.launch { drawerState.open() } },
                 onRepoCountClick = { openDialog = TopReposDialog.RANKING_INFO },
                 onLanguageSelected = viewModel::onLanguageSelected,
@@ -138,9 +126,6 @@ fun TopReposScreen(
                         onRateLimitClick = {
                             openDialog = if (hasToken && !uiState.tokenRejected) TopReposDialog.RATE_LIMIT else TopReposDialog.TOKEN_PROBLEM
                         },
-                        adFreeUntilMs = adFreeUntilMs,
-                        canOfferAdFree = canOfferAdFree,
-                        onAdFreeOffer = { activity?.let(viewModel::onAdFreeOffer) },
                     )
                 },
                 repoList = repoList,

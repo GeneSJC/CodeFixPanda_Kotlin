@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import io.github.genesjc.opensourcepanda.ui.ads.AdsViewModel
 import io.github.genesjc.opensourcepanda.ui.bookmarks.BookmarksViewModel
 import io.github.genesjc.opensourcepanda.ui.hidden.HiddenIssuesViewModel
 import io.github.genesjc.opensourcepanda.ui.modegate.IssueModeViewModel
@@ -78,11 +77,6 @@ class IssueModeViewModelCreationTest {
     @Test
     fun startupSplashViewModelIsCreatedByTheDefaultFactory() {
         assertNotNull(provider()[StartupSplashViewModel::class.java])
-    }
-
-    @Test
-    fun adsViewModelIsCreatedByTheDefaultFactory() {
-        assertNotNull(provider()[AdsViewModel::class.java])
     }
 
     @Test

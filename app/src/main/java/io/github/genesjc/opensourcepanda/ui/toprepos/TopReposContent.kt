@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -28,8 +27,6 @@ import io.github.genesjc.opensourcepanda.model.IssueLabelFilter
 import io.github.genesjc.opensourcepanda.model.LanguageFilter
 import io.github.genesjc.opensourcepanda.model.RateLimitInfo
 import io.github.genesjc.opensourcepanda.model.RepoIssueGroup
-import io.github.genesjc.opensourcepanda.ui.ads.AdBannerSlot
-import io.github.genesjc.opensourcepanda.ui.ads.AdFreeOfferLine
 import io.github.genesjc.opensourcepanda.ui.components.BrandBarIconButton
 import io.github.genesjc.opensourcepanda.ui.components.BrandHeader
 import io.github.genesjc.opensourcepanda.ui.components.BrandSoftBackground
@@ -52,7 +49,6 @@ internal fun TopReposContent(
     currentMode: IssueLabelFilter,
     isLandscape: Boolean,
     snackbarHostState: SnackbarHostState,
-    adBannerVisible: Boolean,
     onMenuClick: () -> Unit,
     onRepoCountClick: () -> Unit,
     onLanguageSelected: (LanguageFilter) -> Unit,
@@ -63,7 +59,6 @@ internal fun TopReposContent(
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = { AdBannerSlot(visible = adBannerVisible, modifier = Modifier.navigationBarsPadding()) },
             topBar = {
                 BrandHeader(
                     leading = {
@@ -120,8 +115,7 @@ internal fun TopReposContent(
 /**
  * The right side of the header: the rate limit as a rounded square, always shown (a placeholder with no
  * data yet) so the header does not shift. With no token there are no rate-limit numbers, so the demo marker
- * takes its place; the screen decides what each tap does. The ad-free offer sits under the widget; in the
- * open build that line draws nothing.
+ * takes its place; the screen decides what each tap does.
  */
 @Composable
 internal fun TopReposHeaderTrailing(
@@ -129,9 +123,6 @@ internal fun TopReposHeaderTrailing(
     rateLimit: RateLimitInfo?,
     onDemoClick: () -> Unit,
     onRateLimitClick: () -> Unit,
-    adFreeUntilMs: Long,
-    canOfferAdFree: Boolean,
-    onAdFreeOffer: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.End,
@@ -144,12 +135,6 @@ internal fun TopReposHeaderTrailing(
             RateLimitWidget(info = rateLimit, onClick = onRateLimitClick)
         }
     }
-    AdFreeOfferLine(
-        adFreeUntilMs = adFreeUntilMs,
-        canOffer = canOfferAdFree,
-        onOffer = onAdFreeOffer,
-        modifier = Modifier.padding(end = 8.dp, top = 2.dp),
-    )
 }
 
 /** Landscape's left rail: the mode, the repo count with its updated time, and the language picker. */

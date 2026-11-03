@@ -1,6 +1,5 @@
 package io.github.genesjc.opensourcepanda.testutil
 
-import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.config.AppConfig
 import io.github.genesjc.opensourcepanda.config.SplashAnimation
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
@@ -128,7 +127,6 @@ class ViewModelFixtures(
     val tokenStorage = FakeApiTokenStorage()
     val tokenRepository = ApiTokenRepository(tokenStorage, buildToken)
     val appConfig = testAppConfig()
-    val adsController = FakeAdsController()
     val hiddenIssuesStorage = FakeHiddenIssuesStorage()
     val bookmarksStorage = FakeBookmarksStorage()
     val hiddenIssuesRepository = HiddenIssuesRepository(hiddenIssuesStorage)
@@ -156,7 +154,6 @@ class ViewModelFixtures(
             single { snippetRepository }
             single { hiddenIssuesRepository }
             single { tokenRepository }
-            single<AdsController> { adsController }
             single { config }
             single<StringResolver> { FakeStringResolver }
         }
@@ -170,7 +167,6 @@ class ViewModelFixtures(
             single { hiddenIssuesRepository }
             single { bookmarksRepository }
             single { tokenRepository }
-            single<AdsController> { adsController }
             single { appConfig }
             single<StringResolver> { FakeStringResolver }
         }

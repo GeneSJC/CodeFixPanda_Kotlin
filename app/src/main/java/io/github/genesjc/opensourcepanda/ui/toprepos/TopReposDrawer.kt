@@ -58,10 +58,6 @@ internal fun TopReposDrawer(
     onOpenSettings: () -> Unit,
     onOpenWelcome: () -> Unit,
     onResetApp: () -> Unit,
-    showPrivacyOptions: Boolean,
-    onPrivacyOptions: () -> Unit,
-    showAdFreeOffer: Boolean,
-    onAdFreeOffer: () -> Unit,
     onSelectMode: (IssueLabelFilter) -> Unit,
     onAboutIssueTypes: () -> Unit,
     onReplay: (AnimationReplay) -> Unit,
@@ -92,8 +88,7 @@ internal fun TopReposDrawer(
             ModalDrawerSheet(modifier = Modifier.width(drawerWidth), windowInsets = WindowInsets(0)) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding()) {
                     BrandTitleBand()
-                    // Always-visible build label, so the running build can be checked against the
-                    // version line in chat.
+                    // Always-visible build label, so the running build can be matched to a Gradle log or a commit.
                     Column(modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp)) {
                         VersionLabel(label = buildLabel)
                         IndependentNotice(textAlign = TextAlign.Start, modifier = Modifier.padding(top = 4.dp))
@@ -107,14 +102,6 @@ internal fun TopReposDrawer(
                         Item(stringResource(R.string.menu_settings)) { onOpenSettings() }
                         // Reopens the welcome slideshow: how to get a token, and a place to paste it.
                         Item(stringResource(R.string.menu_welcome)) { onOpenWelcome() }
-                        // A backup for the title-bar offer, for anyone who looks here: shown only while the offer can be made.
-                        if (showAdFreeOffer) {
-                            Item(stringResource(R.string.action_hide_ads)) { onAdFreeOffer() }
-                        }
-                        // Only where privacy rules require a way back to the consent choices (commercial build).
-                        if (showPrivacyOptions) {
-                            Item(stringResource(R.string.menu_privacy_options)) { onPrivacyOptions() }
-                        }
                         // No confirmation: nothing is destroyed. Clears the mode and returns to the gate screen.
                         Item(stringResource(R.string.menu_reset_app)) { onResetApp() }
                     }

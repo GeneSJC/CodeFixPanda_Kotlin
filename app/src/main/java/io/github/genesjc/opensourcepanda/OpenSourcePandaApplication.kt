@@ -1,7 +1,6 @@
 package io.github.genesjc.opensourcepanda
 
 import android.app.Application
-import io.github.genesjc.opensourcepanda.ads.adsModule
 import io.github.genesjc.opensourcepanda.di.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -17,8 +16,7 @@ class OpenSourcePandaApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@OpenSourcePandaApplication)
-            // adsModule is supplied by the build flavor (src/foss or src/commercial).
-            modules(appModule, adsModule)
+            modules(appModule)
         }
     }
 }

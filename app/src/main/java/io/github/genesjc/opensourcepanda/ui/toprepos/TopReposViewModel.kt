@@ -1,8 +1,6 @@
 package io.github.genesjc.opensourcepanda.ui.toprepos
 
-import android.app.Activity
 import androidx.lifecycle.viewModelScope
-import io.github.genesjc.opensourcepanda.ads.AdsController
 import io.github.genesjc.opensourcepanda.data.ApiTokenRepository
 import io.github.genesjc.opensourcepanda.data.HiddenIssuesRepository
 import io.github.genesjc.opensourcepanda.data.ReadmeSnippetRepository
@@ -39,7 +37,6 @@ class TopReposViewModel : BaseViewModel() {
     private val snippetRepository: ReadmeSnippetRepository by inject()
     private val hiddenIssuesRepository: HiddenIssuesRepository by inject()
     private val tokenRepository: ApiTokenRepository by inject()
-    private val adsController: AdsController by inject()
 
     init {
         stateHolder.open()
@@ -72,24 +69,6 @@ class TopReposViewModel : BaseViewModel() {
 
     /** True while the demo data is shown (no token), for the banner. */
     val isDemo: StateFlow<Boolean> = tokenRepository.isDemo
-
-    /** True when an ad may be shown on this screen (always false in the open build). */
-    val canShowAds: StateFlow<Boolean> = adsController.canShowAds
-
-    /** When the ad-free period ends (epoch milliseconds), or 0; always 0 in the open build. */
-    val adFreeUntilMs: StateFlow<Long> = adsController.adFreeUntilMs
-
-    /** True when the user can be offered the ad-free period now (never in the open build). */
-    val canOfferAdFree: StateFlow<Boolean> = adsController.canOfferAdFree
-
-    /** Plays the rewarded video behind the ad-free offer. The Activity is used for this call only. */
-    fun onAdFreeOffer(activity: Activity) = adsController.showAdFreeOffer(activity)
-
-    /** True when the menu must offer a way to reopen the privacy choices (never in the open build). */
-    val privacyOptionsRequired: StateFlow<Boolean> = adsController.privacyOptionsRequired
-
-    /** Reopens the privacy choices. The Activity is used for this call only. */
-    fun onPrivacyOptions(activity: Activity) = adsController.showPrivacyOptions(activity)
 
     /** The Search API rate-limit numbers for the chip, or null until they are known. */
     val rateLimit: StateFlow<RateLimitInfo?> = stateHolder.rateLimit
