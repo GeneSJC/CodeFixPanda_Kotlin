@@ -7,8 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Covers filterHiddenIssues() — the v0.51 ("Hide Issue") display-time
- * filter both TopReposScreen and RepoIssuesScreen apply. The properties
+ * Covers filterHiddenIssues(), the display-time hide filter both TopReposScreen and RepoIssuesScreen apply. The properties
  * that matter most: hiding never touches the underlying data (a pure
  * filter, not a mutation), a repo group filtered down to zero visible
  * issues drops out entirely, and an empty hidden set is a true no-op

@@ -212,10 +212,11 @@ class LayeringRulesTest {
     /** A comment says what the code is and why; which release added it is the commit history's job and goes stale in the file. */
     @Test
     fun commentsCarryNoVersionMarkers() {
-        val found = sources
-            .filter { s -> s.text.lines().any { line -> COMMENT_LINE.containsMatchIn(line) && VERSION_MARKER.containsMatchIn(line) } }
-            .map { it.path }
-            .toSet()
+        fun hasMarker(text: String) = text.lines().any { COMMENT_LINE.containsMatchIn(it) && VERSION_MARKER.containsMatchIn(it) }
+        val testRoot = listOf(File("src/test/java"), File("app/src/test/java")).first { it.isDirectory }
+        val found = sources.filter { hasMarker(it.text) }.map { it.path }.toSet() +
+            testRoot.walk().filter { it.extension == "kt" && hasMarker(it.readText()) }
+                .map { "test/" + it.relativeTo(testRoot).invariantSeparatorsPath }.toSet()
         check("version markers (v0.42 and the like) in comments", found)
     }
 

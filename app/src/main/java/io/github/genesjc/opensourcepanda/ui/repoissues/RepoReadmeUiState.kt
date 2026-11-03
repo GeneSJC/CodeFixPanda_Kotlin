@@ -14,8 +14,7 @@ data class RepoReadmeUiState(
 
 /**
  * What the README screen shows for each way fetching can end. A pure
- * function, so each message and state can be unit-tested; the wording is
- * what the screen has always shown for these cases, now from string resources.
+ * function, so each message and state can be unit-tested; the wording comes from string resources.
  */
 fun ReadmeResult.toUiState(string: StringResolver): RepoReadmeUiState = when (this) {
     is ReadmeResult.Found -> RepoReadmeUiState(isLoading = false, markdown = markdown)

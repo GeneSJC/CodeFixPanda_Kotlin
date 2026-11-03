@@ -8,8 +8,8 @@ import org.junit.Test
 
 /**
  * Covers applyRepoGroupReplacement() (RepoIssueGroupRepository.kt) — the pure
- * list-transform behind replaceRepoGroup(), the v0.50 write-back
- * RepoIssuesViewModel.refreshThisRepo() uses so a repo refreshed from
+ * list-transform behind replaceRepoGroup(), the write-back
+ * RepoIssuesStateHolder.refreshThisRepo() uses so a repo refreshed from
  * its own screen updates the Top Repos cache entry it came from. Two
  * properties matter most: replacing a repo's group leaves every OTHER
  * repo's group untouched, and updatedGroup == null actually removes
