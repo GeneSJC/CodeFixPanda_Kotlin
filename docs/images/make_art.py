@@ -1,9 +1,9 @@
-"""README tooling only: generates the GitHub front page's artwork (banner, divider, placeholder screens, panda)
+"""README tooling only: generates the GitHub front page's artwork (banner, divider, the demo placeholder, panda)
 with Pillow. It is not part of the Android app and nothing here ships in either build flavor.
 
 Run from this folder:  python3 make_art.py
 It reads the mascot from panda-source.png (next to this file) and writes PNGs next to this file.
-Real screenshots and GIFs replace the placeholder-*.png files; keep the file names, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
+The phone screenshots (screen-*.jpg) are real and not generated. A real demo GIF replaces placeholder-demo.png; keep the file name, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -168,52 +168,6 @@ def divider():
     img = gradient(W, H, [(0, ORANGE_BOTTOM), (0.35, ORANGE_TOP), (0.65, SUN), (1, ORANGE_TOP)], diagonal=False)
     return img
 
-def phone(name, caption, kind):
-    S, W, H = 2, 540, 1100
-    w, h = W * S, H * S
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=70 * S, fill=NAVY)
-    inner = (14 * S, 14 * S, w - 14 * S, h - 14 * S)
-    if kind == "welcome":
-        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, ORANGE_TOP), (0.5, ORANGE_MID), (1, ORANGE_BOTTOM)])
-    else:
-        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, TANGERINE_LIGHT), (1, TANGERINE_MID)])
-        # The header band and its see-through title pill are drawn on the screen before it is rounded off.
-        screen.paste(vgradient(screen.width, 110 * S, [(0, ORANGE_TOP), (1, ORANGE_MID)]), (0, 0))
-        screen = screen.convert("RGBA")
-        pill = Image.new("RGBA", screen.size, (0, 0, 0, 0))
-        ImageDraw.Draw(pill).rounded_rectangle((90 * S, 38 * S, 300 * S, 80 * S), radius=12 * S, fill=(255, 255, 255, 51))
-        screen = Image.alpha_composite(screen, pill).convert("RGB")
-    mask = Image.new("L", screen.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, screen.width - 1, screen.height - 1), radius=58 * S, fill=255)
-    img.paste(screen, inner[:2], mask)
-    d = ImageDraw.Draw(img)
-    ox, oy = inner[0], inner[1]
-    if kind == "welcome":
-        pd = panda(190 * S)
-        img.alpha_composite(pd, (ox + (512 * S - pd.width) // 2, oy + 130 * S))
-        d = ImageDraw.Draw(img)
-        for i, wd in enumerate((260, 200, 300)):
-            d.rounded_rectangle((ox + (512 - wd) // 2 * S, oy + (380 + i * 60) * S, ox + ((512 + wd) // 2) * S, oy + (420 + i * 60) * S), radius=20 * S, fill=(255, 255, 255, 200 if i == 0 else 90))
-        d.rounded_rectangle((ox + 56 * S, oy + 700 * S, ox + 456 * S, oy + 770 * S), radius=35 * S, outline=(255, 255, 255), width=3 * S)
-        d.rounded_rectangle((ox + 56 * S, oy + 800 * S, ox + 456 * S, oy + 870 * S), radius=35 * S, fill=(255, 255, 255))
-    else:
-        for i in range(5):
-            top = oy + (140 + i * 120) * S
-            d.rounded_rectangle((ox + 24 * S, top, ox + 488 * S, top + 104 * S), radius=24 * S, fill=CARD)
-            d.rounded_rectangle((ox + 48 * S, top + 24 * S, ox + 230 * S, top + 44 * S), radius=10 * S, fill=(42, 27, 24))
-            d.rounded_rectangle((ox + 48 * S, top + 62 * S, ox + 380 * S, top + 76 * S), radius=7 * S, fill=(92, 69, 63))
-            d.rounded_rectangle((ox + 384 * S, top + 24 * S, ox + 464 * S, top + 48 * S), radius=12 * S, fill=CHIP)
-    # caption pill
-    f1, f2 = font(FONT_BOLD, 30 * S), font(FONT_TEXT, 24 * S)
-    pw = 430 * S
-    px, py = (w - pw) // 2, h // 2 - 70 * S
-    d.rounded_rectangle((px, py, px + pw, py + 150 * S), radius=30 * S, fill=NAVY + (235,))
-    d.text((w // 2, py + 50 * S), "Screenshot coming", font=f1, fill=(255, 255, 255), anchor="mm")
-    d.text((w // 2, py + 100 * S), caption, font=f2, fill=SOFT, anchor="mm")
-    return img.resize((W, H), Image.LANCZOS)
-
 def demo_placeholder():
     S, W, H = 2, 1200, 675
     img = vgradient(W * S, H * S, [(0, ORANGE_TOP), (0.5, ORANGE_MID), (1, ORANGE_BOTTOM)]).convert("RGBA")
@@ -229,9 +183,6 @@ if __name__ == "__main__":
     out = lambda n: os.path.join(HERE, n)
     banner().save(out("banner.png"), optimize=True)
     divider().save(out("divider.png"), optimize=True)
-    phone("welcome", "Welcome / token gate", "welcome").save(out("placeholder-welcome.png"), optimize=True)
-    phone("top", "Top Repos", "list").save(out("placeholder-top-repos.png"), optimize=True)
-    phone("issues", "Repo issues", "list").save(out("placeholder-repo-issues.png"), optimize=True)
     demo_placeholder().save(out("placeholder-demo.png"), optimize=True)
     panda(160).save(out("panda.png"), optimize=True)
     print("done")
