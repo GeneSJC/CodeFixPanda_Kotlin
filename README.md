@@ -74,19 +74,35 @@ a kind of issue and a language, and it lists the repositories with the most open
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/placeholder-welcome.png" alt="Welcome screen" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
-    <td align="center"><img src="docs/images/placeholder-top-repos.png" alt="Top Repos" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
-    <td align="center"><img src="docs/images/placeholder-repo-issues.png" alt="Repo issues" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
+    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
+    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
   </tr>
 </table>
 
 <br>
 
-<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b><br>the app takes its color</sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b><br>beginner-friendly, in blue</sub></td>
+  </tr>
+</table>
 
 </div>
 
-<sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
+<!--
+Demo slot, hidden until there is a real demo GIF (see docs/images/README.md). To use it, remove these comment
+markers and point the image at docs/images/demo.gif:
+
+<div align="center">
+
+<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+
+</div>
+-->
+
+<sub>Real screenshots, taken on a phone with the app's built-in demo data (no GitHub account or token is shown).</sub>
 
 <a id="run-it"></a>
 
@@ -149,7 +165,7 @@ Two groups of tools live in the repository. The first checks the app and is run 
 
 | Tool | What it does | When to run it |
 |---|---|---|
-| `python3 docs/images/make_art.py` | Redraws the banner, divider, footer mascot and placeholder phone screens in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
+| `python3 docs/images/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
 
 <a id="architecture"></a>
 
