@@ -187,12 +187,22 @@ Two groups of tools live in the repository. The first checks the app and is run 
 
 ## 🏗️ Architecture
 
-One direction only, with every layer doing one job: the View draws, the ViewModel decides what the screen shows, the
-StateHolder owns a feature's data and the logic that changes it, the Repository is the single source of truth for one
-kind of data, and a data source is the one place that talks to GitHub or a file. Each layer depends only on the ones
-below it and never on the ones above, and results come back up as state the screen watches. A unit test
-(`LayeringRulesTest`) checks the import rules in CI, so a stray import that breaks them fails the build. It is Android's
-standard UI layer and data layer, with a state holder for each feature between the ViewModel and the repositories:
+One direction only, with every layer doing one job. It is Android's standard UI layer and data layer, with a state
+holder for each feature between the ViewModel and the repositories.
+
+- **View** draws the screen.
+- **ViewModel** decides what the screen shows.
+- **StateHolder** owns a feature's data and the logic that changes it.
+- **Repository** is the single source of truth for one kind of data.
+- **Data source** is the one place that talks to GitHub or a file.
+
+The rules that hold it together:
+
+- **Each layer depends only on the ones below it**, never on the ones above.
+- **Results come back up as state** that the screen watches.
+- **A unit test checks the imports.** `LayeringRulesTest` runs in CI, so a stray import that breaks a rule fails the build.
+
+Here is how the pieces connect:
 
 ```mermaid
 flowchart TB
