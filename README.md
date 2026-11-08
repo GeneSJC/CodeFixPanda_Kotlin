@@ -210,7 +210,12 @@ flowchart TB
 | **Repository** | The source of truth for one kind of data (fetched, stored, cached) | Know about screens or wording |
 | **Data source** | One external thing: the GitHub API, or a file | Decide what the app does with the data |
 
-**One switch decides which data you see**, and nothing above it ever knows:
+**One switch decides which data you see**, and nothing above it ever knows. When no GitHub token is in use, the app answers
+from built-in demo data instead of the network, so every screen still has something to show. The check happens on every
+request, because a token can be added or removed while the app runs. It swaps only the data sources (the GitHub search,
+the README fetch and the cache file), so the repositories, state holders and screens are the same code either way. Demo
+results stay in memory and never reach the real cache, and saved bookmarks and hidden issues are tagged with where they
+came from, so real and demo data never mix:
 
 ```mermaid
 flowchart LR
