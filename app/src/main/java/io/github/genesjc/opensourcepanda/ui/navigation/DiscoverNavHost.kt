@@ -52,7 +52,7 @@ private fun NavController.popBackStackDebounced() {
  * The selected repo group and language are held by RepoSelectionViewModel, not passed through the
  * route; if the back stack is restored without them (the process was killed), the repo screen's route
  * returns to Top Repos. "Reset App" clears the mode and pops the whole back stack, so the gate is not
- * duplicated. More in docs/design-notes.md, "Navigation".
+ * duplicated. More in _meta/docs/design-notes.md, "Navigation".
  */
 @Composable
 fun DiscoverNavHost(

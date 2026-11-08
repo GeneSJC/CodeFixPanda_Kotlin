@@ -61,7 +61,7 @@ fun ReadmeResult.toReadmeFetch(): ReadmeFetch = when (this) {
  * Each card's first appearance costs one Contents API call (a different, far larger quota than
  * search), so the dozens of cards after Load More add up. A real answer from GitHub, including a
  * 404 "no README", is fetched once per repo per process; only a thrown exception is treated as
- * transient and retried on a later recomposition. More in docs/design-notes.md, "README previews".
+ * transient and retried on a later recomposition. More in _meta/docs/design-notes.md, "README previews".
  */
 class ReadmeSnippetRepository(private val source: ReadmeSource) {
 

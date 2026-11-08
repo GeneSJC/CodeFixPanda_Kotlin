@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
  * the raw list; hiding shows an Undo Snackbar owned by this screen, because the card that
  * triggered it is about to leave the list. The README is an overlay over an always-composed
  * list, so it can animate its size freely. The pill in the filter row shows the active mode;
- * it is not a control, since the mode is one whole-app choice. More in docs/design-notes.md,
+ * it is not a control, since the mode is one whole-app choice. More in _meta/docs/design-notes.md,
  * "Repo issues screen".
  */
 @OptIn(ExperimentalMaterial3Api::class)

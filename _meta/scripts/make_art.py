@@ -1,8 +1,8 @@
 """README tooling only: generates the GitHub front page's artwork (banner, divider, the demo placeholder, panda)
 with Pillow. It is not part of the Android app and nothing here ships in either build flavor.
 
-Run from anywhere:  python3 scripts/make_art.py
-It reads the mascot from docs/images/panda-source.png and writes the PNGs into docs/images/.
+Run from anywhere:  python3 _meta/scripts/make_art.py
+It reads the mascot from _meta/docs/images/panda-source.png and writes the PNGs into _meta/docs/images/.
 The phone screenshots (screen-*.jpg) are real and not generated. A real demo GIF replaces placeholder-demo.png; keep the file name, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
@@ -176,7 +176,7 @@ def demo_placeholder():
     d.ellipse((cx - 90 * S, cy - 90 * S, cx + 90 * S, cy + 90 * S), fill=(255, 255, 255, 235))
     d.polygon([(cx - 26 * S, cy - 48 * S), (cx - 26 * S, cy + 48 * S), (cx + 54 * S, cy)], fill=ORANGE_MID)
     d.text((cx, cy + 150 * S), "Demo GIF coming soon", font=font(FONT_BOLD, 44 * S), fill=(255, 255, 255), anchor="mm")
-    d.text((cx, cy + 205 * S), "swap this file for docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
+    d.text((cx, cy + 205 * S), "swap this file for _meta/docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
 if __name__ == "__main__":

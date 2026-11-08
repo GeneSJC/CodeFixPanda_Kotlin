@@ -41,15 +41,15 @@ jobs:
       - name: Compile (debug)
         run: ./gradlew assembleFossDebug assembleCommercialDebug --stacktrace
 
-      # Proves neither flavor contains advertising software (ads are parked; see docs/ads/README.md).
-      # See scripts/check-no-ads-sdk.sh.
+      # Proves neither flavor contains advertising software (ads are parked; see _meta/docs/ads/README.md).
+      # See _meta/scripts/check-no-ads-sdk.sh.
       - name: Builds contain no ads software
-        run: ./scripts/check-no-ads-sdk.sh
+        run: ./_meta/scripts/check-no-ads-sdk.sh
 
       # Proves no release build contains a developer's GitHub token, and that the check can tell (the debug
-      # builds must contain it). See scripts/check-release-has-no-token.sh.
+      # builds must contain it). See _meta/scripts/check-release-has-no-token.sh.
       - name: Release builds contain no developer token
-        run: ./scripts/check-release-has-no-token.sh
+        run: ./_meta/scripts/check-release-has-no-token.sh
 
       - name: Upload test results
         if: always()

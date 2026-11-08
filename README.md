@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/banner.png" alt="Open Source Panda: diagnosing repo vitals and connecting contributors to issues that need care" width="100%">
+<img src="_meta/docs/images/banner.png" alt="Open Source Panda: diagnosing repo vitals and connecting contributors to issues that need care" width="100%">
 
 <br>
 
@@ -18,7 +18,7 @@
 
 [**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
-<img src="docs/images/divider.png" alt="" width="100%">
+<img src="_meta/docs/images/divider.png" alt="" width="100%">
 
 </div>
 
@@ -30,9 +30,9 @@
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"></td>
-    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"></td>
-    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"></td>
   </tr>
 </table>
 
@@ -40,20 +40,20 @@
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"></td>
-    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"></td>
   </tr>
 </table>
 
 </div>
 
 <!--
-Demo slot, hidden until there is a real demo GIF (see docs/images/README.md). To use it, remove these comment
-markers and point the image at docs/images/demo.gif:
+Demo slot, hidden until there is a real demo GIF (see _meta/docs/images/README.md). To use it, remove these comment
+markers and point the image at _meta/docs/images/demo.gif:
 
 <div align="center">
 
-<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+<img src="_meta/docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
 
 </div>
 -->
@@ -134,8 +134,8 @@ cd OpenSourcePanda_Kotlin
 ./gradlew testFossDebugUnitTest testCommercialDebugUnitTest
 
 # the same checks CI runs
-./scripts/check-no-ads-sdk.sh           # neither flavor contains an ads library
-./scripts/check-release-has-no-token.sh # no release build contains a developer token
+./_meta/scripts/check-no-ads-sdk.sh           # neither flavor contains an ads library
+./_meta/scripts/check-release-has-no-token.sh # no release build contains a developer token
 ```
 
 **A token for your own debug builds.** Put `GITHUB_API_TOKEN=ghp_yourtoken` in `local.properties` (it is git-ignored) and
@@ -171,17 +171,17 @@ Two groups of tools live in the repository. The first checks the app and is run 
 
 | Tool | What it does | When to run it |
 |---|---|---|
-| `./scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
+| `./_meta/scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
 | `./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug` | Unit tests and debug builds for both flavors. Both are named because the bare task names are ambiguous with two flavors | After any code change; a `foss`-only run can miss a break in the `commercial` source folder |
-| `./scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
-| `./scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
+| `./_meta/scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
+| `./_meta/scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
 
 **README artwork** (Python with Pillow; only draws the images on this page, nothing here ships in the app)
 
 | Tool | What it does | When to run it |
 |---|---|---|
-| `python3 scripts/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
+| `python3 _meta/scripts/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `_meta/docs/images/`, using `_meta/docs/images/panda-source.png` | After a rename, a color change or a new mascot |
 
 <a id="architecture"></a>
 
@@ -316,7 +316,7 @@ flowchart LR
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.
 
-More decisions, with their reasons, are in [`docs/design-notes.md`](docs/design-notes.md).
+More decisions, with their reasons, are in [`_meta/docs/design-notes.md`](_meta/docs/design-notes.md).
 
 </details>
 
@@ -338,15 +338,15 @@ Flavors, and not a runtime flag, keep code that only one build may contain out o
 **The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
 steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
-More in `docs/design-notes.md`, "Token storage".
+More in `_meta/docs/design-notes.md`, "Token storage".
 
 **Ads are parked, on purpose.** No build of this app contains an ads SDK, or any code that talks to one. A working,
 tested ads layer (Google's consent flow, an AdMob banner, and a rewarded video that buys an hour without the banner) is
-kept in the repository's history and written up in [`docs/ads/`](docs/ads/README.md): what it does, where each piece lives
+kept in the repository's history and written up in [`_meta/docs/ads/`](_meta/docs/ads/README.md): what it does, where each piece lives
 (two tags and a commit), the setup it needs, and how to bring it back. Restoring is a copy of files out of the history, not
 a merge.
 
-- **Checked by CI.** `scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
+- **Checked by CI.** `_meta/scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
   its merged manifest.
 
 </details>
@@ -355,7 +355,6 @@ a merge.
 
 ```text
 app/src/main/java/io/github/genesjc/opensourcepanda/
-├── ads/          the SDK-free ads contract (ads are parked)
 ├── config/       AppConfig: the build-time values the UI may read
 ├── data/         repositories and their storage, rate limit parsing, demo/ (the invented data),
 │                 network/ (the GitHub client and its DTOs)
@@ -375,11 +374,11 @@ app/src/main/java/io/github/genesjc/opensourcepanda/
     ├── text/         the wording helpers (relative time, issue meta, filter names)
     ├── theme/        colors, including one scheme per issue mode
     ├── toprepos/     the Top Repos screen, its drawer, header and dialogs
-    ├── welcome/      the token gate and its guide
-    └── ads/          the SDK-free hooks
+    └── welcome/      the token gate and its guide
 
-app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
-docs/          design notes, ads restore guide              _meta/     setup docs
+app/src/foss/  app/src/commercial/   per-flavor code
+_meta/docs/      design notes, the ads restore guide, the README art, setup docs
+_meta/scripts/   the CI checks and the script that draws the README art
 ```
 
 <a id="docs"></a>
@@ -388,8 +387,8 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 
 | Read | To learn |
 |---|---|
-| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
-| [`docs/ads/README.md`](docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
+| [`_meta/docs/design-notes.md`](_meta/docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
+| [`_meta/docs/ads/README.md`](_meta/docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
 
 <a id="status"></a>
@@ -412,11 +411,11 @@ covered by this license, and is not part of this repository.
 
 <div align="center">
 
-<img src="docs/images/divider.png" alt="" width="100%">
+<img src="_meta/docs/images/divider.png" alt="" width="100%">
 
 <br>
 
-<img src="docs/images/panda.png" alt="The Open Source Panda mascot" width="90">
+<img src="_meta/docs/images/panda.png" alt="The Open Source Panda mascot" width="90">
 
 <sub>Built with Kotlin, Compose, a lot of small commits, and a panda.</sub>
 

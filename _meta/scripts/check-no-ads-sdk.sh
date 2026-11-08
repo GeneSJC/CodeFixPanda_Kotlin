@@ -4,7 +4,7 @@
 # root; CI runs it too. A single transitive dependency can bring an ads library back, so run it whenever
 # dependencies change.
 #
-# Ads are parked (docs/ads/README.md), so there is no build that contains ads to use as a positive control.
+# Ads are parked (_meta/docs/ads/README.md), so there is no build that contains ads to use as a positive control.
 # The restore guide says to bring a control back with the code (a check that the commercial build does
 # contain the libraries, so this script cannot pass by looking in the wrong place).
 set -euo pipefail

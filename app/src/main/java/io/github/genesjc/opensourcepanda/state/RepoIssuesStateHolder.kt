@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
  *
  * An app-wide singleton, because the state must outlive a composition. open() starts a fresh visit:
  * it clears the state and cancels a refresh left over from the previous one. The work runs in the
- * shared [AppScope]; the Koin module builds the instance. More in docs/design-notes.md,
+ * shared [AppScope]; the Koin module builds the instance. More in _meta/docs/design-notes.md,
  * "Repo issues state".
  */
 class RepoIssuesStateHolder(

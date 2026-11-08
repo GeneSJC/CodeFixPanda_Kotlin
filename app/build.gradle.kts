@@ -15,7 +15,7 @@ plugins {
 }
 
 // Reads GITHUB_API_TOKEN from local.properties (gitignored, never committed), or from a Gradle property of the
-// same name (which scripts/check-release-has-no-token.sh uses), and exposes it as a BuildConfig field in
+// same name (which _meta/scripts/check-release-has-no-token.sh uses), and exposes it as a BuildConfig field in
 // DEBUG builds only, so a developer can run without typing a token. Release builds always get an
 // empty string: a published APK can be unpacked by anyone, and every user would otherwise share that token.
 val localProperties = Properties().apply {
@@ -35,9 +35,9 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 57
-val buildLabelB = 15
+val buildLabelB = 16
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
-// docs/ads/README.md, which says where the working implementation is kept).
+// _meta/docs/ads/README.md, which says where the working implementation is kept).
 
 /** A private property: a Gradle property (-P or the user-level gradle.properties), else local.properties. */
 fun privateProperty(name: String): String? =
@@ -159,7 +159,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.markwon.core)
     implementation(libs.koin.android)
-    // The ads SDK is parked (docs/ads/README.md): no build contains it. scripts/check-no-ads-sdk.sh checks that.
+    // The ads SDK is parked (_meta/docs/ads/README.md): no build contains it. _meta/scripts/check-no-ads-sdk.sh checks that.
     testImplementation(libs.junit)
     // Lets ViewModel unit tests swap Dispatchers.Main (viewModelScope runs on it) for a test dispatcher.
     testImplementation(libs.kotlinx.coroutines.test)
