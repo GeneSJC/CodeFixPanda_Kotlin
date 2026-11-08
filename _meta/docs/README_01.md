@@ -1,4 +1,4 @@
-# Open Source Panda — Setup Docs (Draft)
+# Code Panda — Setup Docs (Draft)
 
 > **Status: TBD / iterative.** This is a first-pass doc living under `/_meta` while it takes
 > shape — not yet promoted into the top-level `README.md`. Content and structure here can
