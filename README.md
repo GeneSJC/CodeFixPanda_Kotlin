@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="_meta/docs/images/banner.png" alt="Open Source Panda: diagnosing repo vitals and connecting contributors to issues that need care" width="100%">
+<img src="_meta/docs/images/banner.png" alt="Open Source Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
 
 <br>
 
-**Diagnosing repo vitals and connecting contributors to issues that need care.**
+**Open Source Triage Board**: connecting contributors to the issues that need attention.
 
 <br>
 

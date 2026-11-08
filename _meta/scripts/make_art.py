@@ -154,12 +154,13 @@ def banner():
     d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
-    d.text((x0, 318 * S), "Diagnosing repo vitals and connecting", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
-    d.text((x0, 358 * S), "contributors to issues that need care.", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
+    d.text((x0, 312 * S), "Open Source Triage Board", font=font(FONT_BOLD, 36 * S), fill=(255, 255, 255))
+    d.text((x0, 364 * S), "Connecting contributors to the issues", font=font(FONT_TEXT, 27 * S), fill=(255, 236, 224))
+    d.text((x0, 396 * S), "that need attention.", font=font(FONT_TEXT, 27 * S), fill=(255, 236, 224))
     cx = x0
     for text, fill, ink in (("beginner-friendly", NAVY, (255, 255, 255)), ("asking for help", SEAFOAM, NAVY), ("kotlin", SUN, NAVY)):
         c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S), text_fill=ink)
-        img.alpha_composite(c, (cx, 432 * S))
+        img.alpha_composite(c, (cx, 446 * S))
         cx += c.width + 14 * S
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
