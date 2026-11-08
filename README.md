@@ -1,11 +1,10 @@
 <div align="center">
 
-<img src="docs/images/banner.png" alt="Open Source Panda: find the open-source issue worth your next hour" width="100%">
+<img src="docs/images/banner.png" alt="Open Source Panda: diagnosing repo vitals and connecting contributors to issues that need care" width="100%">
 
 <br>
 
-**An Android app for finding open-source issues on GitHub that are actually worth working on.**<br>
-The top projects with open issues that suit beginners, or that are asking for help, by language, one tap from the issues themselves.
+**Diagnosing repo vitals and connecting contributors to issues that need care.**
 
 <br>
 
