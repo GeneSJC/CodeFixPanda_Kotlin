@@ -165,9 +165,7 @@ setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 ## 🛠️ Developer tools
 
-Two groups of tools live in the repository. The first checks the app and is run by CI too, so a green run on your machine means a green run there. The second only makes the images on this page and is not part of the Android app.
-
-**App checks** (command-line, no Python)
+These tools check the app, and CI runs them too, so a green run on your machine means a green run there. The script that draws the images on this page is described in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 | Tool | What it does | When to run it |
 |---|---|---|
@@ -176,12 +174,6 @@ Two groups of tools live in the repository. The first checks the app and is run 
 | `./_meta/scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
 | `./_meta/scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
-
-**README artwork** (Python with Pillow; only draws the images on this page, nothing here ships in the app)
-
-| Tool | What it does | When to run it |
-|---|---|---|
-| `python3 _meta/scripts/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `_meta/docs/images/`, using `_meta/docs/images/panda-source.png` | After a rename, a color change or a new mascot |
 
 <a id="architecture"></a>
 

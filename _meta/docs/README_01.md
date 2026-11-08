@@ -61,3 +61,11 @@ access, unlike the Claude Code sandbox's blocked Gradle toolchain download). It 
 just reports status on the PR — it is NOT yet a required check in branch protection, so it
 doesn't block merging. Test result reports (one folder per flavor) are uploaded as a workflow artifact
 (`unit-test-results`) for a few weeks after each run.
+
+## README artwork
+
+Python with Pillow; it only draws the images used by the front-page `README.md`, and nothing here ships in the app.
+
+| Tool | What it does | When to run it |
+|---|---|---|
+| `python3 _meta/scripts/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `_meta/docs/images/`, using `_meta/docs/images/panda-source.png` | After a rename, a color change or a new mascot |
