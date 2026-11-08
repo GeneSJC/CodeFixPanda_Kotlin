@@ -16,7 +16,7 @@
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0F2A52?style=flat-square)](LICENSE)
 
-[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
+[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
 <img src="docs/images/divider.png" alt="" width="100%">
 
@@ -143,6 +143,23 @@ debug builds start with it, skipping the welcome screen. Release builds never in
 setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 </details>
+
+<a id="tech-stack"></a>
+
+## 🧰 Tech stack
+
+| | |
+|---|---|
+| **Language** | Kotlin 2.2 |
+| **UI** | Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose 2.8 |
+| **Architecture** | MVVM with state holders and repositories; Koin 4.2 for dependency injection |
+| **Networking** | Retrofit 2.11, OkHttp 4.12, Moshi 1.15 |
+| **Async** | Kotlin Coroutines and Flow |
+| **Markdown** | Markwon 4.6 (README previews) |
+| **Security** | Android Keystore (AES-GCM) for the saved token |
+| **Build** | Android Gradle Plugin 9.4, two product flavors, minSdk 24, targetSdk 37 |
+| **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
+| **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
 <a id="developer-tools"></a>
 
@@ -364,23 +381,6 @@ app/src/main/java/io/github/genesjc/opensourcepanda/
 app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
 docs/          design notes, ads restore guide              _meta/     setup docs
 ```
-
-<a id="tech-stack"></a>
-
-## 🧰 Tech stack
-
-| | |
-|---|---|
-| **Language** | Kotlin 2.2 |
-| **UI** | Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose 2.8 |
-| **Architecture** | MVVM with state holders and repositories; Koin 4.2 for dependency injection |
-| **Networking** | Retrofit 2.11, OkHttp 4.12, Moshi 1.15 |
-| **Async** | Kotlin Coroutines and Flow |
-| **Markdown** | Markwon 4.6 (README previews) |
-| **Security** | Android Keystore (AES-GCM) for the saved token |
-| **Build** | Android Gradle Plugin 9.4, two product flavors, minSdk 24, targetSdk 37 |
-| **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
-| **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
 <a id="docs"></a>
 
