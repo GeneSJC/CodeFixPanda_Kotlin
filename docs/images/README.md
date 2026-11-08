@@ -8,8 +8,8 @@ The images used by the front-page `README.md`.
 | `divider.png` | The gradient rule between sections | Keep |
 | `panda.png` | The footer mascot, made from `panda-source.png` | Keep |
 | `panda-source.png` | The mascot from the launcher icon art; the only input `make_art.py` reads | Keep |
-| `screen-welcome.jpg`, `screen-top-repos.jpg`, `screen-repo-issues.jpg` | The first row of the "Screens" gallery: the token gate, Top Repos and a repo's issues | Real phone screenshots, resized to 540 px wide. Retake them with the same file names when the screens change |
-| `screen-mode-gate.jpg`, `screen-top-repos-beginner.jpg` | The second row: the mode gate, and Top Repos in the other (blue) mode | Same as above |
+| `screen-welcome.jpg`, `screen-mode-gate.jpg`, `screen-top-repos-beginner.jpg` | The first row of the "Screens" gallery: the token gate, the mode gate, and Top Repos in the blue mode | Real phone screenshots, resized to 540 px wide. Retake them with the same file names when the screens change |
+| `screen-top-repos.jpg`, `screen-repo-issues.jpg` | The second row: Top Repos (orange mode) and a repo's issues | Same as above |
 | `placeholder-demo.png` | The demo slot under the gallery. It is hidden in the README for now (an HTML comment) | An animated `demo.gif` (keep it under about 8 MB; GitHub shows it inline). Unhide the block in the README and change the one `src` path |
 
 `make_art.py` generates the banner, divider, panda and the demo placeholder. It is README tooling only: it needs Pillow, reads

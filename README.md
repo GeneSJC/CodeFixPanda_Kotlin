@@ -75,8 +75,8 @@ a kind of issue and a language, and it lists the repositories with the most open
 <table>
   <tr>
     <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
-    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
-    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
+    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b><br>the app takes its color</sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b><br>beginner-friendly, in blue</sub></td>
   </tr>
 </table>
 
@@ -84,8 +84,8 @@ a kind of issue and a language, and it lists the repositories with the most open
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b><br>the app takes its color</sub></td>
-    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b><br>beginner-friendly, in blue</sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
+    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
   </tr>
 </table>
 
