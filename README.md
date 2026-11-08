@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="_meta/docs/images/banner.png" alt="Code Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
+<img src="_meta/docs/images/banner.png" alt="Code Fix Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
 
 <br>
 
@@ -64,7 +64,7 @@ markers and point the image at _meta/docs/images/demo.gif:
 
 ## ✨ What it does
 
-Code Panda searches GitHub for open issues that carry the "good first issue" or "help wanted" label, most recently
+Code Fix Panda searches GitHub for open issues that carry the "good first issue" or "help wanted" label, most recently
 updated first.
 
 <table>
@@ -406,10 +406,10 @@ covered by this license, and is not part of this repository.
 
 <br>
 
-<img src="_meta/docs/images/panda.png" alt="The Code Panda mascot" width="90">
+<img src="_meta/docs/images/panda.png" alt="The Code Fix Panda mascot" width="90">
 
 <sub>Built with Kotlin, Compose, a lot of small commits, and a panda.</sub>
 
-<sub>Code Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
+<sub>Code Fix Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
 
 </div>
