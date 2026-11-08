@@ -234,7 +234,10 @@ flowchart LR
 
 ### Principles at a glance
 
-- 🧱 **Dependencies point one way.** Views never reach a repository; data layers never know about screens.
+- 🧱 **Dependencies point one way.** Views get everything through their ViewModel and never import a repository, a state
+  holder or a domain rule. State holders know nothing of screens, Compose or Android; data layers know nothing of screens;
+  and the plain types and pure rules at the bottom (`model`, `domain`) know nothing of the rest of the app or of Android.
+  `LayeringRulesTest` fails the build if an import breaks any of this.
 - 💉 **Koin builds everything in one place** (`di/AppModule.kt`). ViewModels declare what they need as plain members and keep a no-argument constructor.
 - 🔤 **Every user-facing word is a string resource.** Data layers report facts; the ViewModels turn them into wording.
 - 🧪 **Everything is testable without a device.** Data sources sit behind interfaces; tests register fakes with `restartKoin { single { fake } }`.
