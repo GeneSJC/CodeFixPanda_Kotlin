@@ -410,7 +410,6 @@ _meta/scripts/   the CI checks and the script that draws the README art
 | ✅ **Done** | Layered MVVM with Koin, string resources, demo data, two flavors, the front door and token guide, encrypted and masked token storage |
 | ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
 | 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
-| 💡 **Later** | Sign in with GitHub instead of pasting a token |
 
 <a id="license"></a>
 
