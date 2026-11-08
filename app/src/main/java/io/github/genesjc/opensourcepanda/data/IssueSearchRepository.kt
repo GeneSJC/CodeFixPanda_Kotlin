@@ -10,16 +10,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** The Search API query for Top Repos: open issues carrying the mode's label, optionally in one language. */
+/**
+ * The Search API query for Top Repos: open issues carrying the mode's label, optionally in one language. `is:issue`
+ * is needed because the search endpoint returns pull requests too, and a pull request is not an issue to pick up.
+ */
 fun topReposQuery(mode: IssueLabelFilter, language: LanguageFilter): String = buildString {
     append("label:\"${mode.queryValue}\"")
-    append(" state:open")
+    append(" state:open is:issue")
     language.queryValue?.let { append(" language:$it") }
 }
 
-/** The Search API query for one repo's own issues screen: that repo's open issues carrying the mode's label. */
+/** The Search API query for one repo's own issues screen: that repo's open issues (not pull requests) carrying the mode's label. */
 fun repoIssuesQuery(repoFullName: String, mode: IssueLabelFilter): String =
-    "repo:$repoFullName label:\"${mode.queryValue}\" state:open"
+    "repo:$repoFullName label:\"${mode.queryValue}\" state:open is:issue"
 
 /**
  * The single place the app searches GitHub for issues: Top Repos' list (with Load More and Check

@@ -58,18 +58,25 @@ class IssueSearchRepositoryTest {
     // ---- query builders ----
 
     @Test
-    fun topReposQueryCombinesLabelOpenStateAndLanguage() {
-        assertEquals("label:\"good first issue\" state:open language:kotlin", topReposQuery(gfi, kotlin))
+    fun topReposQueryCombinesLabelOpenStateIssuesOnlyAndLanguage() {
+        assertEquals("label:\"good first issue\" state:open is:issue language:kotlin", topReposQuery(gfi, kotlin))
     }
 
     @Test
     fun topReposQueryOmitsTheLanguageForAny() {
-        assertEquals("label:\"help wanted\" state:open", topReposQuery(IssueLabelFilter.HELP_WANTED, LanguageFilter.ANY))
+        assertEquals("label:\"help wanted\" state:open is:issue", topReposQuery(IssueLabelFilter.HELP_WANTED, LanguageFilter.ANY))
     }
 
     @Test
     fun repoIssuesQueryScopesToOneRepo() {
-        assertEquals("repo:octo/repo label:\"good first issue\" state:open", repoIssuesQuery("octo/repo", gfi))
+        assertEquals("repo:octo/repo label:\"good first issue\" state:open is:issue", repoIssuesQuery("octo/repo", gfi))
+    }
+
+    @Test
+    fun bothQueriesAskForIssuesOnlySoPullRequestsAreLeftOut() {
+        // The search endpoint returns pull requests as well unless the query says is:issue.
+        assertTrue("is:issue" in topReposQuery(gfi, LanguageFilter.ANY))
+        assertTrue("is:issue" in repoIssuesQuery("octo/repo", IssueLabelFilter.HELP_WANTED))
     }
 
     // ---- searching ----
