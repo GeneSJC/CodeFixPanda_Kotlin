@@ -31,9 +31,9 @@ The top projects with open issues that suit beginners, or that are asking for he
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"><br><sub><b>Welcome</b></sub></td>
-    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b></sub></td>
-    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b></sub></td>
+    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"></td>
+    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"></td>
+    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"></td>
   </tr>
 </table>
 
@@ -41,8 +41,8 @@ The top projects with open issues that suit beginners, or that are asking for he
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b></sub></td>
-    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b></sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"></td>
+    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"></td>
   </tr>
 </table>
 
