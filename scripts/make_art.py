@@ -1,15 +1,15 @@
 """README tooling only: generates the GitHub front page's artwork (banner, divider, the demo placeholder, panda)
 with Pillow. It is not part of the Android app and nothing here ships in either build flavor.
 
-Run from this folder:  python3 make_art.py
-It reads the mascot from panda-source.png (next to this file) and writes PNGs next to this file.
+Run from anywhere:  python3 scripts/make_art.py
+It reads the mascot from docs/images/panda-source.png and writes the PNGs into docs/images/.
 The phone screenshots (screen-*.jpg) are real and not generated. A real demo GIF replaces placeholder-demo.png; keep the file name, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-PANDA = os.path.join(HERE, "panda-source.png")
+IMAGES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "images"))
+PANDA = os.path.join(IMAGES, "panda-source.png")
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_TEXT = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 FONT_TEXT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
@@ -180,7 +180,7 @@ def demo_placeholder():
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
 if __name__ == "__main__":
-    out = lambda n: os.path.join(HERE, n)
+    out = lambda n: os.path.join(IMAGES, n)
     banner().save(out("banner.png"), optimize=True)
     divider().save(out("divider.png"), optimize=True)
     demo_placeholder().save(out("placeholder-demo.png"), optimize=True)

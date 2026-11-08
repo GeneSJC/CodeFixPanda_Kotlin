@@ -181,7 +181,7 @@ Two groups of tools live in the repository. The first checks the app and is run 
 
 | Tool | What it does | When to run it |
 |---|---|---|
-| `python3 docs/images/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
+| `python3 scripts/make_art.py` | Redraws the banner, divider, footer mascot and the demo placeholder in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
 
 <a id="architecture"></a>
 
