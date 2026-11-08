@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="_meta/docs/images/banner.png" alt="Open Source Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
+<img src="_meta/docs/images/banner.png" alt="Code Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
 
 <br>
 

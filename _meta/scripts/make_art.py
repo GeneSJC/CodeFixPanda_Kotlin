@@ -151,7 +151,7 @@ def banner():
     shadowed(img, p, (100 * S + g.width - 2 * edge + 36 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
     # title
     x0 = 835 * S
-    d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
+    d.text((x0, 96 * S), "Code", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
     d.text((x0, 312 * S), "Open Source Triage Board", font=font(FONT_BOLD, 36 * S), fill=(255, 255, 255))
