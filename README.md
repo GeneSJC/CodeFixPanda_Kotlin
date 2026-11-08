@@ -17,11 +17,49 @@ The top projects with open issues that suit beginners, or that are asking for he
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0F2A52?style=flat-square)](LICENSE)
 
-[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
+[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
 
 <img src="docs/images/divider.png" alt="" width="100%">
 
 </div>
+
+<a id="screens"></a>
+
+## 📱 Screens
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
+    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b><br>the app takes its color</sub></td>
+    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b><br>beginner-friendly, in blue</sub></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
+    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
+  </tr>
+</table>
+
+</div>
+
+<!--
+Demo slot, hidden until there is a real demo GIF (see docs/images/README.md). To use it, remove these comment
+markers and point the image at docs/images/demo.gif:
+
+<div align="center">
+
+<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+
+</div>
+-->
+
+<sub>Real screenshots, taken on a phone with the app's built-in demo data (no GitHub account or token is shown).</sub>
 
 <a id="what-it-does"></a>
 
@@ -65,44 +103,6 @@ a kind of issue and a language, and it lists the repositories with the most open
 > To see **real** issues the app needs a free GitHub token with **no permissions at all** (it only reads public data). The
 > first screen walks you through making one in about a minute. The token is stored encrypted on your device, shown masked,
 > and sent only to GitHub.
-
-<a id="screens"></a>
-
-## 📱 Screens
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
-    <td align="center"><img src="docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"><br><sub><b>Pick a mode</b><br>the app takes its color</sub></td>
-    <td align="center"><img src="docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"><br><sub><b>The other mode</b><br>beginner-friendly, in blue</sub></td>
-  </tr>
-</table>
-
-<br>
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
-    <td align="center"><img src="docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
-  </tr>
-</table>
-
-</div>
-
-<!--
-Demo slot, hidden until there is a real demo GIF (see docs/images/README.md). To use it, remove these comment
-markers and point the image at docs/images/demo.gif:
-
-<div align="center">
-
-<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
-
-</div>
--->
-
-<sub>Real screenshots, taken on a phone with the app's built-in demo data (no GitHub account or token is shown).</sub>
 
 <a id="run-it"></a>
 
