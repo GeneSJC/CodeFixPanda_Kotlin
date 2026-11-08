@@ -16,7 +16,7 @@
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0F2A52?style=flat-square)](LICENSE)
 
-[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
+[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Docs**](#docs)
 
 <img src="_meta/docs/images/divider.png" alt="" width="100%">
 
@@ -400,16 +400,6 @@ _meta/scripts/   the CI checks and the script that draws the README art
 | [`_meta/docs/design-notes.md`](_meta/docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
 | [`_meta/docs/ads/README.md`](_meta/docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
-
-<a id="status"></a>
-
-## 🗺️ Status
-
-| | |
-|---|---|
-| ✅ **Done** | Layered MVVM with Koin, string resources, demo data, two flavors, the front door and token guide, encrypted and masked token storage |
-| ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
-| 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
 
 <a id="license"></a>
 
