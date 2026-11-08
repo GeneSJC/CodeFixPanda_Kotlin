@@ -64,8 +64,8 @@ markers and point the image at docs/images/demo.gif:
 
 ## ✨ What it does
 
-Open source runs on people picking up the first issue they can handle. Open Source Panda does the searching for you: pick
-a kind of issue and a language, and it lists the repositories with the most open matches, each with its issues one tap away.
+Open Source Panda searches GitHub for issues that maintainers have labeled for newcomers or marked as wanting help. Pick a
+kind of issue and a language, and it lists the repositories with the most matches, with the issues themselves one tap away.
 
 <table>
   <tr>
