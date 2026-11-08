@@ -64,8 +64,11 @@ markers and point the image at _meta/docs/images/demo.gif:
 
 ## ✨ What it does
 
-Open Source Panda searches GitHub for issues that maintainers have labeled for newcomers or marked as wanting help. Pick a
-kind of issue and a language, and it lists the repositories with the most matches, with the issues themselves one tap away.
+Open Source Panda searches GitHub for open issues that carry the "good first issue" or "help wanted" label, most recently
+updated first.
+
+Pick a kind of issue and a language, and it lists the repositories with the most of them among the issues loaded so far,
+with the issues themselves one tap away.
 
 <table>
   <tr>
