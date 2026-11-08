@@ -170,7 +170,12 @@ Two groups of tools live in the repository. The first checks the app and is run 
 
 ## 🏗️ Architecture
 
-One direction only, with every layer doing one job. The standard Android stack:
+One direction only, with every layer doing one job: the View draws, the ViewModel decides what the screen shows, the
+StateHolder owns a feature's data and the logic that changes it, the Repository is the single source of truth for one
+kind of data, and a data source is the one place that talks to GitHub or a file. Each layer depends only on the ones
+below it and never on the ones above, and results come back up as state the screen watches. A unit test
+(`LayeringRulesTest`) checks the import rules in CI, so a stray import that breaks them fails the build. It is Android's
+standard UI layer and data layer, with a state holder for each feature between the ViewModel and the repositories:
 
 ```mermaid
 flowchart TB
