@@ -8,7 +8,7 @@
 
 <br>
 
-[![CI](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml)
+[![CI](https://github.com/GeneSJC/CodeFixPanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/CodeFixPanda_Kotlin/actions/workflows/ci.yml)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM-1F4B8E?style=flat-square)
@@ -114,8 +114,8 @@ itself). The app runs on Android 7.0 (API 24) and newer.
 > **Which branch?** `develop` is the default and holds the latest code. `main` holds the latest stable release. Short-lived `feature-set/*` and `refinement/*` branches carry work in progress.
 
 ```bash
-git clone https://github.com/GeneSJC/OpenSourcePanda_Kotlin.git
-cd OpenSourcePanda_Kotlin
+git clone https://github.com/GeneSJC/CodeFixPanda_Kotlin.git
+cd CodeFixPanda_Kotlin
 ```
 
 1. Open the folder in Android Studio and let Gradle sync.
@@ -326,8 +326,8 @@ More decisions, with their reasons, are in [`_meta/docs/design-notes.md`](_meta/
 
 | Flavor | Published to | Application id | Version suffix |
 |---|---|---|---|
-| `foss` | GitHub, as the open-source build | `io.github.genesjc.opensourcepanda` | `-foss` |
-| `commercial` | Google Play | `io.github.genesjc.opensourcepanda.commercial` | `-commercial` |
+| `foss` | GitHub, as the open-source build | `io.github.genesjc.codefixpanda` | `-foss` |
+| `commercial` | Google Play | `io.github.genesjc.codefixpanda.commercial` | `-commercial` |
 
 `foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side.
 Flavors, and not a runtime flag, keep code that only one build may contain out of the other at compile time.
@@ -356,7 +356,7 @@ a merge.
 ### Where things live
 
 ```text
-app/src/main/java/io/github/genesjc/opensourcepanda/
+app/src/main/java/io/github/genesjc/codefixpanda/
 ├── config/       AppConfig: the build-time values the UI may read
 ├── data/         repositories and their storage, rate limit parsing, demo/ (the invented data),
 │                 network/ (the GitHub client and its DTOs)

@@ -33,7 +33,7 @@ integration points (section 4).
 
 ## 1. What was parked
 
-**Removed from every build (restore these).** The paths below are as they are in the archive, which predates the package rename (the code package was `io.github.genesjc.githubissuefinder` then and is `io.github.genesjc.opensourcepanda` now). Step 3.2 moves the files into the current package.
+**Removed from every build (restore these).** The paths below are as they are in the archive, which predates the package rename (the code package was `io.github.genesjc.githubissuefinder` then, `io.github.genesjc.opensourcepanda` until Build 61, and is `io.github.genesjc.codefixpanda` now). Step 3.2 moves the files into the current package.
 
 | Piece | Path in the archive | Role |
 |---|---|---|
@@ -101,16 +101,18 @@ git checkout 9d61e0f1fd0814f68d8061cd24698bb069d6e70d -- \
    Then move the copied files into the current package (the archive uses the old package name, so the paths and the
    `package` and `import` lines all change). The current stubs sit in the new folders, and this overwrites them:
 ```
-OLD=io/github/genesjc/githubissuefinder; NEW=io/github/genesjc/opensourcepanda
-for set in commercial testCommercial; do
-  if [ -d app/src/$set/java/$OLD ]; then
-    mkdir -p app/src/$set/java/$NEW
-    cp -R app/src/$set/java/$OLD/. app/src/$set/java/$NEW/
-    git rm -r -q --cached app/src/$set/java/$OLD && rm -rf app/src/$set/java/$OLD
-  fi
+NEW=io/github/genesjc/codefixpanda
+for OLD in io/github/genesjc/githubissuefinder io/github/genesjc/opensourcepanda; do
+  for set in commercial testCommercial; do
+    if [ -d app/src/$set/java/$OLD ]; then
+      mkdir -p app/src/$set/java/$NEW
+      cp -R app/src/$set/java/$OLD/. app/src/$set/java/$NEW/
+      git rm -r -q --cached app/src/$set/java/$OLD && rm -rf app/src/$set/java/$OLD
+    fi
+  done
 done
-grep -rl "io.github.genesjc.githubissuefinder" app/src/commercial app/src/testCommercial \
-  | xargs sed -i 's/io\.github\.genesjc\.githubissuefinder/io.github.genesjc.opensourcepanda/g'
+grep -rlE "io.github.genesjc.(githubissuefinder|opensourcepanda)" app/src/commercial app/src/testCommercial \
+  | xargs sed -i -E 's/io\.github\.genesjc\.(githubissuefinder|opensourcepanda)/io.github.genesjc.codefixpanda/g'
 git add -A app/src/commercial app/src/testCommercial
 ```
 3. **Gradle: the advertising block.** Paste appendix A1 into `app/build.gradle.kts` below the build-label values and above
@@ -233,7 +235,7 @@ val releaseAdmobRewardedUnitId =
 ```kotlin
         create("commercial") {
             dimension = "distribution"
-            applicationId = "io.github.genesjc.opensourcepanda.commercial"
+            applicationId = "io.github.genesjc.codefixpanda.commercial"
             versionNameSuffix = "-commercial"
             // The banner ad unit for release builds: Google's sample unit unless this is a production build
             // (see the advertising block at the top). Debug builds ignore it and always use the sample unit.
