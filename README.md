@@ -173,7 +173,7 @@ These tools check the app, and CI runs them too, so a green run on your machine 
 | `./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug` | Unit tests and debug builds for both flavors. Both are named because the bare task names are ambiguous with two flavors | After any code change; a `foss`-only run can miss a break in the `commercial` source folder |
 | `./_meta/scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
 | `./_meta/scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main`. It first downloads Gradle with up to three tries, so a brief outage on GitHub's download servers does not fail a build before any code has run. Only that download is retried; the tests and checks never are, so a real failure still fails the build | Automatic |
 
 <a id="architecture"></a>
 
