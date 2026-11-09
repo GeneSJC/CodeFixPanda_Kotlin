@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OpenSourcePanda"
+rootProject.name = "CodeFixPanda"
 include(":app")

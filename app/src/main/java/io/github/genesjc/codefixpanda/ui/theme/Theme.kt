@@ -64,7 +64,7 @@ private val LightColorScheme = lightColorScheme(
 private const val MODE_TRANSITION_MS = 350
 
 @Composable
-fun OpenSourcePandaTheme(
+fun CodeFixPandaTheme(
     // Deliberately not isSystemInDarkTheme(): the mode color schemes are light-only, so following the
     // system made the app flip from a dark gate screen to a light Top Repos. Hardcoded false until
     // there is an in-app dark-mode preference.

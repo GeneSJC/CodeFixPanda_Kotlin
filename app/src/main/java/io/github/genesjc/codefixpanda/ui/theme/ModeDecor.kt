@@ -10,7 +10,7 @@ import io.github.genesjc.codefixpanda.model.IssueLabelFilter
  * color of its backdrop, and the fill and outline of its chips (the backdrop's own hue one step deeper,
  * so a chip stands out from the backdrop without a bright white and without a clashing hue). It is
  * not part of the ColorScheme because Material has no roles for it;
- * [LocalModeDecor] carries it down the tree from [OpenSourcePandaTheme], so a screen asks for "the
+ * [LocalModeDecor] carries it down the tree from [CodeFixPandaTheme], so a screen asks for "the
  * header" and "the backdrop" and never names a color.
  */
 @Immutable

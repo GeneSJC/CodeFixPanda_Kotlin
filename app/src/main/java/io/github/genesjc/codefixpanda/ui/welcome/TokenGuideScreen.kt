@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.codefixpanda.R
 import io.github.genesjc.codefixpanda.ui.components.IndependentNotice
-import io.github.genesjc.codefixpanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
 import io.github.genesjc.codefixpanda.ui.theme.BrandSun
 import kotlinx.coroutines.launch
 
@@ -65,7 +65,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
     }
 
-    OpenSourcePandaTheme(issueMode = null) {
+    CodeFixPandaTheme(issueMode = null) {
         FrontDoorBackground(modifier = modifier) {
             Surface(
                 modifier = Modifier.fillMaxSize().systemBarsPadding().padding(PANEL_MARGIN),

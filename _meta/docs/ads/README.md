@@ -1,6 +1,6 @@
 # Ads: parked on purpose, worth bringing back
 
-**Status: parked.** No build of Open Source Panda contains the ads SDK, and, since the clean-out, none of the code
+**Status: parked.** No build of Code Fix Panda contains the ads SDK, and, since the clean-out, none of the code
 that talked to it either. This is a deliberate choice, not an abandoned feature. A working, tested ads layer exists,
 kept in the repository's history, and everything needed to restore it is written down here.
 
@@ -100,7 +100,7 @@ Shared code never knew which build it was in. It asked Koin for an `AdsControlle
     `single { AdFreePeriod(SharedPreferencesAdFreeStorage(androidContext())) }` and
     `single<AdsController> { AdMobAdsController(androidContext(), get()) }`. The controller takes the application context
     and the ad-free period, which Koin resolves with `get()`.
-- **Loaded at start-up.** `OpenSourcePandaApplication.onCreate` calls `startKoin { androidContext(...); modules(appModule, adsModule) }`,
+- **Loaded at start-up.** `CodeFixPandaApplication.onCreate` calls `startKoin { androidContext(...); modules(appModule, adsModule) }`,
   so the ads module sits next to the app module. An Application is created once per process, so the container starts once.
 - **Used through `by inject()`.** `BaseViewModel` is a `KoinComponent`, so the Top Repos and repo-issues ViewModels each declared
   `private val adsController: AdsController by inject()` and exposed its flows (`canShowAds`, `adFreeUntilMs`,
@@ -110,10 +110,10 @@ Shared code never knew which build it was in. It asked Koin for an `AdsControlle
   whose flags the test sets) in `restartKoin`, so ViewModel tests never touched a real controller.
 - **Start-up.** `adsViewModel.start(this)` was a bare line in `MainActivity.onCreate`. The consent form needs an Activity, so the call
   cannot move into `Application`, but when restoring, put it inside a named app-start routine that the Activity calls (as the
-  start splash now is, in `OpenSourcePandaApp`), not back as a loose line.
+  start splash now is, in `CodeFixPandaApp`), not back as a loose line.
 
 Restoring this wiring is step 1a of [`restore.md`](restore.md): reverting the clean-out commit brings back the `AppModule` and
-`OpenSourcePandaApplication` edits, the `by inject()` fields and the test fixtures together, and step 2 brings back the real
+`CodeFixPandaApplication` edits, the `by inject()` fields and the test fixtures together, and step 2 brings back the real
 commercial module.
 
 ## Convention: parking a feature

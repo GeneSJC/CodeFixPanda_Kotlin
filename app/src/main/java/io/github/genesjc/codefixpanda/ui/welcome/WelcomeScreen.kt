@@ -42,7 +42,7 @@ import io.github.genesjc.codefixpanda.R
 import io.github.genesjc.codefixpanda.model.TokenSource
 import io.github.genesjc.codefixpanda.ui.components.IndependentNotice
 import io.github.genesjc.codefixpanda.ui.components.TokenField
-import io.github.genesjc.codefixpanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
 import io.github.genesjc.codefixpanda.ui.theme.BrandOnOrange
 import io.github.genesjc.codefixpanda.ui.theme.BrandOnOrangeSoft
 import io.github.genesjc.codefixpanda.ui.theme.BrandNavy
@@ -80,7 +80,7 @@ fun WelcomeScreen(
     val tokenSource by viewModel.tokenSource.collectAsStateWithLifecycle()
     var tokenDraft by rememberSaveable { mutableStateOf(startingToken) }
 
-    OpenSourcePandaTheme(issueMode = null) {
+    CodeFixPandaTheme(issueMode = null) {
         FrontDoorBackground(modifier = modifier) {
             Column(
                 modifier = Modifier

@@ -36,7 +36,7 @@ import io.github.genesjc.codefixpanda.ui.components.LabelInfoDialog
 import io.github.genesjc.codefixpanda.model.IssueLabelFilter
 import io.github.genesjc.codefixpanda.ui.text.buttonLabelRes
 import io.github.genesjc.codefixpanda.ui.text.glyph
-import io.github.genesjc.codefixpanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
 import io.github.genesjc.codefixpanda.ui.theme.colorScheme
 
 /**
@@ -54,7 +54,7 @@ fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
     val infoLabel = stringResource(R.string.label_info_title)
 
-    OpenSourcePandaTheme(issueMode = null) {
+    CodeFixPandaTheme(issueMode = null) {
         BrandSoftBackground {
             Scaffold(
                 containerColor = Color.Transparent,

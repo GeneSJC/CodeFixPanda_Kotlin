@@ -11,11 +11,11 @@ import org.koin.core.context.startKoin
  * MainActivity.onCreate (which runs again on recreation) there is no
  * risk of starting the container twice.
  */
-class OpenSourcePandaApplication : Application() {
+class CodeFixPandaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         startKoin {
-            androidContext(this@OpenSourcePandaApplication)
+            androidContext(this@CodeFixPandaApplication)
             modules(appModule)
         }
     }

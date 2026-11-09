@@ -10,14 +10,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.genesjc.codefixpanda.ui.modegate.IssueModeViewModel
 import io.github.genesjc.codefixpanda.ui.navigation.DiscoverNavHost
 import io.github.genesjc.codefixpanda.ui.splash.StartupSplash
-import io.github.genesjc.codefixpanda.ui.theme.OpenSourcePandaTheme
+import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
 
 /**
  * The root of the UI, what MainActivity hands to setContent: the whole app inside the theme of the chosen
  * Issue Mode, showing the start splash first and the app once it has finished.
  */
 @Composable
-fun OpenSourcePandaApp() {
+fun CodeFixPandaApp() {
     // The Issue Mode themes the whole app, splash included, so it is observed here at the root.
     // viewModel() is Activity-scoped: DiscoverNavHost's own viewModel() call gets this same
     // instance, so the theme changes the moment the mode gate's choice lands.
@@ -25,13 +25,13 @@ fun OpenSourcePandaApp() {
     val issueModeViewModel: IssueModeViewModel = viewModel()
     val issueMode by issueModeViewModel.mode.collectAsStateWithLifecycle()
 
-    OpenSourcePandaTheme(issueMode = issueMode) {
+    CodeFixPandaTheme(issueMode = issueMode) {
         // For this launch only (StartupSplashViewModel decides which splash plays, per device).
         // Survives rotation because MainActivity is not recreated on it (android:configChanges).
         var hasShownSplash by remember { mutableStateOf(false) }
         if (hasShownSplash) {
             DiscoverNavHost()
-            return@OpenSourcePandaTheme
+            return@CodeFixPandaTheme
         }
 
         StartupSplash(onFinished = { hasShownSplash = true })
