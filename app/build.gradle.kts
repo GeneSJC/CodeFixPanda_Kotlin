@@ -34,8 +34,8 @@ val localProperties = Properties().apply {
 // pushes that change this label within the feature set and restarts at 1 with each new A. Bump it in the
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
-val buildLabelA = 59
-val buildLabelB = 3
+val buildLabelA = 60
+val buildLabelB = 1
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // _meta/docs/ads/README.md, which says where the working implementation is kept).
 
