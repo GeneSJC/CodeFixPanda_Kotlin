@@ -1,11 +1,10 @@
 <div align="center">
 
-<img src="docs/images/banner.png" alt="Open Source Panda: find the open-source issue worth your next hour" width="100%">
+<img src="_meta/docs/images/banner.png" alt="Code Fix Panda: the Open Source Triage Board, connecting contributors to the issues that need attention" width="100%">
 
 <br>
 
-**An Android app for finding open-source issues on GitHub that are actually worth working on.**<br>
-The top projects with open issues that suit beginners, or that are asking for help, by language, one tap from the issues themselves.
+**Open Source Triage Board**: connecting contributors to the issues that need attention.
 
 <br>
 
@@ -17,18 +16,56 @@ The top projects with open issues that suit beginners, or that are asking for he
 ![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 [![License](https://img.shields.io/badge/License-Apache_2.0-0F2A52?style=flat-square)](LICENSE)
 
-[**What it does**](#what-it-does) &nbsp;·&nbsp; [**Screens**](#screens) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Docs**](#docs) &nbsp;·&nbsp; [**Status**](#status)
+[**Screens**](#screens) &nbsp;·&nbsp; [**What it does**](#what-it-does) &nbsp;·&nbsp; [**Run it**](#run-it) &nbsp;·&nbsp; [**Tech stack**](#tech-stack) &nbsp;·&nbsp; [**Developer tools**](#developer-tools) &nbsp;·&nbsp; [**Architecture**](#architecture) &nbsp;·&nbsp; [**Docs**](#docs)
 
-<img src="docs/images/divider.png" alt="" width="100%">
+<img src="_meta/docs/images/divider.png" alt="" width="100%">
 
 </div>
+
+<a id="screens"></a>
+
+## 📱 Screens
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center"><img src="_meta/docs/images/screen-welcome.jpg" alt="Welcome screen, with the GitHub token field" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-mode-gate.jpg" alt="The mode gate: beginner-friendly issues or projects asking for help" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-top-repos-beginner.jpg" alt="Top Repos in the blue beginner-friendly mode" width="230"></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <td align="center"><img src="_meta/docs/images/screen-top-repos.jpg" alt="Top Repos: repos with matching issues, filtered by language" width="230"></td>
+    <td align="center"><img src="_meta/docs/images/screen-repo-issues.jpg" alt="Repo issues: the matching issues in one repo" width="230"></td>
+  </tr>
+</table>
+
+</div>
+
+<!--
+Demo slot, hidden until there is a real demo GIF (see _meta/docs/images/README.md). To use it, remove these comment
+markers and point the image at _meta/docs/images/demo.gif:
+
+<div align="center">
+
+<img src="_meta/docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
+
+</div>
+-->
+
+<sub>Real screenshots, taken on a phone with the app's built-in demo data (no GitHub account or token is shown).</sub>
 
 <a id="what-it-does"></a>
 
 ## ✨ What it does
 
-Open source runs on people picking up the first issue they can handle. Open Source Panda does the searching for you: pick
-a kind of issue and a language, and it lists the repositories with the most open matches, each with its issues one tap away.
+Code Fix Panda searches GitHub for open issues that carry the "good first issue" or "help wanted" label, most recently
+updated first.
 
 <table>
   <tr>
@@ -66,28 +103,6 @@ a kind of issue and a language, and it lists the repositories with the most open
 > first screen walks you through making one in about a minute. The token is stored encrypted on your device, shown masked,
 > and sent only to GitHub.
 
-<a id="screens"></a>
-
-## 📱 Screens
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/images/placeholder-welcome.png" alt="Welcome screen" width="230"><br><sub><b>Welcome</b><br>the token gate</sub></td>
-    <td align="center"><img src="docs/images/placeholder-top-repos.png" alt="Top Repos" width="230"><br><sub><b>Top Repos</b><br>by language and mode</sub></td>
-    <td align="center"><img src="docs/images/placeholder-repo-issues.png" alt="Repo issues" width="230"><br><sub><b>Repo issues</b><br>one tap from the list</sub></td>
-  </tr>
-</table>
-
-<br>
-
-<img src="docs/images/placeholder-demo.png" alt="Demo of the app" width="640">
-
-</div>
-
-<sub>Screenshots and a demo GIF are on the way. The images above are placeholders (see [`docs/images`](docs/images/README.md)).</sub>
-
 <a id="run-it"></a>
 
 ## 🚀 Run it
@@ -119,8 +134,8 @@ cd OpenSourcePanda_Kotlin
 ./gradlew testFossDebugUnitTest testCommercialDebugUnitTest
 
 # the same checks CI runs
-./scripts/check-no-ads-sdk.sh           # neither flavor contains an ads library
-./scripts/check-release-has-no-token.sh # no release build contains a developer token
+./_meta/scripts/check-no-ads-sdk.sh           # neither flavor contains an ads library
+./_meta/scripts/check-release-has-no-token.sh # no release build contains a developer token
 ```
 
 **A token for your own debug builds.** Put `GITHUB_API_TOKEN=ghp_yourtoken` in `local.properties` (it is git-ignored) and
@@ -129,33 +144,57 @@ setup is in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 </details>
 
+<a id="tech-stack"></a>
+
+## 🧰 Tech stack
+
+| | |
+|---|---|
+| **Language** | Kotlin 2.2 |
+| **UI** | Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose 2.8 |
+| **Architecture** | MVVM with state holders and repositories; Koin 4.2 for dependency injection |
+| **Networking** | Retrofit 2.11, OkHttp 4.12, Moshi 1.15 |
+| **Async** | Kotlin Coroutines and Flow |
+| **Markdown** | Markwon 4.6 (README previews) |
+| **Security** | Android Keystore (AES-GCM) for the saved token |
+| **Build** | Android Gradle Plugin 9.4, two product flavors, minSdk 24, targetSdk 37 |
+| **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
+| **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
+
 <a id="developer-tools"></a>
 
 ## 🛠️ Developer tools
 
-Two groups of tools live in the repository. The first checks the app and is run by CI too, so a green run on your machine means a green run there. The second only makes the images on this page and is not part of the Android app.
-
-**App checks** (command-line, no Python)
+These tools check the app, and CI runs them too, so a green run on your machine means a green run there. The script that draws the images on this page is described in [`_meta/docs/README_01.md`](_meta/docs/README_01.md).
 
 | Tool | What it does | When to run it |
 |---|---|---|
-| `./scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
+| `./_meta/scripts/verify-all.sh` | Everything below in one command: tests and debug builds for both flavors, then both safety checks. Stops at the first failure and says which step it was | Before you push |
 | `./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug` | Unit tests and debug builds for both flavors. Both are named because the bare task names are ambiguous with two flavors | After any code change; a `foss`-only run can miss a break in the `commercial` source folder |
-| `./scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
-| `./scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
+| `./_meta/scripts/check-no-ads-sdk.sh` | Proves neither flavor contains an ads or consent library or an ads manifest entry | After any dependency change |
+| `./_meta/scripts/check-release-has-no-token.sh` | Proves no release build carries a developer token, and that the check can tell (the debug builds must contain it) | After any change to build config or token handling |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Runs the tests, both builds and both checks on every push and pull request to `develop` and `main` | Automatic |
-
-**README artwork** (Python with Pillow; only draws the images on this page, nothing here ships in the app)
-
-| Tool | What it does | When to run it |
-|---|---|---|
-| `python3 docs/images/make_art.py` | Redraws the banner, divider, footer mascot and placeholder phone screens in `docs/images/`, using `docs/images/panda-source.png` | After a rename, a color change or a new mascot |
 
 <a id="architecture"></a>
 
 ## 🏗️ Architecture
 
-One direction only, with every layer doing one job. The standard Android stack:
+One direction only, with every layer doing one job. It is Android's standard UI layer and data layer, with a state
+holder for each feature between the ViewModel and the repositories.
+
+- **View** draws the screen.
+- **ViewModel** decides what the screen shows.
+- **StateHolder** owns a feature's data and the logic that changes it.
+- **Repository** is the single source of truth for one kind of data.
+- **Data source** is the one place that talks to GitHub or a file.
+
+The rules that hold it together:
+
+- **Each layer depends only on the ones below it**, never on the ones above.
+- **Results come back up as state** that the screen watches.
+- **A unit test checks the imports.** `LayeringRulesTest` runs in CI, so a stray import that breaks a rule fails the build.
+
+Here is how the pieces connect:
 
 ```mermaid
 flowchart TB
@@ -190,7 +229,12 @@ flowchart TB
 | **Repository** | The source of truth for one kind of data (fetched, stored, cached) | Know about screens or wording |
 | **Data source** | One external thing: the GitHub API, or a file | Decide what the app does with the data |
 
-**One switch decides which data you see**, and nothing above it ever knows:
+**One switch decides which data you see**, and nothing above it ever knows. When no GitHub token is in use, the app answers
+from built-in demo data instead of the network, so every screen still has something to show. The check happens on every
+request, because a token can be added or removed while the app runs. It swaps only the data sources (the GitHub search,
+the README fetch and the cache file), so the repositories, state holders and screens are the same code either way. Demo
+results stay in memory and never reach the real cache, and saved bookmarks and hidden issues are tagged with where they
+came from, so real and demo data never mix:
 
 ```mermaid
 flowchart LR
@@ -209,7 +253,10 @@ flowchart LR
 
 ### Principles at a glance
 
-- 🧱 **Dependencies point one way.** Views never reach a repository; data layers never know about screens.
+- 🧱 **Dependencies point one way.** Views get everything through their ViewModel and never import a repository, a state
+  holder or a domain rule. State holders know nothing of screens, Compose or Android; data layers know nothing of screens;
+  and the plain types and pure rules at the bottom (`model`, `domain`) know nothing of the rest of the app or of Android.
+  `LayeringRulesTest` fails the build if an import breaks any of this.
 - 💉 **Koin builds everything in one place** (`di/AppModule.kt`). ViewModels declare what they need as plain members and keep a no-argument constructor.
 - 🔤 **Every user-facing word is a string resource.** Data layers report facts; the ViewModels turn them into wording.
 - 🧪 **Everything is testable without a device.** Data sources sit behind interfaces; tests register fakes with `restartKoin { single { fake } }`.
@@ -271,7 +318,7 @@ flowchart LR
 - **Local UI state stays in composables.** Animation values, dialog and menu toggles,
   expanded flags and snackbar hosts are not hoisted into ViewModels.
 
-More decisions, with their reasons, are in [`docs/design-notes.md`](docs/design-notes.md).
+More decisions, with their reasons, are in [`_meta/docs/design-notes.md`](_meta/docs/design-notes.md).
 
 </details>
 
@@ -293,15 +340,15 @@ Flavors, and not a runtime flag, keep code that only one build may contain out o
 **The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
 steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
-More in `docs/design-notes.md`, "Token storage".
+More in `_meta/docs/design-notes.md`, "Token storage".
 
 **Ads are parked, on purpose.** No build of this app contains an ads SDK, or any code that talks to one. A working,
 tested ads layer (Google's consent flow, an AdMob banner, and a rewarded video that buys an hour without the banner) is
-kept in the repository's history and written up in [`docs/ads/`](docs/ads/README.md): what it does, where each piece lives
+kept in the repository's history and written up in [`_meta/docs/ads/`](_meta/docs/ads/README.md): what it does, where each piece lives
 (two tags and a commit), the setup it needs, and how to bring it back. Restoring is a copy of files out of the history, not
 a merge.
 
-- **Checked by CI.** `scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
+- **Checked by CI.** `_meta/scripts/check-no-ads-sdk.sh` fails if either flavor lists an ads library or has an ads entry in
   its merged manifest.
 
 </details>
@@ -310,7 +357,6 @@ a merge.
 
 ```text
 app/src/main/java/io/github/genesjc/opensourcepanda/
-├── ads/          the SDK-free ads contract (ads are parked)
 ├── config/       AppConfig: the build-time values the UI may read
 ├── data/         repositories and their storage, rate limit parsing, demo/ (the invented data),
 │                 network/ (the GitHub client and its DTOs)
@@ -330,29 +376,12 @@ app/src/main/java/io/github/genesjc/opensourcepanda/
     ├── text/         the wording helpers (relative time, issue meta, filter names)
     ├── theme/        colors, including one scheme per issue mode
     ├── toprepos/     the Top Repos screen, its drawer, header and dialogs
-    ├── welcome/      the token gate and its guide
-    └── ads/          the SDK-free hooks
+    └── welcome/      the token gate and its guide
 
-app/src/foss/  app/src/commercial/   per-flavor code      scripts/   CI checks
-docs/          design notes, ads restore guide              _meta/     setup docs
+app/src/foss/  app/src/commercial/   per-flavor code
+_meta/docs/      design notes, the ads restore guide, the README art, setup docs
+_meta/scripts/   the CI checks and the script that draws the README art
 ```
-
-<a id="tech-stack"></a>
-
-## 🧰 Tech stack
-
-| | |
-|---|---|
-| **Language** | Kotlin 2.2 |
-| **UI** | Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose 2.8 |
-| **Architecture** | MVVM with state holders and repositories; Koin 4.2 for dependency injection |
-| **Networking** | Retrofit 2.11, OkHttp 4.12, Moshi 1.15 |
-| **Async** | Kotlin Coroutines and Flow |
-| **Markdown** | Markwon 4.6 (README previews) |
-| **Security** | Android Keystore (AES-GCM) for the saved token |
-| **Build** | Android Gradle Plugin 9.4, two product flavors, minSdk 24, targetSdk 37 |
-| **Tests** | JUnit 4, coroutines-test; fakes instead of mocks |
-| **CI** | GitHub Actions: unit tests for both flavors, two guard scripts |
 
 <a id="docs"></a>
 
@@ -360,20 +389,9 @@ docs/          design notes, ads restore guide              _meta/     setup doc
 
 | Read | To learn |
 |---|---|
-| [`docs/design-notes.md`](docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
-| [`docs/ads/README.md`](docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
+| [`_meta/docs/design-notes.md`](_meta/docs/design-notes.md) | The decisions too long for a code comment: navigation, state, demo data, token storage, flavors |
+| [`_meta/docs/ads/README.md`](_meta/docs/ads/README.md) | The parked ads layer: what it is, where it lives, the setup it needs and how to bring it back (with its restore guide, architecture and testing rules) |
 | [`_meta/docs/README_01.md`](_meta/docs/README_01.md) | Running the tests and the CI setup |
-
-<a id="status"></a>
-
-## 🗺️ Status
-
-| | |
-|---|---|
-| ✅ **Done** | Layered MVVM with Koin, string resources, demo data, two flavors, the front door and token guide, encrypted and masked token storage |
-| ⏸️ **Parked** | Ads (a consent flow, a banner and a one-hour ad-free reward), kept recoverable with a restore guide |
-| 🔜 **Next** | A Google Play release, and real screenshots for the token guide |
-| 💡 **Later** | Sign in with GitHub instead of pasting a token |
 
 <a id="license"></a>
 
@@ -384,14 +402,14 @@ covered by this license, and is not part of this repository.
 
 <div align="center">
 
-<img src="docs/images/divider.png" alt="" width="100%">
+<img src="_meta/docs/images/divider.png" alt="" width="100%">
 
 <br>
 
-<img src="docs/images/panda.png" alt="The Open Source Panda mascot" width="90">
+<img src="_meta/docs/images/panda.png" alt="The Code Fix Panda mascot" width="90">
 
 <sub>Built with Kotlin, Compose, a lot of small commits, and a panda.</sub>
 
-<sub>Open Source Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
+<sub>Code Fix Panda is an independent app. It is not affiliated with, endorsed by, or sponsored by GitHub, Inc. GitHub is a trademark of GitHub, Inc.</sub>
 
 </div>

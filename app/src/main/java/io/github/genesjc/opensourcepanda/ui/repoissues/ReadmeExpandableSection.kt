@@ -53,7 +53,7 @@ import io.noties.markwon.Markwon
  * Markwon in a wrapped TextView (AndroidView), since Markwon has no first-party Compose API. The
  * 2-second expand/collapse and the matching chevron rotation are a deliberate slow "hero" moment,
  * not the usual 200 to 300 ms. The body fills the available height instead of being capped, because
- * it is drawn as an overlay (see the repo issues screen in docs/design-notes.md).
+ * it is drawn as an overlay (see the repo issues screen in _meta/docs/design-notes.md).
  */
 private const val EXPAND_COLLAPSE_DURATION_MS = 2000
 

@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
  *
  * Not a mode dropdown in the title: the mode is one whole-app choice made at the gate screen. The
  * two "Find ..." menu items are hardcoded, so a third mode means editing them.
- * More in docs/design-notes.md, "Top Repos screen".
+ * More in _meta/docs/design-notes.md, "Top Repos screen".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

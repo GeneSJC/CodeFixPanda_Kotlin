@@ -3,8 +3,13 @@
 Ads are **parked**: no build of this app contains the ads SDK, and none of the code that talks to it, not even the
 small SDK-free hooks. Start at [`README.md`](README.md) in this folder for what the layer is worth and the setup it
 needs. This guide is the way back. It is written so that a developer who has never seen the ads code can restore it, and so
-that nothing has to be re-implemented or reverse-engineered. Read `docs/ads/architecture.md` first if you want to
+that nothing has to be re-implemented or reverse-engineered. Read `_meta/docs/ads/architecture.md` first if you want to
 understand how the ads layer works; this document is the procedure.
+
+**A note on paths.** This guide was written when `docs/` and `scripts/` sat at the repository root. They now live under
+`_meta/` (`_meta/docs/`, `_meta/scripts/`), and the guide uses the new paths for files that are in the repository today.
+Paths inside the archives (the commit and the tags below) are the old ones, so a file checked out from an archive lands at
+its old path and needs a `git mv` into `_meta/`, as the steps say.
 
 ## 0. Where the working implementation is
 
@@ -42,7 +47,7 @@ integration points (section 4).
 | Version catalog | `gradle/libs.versions.toml` | The ads library version and entry (appendix A) |
 | Strings | `app/src/main/res/values/strings.xml` | `ad_banner_offline` (appendix A) |
 | Backup rules | `app/src/main/res/xml/backup_rules.xml`, `data_extraction_rules.xml` | Exclude `ad_free_prefs.xml` (appendix A) |
-| Clean-build check | `scripts/check-foss-clean.sh` and a CI step | Proves the open build has no ads software, with a positive control on the commercial build. Parking replaced it with `scripts/check-no-ads-sdk.sh` (section 3, step 8) |
+| Clean-build check | `scripts/check-foss-clean.sh` and a CI step | Proves the open build has no ads software, with a positive control on the commercial build. Parking replaced it with `_meta/scripts/check-no-ads-sdk.sh` (section 3, step 8) |
 
 **Also removed, in the clean-out (restore these first; step 1a):** the SDK-free hooks that had stayed in the code while ads
 were parked: the `AdsController` interface and `NoAdsController` (`ads/`), `AdsViewModel`, `AdBannerSlot` and
@@ -67,7 +72,7 @@ Restoring the code and building with **test ads** needs none of them. Going live
 4. **Three real ad ids** from the ad account (app id, banner unit, rewarded unit), to keep as private properties, never
    in a committed file.
 5. **Test devices** registered in the ad console for everyone who will run a build.
-6. Read `docs/ads/testing-rules.md`: never tap your own live ads, never ask anyone to.
+6. Read `_meta/docs/ads/testing-rules.md`: never tap your own live ads, never ask anyone to.
 
 ## 3. The restore, step by step
 
@@ -116,17 +121,17 @@ git add -A app/src/commercial app/src/testCommercial
 6. **Dependency and catalog.** Add appendix A4 to `dependencies { }` and appendix A5 to `gradle/libs.versions.toml`.
 7. **Strings and backup rules.** Add appendix A6 to `strings.xml` and appendix A7 to the two XML files.
 8. **The clean-build check.** Restore the old script and CI step, which add the positive control back:
-   `git checkout 9d61e0f1fd0814f68d8061cd24698bb069d6e70d -- scripts/check-foss-clean.sh`, then `git rm scripts/check-no-ads-sdk.sh`, and replace the
+   `git checkout 9d61e0f1fd0814f68d8061cd24698bb069d6e70d -- scripts/check-foss-clean.sh`, move it with `git mv scripts/check-foss-clean.sh _meta/scripts/`, then `git rm _meta/scripts/check-no-ads-sdk.sh`, and replace the
    CI step "Builds contain no ads software" with appendix A8. (The restored script requires the foss build to be
    clean and the commercial build to contain the libraries.)
-9. **Update the docs.** Replace the "Ads are parked" notes in `README.md` and `docs/design-notes.md` with a description of
+9. **Update the docs.** Replace the "Ads are parked" notes in `README.md` and `_meta/docs/design-notes.md` with a description of
    the live ads layer (the old text is in `git show 9d61e0f1fd0814f68d8061cd24698bb069d6e70d:docs/design-notes.md`, sections "Advertising" and
-   "Ad-free offer"). Update the status line at the top of `docs/ads/README.md`, keep `docs/ads/architecture.md`, and update the
+   "Ad-free offer"). Update the status line at the top of `_meta/docs/ads/README.md`, keep `_meta/docs/ads/architecture.md`, and update the
    comments that say ads are parked in `AdsController.kt`, `NoAdsController.kt` and the foss `AdsModule.kt`.
 10. **Bump the build label** in the same commit as the work.
 
 **Optional, from the tag (only if you want them):** the **ads switch** (`adsEnabled`, off by default) and the **kit export**.
-`git checkout ads-parked-2026-10-27 -- scripts/export-ads-kit.sh scripts/ads-kit`, and take the `ads-kit:begin/end`
+`git checkout ads-parked-2026-10-27 -- scripts/export-ads-kit.sh scripts/ads-kit`, move them with `git mv scripts/export-ads-kit.sh scripts/ads-kit _meta/scripts/`, and take the `ads-kit:begin/end`
 marker comments and the `adsEnabled` block from that tag's `app/build.gradle.kts` and its commercial `AdsModule.kt`.
 The switch is not needed for ads to work; skip it unless you want a way to keep ads off in some builds.
 
@@ -152,7 +157,7 @@ The switch is not needed for ads to work; skip it unless you want a way to keep 
 
 1. **Build both flavors, debug and release**, naming them in every Gradle task (the bare task names are ambiguous with two flavors):
    `./gradlew assembleFossDebug assembleCommercialDebug` and the unit tests `testFossDebugUnitTest testCommercialDebugUnitTest`.
-2. **The clean-build check.** `./scripts/check-foss-clean.sh` must pass: the foss build has no ads library or manifest entry; the commercial build
+2. **The clean-build check.** `./_meta/scripts/check-foss-clean.sh` must pass: the foss build has no ads library or manifest entry; the commercial build
    does (the positive control).
 3. **Run `commercialDebug` on a device with test ads.** Check: the consent form appears where required (a debug build with
    `ADMOB_TEST_DEVICE_ID` set simulates the EU); a banner appears at the bottom of Top Repos and repo issues, labelled "Test Ad"; the offer line
@@ -258,7 +263,7 @@ The first line goes in `debug`, the second in `release`.
 
 ```kotlin
     // Only the commercial build contains the ads software; the foss build never does (see
-    // scripts/check-foss-clean.sh). The string form is used because the typed accessor for a flavor's
+    // _meta/scripts/check-foss-clean.sh). The string form is used because the typed accessor for a flavor's
     // configuration is not generated when the flavors are declared in this same script.
     add("commercialImplementation", libs.play.services.ads)
 ```
@@ -289,9 +294,9 @@ Each file also had a comment line above the first exclusion: "The ad-free period
 
 ```yaml
       # Proves the open (foss) build has no ads libraries or manifest entries, and that the check can
-      # tell (the commercial build must have them). See scripts/check-foss-clean.sh.
+      # tell (the commercial build must have them). See _meta/scripts/check-foss-clean.sh.
       - name: Open build contains no ads software
-        run: ./scripts/check-foss-clean.sh
+        run: ./_meta/scripts/check-foss-clean.sh
 ```
 
 ### A9. `app/src/commercial/AndroidManifest.xml`
@@ -301,7 +306,7 @@ Each file also had a comment line above the first exclusion: "The ad-free period
 <!--
     Only the commercial build's manifest mentions the ads software. The AdMob SDK refuses to start
     without its app id here, and the foss build must contain no ads entries at all
-    (scripts/check-foss-clean.sh checks that). The value comes from a placeholder set per build type
+    (_meta/scripts/check-foss-clean.sh checks that). The value comes from a placeholder set per build type
     in app/build.gradle.kts: Google's sample id in debug, the real id from a Gradle property in release.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">

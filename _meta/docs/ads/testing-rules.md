@@ -1,6 +1,6 @@
 # Ads testing rules
 
-> Ads are parked (see `docs/ads/README.md`), so these rules apply from the day ads are restored.
+> Ads are parked (see `_meta/docs/ads/README.md`), so these rules apply from the day ads are restored.
 
 Ads are an income source, and Google can suspend an account for invalid traffic, sometimes without appeal.
 These rules keep that from happening.

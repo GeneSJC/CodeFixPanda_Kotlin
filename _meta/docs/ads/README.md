@@ -22,7 +22,7 @@ A complete, working ads layer for the `commercial` (Google Play) build, built on
 - **Tests.** The ad-free period is unit-tested under virtual time; the ViewModel flows and the do-nothing controller
   have their own tests.
 - **A proof that the open build is clean.** A CI script checks that no ads or consent library and no AdMob manifest
-  entry is in either build. That check stays in the repository today (`scripts/check-no-ads-sdk.sh`).
+  entry is in either build. That check stays in the repository today (`_meta/scripts/check-no-ads-sdk.sh`).
 
 Restoring it is a copy of files out of the history plus a re-check, about half a day if nothing has drifted. The real
 lead time is not code: it is the ad account, the privacy policy and the store declarations (see "Before going live").
@@ -121,7 +121,7 @@ commercial module.
 When a feature is taken out of the code but may come back, it is not deleted and it is not hidden in a tag alone:
 
 1. **Tag it** so the exact code can be found (here, two tags and the removal commit).
-2. **Keep a front-page README in `docs/<feature>/`**, in the mainline, that says up front that the parked material has
+2. **Keep a front-page README in `_meta/docs/<feature>/`**, in the mainline, that says up front that the parked material has
    value and why, where it lives, what restoring costs, and the setup and configuration it needs. A tag nobody reads
    about is forgotten; a README in the mainline is how a reader learns the capability exists.
 3. **Keep the detail next to it** (how it works, the restore procedure, the rules for using it).

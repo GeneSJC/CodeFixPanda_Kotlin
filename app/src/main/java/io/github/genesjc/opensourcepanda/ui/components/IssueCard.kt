@@ -56,7 +56,7 @@ import kotlinx.coroutines.launch
  * external-link badge are optional: each appears only when its callback is given.
  * Hide is a plain callback with no Snackbar here, because the card is about to leave the
  * list and would cancel its own scope; the screen owns the Undo Snackbar. The revealed row is
- * IssueCardActions. More in docs/design-notes.md, "Issue card".
+ * IssueCardActions. More in _meta/docs/design-notes.md, "Issue card".
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

@@ -47,7 +47,7 @@ import io.github.genesjc.opensourcepanda.ui.theme.colorScheme
  * the prompt opens LabelInfoDialog for a user who wants to read what the modes mean before choosing.
  * The content sits in a nested theme with issueMode = null: tapping a card sets the mode
  * synchronously, and without the wrapper this screen's text color snapped to the new mode's tone just
- * before the transition. More in docs/design-notes.md, "Mode gate".
+ * before the transition. More in _meta/docs/design-notes.md, "Mode gate".
  */
 @Composable
 fun IssueModeGateScreen(onModeSelected: (IssueLabelFilter) -> Unit) {
