@@ -34,6 +34,21 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      # The first Gradle command downloads the Gradle distribution from GitHub's release servers, which
+      # now and then answer 504 or time out. This step does that download alone and tries up to three
+      # times, so a passing hiccup does not fail the build before any code has run. Only this download is
+      # retried: tests and checks are never re-run, so a real failure still fails the build.
+      - name: Download Gradle (retries)
+        run: |
+          for attempt in 1 2 3; do
+            if ./gradlew --version; then
+              exit 0
+            fi
+            echo "Gradle download failed (attempt $attempt of 3)"
+            sleep $((attempt * 20))
+          done
+          exit 1
+
       - name: Unit tests
         # Both flavors are named: with two flavors the bare name testDebugUnitTest is ambiguous to Gradle.
         run: ./gradlew testFossDebugUnitTest testCommercialDebugUnitTest --stacktrace
