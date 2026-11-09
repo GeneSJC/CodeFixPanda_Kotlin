@@ -20,7 +20,7 @@ import io.github.genesjc.opensourcepanda.ui.theme.BrandColorScheme
 private val BURST_SIZE = (120 * SPLASH_TEXT_SCALE).dp
 
 /**
- * A kinetic title-reveal splash: "Open" slides in from the left and overshoots before settling, "Source"
+ * A kinetic title-reveal splash: "Code" slides in from the left and overshoots before settling, "Fix"
  * slides in from the right and shudders on impact, "PANDA" rises into place beneath them, and finally the
  * panda drops in above the name and lands with a squash while a burst of light flashes behind it.
  * [speedMultiplier] scales every stage duration (0.5 means twice as slow), so one composable serves

@@ -205,7 +205,7 @@
 
     <!-- Welcome screen (the front door) and the token guide. The screenshot captions are text placeholders until real screenshots of GitHub's pages exist. -->
     <string name="welcome_title_intro">Welcome to</string>
-    <string name="welcome_title_name">Open Source\nPanda</string>
+    <string name="welcome_title_name">Code Fix\nPanda</string>
     <string name="welcome_message">To use this app you need to set your GitHub token. It is free, takes about a minute, and needs no permissions.</string>
     <string name="welcome_how_to_link">How does it work?</string>
     <string name="welcome_try_demo">Try the demo</string>
