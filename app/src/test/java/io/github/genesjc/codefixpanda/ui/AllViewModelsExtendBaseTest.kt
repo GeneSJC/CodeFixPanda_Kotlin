@@ -1,0 +1,45 @@
+package io.github.genesjc.codefixpanda.ui
+
+import io.github.genesjc.codefixpanda.ui.bookmarks.BookmarksViewModel
+import io.github.genesjc.codefixpanda.ui.hidden.HiddenIssuesViewModel
+import io.github.genesjc.codefixpanda.ui.modegate.IssueModeViewModel
+import io.github.genesjc.codefixpanda.ui.navigation.RepoSelectionViewModel
+import io.github.genesjc.codefixpanda.ui.repoissues.RepoIssuesViewModel
+import io.github.genesjc.codefixpanda.ui.repoissues.RepoReadmeViewModel
+import io.github.genesjc.codefixpanda.ui.settings.ApiTokenViewModel
+import io.github.genesjc.codefixpanda.ui.splash.StartupSplashViewModel
+import io.github.genesjc.codefixpanda.ui.toprepos.TopReposViewModel
+import io.github.genesjc.codefixpanda.ui.welcome.WelcomeViewModel
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * The project convention: every top-level (screen-facing) ViewModel
+ * extends BaseViewModel unless there is a stated reason not to (see
+ * Conventions 4 — Architecture Design). This keeps the convention from
+ * quietly eroding. A new ViewModel is added to the list below; one that
+ * deliberately does not extend the base would be left out with a comment
+ * here saying why.
+ */
+class AllViewModelsExtendBaseTest {
+
+    @Test
+    fun everyScreenViewModelExtendsTheBase() {
+        val viewModels = listOf(
+            TopReposViewModel::class.java,
+            RepoIssuesViewModel::class.java,
+            RepoReadmeViewModel::class.java,
+            BookmarksViewModel::class.java,
+            HiddenIssuesViewModel::class.java,
+            IssueModeViewModel::class.java,
+            ApiTokenViewModel::class.java,
+            StartupSplashViewModel::class.java,
+            WelcomeViewModel::class.java,
+            RepoSelectionViewModel::class.java,
+        )
+
+        viewModels.forEach { viewModel ->
+            assertTrue("${viewModel.simpleName} should extend BaseViewModel", BaseViewModel::class.java.isAssignableFrom(viewModel))
+        }
+    }
+}

@@ -1,0 +1,247 @@
+package io.github.genesjc.codefixpanda.data
+
+import io.github.genesjc.codefixpanda.model.DataOrigin
+import io.github.genesjc.codefixpanda.model.TokenSource
+import io.github.genesjc.codefixpanda.model.TokenStorageProblem
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class ApiTokenRepositoryTest {
+
+    private class FakeStorage(var stored: String? = null) : ApiTokenStorage {
+        override var lastProblem: TokenStorageProblem? = null
+        override fun load(): String? = stored
+        override fun save(token: String?) {
+            stored = token
+        }
+    }
+
+    @Test
+    fun aProblemKeepingTheTokenIsPassedOnAndClearedBySuccess() {
+        val storage = FakeStorage()
+        val repository = ApiTokenRepository(storage, buildToken = "")
+        assertNull(repository.storageProblem.value)
+
+        storage.lastProblem = TokenStorageProblem.COULD_NOT_SAVE
+        repository.setUserToken("ghp_secret")
+        assertEquals(TokenStorageProblem.COULD_NOT_SAVE, repository.storageProblem.value)
+
+        storage.lastProblem = null
+        repository.setUserToken("ghp_secret")
+        assertNull(repository.storageProblem.value)
+    }
+
+    @Test
+    fun aProblemFoundWhenTheSavedTokenWasReadIsReportedFromTheStart() {
+        val storage = FakeStorage().apply { lastProblem = TokenStorageProblem.COULD_NOT_READ }
+
+        val repository = ApiTokenRepository(storage, buildToken = "")
+
+        assertEquals(TokenStorageProblem.COULD_NOT_READ, repository.storageProblem.value)
+    }
+
+    // ---- the precedence rule, as pure functions ----
+
+    @Test
+    fun userTokenBeatsTheBuildToken() {
+        assertEquals("user", resolveEffectiveToken("user", "build"))
+    }
+
+    @Test
+    fun buildTokenIsUsedWhenThereIsNoUserToken() {
+        assertEquals("build", resolveEffectiveToken("", "build"))
+    }
+
+    @Test
+    fun blankUserTokenFallsBackToTheBuildToken() {
+        assertEquals("build", resolveEffectiveToken("   ", "build"))
+    }
+
+    @Test
+    fun noTokenAtAllResolvesToEmpty() {
+        assertEquals("", resolveEffectiveToken("", ""))
+        assertEquals("", resolveEffectiveToken("  ", "  "))
+    }
+
+    @Test
+    fun tokenSourceFollowsTheSameRule() {
+        assertEquals(TokenSource.USER, tokenSourceOf("user", "build"))
+        assertEquals(TokenSource.USER, tokenSourceOf("user", ""))
+        assertEquals(TokenSource.BUILD, tokenSourceOf("", "build"))
+        assertEquals(TokenSource.BUILD, tokenSourceOf("  ", "build"))
+        assertEquals(TokenSource.NONE, tokenSourceOf("", ""))
+    }
+
+    // ---- the repository ----
+
+    @Test
+    fun startsWithTheBuildTokenWhenNothingIsSaved() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "build")
+        assertEquals("", repository.userToken.value)
+        assertEquals("build", repository.effectiveToken.value)
+        assertEquals(TokenSource.BUILD, repository.tokenSource.value)
+    }
+
+    @Test
+    fun startsWithNoTokenWhenNeitherExists() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        assertEquals("", repository.effectiveToken.value)
+        assertEquals(TokenSource.NONE, repository.tokenSource.value)
+    }
+
+    @Test
+    fun restoresASavedUserTokenOnConstruction() {
+        val repository = ApiTokenRepository(FakeStorage("saved"), buildToken = "build")
+        assertEquals("saved", repository.userToken.value)
+        assertEquals("saved", repository.effectiveToken.value)
+        assertEquals(TokenSource.USER, repository.tokenSource.value)
+    }
+
+    @Test
+    fun savingATokenOverridesTheBuildTokenAndPersists() {
+        val storage = FakeStorage()
+        val repository = ApiTokenRepository(storage, buildToken = "build")
+
+        repository.setUserToken("mine")
+
+        assertEquals("mine", repository.effectiveToken.value)
+        assertEquals(TokenSource.USER, repository.tokenSource.value)
+        assertEquals("mine", storage.stored)
+    }
+
+    @Test
+    fun savingTrimsSurroundingWhitespace() {
+        val storage = FakeStorage()
+        val repository = ApiTokenRepository(storage, buildToken = "")
+
+        repository.setUserToken("  ghp_abc123\n")
+
+        assertEquals("ghp_abc123", repository.userToken.value)
+        assertEquals("ghp_abc123", repository.effectiveToken.value)
+        assertEquals("ghp_abc123", storage.stored)
+    }
+
+    @Test
+    fun clearingFallsBackToTheBuildTokenAndClearsStorage() {
+        val storage = FakeStorage()
+        val repository = ApiTokenRepository(storage, buildToken = "build")
+        repository.setUserToken("mine")
+
+        repository.setUserToken("")
+
+        assertEquals("", repository.userToken.value)
+        assertEquals("build", repository.effectiveToken.value)
+        assertEquals(TokenSource.BUILD, repository.tokenSource.value)
+        assertNull(storage.stored)
+    }
+
+    @Test
+    fun savingABlankValueCountsAsClearing() {
+        val storage = FakeStorage("old")
+        val repository = ApiTokenRepository(storage, buildToken = "")
+
+        repository.setUserToken("   ")
+
+        assertEquals(TokenSource.NONE, repository.tokenSource.value)
+        assertNull(storage.stored)
+    }
+
+    /** A new repository over the same storage stands in for killing and relaunching the app. */
+    @Test
+    fun aSavedTokenSurvivesARestart() {
+        val storage = FakeStorage()
+        ApiTokenRepository(storage, buildToken = "build").setUserToken("mine")
+
+        val afterRestart = ApiTokenRepository(storage, buildToken = "build")
+
+        assertEquals("mine", afterRestart.effectiveToken.value)
+    }
+
+    @Test
+    fun replacingATokenKeepsOnlyTheLatest() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        repository.setUserToken("first")
+        repository.setUserToken("second")
+        assertEquals("second", repository.effectiveToken.value)
+    }
+
+    // ---- which data is in use ----
+
+    @Test
+    fun noTokenMeansDemoData() {
+        assertEquals(DataOrigin.DEMO, dataOriginFor(""))
+        assertEquals(DataOrigin.DEMO, ApiTokenRepository(FakeStorage(), buildToken = "").dataOrigin.value)
+    }
+
+    @Test
+    fun aTokenMeansGitHubData() {
+        assertEquals(DataOrigin.GITHUB, dataOriginFor("abc"))
+        assertEquals(DataOrigin.GITHUB, ApiTokenRepository(FakeStorage("user"), buildToken = "").dataOrigin.value)
+        assertEquals(DataOrigin.GITHUB, ApiTokenRepository(FakeStorage(), buildToken = "build").dataOrigin.value)
+    }
+
+    @Test
+    fun isDemoIsTrueExactlyWhileThereIsNoToken() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        assertTrue(repository.isDemo.value)
+
+        repository.setUserToken("abc")
+        assertFalse(repository.isDemo.value)
+
+        repository.setUserToken("")
+        assertTrue(repository.isDemo.value)
+    }
+
+    @Test
+    fun theOriginFollowsTheTokenAsItIsSetAndCleared() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+
+        repository.setUserToken("abc")
+        assertEquals(DataOrigin.GITHUB, repository.dataOrigin.value)
+
+        repository.setUserToken("")
+        assertEquals(DataOrigin.DEMO, repository.dataOrigin.value)
+    }
+
+    // ---- a demo started for the session ----
+
+    @Test
+    fun startingTheDemoShowsDemoDataEvenWithATokenAndChangesNothingStored() {
+        val storage = FakeStorage("ghp_saved")
+        val repository = ApiTokenRepository(storage, buildToken = "build")
+
+        repository.startDemo()
+
+        assertTrue(repository.isDemo.value)
+        assertEquals("", repository.effectiveToken.value)
+        assertEquals(TokenSource.NONE, repository.tokenSource.value)
+        assertEquals("ghp_saved", repository.userToken.value)
+        assertEquals("ghp_saved", storage.stored)
+    }
+
+    @Test
+    fun savingATokenEndsTheDemo() {
+        val repository = ApiTokenRepository(FakeStorage(), buildToken = "")
+        repository.startDemo()
+
+        repository.setUserToken("ghp_new")
+
+        assertFalse(repository.isDemo.value)
+        assertEquals("ghp_new", repository.effectiveToken.value)
+        assertEquals(TokenSource.USER, repository.tokenSource.value)
+    }
+
+    @Test
+    fun theDemoLastsOnlyForTheSession() {
+        val storage = FakeStorage("ghp_saved")
+        ApiTokenRepository(storage, buildToken = "").startDemo()
+
+        val nextLaunch = ApiTokenRepository(storage, buildToken = "")
+
+        assertFalse(nextLaunch.isDemo.value)
+        assertEquals("ghp_saved", nextLaunch.effectiveToken.value)
+    }
+}

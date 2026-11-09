@@ -35,7 +35,7 @@ val localProperties = Properties().apply {
 // SAME commit as the work it labels, and read the value back before committing: a scripted edit can
 // silently fail.
 val buildLabelA = 61
-val buildLabelB = 1
+val buildLabelB = 2
 // Ads are parked: the ads SDK and all code that depends on it were removed from this build (see
 // _meta/docs/ads/README.md, which says where the working implementation is kept).
 
@@ -48,7 +48,7 @@ val splashAnimation = "titleReveal" // "coin", "origami", "shapeStack", or "titl
 val showDetailedDrawerMenu = false // true reveals the full animation-replay menu + version stamp (dev use); false shows just "Play App Start Animation"
 
 android {
-    namespace = "io.github.genesjc.opensourcepanda"
+    namespace = "io.github.genesjc.codefixpanda"
     compileSdk {
         version = release(37)
     }
@@ -106,12 +106,12 @@ android {
         create("foss") {
             dimension = "distribution"
             isDefault = true // a fresh checkout builds and runs the open build
-            applicationId = "io.github.genesjc.opensourcepanda"
+            applicationId = "io.github.genesjc.codefixpanda"
             versionNameSuffix = "-foss"
         }
         create("commercial") {
             dimension = "distribution"
-            applicationId = "io.github.genesjc.opensourcepanda.commercial"
+            applicationId = "io.github.genesjc.codefixpanda.commercial"
             versionNameSuffix = "-commercial"
         }
     }

@@ -326,8 +326,8 @@ More decisions, with their reasons, are in [`_meta/docs/design-notes.md`](_meta/
 
 | Flavor | Published to | Application id | Version suffix |
 |---|---|---|---|
-| `foss` | GitHub, as the open-source build | `io.github.genesjc.opensourcepanda` | `-foss` |
-| `commercial` | Google Play | `io.github.genesjc.opensourcepanda.commercial` | `-commercial` |
+| `foss` | GitHub, as the open-source build | `io.github.genesjc.codefixpanda` | `-foss` |
+| `commercial` | Google Play | `io.github.genesjc.codefixpanda.commercial` | `-commercial` |
 
 `foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side.
 Flavors, and not a runtime flag, keep code that only one build may contain out of the other at compile time.
@@ -356,7 +356,7 @@ a merge.
 ### Where things live
 
 ```text
-app/src/main/java/io/github/genesjc/opensourcepanda/
+app/src/main/java/io/github/genesjc/codefixpanda/
 ├── config/       AppConfig: the build-time values the UI may read
 ├── data/         repositories and their storage, rate limit parsing, demo/ (the invented data),
 │                 network/ (the GitHub client and its DTOs)

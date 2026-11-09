@@ -1,0 +1,44 @@
+package io.github.genesjc.codefixpanda.ui.bookmarks
+
+import androidx.lifecycle.viewModelScope
+import io.github.genesjc.codefixpanda.R
+import io.github.genesjc.codefixpanda.data.ApiTokenRepository
+import io.github.genesjc.codefixpanda.data.BookmarksRepository
+import io.github.genesjc.codefixpanda.model.Issue
+import io.github.genesjc.codefixpanda.ui.BaseViewModel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import org.koin.core.component.inject
+
+/**
+ * The Bookmarks screen's interface to the saved bookmarks: the list to
+ * show. What is saved and when is BookmarksRepository's job. Only the bookmarks whose origin matches
+ * the data in use are listed, so demo bookmarks and real bookmarks never appear together.
+ *
+ * The repository is a plain member that Koin supplies; a test registers
+ * one over a fake storage.
+ */
+class BookmarksViewModel : BaseViewModel() {
+
+    private val bookmarksRepository: BookmarksRepository by inject()
+    private val tokenRepository: ApiTokenRepository by inject()
+
+    /** Bookmarked issues of the data in use, in the order they were saved. */
+    val bookmarks: StateFlow<List<Issue>> = combine(bookmarksRepository.bookmarks, tokenRepository.dataOrigin) { issues, origin ->
+        issues.filter { it.origin == origin }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        bookmarksRepository.bookmarks.value.filter { it.origin == tokenRepository.dataOrigin.value },
+    )
+
+    /** One-shot messages for the screen's Snackbar: a bookmark change that could not be saved. */
+    val snackbarEvents: Flow<String> = bookmarksRepository.saveFailures.map { string(R.string.bookmark_save_failed) }
+
+    /** Toggles [issue]'s bookmark; returns the new state (true = now bookmarked). */
+    fun toggleBookmark(issue: Issue): Boolean = bookmarksRepository.toggle(issue)
+}
