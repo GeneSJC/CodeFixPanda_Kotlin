@@ -8,7 +8,7 @@
 
 <br>
 
-[![CI](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/OpenSourcePanda_Kotlin/actions/workflows/ci.yml)
+[![CI](https://github.com/GeneSJC/CodeFixPanda_Kotlin/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/GeneSJC/CodeFixPanda_Kotlin/actions/workflows/ci.yml)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-MVVM-1F4B8E?style=flat-square)
@@ -114,8 +114,8 @@ itself). The app runs on Android 7.0 (API 24) and newer.
 > **Which branch?** `develop` is the default and holds the latest code. `main` holds the latest stable release. Short-lived `feature-set/*` and `refinement/*` branches carry work in progress.
 
 ```bash
-git clone https://github.com/GeneSJC/OpenSourcePanda_Kotlin.git
-cd OpenSourcePanda_Kotlin
+git clone https://github.com/GeneSJC/CodeFixPanda_Kotlin.git
+cd CodeFixPanda_Kotlin
 ```
 
 1. Open the folder in Android Studio and let Gradle sync.
