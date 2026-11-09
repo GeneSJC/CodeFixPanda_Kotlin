@@ -1,15 +1,15 @@
-"""README tooling only: generates the GitHub front page's artwork (banner, divider, placeholder screens, panda)
+"""README tooling only: generates the GitHub front page's artwork (banner, divider, the demo placeholder, panda)
 with Pillow. It is not part of the Android app and nothing here ships in either build flavor.
 
-Run from this folder:  python3 make_art.py
-It reads the mascot from panda-source.png (next to this file) and writes PNGs next to this file.
-Real screenshots and GIFs replace the placeholder-*.png files; keep the file names, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
+Run from anywhere:  python3 _meta/scripts/make_art.py
+It reads the mascot from _meta/docs/images/panda-source.png and writes the PNGs into _meta/docs/images/.
+The phone screenshots (screen-*.jpg) are real and not generated. A real demo GIF replaces placeholder-demo.png; keep the file name, or change the README to match. Fonts: DejaVu Sans Bold and Liberation Sans (Linux paths); edit FONT_* for another machine.
 """
 import os
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-PANDA = os.path.join(HERE, "panda-source.png")
+IMAGES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "images"))
+PANDA = os.path.join(IMAGES, "panda-source.png")
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_TEXT = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 FONT_TEXT_BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
@@ -151,15 +151,16 @@ def banner():
     shadowed(img, p, (100 * S + g.width - 2 * edge + 36 * S, (h - p.height) // 2 + 6 * S), blur=22 * S, offset=(0, 16 * S), opacity=110)
     # title
     x0 = 835 * S
-    d.text((x0, 96 * S), "Open Source", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
+    d.text((x0, 96 * S), "Code Fix", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.text((x0, 182 * S), "Panda", font=font(FONT_BOLD, 80 * S), fill=(255, 255, 255))
     d.rounded_rectangle((x0, 290 * S, x0 + 140 * S, 298 * S), radius=4 * S, fill=SUN)
-    d.text((x0, 318 * S), "Find the open-source issue", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
-    d.text((x0, 358 * S), "worth your next hour.", font=font(FONT_TEXT, 31 * S), fill=(255, 236, 224))
+    d.text((x0, 312 * S), "Open Source Triage Board", font=font(FONT_BOLD, 36 * S), fill=(255, 255, 255))
+    d.text((x0, 364 * S), "Connecting contributors to the issues", font=font(FONT_TEXT, 27 * S), fill=(255, 236, 224))
+    d.text((x0, 396 * S), "that need attention.", font=font(FONT_TEXT, 27 * S), fill=(255, 236, 224))
     cx = x0
     for text, fill, ink in (("beginner-friendly", NAVY, (255, 255, 255)), ("asking for help", SEAFOAM, NAVY), ("kotlin", SUN, NAVY)):
         c = chip(text, fill, size=20 * S, pad=(15 * S, 7 * S), text_fill=ink)
-        img.alpha_composite(c, (cx, 432 * S))
+        img.alpha_composite(c, (cx, 446 * S))
         cx += c.width + 14 * S
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
@@ -167,52 +168,6 @@ def divider():
     W, H = 1600, 6
     img = gradient(W, H, [(0, ORANGE_BOTTOM), (0.35, ORANGE_TOP), (0.65, SUN), (1, ORANGE_TOP)], diagonal=False)
     return img
-
-def phone(name, caption, kind):
-    S, W, H = 2, 540, 1100
-    w, h = W * S, H * S
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=70 * S, fill=NAVY)
-    inner = (14 * S, 14 * S, w - 14 * S, h - 14 * S)
-    if kind == "welcome":
-        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, ORANGE_TOP), (0.5, ORANGE_MID), (1, ORANGE_BOTTOM)])
-    else:
-        screen = vgradient(inner[2] - inner[0], inner[3] - inner[1], [(0, TANGERINE_LIGHT), (1, TANGERINE_MID)])
-        # The header band and its see-through title pill are drawn on the screen before it is rounded off.
-        screen.paste(vgradient(screen.width, 110 * S, [(0, ORANGE_TOP), (1, ORANGE_MID)]), (0, 0))
-        screen = screen.convert("RGBA")
-        pill = Image.new("RGBA", screen.size, (0, 0, 0, 0))
-        ImageDraw.Draw(pill).rounded_rectangle((90 * S, 38 * S, 300 * S, 80 * S), radius=12 * S, fill=(255, 255, 255, 51))
-        screen = Image.alpha_composite(screen, pill).convert("RGB")
-    mask = Image.new("L", screen.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, screen.width - 1, screen.height - 1), radius=58 * S, fill=255)
-    img.paste(screen, inner[:2], mask)
-    d = ImageDraw.Draw(img)
-    ox, oy = inner[0], inner[1]
-    if kind == "welcome":
-        pd = panda(190 * S)
-        img.alpha_composite(pd, (ox + (512 * S - pd.width) // 2, oy + 130 * S))
-        d = ImageDraw.Draw(img)
-        for i, wd in enumerate((260, 200, 300)):
-            d.rounded_rectangle((ox + (512 - wd) // 2 * S, oy + (380 + i * 60) * S, ox + ((512 + wd) // 2) * S, oy + (420 + i * 60) * S), radius=20 * S, fill=(255, 255, 255, 200 if i == 0 else 90))
-        d.rounded_rectangle((ox + 56 * S, oy + 700 * S, ox + 456 * S, oy + 770 * S), radius=35 * S, outline=(255, 255, 255), width=3 * S)
-        d.rounded_rectangle((ox + 56 * S, oy + 800 * S, ox + 456 * S, oy + 870 * S), radius=35 * S, fill=(255, 255, 255))
-    else:
-        for i in range(5):
-            top = oy + (140 + i * 120) * S
-            d.rounded_rectangle((ox + 24 * S, top, ox + 488 * S, top + 104 * S), radius=24 * S, fill=CARD)
-            d.rounded_rectangle((ox + 48 * S, top + 24 * S, ox + 230 * S, top + 44 * S), radius=10 * S, fill=(42, 27, 24))
-            d.rounded_rectangle((ox + 48 * S, top + 62 * S, ox + 380 * S, top + 76 * S), radius=7 * S, fill=(92, 69, 63))
-            d.rounded_rectangle((ox + 384 * S, top + 24 * S, ox + 464 * S, top + 48 * S), radius=12 * S, fill=CHIP)
-    # caption pill
-    f1, f2 = font(FONT_BOLD, 30 * S), font(FONT_TEXT, 24 * S)
-    pw = 430 * S
-    px, py = (w - pw) // 2, h // 2 - 70 * S
-    d.rounded_rectangle((px, py, px + pw, py + 150 * S), radius=30 * S, fill=NAVY + (235,))
-    d.text((w // 2, py + 50 * S), "Screenshot coming", font=f1, fill=(255, 255, 255), anchor="mm")
-    d.text((w // 2, py + 100 * S), caption, font=f2, fill=SOFT, anchor="mm")
-    return img.resize((W, H), Image.LANCZOS)
 
 def demo_placeholder():
     S, W, H = 2, 1200, 675
@@ -222,16 +177,13 @@ def demo_placeholder():
     d.ellipse((cx - 90 * S, cy - 90 * S, cx + 90 * S, cy + 90 * S), fill=(255, 255, 255, 235))
     d.polygon([(cx - 26 * S, cy - 48 * S), (cx - 26 * S, cy + 48 * S), (cx + 54 * S, cy)], fill=ORANGE_MID)
     d.text((cx, cy + 150 * S), "Demo GIF coming soon", font=font(FONT_BOLD, 44 * S), fill=(255, 255, 255), anchor="mm")
-    d.text((cx, cy + 205 * S), "swap this file for docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
+    d.text((cx, cy + 205 * S), "swap this file for _meta/docs/images/demo.gif and update the README line", font=font(FONT_TEXT, 26 * S), fill=SOFT, anchor="mm")
     return img.convert("RGB").resize((W, H), Image.LANCZOS)
 
 if __name__ == "__main__":
-    out = lambda n: os.path.join(HERE, n)
+    out = lambda n: os.path.join(IMAGES, n)
     banner().save(out("banner.png"), optimize=True)
     divider().save(out("divider.png"), optimize=True)
-    phone("welcome", "Welcome / token gate", "welcome").save(out("placeholder-welcome.png"), optimize=True)
-    phone("top", "Top Repos", "list").save(out("placeholder-top-repos.png"), optimize=True)
-    phone("issues", "Repo issues", "list").save(out("placeholder-repo-issues.png"), optimize=True)
     demo_placeholder().save(out("placeholder-demo.png"), optimize=True)
     panda(160).save(out("panda.png"), optimize=True)
     print("done")

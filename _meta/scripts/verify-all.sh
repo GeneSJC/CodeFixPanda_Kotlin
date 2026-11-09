@@ -4,15 +4,15 @@
 # the repository. It stops at the first failure and says which step failed.
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 echo "== Unit tests and debug builds, both flavors"
 ./gradlew testFossDebugUnitTest testCommercialDebugUnitTest assembleFossDebug assembleCommercialDebug --stacktrace
 
 echo "== No advertising software in either flavor"
-./scripts/check-no-ads-sdk.sh
+./_meta/scripts/check-no-ads-sdk.sh
 
 echo "== No developer token in any release build"
-./scripts/check-release-has-no-token.sh
+./_meta/scripts/check-release-has-no-token.sh
 
 echo "All checks passed."

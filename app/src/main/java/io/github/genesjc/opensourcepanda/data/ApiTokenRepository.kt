@@ -45,7 +45,7 @@ interface ApiTokenStorage {
  * Plain SharedPreferences in the app's private storage; the app wraps it in [EncryptingApiTokenStorage],
  * so the value in the file is ciphertext. Backup and device-transfer copies are also kept out, which is
  * why res/xml/backup_rules.xml and data_extraction_rules.xml exclude this file by name ([PREFS_NAME]);
- * keep them in sync if it changes. More in docs/design-notes.md, "Token storage".
+ * keep them in sync if it changes. More in _meta/docs/design-notes.md, "Token storage".
  */
 class SharedPreferencesApiTokenStorage(context: Context) : ApiTokenStorage {
 
