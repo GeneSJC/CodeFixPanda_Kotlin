@@ -33,7 +33,7 @@ private const val MASCOT_REBOUND_X = 0.98f
 
 private val OFFSCREEN_OFFSET = 260.dp
 private val VERTICAL_RISE_OFFSET = 140.dp
-// How hard "Open" lurches when it stops: well past the reference prototype's +28dp / -4.5deg
+// How hard "Code" lurches when it stops: well past the reference prototype's +28dp / -4.5deg
 // (a bigger lurch, a harder tilt, a small rebound back) so the stop is an unmistakable bump.
 private val OPEN_OVERSHOOT = 44.dp
 private val OPEN_REBOUND = 10.dp
@@ -72,7 +72,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
     // below start settling.
     private val sourceImpactOffsetMs = (sourceDurationMs * 0.55).toInt()
 
-    // Every animated value STARTS where its animation begins ("Open" off to the left, "Source" off to the
+    // Every animated value STARTS where its animation begins ("Code" off to the left, "Fix" off to the
     // right, the rising words below), not at its resting position. Starting at rest and moving off-screen
     // with snapTo() inside the effect that plays the timeline would draw one frame of the finished title
     // first, and on a slow cold start (a fresh install) that frame can stay up for a noticeable time.
@@ -107,7 +107,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
     }
 
     /**
-     * "Open": screech in from off-left, overshoot forward past its resting spot, then ease back: the
+     * "Code": screech in from off-left, overshoot forward past its resting spot, then ease back: the
      * reference's "+28px, -4.5° tilt, simulating high-inertia braking".
      */
     private fun CoroutineScope.launchOpen() {
@@ -139,10 +139,10 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
         }
     }
 
-    /** "Source": slides in from off-right, then a quick decaying shudder on collision with "Open" before settling flush. */
+    /** "Fix": slides in from off-right, then a quick decaying shudder on collision with "Code" before settling flush. */
     private fun CoroutineScope.launchSource() {
         launch {
-            // Off-screen from the very first frame, same as "Open"'s own immediate snapTo: snapping AFTER the
+            // Off-screen from the very first frame, same as "Code"'s own immediate snapTo: snapping AFTER the
             // delay instead (the original bug here) left Source sitting fully visible at its final resting
             // spot for the entire wait, since nothing had moved it yet.
             sourceOffsetX.snapTo(offscreenPx)
@@ -185,7 +185,7 @@ internal class TitleRevealTimeline(private val density: Density, speedMultiplier
         }
     }
 
-    /** "Panda": a straight rise from below into place under "Open Source", fading in as it goes. */
+    /** "Panda": a straight rise from below into place under "Code Fix", fading in as it goes. */
     private fun CoroutineScope.launchPanda() {
         launch {
             delay(pandaStartMs.toLong())

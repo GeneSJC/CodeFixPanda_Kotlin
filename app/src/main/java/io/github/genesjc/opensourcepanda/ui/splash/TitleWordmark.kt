@@ -35,7 +35,7 @@ internal const val SPLASH_TEXT_SCALE = 1.7f
 private const val PANDA_BASE_FONT_SP = 20f
 private const val PANDA_BASE_LETTER_SPACING_SP = 4f
 
-/** "Open Source" is a long headline, so it is set smaller to fit a phone's width. */
+/** "Code Fix" is a long headline, so it is set smaller to fit a phone's width. */
 private const val HEADLINE_FIT_FACTOR = 0.62f
 
 /**
@@ -48,7 +48,7 @@ private val MASCOT_HEIGHT = 130.dp
 private fun TextUnit.scaledBy(factor: Float): TextUnit = if (isSpecified) this * factor else this
 
 /**
- * The panda above the app name laid out as "Open|Source" over "PANDA", centered —
+ * The panda above the app name laid out as "Code|Fix" over "PANDA", centered —
  * shared by the full title-reveal animation (which passes motion
  * modifiers for each piece) and the short splash (which passes only
  * a fade), so the short version starts on the animation's final frame
@@ -64,7 +64,7 @@ internal fun TitleWordmark(
     mascotModifier: Modifier = Modifier,
     mascotBackdrop: @Composable BoxScope.() -> Unit = {},
 ) {
-    // Shared by both "Open" and "Source": a soft colored glow beneath the
+    // Shared by both "Code" and "Fix": a soft colored glow beneath the
     // wordmark, matching the reference's own drop-shadowed look — plain
     // Bold alone read flatter on-device than the reference's heavier
     // weight + shadow combination.
@@ -99,7 +99,7 @@ internal fun TitleWordmark(
         Spacer(modifier = Modifier.height((8 * SPLASH_TEXT_SCALE).dp))
         Row {
             Text(
-                "Open",
+                "Code",
                 style = wordmarkStyle,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -107,7 +107,7 @@ internal fun TitleWordmark(
             )
             Spacer(modifier = Modifier.width((8 * SPLASH_TEXT_SCALE * HEADLINE_FIT_FACTOR).dp))
             Text(
-                "Source",
+                "Fix",
                 style = wordmarkStyle,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.secondary,

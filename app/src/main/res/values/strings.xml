@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Open Source Panda</string>
+    <string name="app_name">Code Fix Panda</string>
     <!-- The name under the launcher icon. -->
-    <string name="launcher_label">Open Source Panda</string>
+    <string name="launcher_label">Code Fix Panda</string>
     <!-- Shown on every screen that names GitHub. -->
-    <string name="independent_notice">Open Source Panda is not affiliated with or endorsed by GitHub.</string>
+    <string name="independent_notice">Code Fix Panda is not affiliated with or endorsed by GitHub.</string>
 
     <!-- Wording the ViewModels build from the data layer's facts. -->
     <string name="error_unknown">unknown error</string>
@@ -30,7 +30,7 @@
     <!-- Settings, the token help dialog and the mode gate. -->
     <string name="settings_title">Settings</string>
     <string name="settings_token_heading">GitHub token</string>
-    <string name="settings_token_explainer">Open Source Panda needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
+    <string name="settings_token_explainer">Code Fix Panda needs a GitHub personal access token to search for issues. It needs no permissions, and it stays on this device.</string>
     <string name="settings_token_label">Your GitHub token</string>
     <string name="token_show">Show</string>
     <string name="token_hide">Hide</string>
@@ -39,10 +39,10 @@
     <string name="token_remove_unavailable_build">This token is built into this debug build, so it cannot be removed here.</string>
     <string name="settings_how_to_get_token">How do I get a token?</string>
     <string name="token_help_title">How to get a GitHub token</string>
-    <string name="token_help_intro">Open Source Panda needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>
+    <string name="token_help_intro">Code Fix Panda needs a free GitHub personal access token to search for issues. It only reads public information, so your token needs no permissions at all.</string>
     <string name="token_help_step1">Sign in at github.com. You can create a free account if you don\'t have one.</string>
     <string name="token_help_step2">Open Settings → Developer settings → Personal access tokens → Tokens (classic), then choose Generate new token (classic). The button below takes you straight there.</string>
-    <string name="token_help_step3">Name it \"Open Source Panda\" and pick an expiration. Leave every permission (scope) unchecked.</string>
+    <string name="token_help_step3">Name it \"Code Fix Panda\" and pick an expiration. Leave every permission (scope) unchecked.</string>
     <string name="token_help_step4">Tap Generate token, then copy the token. GitHub shows it only once, so copy it before leaving the page.</string>
     <string name="token_help_step5">Come back here, paste it into the token box, and tap Save.</string>
     <string name="token_help_footer">Your token stays on this device and is sent only to GitHub. A token saved here replaces any token built into the app.</string>
@@ -205,7 +205,7 @@
 
     <!-- Welcome screen (the front door) and the token guide. The screenshot captions are text placeholders until real screenshots of GitHub's pages exist. -->
     <string name="welcome_title_intro">Welcome to</string>
-    <string name="welcome_title_name">Open Source\nPanda</string>
+    <string name="welcome_title_name">Code Fix\nPanda</string>
     <string name="welcome_message">To use this app you need to set your GitHub token. It is free, takes about a minute, and needs no permissions.</string>
     <string name="welcome_how_to_link">How does it work?</string>
     <string name="welcome_try_demo">Try the demo</string>
