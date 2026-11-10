@@ -329,7 +329,7 @@ More decisions, with their reasons, are in [`_meta/docs/design-notes.md`](_meta/
 | `foss` | GitHub, as the open-source build | `io.github.genesjc.codefixpanda` | `-foss` |
 | `commercial` | Google Play | `io.github.genesjc.codefixpanda.commercial` | `-commercial` |
 
-`foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side.
+`foss` is the default, so a fresh checkout builds and runs the open build. The two ids differ, so both install side by side, and the `foss` build's launcher icon has a blue background so the two are easy to tell apart on a home screen.
 Flavors, and not a runtime flag, keep code that only one build may contain out of the other at compile time.
 
 <details>
