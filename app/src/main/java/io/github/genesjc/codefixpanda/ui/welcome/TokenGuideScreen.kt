@@ -1,7 +1,9 @@
 package io.github.genesjc.codefixpanda.ui.welcome
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,10 +32,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.codefixpanda.R
@@ -49,8 +55,8 @@ private val PANEL_MARGIN = 15.dp
 private val PANEL_CORNER_RADIUS = 32.dp
 
 /**
- * The step-by-step guide to getting a GitHub token: four short steps, one per screen, each with a slot for a
- * screenshot of GitHub's own page. It sits in a rounded, bordered white panel, inset from the screen edges,
+ * The step-by-step guide to getting a GitHub token: four short steps, one per screen: the page we send you to,
+ * then screenshots of GitHub's own pages. It sits in a rounded, bordered white panel, inset from the screen edges,
  * on the same blue gradient as the welcome screen. Reached from the welcome screen's link and its menu entry.
  * [onBack] runs from the Close button on any step, and from Back on the first one; Back on a later step goes
  * to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
@@ -106,7 +112,7 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** One step: the glyph, the title, the screenshot slot, the explanation, and where needed a button to GitHub's token page. */
+/** One step: the glyph, the title, a reminder if it has one, the picture, the explanation, and where needed a button to GitHub's token page. */
 @Composable
 private fun TokenGuideStepPage(step: TokenGuideStep) {
     val uriHandler = LocalUriHandler.current
@@ -122,7 +128,15 @@ private fun TokenGuideStepPage(step: TokenGuideStep) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
         )
-        ScreenshotSlot(stringResource(step.screenshotCaption))
+        step.emphasis?.let { EmphasisNote(stringResource(it)) }
+        if (step.showsLink) {
+            LinkCard(NEW_TOKEN_DISPLAY)
+        }
+
+        if (step.screenshot != null && step.screenshotDescription != null) {
+            GuideScreenshot(step.screenshot, stringResource(step.screenshotDescription))
+        }
+
         Text(
             stringResource(step.body),
             style = MaterialTheme.typography.bodyLarge,
@@ -139,25 +153,55 @@ private fun TokenGuideStepPage(step: TokenGuideStep) {
     }
 }
 
-/** Where a real screenshot goes; until one is supplied it shows its caption as text. */
+/** A highlighted reminder, in the brand's yellow, for the one thing the user must not get wrong. */
 @Composable
-private fun ScreenshotSlot(caption: String) {
+private fun EmphasisNote(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = BrandSun.copy(alpha = 0.28f),
+        border = BorderStroke(2.dp, BrandSun),
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(12.dp),
+        )
+    }
+}
+
+/** The address the user is about to be sent to, in a box so they can see where the button goes. */
+@Composable
+private fun LinkCard(address: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            caption,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            address,
+            style = MaterialTheme.typography.titleMedium,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(16.dp),
         )
     }
+}
+
+/** A screenshot of GitHub's own page, full width with its natural height, so the page scrolls instead of squashing it. */
+@Composable
+private fun GuideScreenshot(@DrawableRes image: Int, description: String) {
+    Image(
+        painter = painterResource(image),
+        contentDescription = description,
+        contentScale = ContentScale.FillWidth,
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+    )
 }
 
 /** The row of dots under the pager. It is one element for screen readers: "Page 2 of 4". */
