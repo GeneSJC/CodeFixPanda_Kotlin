@@ -123,22 +123,28 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun TokenGuideStepPage(step: TokenGuideStep) {
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(step.glyph, style = MaterialTheme.typography.displayMedium)
-        Text(
-            stringResource(step.title),
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
-        )
+        Row(
+            modifier = Modifier.padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(step.glyph, style = MaterialTheme.typography.headlineMedium)
+            Text(
+                stringResource(step.title),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+        }
+
         if (step.showsLink) {
             TokenPageLink(NEW_TOKEN_DISPLAY)
         }
 
         step.emphasis?.let { EmphasisNote(stringResource(it)) }
-        GuideScreenshot(step.screenshot, stringResource(step.screenshotDescription))
+        GuideScreenshot(step.screenshot, stringResource(step.screenshotDescription), step.screenshotWidthFraction)
         Text(
             stringResource(step.body),
             style = MaterialTheme.typography.bodyLarge,
@@ -187,14 +193,14 @@ private fun TokenPageLink(address: String) {
     )
 }
 
-/** A screenshot of GitHub's own page, full width with its natural height, so the page scrolls instead of squashing it. */
+/** A screenshot at its natural height, [widthFraction] of the width, so the page scrolls instead of squashing it. */
 @Composable
-private fun GuideScreenshot(@DrawableRes image: Int, description: String) {
+private fun GuideScreenshot(@DrawableRes image: Int, description: String, widthFraction: Float) {
     Image(
         painter = painterResource(image),
         contentDescription = description,
         contentScale = ContentScale.FillWidth,
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
+        modifier = Modifier.fillMaxWidth(widthFraction).clip(RoundedCornerShape(12.dp)),
     )
 }
 
