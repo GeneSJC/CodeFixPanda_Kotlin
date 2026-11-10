@@ -221,8 +221,11 @@
     <string name="guide_step_2_body">The app only reads public information, so the token can do almost nothing. Check that every box is empty, then tap Generate token.</string>
     <string name="guide_step_2_screenshot">The bottom of the form: every permission box is unticked, with the Generate token button</string>
     <string name="guide_step_3_title">3. Copy the token</string>
-    <string name="guide_step_3_body">GitHub shows the token only once, so copy it before you leave the page. Then come back here and paste it into the box on the welcome screen.</string>
+    <string name="guide_step_3_body">GitHub shows the token only once, so copy it before you leave the page.</string>
     <string name="guide_step_3_screenshot">GitHub\'s token page, showing the new token and its copy button</string>
+    <string name="guide_step_4_title">4. Paste it into the app</string>
+    <string name="guide_step_4_body">Come back to the welcome screen, paste the token you copied into the box, and tap Save. It stays on this device and is sent only to GitHub.</string>
+    <string name="guide_step_4_screenshot">The welcome screen, with the token pasted into the Your GitHub token box</string>
 
     <!-- Demo mode. -->
     <string name="demo_chip_label">Demo data</string>

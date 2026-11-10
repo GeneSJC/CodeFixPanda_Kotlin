@@ -57,8 +57,8 @@ private val PANEL_MARGIN = 15.dp
 private val PANEL_CORNER_RADIUS = 32.dp
 
 /**
- * The step-by-step guide to getting a GitHub token: three numbered steps, one per screen, each showing a
- * screenshot of GitHub's own page (the first also shows the page's address). It sits in a rounded, bordered white panel, inset from the screen edges,
+ * The step-by-step guide to getting a GitHub token: four numbered steps, one per screen, each showing a
+ * screenshot: GitHub's own pages (the first also shows the page's address), then this app's welcome screen. It sits in a rounded, bordered white panel, inset from the screen edges,
  * on the same blue gradient as the welcome screen. Reached from the welcome screen's link and its menu entry.
  * [onBack] runs from the Close button on any step, and from Back on the first one; Back on a later step goes
  * to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.

@@ -337,7 +337,7 @@ Flavors, and not a runtime flag, keep code that only one build may contain out o
 
 <br>
 
-**The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the three
+**The front door.** With no token the app starts on a blue welcome screen that links to GitHub's token page, explains the four
 steps in a short guide, and has a box to paste the token. "Try the demo" opens sample data for that session; the next launch
 without a token starts on the welcome again. The token is stored encrypted on the device, shown masked, and sent only to GitHub.
 More in `_meta/docs/design-notes.md`, "Token storage".

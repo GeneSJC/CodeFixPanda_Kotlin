@@ -19,7 +19,7 @@ internal data class TokenGuideStep(
     val showsLink: Boolean,
 )
 
-/** The token guide, in order: name the token, scroll down and save without ticking anything, copy the token. */
+/** The token guide, in order: name the token, scroll down and save without ticking anything, copy the token, paste it into the app. */
 internal val tokenGuideSteps = listOf(
     TokenGuideStep(
         glyph = "✏️",
@@ -45,6 +45,15 @@ internal val tokenGuideSteps = listOf(
         body = R.string.guide_step_3_body,
         screenshot = R.drawable.token_guide_copy,
         screenshotDescription = R.string.guide_step_3_screenshot,
+        emphasis = null,
+        showsLink = false,
+    ),
+    TokenGuideStep(
+        glyph = "✅",
+        title = R.string.guide_step_4_title,
+        body = R.string.guide_step_4_body,
+        screenshot = R.drawable.token_guide_paste,
+        screenshotDescription = R.string.guide_step_4_screenshot,
         emphasis = null,
         showsLink = false,
     ),
