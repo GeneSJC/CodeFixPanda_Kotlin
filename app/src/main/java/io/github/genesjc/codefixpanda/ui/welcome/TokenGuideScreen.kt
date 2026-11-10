@@ -33,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.codefixpanda.R
+import io.github.genesjc.codefixpanda.ui.components.BrandSoftBackground
 import io.github.genesjc.codefixpanda.ui.components.IndependentNotice
 import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
 import io.github.genesjc.codefixpanda.ui.theme.BrandBlue
@@ -58,10 +60,11 @@ private val PANEL_CORNER_RADIUS = 32.dp
 
 /**
  * The step-by-step guide to getting a GitHub token: four numbered steps, one per screen, each showing a
- * screenshot: GitHub's own pages (the first also shows the page's address), then this app's welcome screen. It sits in a rounded, bordered white panel, inset from the screen edges,
- * on the same blue gradient as the welcome screen. Reached from the welcome screen's link and its menu entry.
- * [onBack] runs from the Close button on any step, and from Back on the first one; Back on a later step goes
- * to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
+ * screenshot: GitHub's own pages (the first also shows the page's address), then this app's welcome screen.
+ * It sits in a rounded, bordered panel inset from the screen edges, on the soft glyph backdrop the issue-type
+ * screen uses, over the same orange background as the welcome screen. Reached from the welcome screen's link
+ * and its menu entry. [onBack] runs from the Close button on any step, and from Back on the first one; Back
+ * on a later step goes to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
  */
 @Composable
 fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -78,33 +81,35 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             Surface(
                 modifier = Modifier.fillMaxSize().systemBarsPadding().padding(PANEL_MARGIN),
                 shape = RoundedCornerShape(PANEL_CORNER_RADIUS),
-                color = MaterialTheme.colorScheme.surface,
+                color = Color.Transparent,
                 border = BorderStroke(3.dp, BrandSun),
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        stringResource(R.string.token_help_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp),
-                    )
-                    HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-                        TokenGuideStepPage(tokenGuideSteps[page])
-                    }
+                BrandSoftBackground {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            stringResource(R.string.token_help_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp),
+                        )
+                        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
+                            TokenGuideStepPage(tokenGuideSteps[page])
+                        }
 
-                    PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
-                    IndependentNotice(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextButton(onClick = onBack) { Text(stringResource(R.string.action_close)) }
-                        if (pagerState.currentPage == lastPage) {
-                            Button(onClick = onBack) { Text(stringResource(R.string.guide_done)) }
-                        } else {
-                            Button(onClick = { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }) {
-                                Text(stringResource(R.string.welcome_next))
+                        PageDots(count = tokenGuideSteps.size, current = pagerState.currentPage)
+                        IndependentNotice(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TextButton(onClick = onBack) { Text(stringResource(R.string.action_close)) }
+                            if (pagerState.currentPage == lastPage) {
+                                Button(onClick = onBack) { Text(stringResource(R.string.guide_done)) }
+                            } else {
+                                Button(onClick = { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }) {
+                                    Text(stringResource(R.string.welcome_next))
+                                }
                             }
                         }
                     }
