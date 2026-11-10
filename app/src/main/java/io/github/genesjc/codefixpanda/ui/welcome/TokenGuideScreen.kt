@@ -1,10 +1,12 @@
 package io.github.genesjc.codefixpanda.ui.welcome
 
 import androidx.activity.compose.BackHandler
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,18 +34,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import io.github.genesjc.codefixpanda.R
 import io.github.genesjc.codefixpanda.ui.components.IndependentNotice
 import io.github.genesjc.codefixpanda.ui.theme.CodeFixPandaTheme
+import io.github.genesjc.codefixpanda.ui.theme.BrandBlue
 import io.github.genesjc.codefixpanda.ui.theme.BrandSun
 import kotlinx.coroutines.launch
 
@@ -55,8 +57,8 @@ private val PANEL_MARGIN = 15.dp
 private val PANEL_CORNER_RADIUS = 32.dp
 
 /**
- * The step-by-step guide to getting a GitHub token: four short steps, one per screen: the page we send you to,
- * then screenshots of GitHub's own pages. It sits in a rounded, bordered white panel, inset from the screen edges,
+ * The step-by-step guide to getting a GitHub token: three numbered steps, one per screen, each showing a
+ * screenshot of GitHub's own page (the first also shows the page's address). It sits in a rounded, bordered white panel, inset from the screen edges,
  * on the same blue gradient as the welcome screen. Reached from the welcome screen's link and its menu entry.
  * [onBack] runs from the Close button on any step, and from Back on the first one; Back on a later step goes
  * to the previous step. Drawn in the neutral theme, since no Issue Mode is chosen yet.
@@ -112,11 +114,9 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** One step: the glyph, the title, a reminder if it has one, the picture, the explanation, and where needed a button to GitHub's token page. */
+/** One step: the glyph, the title, the link if it has one, a reminder if it has one, the picture, and the explanation. */
 @Composable
 private fun TokenGuideStepPage(step: TokenGuideStep) {
-    val uriHandler = LocalUriHandler.current
-
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -128,28 +128,17 @@ private fun TokenGuideStepPage(step: TokenGuideStep) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
         )
-        step.emphasis?.let { EmphasisNote(stringResource(it)) }
         if (step.showsLink) {
-            LinkCard(NEW_TOKEN_DISPLAY)
+            TokenPageLink(NEW_TOKEN_DISPLAY)
         }
 
-        if (step.screenshot != null && step.screenshotDescription != null) {
-            GuideScreenshot(step.screenshot, stringResource(step.screenshotDescription))
-        }
-
+        step.emphasis?.let { EmphasisNote(stringResource(it)) }
+        GuideScreenshot(step.screenshot, stringResource(step.screenshotDescription))
         Text(
             stringResource(step.body),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(top = 16.dp),
         )
-        if (step.showGetToken) {
-            OutlinedButton(
-                onClick = { uriHandler.openUri(NEW_TOKEN_URL) },
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-            ) {
-                Text(stringResource(R.string.action_get_token))
-            }
-        }
     }
 }
 
@@ -172,25 +161,25 @@ private fun EmphasisNote(text: String) {
     }
 }
 
-/** The address the user is about to be sent to, in a box so they can see where the button goes. */
+/**
+ * The address of GitHub's token page, as a blue link. Tapping it only explains where the real button is: the guide
+ * is for reading, and the welcome screen's Get a token button is what opens the page.
+ */
 @Composable
-private fun LinkCard(address: String) {
-    Box(
+private fun TokenPageLink(address: String) {
+    val context = LocalContext.current
+    val explanation = stringResource(R.string.guide_link_toast)
+
+    Text(
+        address,
+        style = MaterialTheme.typography.titleMedium,
+        color = BrandBlue,
+        textDecoration = TextDecoration.Underline,
+        textAlign = TextAlign.Center,
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            address,
-            style = MaterialTheme.typography.titleMedium,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-    }
+            .padding(bottom = 16.dp)
+            .clickable { Toast.makeText(context, explanation, Toast.LENGTH_SHORT).show() },
+    )
 }
 
 /** A screenshot of GitHub's own page, full width with its natural height, so the page scrolls instead of squashing it. */

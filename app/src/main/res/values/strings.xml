@@ -212,18 +212,17 @@
     <string name="welcome_next">Next</string>
     <string name="welcome_page_description">Page %1$d of %2$d</string>
     <string name="guide_done">Done</string>
-    <string name="guide_step_1_title">Open GitHub\'s token page</string>
-    <string name="guide_step_1_body">The button below takes you to this page on GitHub, with the token\'s name already filled in.</string>
-    <string name="guide_step_2_title">Name your token</string>
-    <string name="guide_step_2_body">The name is already filled in. Choose an expiration, then scroll down.</string>
-    <string name="guide_step_2_screenshot">GitHub\'s new token form, with the name Code Fix Panda filled in</string>
-    <string name="guide_step_3_title">Leave every permission unticked</string>
-    <string name="guide_step_3_emphasis">No permissions needed. Do not tick any box.</string>
-    <string name="guide_step_3_body">The app only reads public information, so the token can do almost nothing. Check that every box is empty, then tap Generate token.</string>
-    <string name="guide_step_3_screenshot">The bottom of the form: every permission box is unticked, with the Generate token button</string>
-    <string name="guide_step_4_title">Copy the token</string>
-    <string name="guide_step_4_body">GitHub shows the token only once, so copy it before you leave the page. Then come back here and paste it into the box on the welcome screen.</string>
-    <string name="guide_step_4_screenshot">GitHub\'s token page, showing the new token and its copy button</string>
+    <string name="guide_step_1_title">1. Name your token</string>
+    <string name="guide_step_1_body">The Get a token button on the welcome screen opens this page, with the token\'s name already filled in. Choose an expiration, then scroll down.</string>
+    <string name="guide_step_1_screenshot">GitHub\'s new token form, with the name Code Fix Panda filled in</string>
+    <string name="guide_link_toast">The Get a token button on the welcome screen opens this page</string>
+    <string name="guide_step_2_title">2. Scroll down and save</string>
+    <string name="guide_step_2_emphasis">No permissions needed. Do not tick any box.</string>
+    <string name="guide_step_2_body">The app only reads public information, so the token can do almost nothing. Check that every box is empty, then tap Generate token.</string>
+    <string name="guide_step_2_screenshot">The bottom of the form: every permission box is unticked, with the Generate token button</string>
+    <string name="guide_step_3_title">3. Copy the token</string>
+    <string name="guide_step_3_body">GitHub shows the token only once, so copy it before you leave the page. Then come back here and paste it into the box on the welcome screen.</string>
+    <string name="guide_step_3_screenshot">GitHub\'s token page, showing the new token and its copy button</string>
 
     <!-- Demo mode. -->
     <string name="demo_chip_label">Demo data</string>
