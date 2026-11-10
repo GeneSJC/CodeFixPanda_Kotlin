@@ -119,25 +119,19 @@ fun TokenGuideScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** One step: the glyph, the title, the link if it has one, a reminder if it has one, the picture, and the explanation. */
+/** One step: the title, the link if it has one, a reminder if it has one, the picture, and the explanation. */
 @Composable
 private fun TokenGuideStepPage(step: TokenGuideStep) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
+        Text(
+            stringResource(step.title),
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(step.glyph, style = MaterialTheme.typography.headlineMedium)
-            Text(
-                stringResource(step.title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-        }
+        )
 
         if (step.showsLink) {
             TokenPageLink(NEW_TOKEN_DISPLAY)

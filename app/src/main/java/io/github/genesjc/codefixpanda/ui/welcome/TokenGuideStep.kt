@@ -5,13 +5,12 @@ import androidx.annotation.StringRes
 import io.github.genesjc.codefixpanda.R
 
 /**
- * One step of the token guide. [glyph] is a drawing, not wording. [screenshot] is a picture of GitHub's own
- * page, described for screen readers by [screenshotDescription]. [showsLink] adds the address of that page
- * above the picture. [emphasis] is an optional highlighted reminder above the picture. [screenshotWidthFraction]
- * narrows a tall picture so that it fits on screen without scrolling.
+ * One step of the token guide. [screenshot] is a picture of the page the step is about, described for screen
+ * readers by [screenshotDescription]. [showsLink] adds the address of GitHub's token page above the picture.
+ * [emphasis] is an optional highlighted reminder above the picture. [screenshotWidthFraction] narrows a tall
+ * picture so that it fits on screen without scrolling.
  */
 internal data class TokenGuideStep(
-    val glyph: String,
     @StringRes val title: Int,
     @StringRes val body: Int,
     @DrawableRes val screenshot: Int,
@@ -24,7 +23,6 @@ internal data class TokenGuideStep(
 /** The token guide, in order: name the token, scroll down and save without ticking anything, copy the token, paste it into the app. */
 internal val tokenGuideSteps = listOf(
     TokenGuideStep(
-        glyph = "✏️",
         title = R.string.guide_step_1_title,
         body = R.string.guide_step_1_body,
         screenshot = R.drawable.token_guide_form,
@@ -33,7 +31,6 @@ internal val tokenGuideSteps = listOf(
         showsLink = true,
     ),
     TokenGuideStep(
-        glyph = "☐",
         title = R.string.guide_step_2_title,
         body = R.string.guide_step_2_body,
         screenshot = R.drawable.token_guide_submit,
@@ -42,7 +39,6 @@ internal val tokenGuideSteps = listOf(
         showsLink = false,
     ),
     TokenGuideStep(
-        glyph = "📋",
         title = R.string.guide_step_3_title,
         body = R.string.guide_step_3_body,
         screenshot = R.drawable.token_guide_copy,
@@ -51,7 +47,6 @@ internal val tokenGuideSteps = listOf(
         showsLink = false,
     ),
     TokenGuideStep(
-        glyph = "✅",
         title = R.string.guide_step_4_title,
         body = R.string.guide_step_4_body,
         screenshot = R.drawable.token_guide_paste,
