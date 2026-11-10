@@ -215,6 +215,8 @@
     <string name="guide_step_1_title">1. Name your token</string>
     <string name="guide_step_1_body">The Get a token button on the welcome screen opens this page, with the token\'s name already filled in. Choose an expiration, then scroll down.</string>
     <string name="guide_step_1_screenshot">GitHub\'s new token form, with the name Code Fix Panda filled in</string>
+    <string name="guide_enlarge_hint">Tap to enlarge</string>
+    <string name="guide_zoom_hint">Pinch to zoom, drag to move, double-tap to reset</string>
     <string name="guide_link_toast">The Get a token button on the welcome screen opens this page</string>
     <string name="guide_step_2_title">2. Scroll down and save</string>
     <string name="guide_step_2_emphasis">No permissions needed.\nDo not tick any box.</string>

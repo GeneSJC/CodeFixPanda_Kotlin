@@ -29,7 +29,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -187,15 +191,43 @@ private fun TokenPageLink(address: String) {
     )
 }
 
-/** A screenshot at its natural height, [widthFraction] of the width, so the page scrolls instead of squashing it. */
+/**
+ * A screenshot at its natural height, [widthFraction] of the width, so the page scrolls instead of squashing it.
+ * Tapping it opens it full screen, where it can be zoomed; a small label says so.
+ */
 @Composable
 private fun GuideScreenshot(@DrawableRes image: Int, description: String, widthFraction: Float) {
-    Image(
-        painter = painterResource(image),
-        contentDescription = description,
-        contentScale = ContentScale.FillWidth,
-        modifier = Modifier.fillMaxWidth(widthFraction).clip(RoundedCornerShape(12.dp)),
-    )
+    var enlarged by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(widthFraction)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClickLabel = stringResource(R.string.guide_enlarge_hint)) { enlarged = true },
+    ) {
+        Image(
+            painter = painterResource(image),
+            contentDescription = description,
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Surface(
+            modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            shape = CircleShape,
+            color = Color.Black.copy(alpha = 0.65f),
+        ) {
+            Text(
+                stringResource(R.string.guide_enlarge_hint),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
+    }
+
+    if (enlarged) {
+        ZoomableImageDialog(image, description, onDismiss = { enlarged = false })
+    }
 }
 
 /** The row of dots under the pager. It is one element for screen readers: "Page 2 of 4". */
