@@ -28,6 +28,6 @@ class MainActivity2 : ComponentActivity() {
         super.onCreate(savedInstanceState)
         getKoin().loadModules(listOf(module { single { Greeter() } }))
         Log.d("Mini", "module registered, Greeter not built yet")
-        setContent { Text(greeter.hello()) }   // first read of `greeter` builds it
+        setContent { Text(greeter.hello()) }   // lambda runs at first composition (after onCreate returns); its first read of `greeter` builds it
     }
 }
