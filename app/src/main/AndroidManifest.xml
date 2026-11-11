@@ -21,6 +21,11 @@
             android:label="@string/launcher_label"
             android:theme="@style/Theme.CodeFixPanda"
             android:windowSoftInputMode="adjustResize">
+        </activity>
+        <!-- Sandbox launcher. To run the real app, move the intent-filter back to MainActivity. -->
+        <activity
+            android:name=".MainActivity2"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
